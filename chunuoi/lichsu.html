@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nhật Ký Y Tế & Chăm Sóc - Cổng Chủ Nuôi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body { 
+            background: #f1f5f9; 
+            margin: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            display: flex;
+            justify-content: center;
+        }
+        .mobile-shell {
+            width: 100%;
+            max-width: 480px;
+            background: #f8fafc;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+            padding: 12px;
+            padding-bottom: 80px;
+        }
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            font-weight: bold;
+            color: #1e293b;
+            font-size: 14px;
+        }
+        .history-card { 
+            background: white; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 12px; 
+            padding: 14px; 
+            margin-bottom: 10px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
+        }
+        .history-date {
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .history-content {
+            font-size: 12px;
+            color: #334155;
+            line-height: 1.5;
+        }
+        .badge-kham { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+        .badge-tiem { background: #fef3c7; color: #d97706; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+        .badge-noitru { background: #fee2e2; color: #dc2626; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+
+        /* Thanh menu đáy phong cách Mobile App */
+        .mobile-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            height: 60px;
+            background: #ffffff;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 9999;
+            border-top: 1px solid #e2e8f0;
+            box-sizing: border-box;
+        }
+        .mobile-bottom-nav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 500;
+            flex: 1;
+        }
+        .mobile-bottom-nav a span { font-size: 20px; margin-bottom: 2px; }
+        .mobile-bottom-nav a.active { color: #0284c7; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-shell">
+        <div class="top-bar">
+            <span>📋 Nhật ký Y tế & Chăm sóc</span>
+            <span id="tenChuNuoiLabel" style="font-size: 11px; color: #64748b; font-weight: normal;">---</span>
+        </div>
+
+        <div id="danhSachLichSu">
+            <div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 12px; font-size: 12px;">Đang tải dữ liệu y tế...</div>
+        </div>
+    </div>
+
+    <!-- THANH MENU ĐÁY MOBILE -->
+     <div class="mobile-bottom-nav">
+        <a href="trangchu.html">
+            <span>🏠</span>
+            Trang chủ
+        </a>
+        <a href="lichsu.html">
+            <span>📋</span>
+            Lịch sử khám
+        </a>
+        <a href="ketquachidinh-chunuoi.html" class="active">
+            <span>🔬</span>
+            Chỉ định
+        </a>
+        <a href="noitru-chunuoi.html">
+            <span>🏨</span>
+            Lịch trình
+        </a>
+		<a href="muahang.html">
+            <span>🛍️</span>
+            Cửa hàng
+        </a>
+        <a href="datlich.html">
+            <span>📅</span>
+            Đặt lịch hẹn
+        </a>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', async () => {
+            const ownerStr = sessionStorage.getItem('currentPetOwner');
+            if (!ownerStr) {
+                alert('Vui lòng đăng nhập trước!');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const ownerData = JSON.parse(ownerStr);
+            document.getElementById('tenChuNuoiLabel').innerText = ownerData.hovaten || ownerData.tenkhachhang || '';
+
+            await taiNhatKyYTeChinhXac(ownerData.id);
+        });
+
+        async function taiNhatKyYTeChinhXac(ownerId) {
+            const container = document.getElementById('danhSachLichSu');
+            container.innerHTML = '';
+
+            // 1. Tìm danh sách thú cưng của chủ nuôi dựa trên các tên cột khóa ngoại khách hàng phổ biến
+            let listPets = null;
+            for (let col of ['makhachhang', 'makh', 'khachhang_id', 'idkhachhang']) {
+                let { data } = await db.from('thucung').select('*').eq(col, ownerId);
+                if (data && data.length > 0) {
+                    listPets = data;
+                    break;
+                }
+            }
+
+            if (!listPets || listPets.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 25px; background: white; border-radius: 12px; font-size: 12px;">Chưa tìm thấy thú cưng liên kết.</div>`;
+                return;
+            }
+
+            const petIds = listPets.map(p => p.id);
+            const petMap = {};
+            listPets.forEach(p => {
+                petMap[p.id] = p.tenthucung || p.tenthecung || p.ten || 'Thú cưng';
+            });
+
+            let allRecords = [];
+
+            // 2. Lấy dữ liệu từ bảng KHÁM BỆNH: khambenh (dựa theo code nguồn quản lý khám bệnh)[cite: 1]
+            try {
+                let { data } = await db.from('khambenh').select('*').in('mathucung', petIds);
+                if (data) {
+                    data.forEach(item => {
+                        allRecords.push({
+                            ngay: item.ngaykham || item.created_at || 'Gần đây',
+                            tenPet: petMap[item.mathucung] || 'Thú cưng',
+                            tieuDe: '🩺 Khám bệnh (KB' + String(item.id).padStart(4, '0') + ')',
+                            noiDung: `Triệu chứng: <b>${item.trieuchung || '---'}</b><br>Chẩn đoán: <span style="color: #d97706;">${item.chandoan || '---'}</span><br>Phác đồ: ${item.dieutri || '---'}`,
+                            badgeClass: 'badge-kham',
+                            badgeText: 'Khám bệnh',
+                            rawDate: item.ngaykham || item.created_at || ''
+                        });
+                    });
+                }
+            } catch (e) { console.log('Lỗi bảng khambenh', e); }
+
+            // 3. Lấy dữ liệu từ bảng TIÊM VACCINE: nhatkylamvaccine (dựa theo code nguồn quản lý tiêm)[cite: 2]
+            try {
+                let { data } = await db.from('nhatkylamvaccine').select('*').in('mathucung', petIds);
+                if (data) {
+                    data.forEach(item => {
+                        allRecords.push({
+                            ngay: item.ngaytiem || item.created_at || 'Gần đây',
+                            tenPet: petMap[item.mathucung] || 'Thú cưng',
+                            tieuDe: '💉 Tiêm Vaccine: ' + (item.tenvaccine || '---'),
+                            noiDung: `Mã VC: ${item.mavaccine || '---'}<br>Trạng thái: <b>${item.trangthai || 'Đã tiêm'}</b><br>Ngày nhắc lại: ${item.ngaynhaclai || 'Không có'}<br>Bác sĩ tiêm: ${item.bacsi || '---'}`,
+                            badgeClass: 'badge-tiem',
+                            badgeText: 'Tiêm chủng',
+                            rawDate: item.ngaytiem || item.created_at || ''
+                        });
+                    });
+                }
+            } catch (e) { console.log('Lỗi bảng nhatkylamvaccine', e); }
+
+            // 4. Lấy dữ liệu từ bảng NỘI TRÚ: nhatkynoitru (dựa theo code nguồn nội trú map qua khambenh)[cite: 3]
+            try {
+                // Lấy danh sách id khám bệnh của các thú cưng này trước để lọc nội trú
+                let { data: kbCheck } = await db.from('khambenh').select('id').in('mathucung', petIds);
+                if (kbCheck && kbCheck.length > 0) {
+                    let kbIds = kbCheck.map(k => k.id);
+                    let { data: ntData } = await db.from('nhatkynoitru').select('*').in('makhambenh', kbIds);
+                    if (ntData) {
+                        ntData.forEach(item => {
+                            // Tìm lại tên pet thông qua mã khám bệnh của nội trú
+                            let petName = 'Thú cưng';
+                            // Ta có thể truy vấn ngược hoặc map đơn giản
+                            allRecords.push({
+                                ngay: item.ngayvao || item.created_at || 'Gần đây',
+                                tenPet: 'Thú cưng', // Sẽ hiển thị chung hoặc cập nhật nếu khớp mã khám
+                                tieuDe: '🏥 Nội trú (NKNT' + String(item.id).padStart(4, '0') + ')',
+                                noiDung: `Trạng thái: <b>${item.trangthai || 'Đang nằm viện'}</b><br>Bác sĩ: ${item.bacsiphutrach || '---'}<br>Tổng viện phí: ${Number(item.tongchiphi || 0).toLocaleString('vi-VN')} đ`,
+                                badgeClass: 'badge-noitru',
+                                badgeText: 'Nội trú',
+                                rawDate: item.ngayvao || item.created_at || ''
+                            });
+                        });
+                    }
+                }
+            } catch (e) { console.log('Lỗi bảng nhatkynoitru', e); }
+
+            if (allRecords.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 25px; background: white; border-radius: 12px; font-size: 12px;">Chưa có dữ liệu khám bệnh, tiêm vaccine hay nội trú nào.</div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            allRecords.forEach(rec => {
+                container.innerHTML += `
+                    <div class="history-card">
+                        <div class="history-date">
+                            <span>🐾 <b>${rec.tenPet}</b> - ${rec.tieuDe}</span>
+                            <span class="${rec.badgeClass}">${rec.badgeText}</span>
+                        </div>
+                        <div class="history-content">
+                            <div style="margin-bottom: 4px; color: #0284c7; font-size: 10px;">📅 Ngày: ${rec.ngay}</div>
+                            <div>${rec.noiDung}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>

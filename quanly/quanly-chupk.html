@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Trị Hệ Thống & Bản Quyền App - VetCare Pro</title>
+    
+    <!-- Thư viện Supabase JS và CryptoJS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/smart-search.js"></script>
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+    <link rel="stylesheet" href="../css/smart-search.css">
+    <style>
+        body {
+            background: #f8fafc;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 30px;
+        }
+        .container {
+            max-width: 1250px;
+            margin: 0 auto;
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 16px;
+        }
+        .header-flex h2 {
+            margin: 0 0 4px 0;
+            color: #1e3a8a;
+            font-size: 22px;
+        }
+        .header-flex p {
+            margin: 0;
+            color: #64748b;
+            font-size: 13px;
+        }
+        .btn-primary {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover {
+            background: #0369a1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: left;
+            vertical-align: middle;
+        }
+        th {
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 480px;
+            padding: 28px;
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            box-sizing: border-box;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .modal-close-btn {
+            position: absolute;
+            top: 18px;
+            right: 20px;
+            background: #f1f5f9;
+            color: #64748b;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .modal-close-btn:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .form-group {
+            margin-bottom: 14px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 5px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            box-sizing: border-box;
+            outline: none;
+            background: #ffffff;
+            transition: all 0.2s;
+        }
+        .form-control:focus {
+            border-color: #0284c7;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn-cancel {
+            padding: 10px 16px;
+            background: #e2e8f0;
+            color: #334155;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-save {
+            padding: 10px 18px;
+            background: #059669;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-save:hover {
+            background: #047857;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-flex">
+            <div>
+                <h2>🛡️ Quản Lý Chủ Phòng Khám & Bản Quyền App</h2>
+                <p>Quản lý thông tin cơ sở, upload logo trực tiếp, tài khoản mã hóa an toàn</p>
+            </div>
+            <button class="btn-primary" onclick="moModalThem()">➕ Thêm Phòng Khám Mới</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Logo</th>
+                    <th>Mã PK</th>
+                    <th>Tên Phòng Khám</th>
+                    <th>Chủ Phòng Khám</th>
+                    <th>Số Điện Thoại</th>
+                    <th>Hạn App</th>
+                    <th>Trạng Thái</th>
+                    <th>Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <tr><td colspan="9" style="text-align: center; color: #64748b;">Đang tải dữ liệu phòng khám...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- MODAL THÊM / SỬA & GIA HẠN -->
+    <div id="modalQuanLy" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close-btn" onclick="dongModal()" title="Đóng modal">&times;</button>
+
+            <h3 id="modalTitle" style="margin-top: 0; font-size: 18px; color: #1e3a8a; margin-bottom: 18px;">Thông tin phòng khám</h3>
+            
+            <input type="hidden" id="editingId">
+            <input type="hidden" id="oldLogoUrl">
+
+            <div class="form-group">
+                <label>Tên Phòng Khám (*):</label>
+                <input type="text" id="tenphongkham" class="form-control" placeholder="Ví dụ: Phòng Khám Thú Y Hòa Vang" required>
+            </div>
+
+            <div class="form-group">
+                <label>Họ và Tên Chủ Phòng Khám (*):</label>
+                <input type="text" id="hovaten" class="form-control" placeholder="Ví dụ: Văn Hữu Tỵ" required>
+            </div>
+
+            <div class="form-group">
+                <label>Số Điện Thoại (Đăng nhập) (*):</label>
+                <input type="text" id="sodienthoai" class="form-control" placeholder="Ví dụ: 0935778727" required>
+            </div>
+
+            <div class="form-group">
+                <label>Mật Khẩu (Để trống nếu không đổi khi sửa):</label>
+                <input type="text" id="matkhau" class="form-control" placeholder="Nhập mật khẩu mới...">
+            </div>
+
+            <div class="form-group">
+                <label>Tải Lên Logo Phòng Khám (Chọn file ảnh):</label>
+                <input type="file" id="logoFile" class="form-control" accept="image/*">
+                <small style="color: #64748b; font-size: 11px;">Hệ thống sẽ tự động upload lên Supabase Storage (Bucket: logo).</small>
+            </div>
+
+            <div class="form-group">
+                <label>Địa Chỉ:</label>
+                <input type="text" id="diachi" class="form-control" placeholder="Nhập địa chỉ phòng khám...">
+            </div>
+
+            <div class="form-group">
+                <label>📅 Ngày Hết Hạn Bản Quyền App (*):</label>
+                <input type="date" id="ngayhethan" class="form-control" required>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="dongModal()">Hủy</button>
+                <button type="button" id="btnSave" class="btn-save" onclick="luuThongTin()">Lưu Lại</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cấu hình kết nối Supabase trực tiếp -->
+    <script>
+        const SUPABASE_URL = 'https://glbycylllulafzrzfcz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsYnljeWxsbHVsYWZ6cnpmY3oiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTcyMjI5NzYwMCwiZXhwIjoyMDM3ODczNjAwfQ.DUMMY_KEY_OR_YOUR_ACTUAL_KEY';
+
+        const { createClient } = supabase;
+        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
+
+    <script>
+        let danhSachPhongKham = [];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await taiDanhSach();
+        });
+
+        async function taiDanhSach() {
+            const tbody = document.getElementById('table-body');
+            try {
+                let { data, error } = await db.from('chupk').select('*');
+                if (error) throw error;
+
+                danhSachPhongKham = data || [];
+                tbody.innerHTML = '';
+
+                if (danhSachPhongKham.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #64748b;">Chưa có bản ghi nào trong bảng chupk.</td></tr>`;
+                    return;
+                }
+
+                const ngayHienTai = new Date();
+
+                danhSachPhongKham.forEach(item => {
+                    let trangThaiBadge = '';
+                    let ngayHetHanStr = 'Chưa có hạn';
+                    
+                    if (item.ngayhethan) {
+                        const d = new Date(item.ngayhethan);
+                        ngayHetHanStr = d.toLocaleDateString('vi-VN');
+                        if (d < ngayHienTai) {
+                            trangThaiBadge = `<span style="background: #fee2e2; color: #dc2626; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold;">⚠️ Hết hạn</span>`;
+                        } else {
+                            trangThaiBadge = `<span style="background: #d1fae5; color: #059669; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold;">✅ Hoạt động</span>`;
+                        }
+                    } else {
+                        trangThaiBadge = `<span style="background: #f1f5f9; color: #64748b; padding: 3px 6px; border-radius: 4px; font-size: 11px;">Chưa rõ</span>`;
+                    }
+
+                    let logoHtml = item.logo ? `<img src="${item.logo}" style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1;">` : `<span style="color: #94a3b8; font-size: 12px;">Không có</span>`;
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>#${item.id || item.sodienthoai}</td>
+                            <td>${logoHtml}</td>
+                            <td><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #0284c7; font-weight: bold;">${item.maphongkham || '---'}</code></td>
+                            <td><b>${item.tenphongkham || '---'}</b></td>
+                            <td>${item.hovaten || '---'}</td>
+                            <td>${item.sodienthoai || '---'}</td>
+                            <td><b>${ngayHetHanStr}</b></td>
+                            <td>${trangThaiBadge}</td>
+                            <td>
+                                <button onclick="moModalSua(${item.id})" style="background: #eab308; color: white; border: none; padding: 5px 9px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">Sửa</button>
+                                <button onclick="xoaPhongKham(${item.id})" style="background: #ef4444; color: white; border: none; padding: 5px 9px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; margin-left: 3px;">Xóa</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                console.error('Lỗi tải dữ liệu:', err);
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: red;">Lỗi kết nối cơ sở dữ liệu: ${err.message}</td></tr>`;
+            }
+        }
+
+        function moModalThem() {
+            document.getElementById('editingId').value = '';
+            document.getElementById('tenphongkham').value = '';
+            document.getElementById('hovaten').value = '';
+            document.getElementById('sodienthoai').value = '';
+            document.getElementById('matkhau').value = '';
+            document.getElementById('logoFile').value = '';
+            document.getElementById('oldLogoUrl').value = '';
+            document.getElementById('diachi').value = '';
+            
+            const motNamSau = new Date();
+            motNamSau.setFullYear(motNamSau.getFullYear() + 1);
+            document.getElementById('ngayhethan').value = motNamSau.toISOString().split('T')[0];
+            
+            document.getElementById('modalTitle').innerText = 'Thêm mới phòng khám & Cấp bản quyền';
+            document.getElementById('modalQuanLy').style.display = 'flex';
+        }
+
+        function moModalSua(id) {
+            const item = danhSachPhongKham.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('editingId').value = item.id;
+            document.getElementById('tenphongkham').value = item.tenphongkham || '';
+            document.getElementById('hovaten').value = item.hovaten || '';
+            document.getElementById('sodienthoai').value = item.sodienthoai || '';
+            document.getElementById('matkhau').value = '';
+            document.getElementById('logoFile').value = '';
+            document.getElementById('oldLogoUrl').value = item.logo || '';
+            document.getElementById('diachi').value = item.diachi || '';
+            
+            if (item.ngayhethan) {
+                const dateObj = new Date(item.ngayhethan);
+                document.getElementById('ngayhethan').value = dateObj.toISOString().split('T')[0];
+            } else {
+                document.getElementById('ngayhethan').value = '';
+            }
+
+            document.getElementById('modalTitle').innerText = 'Cập nhật phòng khám #' + id;
+            document.getElementById('modalQuanLy').style.display = 'flex';
+        }
+
+        function dongModal() {
+            document.getElementById('modalQuanLy').style.display = 'none';
+        }
+
+        async function luuThongTin() {
+            const id = document.getElementById('editingId').value;
+            const tenphongkham = document.getElementById('tenphongkham').value.trim();
+            const hovaten = document.getElementById('hovaten').value.trim();
+            const sodienthoai = document.getElementById('sodienthoai').value.trim();
+            const matkhauRaw = document.getElementById('matkhau').value.trim();
+            const fileInput = document.getElementById('logoFile');
+            const oldLogoUrl = document.getElementById('oldLogoUrl').value;
+            const diachi = document.getElementById('diachi').value.trim();
+            const ngayhethan = document.getElementById('ngayhethan').value;
+            const btnSave = document.getElementById('btnSave');
+
+            if (!tenphongkham || !hovaten || !sodienthoai || !ngayhethan) {
+                alert('Vui lòng điền đầy đủ các thông tin bắt buộc (*)!');
+                return;
+            }
+
+            btnSave.disabled = true;
+            btnSave.textContent = 'Đang xử lý...';
+
+            try {
+                let logoUrl = oldLogoUrl;
+
+                if (fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = 'logo_' + Date.now() + '_' + Math.floor(Math.random() * 1000) + '.' + fileExt;
+                    const filePath = `${fileName}`;
+
+                    // Đã sửa thành đúng tên bucket 'logo' của bạn trên Supabase
+                    let { error: uploadError } = await db.storage.from('logo').upload(filePath, file);
+                    if (uploadError) {
+                        throw new Error('Lỗi upload ảnh lên Storage: ' + uploadError.message);
+                    }
+
+                    let { data: publicURLData } = db.storage.from('logo').getPublicUrl(filePath);
+                    logoUrl = publicURLData.publicUrl;
+                }
+
+                let error;
+                if (id === "") {
+                    if (!matkhauRaw) {
+                        alert('Vui lòng nhập mật khẩu cho tài khoản mới!');
+                        btnSave.disabled = false;
+                        btnSave.textContent = 'Lưu Lại';
+                        return;
+                    }
+                    
+                    const hashedPassword = CryptoJS.MD5(matkhauRaw).toString();
+                    const autoMaPK = 'PK_' + Math.floor(100000 + Math.random() * 900000);
+                    
+                    const payload = {
+                        maphongkham: autoMaPK,
+                        tenphongkham,
+                        hovaten,
+                        sodienthoai,
+                        matkhau: hashedPassword,
+                        logo: logoUrl,
+                        diachi,
+                        vaitro: 'Chủ phòng khám',
+                        trangthai: 'Hoạt động',
+                        ngaytao: new Date().toISOString(),
+                        ngayhethan: new Date(ngayhethan).toISOString()
+                    };
+
+                    let res = await db.from('chupk').insert([payload]);
+                    error = res.error;
+                } else {
+                    const payload = {
+                        tenphongkham,
+                        hovaten,
+                        sodienthoai,
+                        logo: logoUrl,
+                        diachi,
+                        ngayhethan: new Date(ngayhethan).toISOString()
+                    };
+
+                    if (matkhauRaw) {
+                        payload.matkhau = CryptoJS.MD5(matkhauRaw).toString();
+                    }
+
+                    let res = await db.from('chupk').update(payload).eq('id', id);
+                    error = res.error;
+                }
+
+                if (error) throw error;
+
+                alert('Lưu thông tin thành công!');
+                dongModal();
+                await taiDanhSach();
+
+            } catch (err) {
+                console.error('Lỗi:', err);
+                alert('Có lỗi xảy ra: ' + err.message);
+            } finally {
+                btnSave.disabled = false;
+                btnSave.textContent = 'Lưu Lại';
+            }
+        }
+
+        async function xoaPhongKham(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa phòng khám này không?')) {
+                let { error } = await db.from('chupk').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa: ' + error.message);
+                } else {
+                    alert('Đã xóa thành công!');
+                    await taiDanhSach();
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+/* Khung chứa thanh tìm kiếm */
+.search-container {
+    position: relative;
+    width: 350px;
+    margin-left: 20px; /* Thêm khoảng hở đẩy cách xa chữ bên trái ra một xíu */
+}
+}
+.search-box {
+    width: 100%;
+    padding: 9px 35px 9px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+    transition: all 0.3s;
+}
+.search-box:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+/* Bảng gợi ý xổ xuống */
+.search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    margin-top: 5px;
+    max-height: 380px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+}
+
+/* Từng dòng kết quả */
+.search-item {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.search-item:hover {
+    background: #f8fafc;
+}
+.search-item:last-child {
+    border-bottom: none;
+}
+
+/* Huy hiệu phân loại */
+.badge-kh { background-color: #0284c7; color: #fff; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 500; }
+.badge-pet { background-color: #0d9488; color: #fff; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 500; }
+.badge-other { background-color: #d97706; color: #fff; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 500; }
+
+/* Hiệu ứng nháy sáng dòng khi click chuyển tới */
+@keyframes highlightFlash {
+    0% { background-color: #fef08a; }
+    100% { background-color: transparent; }
+}
+.highlight-row {
+    animation: highlightFlash 2s ease;
+}
+.search-container {
+    position: relative;
+    width: 250px;
+    margin-left: 15px;
+}
+
+.search-box {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    outline: none;
+}
+
+.search-box:focus {
+    border-color: #2563eb;
+}
+
+.card-header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}

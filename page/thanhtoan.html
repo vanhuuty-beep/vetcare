@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thanh Toán & Gia Hạn Bản Quyền - VetCare Pro</title>
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+    <script src="../js/smart-search.js"></script>
+    
+    <!-- CSS Hệ Thống -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+    <link rel="stylesheet" href="../css/smart-search.css">
+
+    <style>
+        .subscription-banner {
+            background: linear-gradient(135deg, #1e3a8a, #0284c7);
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 20px 25px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.2);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .subscription-info h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: bold; }
+        .subscription-info p { margin: 0; opacity: 0.9; font-size: 13px; }
+        
+        .status-badge-active {
+            background: #22c55e; color: #fff; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .status-badge-expired {
+            background: #ef4444; color: #fff; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;
+        }
+
+        .packages-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        @media (max-width: 768px) {
+            .packages-grid { grid-template-columns: 1fr; }
+        }
+
+        .pkg-card {
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px 20px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .pkg-card:hover {
+            border-color: #0284c7;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(2, 132, 199, 0.15);
+        }
+        .pkg-card.recommended {
+            border-color: #0284c7;
+            background: #f0f9ff;
+        }
+        .pkg-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #dc2626;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 3px 12px;
+            border-radius: 12px;
+            text-transform: uppercase;
+        }
+        .pkg-title { font-size: 18px; font-weight: bold; color: #1e293b; margin-bottom: 8px; }
+        .pkg-price { font-size: 26px; font-weight: bold; color: #0284c7; margin-bottom: 15px; }
+        .pkg-price span { font-size: 13px; color: #64748b; font-weight: normal; }
+        .pkg-features { list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 13px; color: #475569; text-align: left; }
+        .pkg-features li { padding: 6px 0; border-bottom: 1px dashed #e2e8f0; display: flex; align-items: center; gap: 8px; }
+
+        .btn-select-pkg {
+            background: #0284c7;
+            color: #ffffff;
+            border: none;
+            padding: 11px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        .btn-select-pkg:hover { background: #0369a1; }
+
+        /* Modal QR Code */
+        .qr-modal-container {
+            max-width: 480px;
+            text-align: center;
+            padding: 25px;
+        }
+        .qr-image-wrap {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 12px;
+            border-radius: 10px;
+            display: inline-block;
+            margin: 15px 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .qr-image-wrap img { width: 220px; height: 220px; display: block; }
+
+        .bank-info-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            text-align: left;
+            font-size: 13px;
+            color: #334155;
+            margin-bottom: 15px;
+        }
+        .bank-info-box div { margin-bottom: 6px; display: flex; justify-content: space-between; }
+        .bank-info-box strong { color: #0f172a; }
+
+        .copy-btn {
+            background: #e2e8f0;
+            border: none;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        .copy-btn:hover { background: #cbd5e1; }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+        <div id="topnav-container"></div>
+
+        <div class="content-body">
+            <!-- BANNER THÔNG TIN HẠN SỬ DỤNG -->
+            <div class="subscription-banner">
+                <div class="subscription-info">
+                    <h2 id="bannerTenPK">🏥 Phòng Khám Thú Y</h2>
+                    <p>Mã phòng khám: <b id="bannerMaPK" style="color: #fef08a;">PK_......</b> | Chủ sở hữu: <span id="bannerChuPK">...</span></p>
+                    <p style="margin-top: 6px;">Ngày hết hạn hiện tại: <b id="bannerNgayHetHan" style="font-size: 14px; color: #ffffff;">--/--/----</b></p>
+                </div>
+                <div id="bannerStatusBadge">
+                    <div class="status-badge-active">⏳ Đang tải...</div>
+                </div>
+            </div>
+
+            <!-- DANH SÁCH GÓI DỊCH VỤ GIA HẠN -->
+            <div style="margin-bottom: 15px;">
+                <h3 style="margin: 0 0 6px 0; color: #1e3a8a; font-size: 18px;">💎 Chọn Gói Gia Hạn Bản Quyền App</h3>
+                <p style="margin: 0; font-size: 13px; color: #64748b;">Sau khi chuyển khoản thành công, bản quyền sử dụng ứng dụng sẽ tự động cộng nối tiếp thời hạn.</p>
+            </div>
+
+            <div class="packages-grid">
+                <!-- GÓI 6 THÁNG -->
+                <div class="pkg-card">
+                    <div>
+                        <div class="pkg-title">Gói 6 Tháng</div>
+                        <div class="pkg-price">1.200.000 đ <span>/ 6 tháng</span></div>
+                        <ul class="pkg-features">
+                            <li>✅ Đầy đủ tính năng quản lý</li>
+                            <li>✅ Không giới hạn lưu trữ dữ liệu</li>
+                            <li>✅ Hỗ trợ kỹ thuật 24/7</li>
+                            <li>✅ Cập nhật tính năng mới miễn phí</li>
+                        </ul>
+                    </div>
+                    <button class="btn-select-pkg" onclick="moModalThanhToan('Gói 6 Tháng', 1200000)">Thanh Toán Ngay</button>
+                </div>
+
+                <!-- GÓI 1 NĂM (KHUYÊN DÙNG) -->
+                <div class="pkg-card recommended">
+                    <div class="pkg-badge">🔥 ĐƯỢC CHỌN NHIỀU NHẤT</div>
+                    <div>
+                        <div class="pkg-title" style="color: #0284c7;">Gói 1 Năm (12 Tháng)</div>
+                        <div class="pkg-price">2.000.000 đ <span>/ năm</span></div>
+                        <ul class="pkg-features">
+                            <li>✅ <b>Tiết kiệm ngay 400.000 đ</b></li>
+                            <li>✅ Đầy đủ tính năng quản lý</li>
+                            <li>✅ Không giới hạn dung lượng</li>
+                            <li>✅ Hỗ trợ ưu tiên qua Zalo/SĐT</li>
+                            <li>✅ Tự động khôi phục & Sao lưu</li>
+                        </ul>
+                    </div>
+                    <button class="btn-select-pkg" style="background: #0284c7;" onclick="moModalThanhToan('Gói 1 Năm', 2000000)">Thanh Toán Ngay</button>
+                </div>
+
+                <!-- GÓI 2 NĂM -->
+                <div class="pkg-card">
+                    <div>
+                        <div class="pkg-title">Gói 2 Năm (24 Tháng)</div>
+                        <div class="pkg-price">3.500.000 đ <span>/ 2 năm</span></div>
+                        <ul class="pkg-features">
+                            <li>✅ <b>Tiết kiệm lên tới 1.300.000 đ</b></li>
+                            <li>✅ Cam kết giữ giá cố định lâu dài</li>
+                            <li>✅ Đầy đủ tính năng cao cấp</li>
+                            <li>✅ Hỗ trợ đào tạo nhân viên miễn phí</li>
+                        </ul>
+                    </div>
+                    <button class="btn-select-pkg" onclick="moModalThanhToan('Gói 2 Năm', 3500000)">Thanh Toán Ngay</button>
+                </div>
+            </div>
+
+            <!-- BẢNG LỊCH SỬ THANH TOÁN -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 style="margin: 0; font-size: 16px;">📜 Lịch Sử Giao Dịch Thanh Toán</h3>
+                    <button class="btn-primary" style="background: #64748b; padding: 6px 12px; font-size: 12px;" onclick="taiLichSuThanhToan()">🔄 Làm mới</button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr style="background: #1e3a8a; color: white;">
+                                <th>Mã GD</th>
+                                <th>Gói Dịch Vụ</th>
+                                <th>Số Tiền</th>
+                                <th>Phương Thức</th>
+                                <th>Thời Gian</th>
+                                <th style="text-align: center;">Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table-history">
+                            <!-- Dữ liệu nạp từ Supabase -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP MA QR THANH TOAN -->
+    <div class="modal-overlay" id="qrModal" style="display: none;">
+        <div class="modal-container qr-modal-container">
+            <div class="modal-header">
+                <h3 style="margin: 0; font-size: 16px; color: #1e3a8a;">📲 Quét Mã QR Thanh Toán VietQR</h3>
+                <button class="close-modal" onclick="dongModalQR()">&times;</button>
+            </div>
+
+            <p style="font-size: 13px; color: #475569; margin-top: 10px;">Mở App ngân hàng quét mã QR dưới đây. Số tiền và nội dung chuyển khoản đã được tạo tự động.</p>
+
+            <div class="qr-image-wrap">
+                <img id="qrImage" src="" alt="Mã QR VietQR">
+            </div>
+
+            <div class="bank-info-box">
+                <div><span>Ngân hàng:</span> <strong id="lblNganHang">Techcombank</strong></div>
+                <div><span>Số tài khoản:</span> <strong><span id="lblSTK">3757231999</span> <button class="copy-btn" onclick="saoChepText('lblSTK')">📋 Chép</button></strong></div>
+                <div><span>Chủ tài khoản:</span> <strong id="lblTenChTK">VAN HUU TY</strong></div>
+                <div><span>Số tiền:</span> <strong id="lblSoTien" style="color: #dc2626; font-size: 15px;">0 đ</strong></div>
+                <div><span>Nội dung CK:</span> <strong id="lblNoiDungCK" style="color: #0284c7; font-size: 14px;">GH PK_......</strong> <button class="copy-btn" onclick="saoChepText('lblNoiDungCK')">📋 Chép</button></div>
+            </div>
+
+            <div style="font-size: 12px; color: #d97706; background: #fffbe3; padding: 8px; border-radius: 6px; border: 1px solid #fef08a; margin-bottom: 15px;">
+                ⚠️ <b>Lưu ý quan trọng:</b> Giữ nguyên <b>Nội dung CK</b> để hệ thống nhận diện và kích hoạt tự động.
+            </div>
+
+            <div class="modal-footer" style="justify-content: center; gap: 10px;">
+                <button class="btn-secondary" onclick="dongModalQR()">Đóng lại</button>
+                <button class="btn-primary" onclick="xacNhanDaChuyenKhoan()" style="background: #059669;">✅ Tôi Đã Chuyển Khoản</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CẤU HÌNH TÀI KHOẢN NGÂN HÀNG TECHCOMBANK CỦA BẠN ---
+        const CAU_HINH_NH = {
+            BANK_ID: "970407",             // Mã BIN VietQR của Techcombank
+            TEN_NGAN_HANG: "Techcombank",
+            STK: "3757231999",             // Số tài khoản của bạn
+            TEN_CHU_TK: "VAN HUU TY"       // Tên chủ tài khoản
+        };
+
+        let currentChuPK = null;
+        let selectedGoi = null;
+        let selectedAmount = 0;
+        let currentMaGD = "";
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await taiThongTinPhongKham();
+            await taiLichSuThanhToan();
+        });
+
+        // 1. Tải thông tin phòng khám hiện tại
+        async function taiThongTinPhongKham() {
+            let user = null;
+            try {
+                user = JSON.parse(sessionStorage.getItem('currentUser'));
+            } catch (e) {}
+
+            if (!user || !user.maphongkham) {
+                alert('Không tìm thấy thông tin phòng khám!');
+                return;
+            }
+
+            // Truy vấn thông tin mới nhất từ bảng chupk
+            const { data, error } = await db.from('chupk').select('*').eq('maphongkham', user.maphongkham).maybeSingle();
+            if (error || !data) {
+                console.error('Lỗi lấy thông tin phòng khám:', error);
+                return;
+            }
+
+            currentChuPK = data;
+
+            // Hiển thị thông tin lên Banner
+            document.getElementById('bannerTenPK').innerText = '🏥 ' + (data.tenphongkham || 'Phòng Khám Thú Y');
+            document.getElementById('bannerMaPK').innerText = data.maphongkham || '---';
+            document.getElementById('bannerChuPK').innerText = data.hovaten || '---';
+
+            if (data.ngayhethan) {
+                const ngayHetHan = new Date(data.ngayhethan);
+                document.getElementById('bannerNgayHetHan').innerText = ngayHetHan.toLocaleDateString('vi-VN');
+
+                const today = new Date();
+                const diffTime = ngayHetHan - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                const badgeDiv = document.getElementById('bannerStatusBadge');
+                if (diffDays > 0) {
+                    badgeDiv.innerHTML = `<div class="status-badge-active">🟢 Còn ${diffDays} ngày sử dụng</div>`;
+                } else {
+                    badgeDiv.innerHTML = `<div class="status-badge-expired">🔴 Đã hết hạn (${Math.abs(diffDays)} ngày)</div>`;
+                }
+            }
+        }
+
+        // 2. Mở Modal Thanh toán & Tạo VietQR Động
+        async function moModalThanhToan(tenGoi, soTien) {
+            if (!currentChuPK) {
+                alert('Vui lòng chờ nạp thông tin tài khoản!');
+                return;
+            }
+
+            selectedGoi = tenGoi;
+            selectedAmount = soTien;
+
+            // Tạo mã nội dung chuyển khoản độc nhất: GH_MAPHONGKHAM (VD: GH PK_617723)
+            const maPKClean = currentChuPK.maphongkham.replace(/[^a-zA-Z0-9]/g, "");
+            const noiDungCK = `GH ${maPKClean}`;
+            currentMaGD = 'GD' + Date.now().toString().slice(-6);
+
+            // Tạo link VietQR động chuẩn Techcombank
+            const qrUrl = `https://img.vietqr.io/image/${CAU_HINH_NH.BANK_ID}-${CAU_HINH_NH.STK}-compact2.png?amount=${soTien}&addInfo=${encodeURIComponent(noiDungCK)}&accountName=${encodeURIComponent(CAU_HINH_NH.TEN_CHU_TK)}`;
+
+            // Đổ thông tin ra giao diện Modal
+            document.getElementById('qrImage').src = qrUrl;
+            document.getElementById('lblNganHang').innerText = CAU_HINH_NH.TEN_NGAN_HANG;
+            document.getElementById('lblSTK').innerText = CAU_HINH_NH.STK;
+            document.getElementById('lblTenChTK').innerText = CAU_HINH_NH.TEN_CHU_TK;
+            document.getElementById('lblSoTien').innerText = soTien.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('lblNoiDungCK').innerText = noiDungCK;
+
+            document.getElementById('qrModal').style.display = 'flex';
+        }
+
+        function dongModalQR() {
+            document.getElementById('qrModal').style.display = 'none';
+        }
+
+        // 3. Xử lý khi nhấn nút "Tôi Đã Chuyển Khoản"
+        async function xacNhanDaChuyenKhoan() {
+            if (!currentChuPK) return;
+
+            const payload = {
+                maphongkham: currentChuPK.maphongkham,
+                tenphongkham: currentChuPK.tenphongkham || '',
+                magiaodich: currentMaGD,
+                goidichvu: selectedGoi,
+                sotien: selectedAmount,
+                phuongthuc: 'Chuyển khoản VietQR',
+                trangthai: 'Chờ duyệt'
+            };
+
+            const { error } = await db.from('lichsuthanhtoan').insert([payload]);
+
+            if (error) {
+                alert('Lỗi tạo lịch sử giao dịch: ' + error.message);
+            } else {
+                alert('✅ Yêu cầu gia hạn đã được gửi đi! Hệ thống/Admin sẽ kiểm tra số dư và tự động cộng hạn dùng cho bạn.');
+                dongModalQR();
+                taiLichSuThanhToan();
+            }
+        }
+
+        // 4. Tải lịch sử giao dịch
+        async function taiLichSuThanhToan() {
+            let user = null;
+            try { user = JSON.parse(sessionStorage.getItem('currentUser')); } catch (e) {}
+
+            if (!user || !user.maphongkham) return;
+
+            const { data, error } = await db.from('lichsuthanhtoan')
+                .select('*')
+                .eq('maphongkham', user.maphongkham)
+                .order('id', { ascending: false });
+
+            const tbody = document.getElementById('data-table-history');
+            tbody.innerHTML = '';
+
+            if (error || !data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 20px;">Chưa có lịch sử giao dịch nào</td></tr>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const ngayGD = item.created_at ? new Date(item.created_at).toLocaleString('vi-VN') : '---';
+                let trangThaiBadge = `<span style="background: #fef3c7; color: #d97706; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">⏳ Chờ duyệt</span>`;
+                
+                if (item.trangthai === 'Thành công' || item.trangthai === 'Đã duyệt') {
+                    trangThaiBadge = `<span style="background: #dcfce7; color: #15803d; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">✅ Thành công</span>`;
+                } else if (item.trangthai === 'Thất bại' || item.trangthai === 'Hủy') {
+                    trangThaiBadge = `<span style="background: #fee2e2; color: #dc2626; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">❌ Hủy bỏ</span>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 10px; font-weight: bold; color: #1e3a8a;">${item.magiaodich || ('GD' + item.id)}</td>
+                        <td style="padding: 10px; font-weight: 500;">${item.goidichvu || '---'}</td>
+                        <td style="padding: 10px; font-weight: bold; color: #dc2626;">${Number(item.sotien || 0).toLocaleString('vi-VN')} đ</td>
+                        <td style="padding: 10px; font-size: 12px;">${item.phuongthuc || 'VietQR'}</td>
+                        <td style="padding: 10px; font-size: 12px; color: #64748b;">${ngayGD}</td>
+                        <td style="padding: 10px; text-align: center;">${trangThaiBadge}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Hàm sao chép văn bản tiện lợi
+        function saoChepText(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('📋 Đã sao chép: ' + text);
+            });
+        }
+    </script>
+</body>
+</html>

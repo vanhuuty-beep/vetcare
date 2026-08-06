@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Khám bệnh - Mobile</title>
+    
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Kết nối các file cấu hình ở thư mục gốc (thêm ../) -->
+	<script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="out.js"></script>
+    
+    <!-- CSS chung và CSS riêng mobile -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="css/button.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { background: #f8fafc; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        .mobile-container { max-width: 480px; margin: 0 auto; background: #ffffff; min-height: 100vh; padding: 10px; padding-bottom: 80px; box-shadow: 0 0 15px rgba(0,0,0,0.05); }
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding: 10px; background: #1e3a8a; border-radius: 6px; }
+        .top-header h3 { margin: 0; font-size: 16px; color: white; }
+        .btn-desktop { background: #3b82f6; color: white; text-decoration: none; padding: 5px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .form-control { width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; box-sizing: border-box; margin-bottom: 8px; background: #fff; }
+        .mobile-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        
+        .search-container { display: flex; gap: 6px; margin-bottom: 10px; align-items: stretch; }
+        .search-box { flex: 1; height: 36px; padding: 0 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; box-sizing: border-box; }
+        .search-box:focus { border-color: #2563eb; }
+        .btn-them-custom { height: 36px; padding: 0 14px; background: #059669; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap; display: flex; align-items: center; justify-content: center; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-content-custom { background: #fff; width: 92%; max-width: 420px; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
+        label { font-size: 11px; font-weight: bold; color: #475569; display: block; margin-bottom: 2px; }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container">
+        <!-- THANH TIÊU ĐỀ PHÍA TRÊN -->
+        <div class="top-header">
+            <h3>🏥 Quản lý Khám bệnh</h3>
+            <div style="display: flex; gap: 5px; align-items: center;">
+                <a href="../page/thongke.html" class="btn-desktop">💻</a>
+                <button onclick="dangXuatMobile()" style="background: #ef4444; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">🚪 Thoát</button>
+            </div>
+        </div>
+
+        <!-- THANH TÌM KIẾM VÀ NÚT THÊM -->
+        <div class="search-container">
+            <input type="text" id="searchMobile" class="search-box" placeholder="🔍 Tìm triệu chứng, chẩn đoán, ID Pet..." onkeyup="timKiemKhamBenh()">
+            <button type="button" onclick="moModalThem()" class="btn-them-custom">➕ Khám</button>
+        </div>
+        
+        <div style="font-weight: bold; font-size: 12px; color: #334155; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span>📋 Danh Sách Khám Bệnh:</span>
+            <span id="tongSoKham" style="color: #2563eb; font-size: 11px;">0 bản ghi</span>
+        </div>
+
+        <!-- DANH SÁCH THẺ HIỂN THỊ -->
+        <div id="mobile-list" style="max-height: 480px; overflow-y: auto;">
+            <div style="text-align: center; color: #666; padding: 20px; font-size: 11px;">Đang tải dữ liệu...</div>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM / SỬA PHIẾU KHÁM BỆNH -->
+    <div id="modalThemKhamBenh" class="modal-overlay">
+        <div class="modal-content-custom">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+                <h4 id="modalTitle" style="margin: 0; font-size: 14px; color: #1e293b;">Thêm phiếu khám bệnh mới</h4>
+                <button type="button" onclick="dongModalThem()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            <form id="formThemKB" onsubmit="luuKhamBenhMoi(event)">
+                <input type="hidden" id="editingHinhanhOld">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                    <div>
+                        <label>Mã thú cưng (ID) (*):</label>
+                        <input type="text" id="modalMaThuCung" class="form-control" placeholder="VD: 1..." required>
+                    </div>
+                    <div>
+                        <label>Ngày khám (*):</label>
+                        <input type="date" id="modalNgayKham" class="form-control" required>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                    <div>
+                        <label>Nhiệt độ (°C):</label>
+                        <input type="text" id="modalNhietDo" class="form-control" placeholder="VD: 38.5">
+                    </div>
+                    <div>
+                        <label>Trạng thái:</label>
+                        <select id="modalTrangThai" class="form-control">
+                            <option value="Đang điều trị">Đang điều trị</option>
+                            <option value="Đã khỏi bệnh">Đã khỏi bệnh</option>
+                            <option value="Hẹn tái khám">Hẹn tái khám</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 6px;">
+                    <label>Triệu chứng:</label>
+                    <textarea id="modalTrieuChung" class="form-control" rows="2" placeholder="Nhập mô tả triệu chứng bệnh..." style="resize: none;"></textarea>
+                </div>
+
+                <div style="margin-bottom: 6px;">
+                    <label>Chẩn đoán:</label>
+                    <input type="text" id="modalChanDoan" class="form-control" placeholder="Nhập kết luận chẩn đoán...">
+                </div>
+
+                <div style="margin-bottom: 6px;">
+                    <label>Điều trị / Ghi chú:</label>
+                    <textarea id="modalDieuTri" class="form-control" rows="2" placeholder="Nhập phác đồ điều trị..." style="resize: none;"></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+                    <div>
+                        <label>Chi phí (VNĐ):</label>
+                        <input type="text" id="modalChiPhi" class="form-control" placeholder="VD: 150000">
+                    </div>
+                    <div>
+                        <label>Hình ảnh:</label>
+                        <input type="file" id="modalHinhAnh" accept="image/*" capture="environment" class="form-control" style="font-size: 10px; padding: 5px;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                    <button type="button" onclick="dongModalThem()" style="padding: 6px 10px; font-size: 11px; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer;">Hủy</button>
+                    <button type="submit" id="btnSaveModal" style="padding: 6px 12px; font-size: 11px; background: #059669; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Lưu dữ liệu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL LẬP PHIẾU CHỈ ĐỊNH -->
+    <div id="modalChiDinh" class="modal-overlay">
+        <div class="modal-content-custom" style="max-width: 450px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+                <h4 style="margin: 0; font-size: 14px; color: #1e293b;">📋 Lập phiếu chỉ định mới</h4>
+                <button type="button" onclick="dongModalChiDinh()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            <form id="formChiDinh" onsubmit="luuChiDinh(event)">
+                <input type="hidden" id="cdIdKham">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+                    <div>
+                        <label>Mã khám bệnh (*):</label>
+                        <input type="text" id="cdMaKhamHienThi" class="form-control" style="background: #f8fafc;" readonly>
+                    </div>
+                    <div>
+                        <label>Ngày chỉ định:</label>
+                        <input type="datetime-local" id="cdNgayChiDinh" class="form-control">
+                    </div>
+                </div>
+
+                <div style="background: #f1f5f9; padding: 8px; border-radius: 6px; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label style="font-weight: bold; color: #1e293b; font-size: 11px; margin: 0;">📋 Chi tiết dịch vụ chỉ định:</label>
+                        <button type="button" style="margin: 0; background: #0ea5e9; padding: 3px 8px; font-size: 10px; border: none; border-radius: 4px; color: #fff; cursor: pointer;" onclick="themDongDichVu()">+ Thêm dịch vụ</button>
+                    </div>
+                    <div id="danhSachDichVuContainer"></div>
+                </div>
+
+                <div style="text-align: right; font-weight: bold; font-size: 12px; margin-bottom: 8px; color: #1e293b;">
+                    Tổng tiền: <span id="tongTienHienThi" style="color: #dc2626;">0 đ</span>
+                </div>
+
+                <div style="margin-bottom: 8px;">
+                    <label>Kết luận chuyên môn:</label>
+                    <textarea id="cdKetLuan" rows="2" placeholder="Nhập kết luận chuyên môn..." class="form-control" style="resize: none;"></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+                    <div>
+                        <label>Trạng thái:</label>
+                        <select id="cdTrangThai" class="form-control">
+                            <option value="Chờ thực hiện">Chờ thực hiện</option>
+                            <option value="Đang thực hiện">Đang thực hiện</option>
+                            <option value="Đã hoàn thành">Đã hoàn thành</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Hình ảnh kết quả:</label>
+                        <input type="file" id="cdHinhAnh" accept="image/*" capture="environment" class="form-control" style="font-size: 10px; padding: 4px;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                    <button type="button" onclick="dongModalChiDinh()" style="padding: 6px 10px; font-size: 11px; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer;">Hủy</button>
+                    <button type="submit" id="btnSaveChiDinh" style="padding: 6px 12px; font-size: 11px; background: #8b5cf6; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Lưu dữ liệu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL NHẬP VIỆN / NỘI TRÚ -->
+    <div id="modalNhapVien" class="modal-overlay">
+        <div class="modal-content-custom">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
+                <h4 style="margin: 0; font-size: 13px; color: #1e293b;">🏥 Lập hồ sơ nội trú / Nhập viện</h4>
+                <button type="button" onclick="dongModalNhapVien()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            <form id="formNhapVien" onsubmit="luuNhapVien(event)">
+                <input type="hidden" id="nvIdKham">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                    <div>
+                        <label>Mã khám bệnh (*):</label>
+                        <input type="text" id="nvMaKhamHienThi" class="form-control" style="background: #f8fafc;" readonly>
+                    </div>
+                    <div>
+                        <label>Chọn Lồng / Phòng (*):</label>
+                        <select id="nvMaLong" class="form-control" required>
+                            <option value="">-- Chọn lồng / phòng --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                    <div>
+                        <label>Ngày vào:</label>
+                        <input type="datetime-local" id="nvNgayVao" class="form-control" required onchange="tinhTienNhapVien()">
+                    </div>
+                    <div>
+                        <label>Ngày ra:</label>
+                        <input type="datetime-local" id="nvNgayRa" class="form-control" onchange="tinhTienNhapVien()">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                    <div>
+                        <label>Bác sĩ phụ trách:</label>
+                        <input type="text" id="nvBacSi" class="form-control" placeholder="Tên bác sĩ...">
+                    </div>
+                    <div>
+                        <label>Trạng thái:</label>
+                        <select id="nvTrangThai" class="form-control">
+                            <option value="Đang nằm viện">Đang nằm viện</option>
+                            <option value="Chờ xuất viện">Chờ xuất viện</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                    <div>
+                        <label>Chi phí / ngày (VNĐ):</label>
+                        <input type="number" id="nvChiPhiNgay" class="form-control" value="100000" oninput="tinhTienNhapVien()">
+                    </div>
+                    <div>
+                        <label>Tổng chi phí:</label>
+                        <input type="number" id="nvTongChiPhi" class="form-control" placeholder="Tổng tiền..." oninput="tinhThanhTienNhapVien()">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                    <div>
+                        <label>Khách tạm ứng:</label>
+                        <input type="number" id="nvTamUng" class="form-control" value="0" oninput="tinhThanhTienNhapVien()">
+                    </div>
+                    <div>
+                        <label>Thành tiền (Còn lại):</label>
+                        <input type="number" id="nvThanhTien" class="form-control" readonly style="background: #f8fafc; font-weight: bold; color: #dc2626;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 6px;">
+                    <label>Ghi chú / Tình trạng:</label>
+                    <textarea id="nvGhiChu" class="form-control" rows="2" placeholder="Thức ăn, tình trạng sức khỏe..." style="resize: none;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 6px; justify-content: flex-end; margin-top: 4px;">
+                    <button type="button" onclick="dongModalNhapVien()" style="padding: 6px 10px; font-size: 11px; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer;">Hủy</button>
+                    <button type="submit" id="btnSaveNhapVien" style="padding: 6px 12px; font-size: 11px; background: #059669; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Lưu nhập viện</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL VACCINE -->
+    <div id="modalVaccine" class="modal-overlay">
+        <div class="modal-content-custom">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+                <h4 style="margin: 0; font-size: 14px; color: #1e293b;">➕ Thêm Mũi Tiêm Vắc-xin</h4>
+                <button type="button" onclick="dongModalVaccine()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            <form id="formVaccine" onsubmit="luuVaccineKhamBenh(event)">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                    <div>
+                        <label>Mã thú cưng (*):</label>
+                        <input type="number" id="khamMathucung" class="form-control" placeholder="ID thú cưng..." required>
+                    </div>
+                    <div>
+                        <label>Mã khám bệnh:</label>
+                        <input type="text" id="khamMakham" class="form-control" style="background: #f8fafc;" readonly>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 6px;">
+                    <label>Chọn Vaccine từ kho (*):</label>
+                    <select id="khamChonKhoVaccine" class="form-control" style="margin-bottom: 4px;">
+                        <option value="">-- Chọn vắc-xin từ kho --</option>
+                    </select>
+                    <input type="text" id="khamTenvaccine" class="form-control" placeholder="Hoặc nhập tên vaccine..." required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                    <div>
+                        <label>Ngày tiêm (*):</label>
+                        <input type="date" id="khamNgaytiem" class="form-control" required>
+                    </div>
+                    <div>
+                        <label>Ngày nhắc lại:</label>
+                        <input type="date" id="khamNgaynhaclai" class="form-control">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 6px;">
+                    <label>Bác sĩ phụ trách:</label>
+                    <input type="text" id="khamBacsi" class="form-control" placeholder="Tên bác sĩ...">
+                </div>
+
+                <div style="margin-bottom: 8px;">
+                    <label>Trạng thái:</label>
+                    <select id="khamTrangthai" class="form-control">
+                        <option value="Đã tiêm">Đã tiêm</option>
+                        <option value="Chờ nhắc lịch">Chờ nhắc lịch</option>
+                        <option value="Đã hủy">Đã hủy</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                    <button type="button" onclick="dongModalVaccine()" style="padding: 6px 10px; font-size: 11px; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer;">Hủy</button>
+                    <button type="submit" id="btnSaveKhamVaccine" style="padding: 6px 12px; font-size: 11px; background: #0284c7; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Lưu dữ liệu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT XỬ LÝ DỮ LIỆU -->
+    <script>
+        let danhSachKhamBenhGoc = [];
+        let danhSachDichVuGoc = [];
+        let mapThuCung = {}; 
+        let mapKhachHang = {}; 
+
+        function dangXuatMobile() {
+            if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?')) {
+                sessionStorage.removeItem('currentUser');
+                window.location.href = '../index.html';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('auto_open') === 'true' && urlParams.get('pet_id')) {
+                const petId = urlParams.get('pet_id');
+                moModalThem();
+                document.getElementById('modalMaThuCung').value = petId;
+            }
+            loadKhamBenhMobile();
+            loadDropdownsData();
+
+            // Đăng ký Realtime tự động đồng bộ khi có thay đổi dữ liệu từ thiết bị khác
+            if (typeof db !== 'undefined' && db) {
+                db.channel('realtime-khambenh-mobile')
+                  .on('postgres_changes', { event: '*', schema: 'public', table: 'khambenh' }, async () => {
+                      await loadKhamBenhMobile();
+                  })
+                  .subscribe();
+            }
+        });
+
+        async function loadDropdownsData() {
+            const { data: dvData } = await db.from('dichvu').select('*');
+            if (dvData) danhSachDichVuGoc = dvData;
+
+            const { data: vacData } = await db.from('khovaccine').select('*');
+            if (vacData) {
+                const selectVac = document.getElementById('khamChonKhoVaccine');
+                if (selectVac) {
+                    selectVac.innerHTML = '<option value="">-- Chọn vắc-xin từ kho --</option>';
+                    vacData.forEach(v => {
+                        const tenV = v.tenvaccine || v.ten || '';
+                        const soLuongNhap = v.soluongnhap !== undefined ? v.soluongnhap : 0;
+                        selectVac.innerHTML += `<option value="${v.id}">${tenV} (SL: ${soLuongNhap})</option>`;
+                    });
+                    selectVac.onchange = function() {
+                        const selectedOpt = this.options[this.selectedIndex];
+                        const ten = selectedOpt.text.split(' (')[0];
+                        if (ten && !ten.includes('--')) {
+                            document.getElementById('khamTenvaccine').value = ten;
+                        }
+                    };
+                }
+            }
+
+            loadDanhSachLongModal();
+        }
+
+        async function loadDanhSachLongModal() {
+            const selectEl = document.getElementById('nvMaLong');
+            if (!selectEl) return;
+
+            selectEl.innerHTML = '<option value="">-- Chọn lồng / phòng --</option>';
+
+            const { data: noitruData, error } = await db.from('noitru').select('*');
+            
+            if (!error && noitruData && noitruData.length > 0) {
+                noitruData.forEach(l => {
+                    if (!l.trangthai || l.trangthai.toLowerCase() !== 'đang sử dụng') {
+                        const tenPhong = l.phong || '';
+                        const tenLong = l.long || l.malong || l.id;
+                        const hienThi = tenPhong ? `${tenPhong} - ${tenLong}` : `Lồng ${tenLong}`;
+                        selectEl.innerHTML += `<option value="${l.id}">${hienThi}</option>`;
+                    }
+                });
+            } else {
+                const mauLongs = ["Phòng truyền nhiễm - 01", "Phòng truyền nhiễm - 02", "Lồng cách ly - 01"];
+                mauLongs.forEach(tenLong => {
+                    selectEl.innerHTML += `<option value="${tenLong}">${tenLong}</option>`;
+                });
+            }
+        }
+
+        async function loadKhamBenhMobile() {
+            if (typeof db === 'undefined' || !db) return;
+
+            const { data: khData } = await db.from('khachhang').select('*');
+            if (khData) {
+                khData.forEach(kh => {
+                    if (kh.id) mapKhachHang[kh.id] = kh.hovaten || kh.tenkhachhang || kh.ten || 'Khách lẻ';
+                });
+            }
+
+            const { data: tcData } = await db.from('thucung').select('*');
+            if (tcData) {
+                tcData.forEach(tc => {
+                    const idTC = tc.id;
+                    const tenTC = tc.tenthucung || tc.ten || tc.name || 'Chưa đặt tên';
+                    const idChu = tc.makhachhang || tc.machunuoi || tc.khachhang_id || tc.makh;
+                    if (idTC) mapThuCung[idTC] = { ten: tenTC, makh: idChu };
+                });
+            }
+
+            const { data, error } = await db.from('khambenh').select('*').order('id', { ascending: false });
+            const container = document.getElementById('mobile-list');
+
+            if (error) {
+                container.innerHTML = `<div style="text-align:center; color:red; font-size:11px; padding:15px;">Lỗi tải dữ liệu: ${error.message}</div>`;
+                return;
+            }
+
+            danhSachKhamBenhGoc = data || [];
+            hienThiDanhSach(danhSachKhamBenhGoc);
+        }
+
+        function hienThiDanhSach(data) {
+            const container = document.getElementById('mobile-list');
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #777; padding: 15px; font-size: 11px;">Không tìm thấy phiếu khám phù hợp</div>`;
+                document.getElementById('tongSoKham').innerText = '0 bản ghi';
+                return;
+            }
+
+            document.getElementById('tongSoKham').innerText = data.length + ' bản ghi';
+
+            data.forEach(item => {
+                const maKB = 'KB' + String(item.id).padStart(4, '0');
+                const petId = item.mathucung || item.thucung_id || item.pet_id;
+
+                let tenPet = 'Chưa rõ tên';
+                let tenChu = 'Chưa rõ chủ';
+
+                if (petId && mapThuCung[petId]) {
+                    tenPet = mapThuCung[petId].ten;
+                    const idChu = mapThuCung[petId].makh;
+                    if (idChu && mapKhachHang[idChu]) tenChu = mapKhachHang[idChu];
+                }
+
+                let imgHtml = '';
+                if (item.hinhanh && item.hinhanh.trim() !== '') {
+                    imgHtml = `<img src="${item.hinhanh}" style="width: 55px; height: 55px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; flex-shrink: 0;" alt="Ảnh">`;
+                } else {
+                    imgHtml = `<div style="width: 55px; height: 55px; background: #f1f5f9; border-radius: 6px; border: 1px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #64748b; flex-shrink: 0;">Không ảnh</div>`;
+                }
+
+                const chiPhiFormatted = item.chiphi ? Number(item.chiphi).toLocaleString('vi-VN') + ' đ' : '0 đ';
+
+                // Xử lý trạng thái dạng bấm đổi nhanh giống trang Nhật ký Spa
+                const trangThaiHienTai = item.trangthai || 'Đang điều trị';
+                let badgeColor = '#dc2626'; // Đỏ: Đang điều trị
+                let nextStatus = 'Đã khỏi bệnh';
+
+                if (trangThaiHienTai === 'Đã khỏi bệnh') {
+                    badgeColor = '#2563eb'; // Xanh dương: Đã khỏi bệnh
+                    nextStatus = 'Hẹn tái khám';
+                } else if (trangThaiHienTai === 'Hẹn tái khám') {
+                    badgeColor = '#059669'; // Xanh lá: Hẹn tái khám
+                    nextStatus = 'Đang điều trị';
+                }
+
+                container.innerHTML += `
+                    <div class="mobile-card">
+                        <div style="display: flex; gap: 8px; align-items: flex-start;">
+                            ${imgHtml}
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                                    <span style="font-weight: bold; font-size: 12px; color: #1e293b;">🐾 ${tenPet} <span style="font-size: 10px; color: #64748b;">(ID: ${petId || '---'})</span></span>
+                                    <span style="color: #2563eb; font-size: 11px; font-weight: bold;">${maKB}</span>
+                                </div>
+                                <div style="font-size: 11px; color: #059669; font-weight: bold; margin-bottom: 2px;">👤 Chủ: ${tenChu}</div>
+                                <div style="font-size: 10px; color: #64748b; margin-bottom: 2px;">📅 ${item.ngaykham || '---'} | 🌡️ ${item.nhietdo ? item.nhietdo + '°C' : '---'}</div>
+                                <div style="font-size: 11px; color: #334155; margin-bottom: 2px;"><strong>Triệu chứng:</strong> ${item.trieuchung || '---'}</div>
+                                <div style="font-size: 11px; color: #0284c7; font-weight: 500; margin-bottom: 2px;"><strong>Chẩn đoán:</strong> ${item.chandoan || '---'}</div>
+                                <div style="font-size: 11px; color: #64748b; display: flex; justify-content: space-between; align-items: center;">
+                                    <span>📝 ${item.dieutri || '---'}</span>
+                                    <span style="color: #dc2626; font-weight: bold;">${chiPhiFormatted}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; border-top: 1px solid #f1f5f9; padding-top: 6px; flex-wrap: wrap; gap: 4px;">
+                            <span onclick="capNhatTrangThaiKhambenhMobile(${item.id}, '${nextStatus}')" 
+                                  style="background-color: ${badgeColor}; color: white; font-size: 10px; padding: 3px 8px; border-radius: 12px; cursor: pointer; font-weight: bold; display: inline-block;" 
+                                  title="Bấm để đổi trạng thái">
+                                ${trangThaiHienTai} 🔄
+                            </span>
+                            <div style="display: flex; gap: 3px; flex-wrap: wrap;">
+                                <button onclick="moModalChiDinh(${item.id}, '${maKB}')" style="background: #8b5cf6; color: #fff; border: none; padding: 2px 5px; border-radius: 3px; font-size: 10px; cursor: pointer; font-weight: bold;">📋 Chỉ định</button>
+                                <button onclick="moModalNhapVien(${item.id}, '${maKB}')" style="background: #0d9488; color: #fff; border: none; padding: 2px 5px; border-radius: 3px; font-size: 10px; cursor: pointer; font-weight: bold;">🏥 Nhập viện</button>
+                                <button onclick="moModalVaccine('${petId || ''}', '${maKB}')" style="background: #0284c7; color: #fff; border: none; padding: 2px 5px; border-radius: 3px; font-size: 10px; cursor: pointer; font-weight: bold;">💉 Vaccine</button>
+                                <button onclick="moModalSua(${item.id})" style="background: #eab308; color: #fff; border: none; padding: 2px 5px; border-radius: 3px; font-size: 10px; cursor: pointer; font-weight: bold;">✏️ Sửa</button>
+                                <button onclick="xoaKhamBenh(${item.id})" style="background: #ef4444; color: #fff; border: none; padding: 2px 5px; border-radius: 3px; font-size: 10px; cursor: pointer; font-weight: bold;">🗑️ Xóa</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Hàm gọi Database cập nhật trạng thái trực tiếp trên Mobile
+        async function capNhatTrangThaiKhambenhMobile(id, trangThaiMoi) {
+            if (typeof db === 'undefined' || !db) return;
+
+            const { error } = await db
+                .from('khambenh')
+                .update({ trangthai: trangThaiMoi })
+                .eq('id', id);
+
+            if (error) {
+                alert('Lỗi cập nhật trạng thái: ' + error.message);
+            } else {
+                await loadKhamBenhMobile();
+            }
+        }
+
+        function timKiemKhamBenh() {
+            const tuKhoa = document.getElementById('searchMobile').value.toLowerCase().trim();
+            const ketQuaLoc = danhSachKhamBenhGoc.filter(item => {
+                const trieuChung = (item.trieuchung || '').toLowerCase();
+                const chanDoan = (item.chandoan || '').toLowerCase();
+                const petId = String(item.mathucung || item.thucung_id || item.pet_id || '').toLowerCase();
+                const petInfo = mapThuCung[item.mathucung || item.thucung_id || item.pet_id];
+                const tenPet = petInfo ? petInfo.ten.toLowerCase() : '';
+                const tenChu = petInfo && mapKhachHang[petInfo.makh] ? mapKhachHang[petInfo.makh].toLowerCase() : '';
+
+                return trieuChung.includes(tuKhoa) || chanDoan.includes(tuKhoa) || petId.includes(tuKhoa) || tenPet.includes(tuKhoa) || tenChu.includes(tuKhoa);
+            });
+            hienThiDanhSach(ketQuaLoc);
+        }
+
+        function moModalThem() {
+            document.getElementById('modalTitle').innerText = 'Thêm phiếu khám bệnh mới';
+            document.getElementById('formThemKB').reset();
+            document.getElementById('editingHinhanhOld').value = '';
+            document.getElementById('modalNgayKham').valueAsDate = new Date();
+            document.getElementById('modalThemKhamBenh').removeAttribute('data-edit-id');
+            document.getElementById('modalThemKhamBenh').style.display = 'flex';
+        }
+
+        function dongModalThem() {
+            document.getElementById('modalThemKhamBenh').style.display = 'none';
+        }
+
+        async function luuKhamBenhMoi(event) {
+            event.preventDefault();
+
+            const mathucungStr = document.getElementById('modalMaThuCung').value.trim();
+            const ngaykham = document.getElementById('modalNgayKham').value.trim();
+            const nhietdoStr = document.getElementById('modalNhietDo').value.trim();
+            const trangthai = document.getElementById('modalTrangThai').value;
+            const trieuchung = document.getElementById('modalTrieuChung').value.trim();
+            const chandoan = document.getElementById('modalChanDoan').value.trim();
+            const dieutri = document.getElementById('modalDieuTri').value.trim();
+            const chiphiStr = document.getElementById('modalChiPhi').value.trim();
+            
+            const fileInput = document.getElementById('modalHinhAnh');
+            let hinhanhUrl = document.getElementById('editingHinhanhOld').value;
+
+            const btnSave = document.getElementById('btnSaveModal');
+            btnSave.disabled = true;
+            btnSave.textContent = 'Đang lưu...';
+
+            if (fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                const fileName = `kham_${Date.now()}_${file.name}`;
+                const { error: uploadError } = await db.storage.from('images').upload(fileName, file);
+
+                if (uploadError) {
+                    alert('Lỗi upload ảnh: ' + uploadError.message);
+                    btnSave.disabled = false;
+                    btnSave.textContent = '💾 Lưu dữ liệu';
+                    return;
+                }
+
+                const { data: publicUrlData } = db.storage.from('images').getPublicUrl(fileName);
+                hinhanhUrl = publicUrlData.publicUrl;
+            }
+
+            const mathucung = mathucungStr.replace(/[^0-9]/g, '');
+            if (!mathucung || !ngaykham) {
+                alert('Vui lòng nhập Mã thú cưng và Ngày khám!');
+                btnSave.disabled = false;
+                btnSave.textContent = '💾 Lưu dữ liệu';
+                return;
+            }
+
+            const payload = {
+                mathucung: parseInt(mathucung),
+                ngaykham: ngaykham,
+                nhietdo: nhietdoStr !== "" ? parseFloat(nhietdoStr) : null,
+                trangthai: trangthai,
+                trieuchung: trieuchung,
+                chandoan: chandoan,
+                dieutri: dieutri,
+                chiphi: chiphiStr !== "" ? parseFloat(chiphiStr) : null,
+                hinhanh: hinhanhUrl
+            };
+
+            const editId = document.getElementById('modalThemKhamBenh').getAttribute('data-edit-id');
+            let error = null;
+
+            if (editId) {
+                const res = await db.from('khambenh').update(payload).eq('id', editId);
+                error = res.error;
+            } else {
+                const res = await db.from('khambenh').insert([payload]);
+                error = res.error;
+            }
+
+            btnSave.disabled = false;
+            btnSave.textContent = '💾 Lưu dữ liệu';
+
+            if (error) {
+                alert('Lỗi khi lưu phiếu khám: ' + error.message);
+                return;
+            }
+
+            alert('Lưu dữ liệu thành công!');
+            dongModalThem();
+            await loadKhamBenhMobile();
+        }
+
+        function moModalSua(id) {
+            const item = danhSachKhamBenhGoc.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('modalThemKhamBenh').style.display = 'flex';
+            document.getElementById('modalThemKhamBenh').setAttribute('data-edit-id', id);
+            document.getElementById('modalTitle').innerText = '✏️ Sửa phiếu khám (ID: ' + id + ')';
+
+            document.getElementById('modalMaThuCung').value = item.mathucung || '';
+            document.getElementById('modalNgayKham').value = item.ngaykham || '';
+            document.getElementById('modalNhietDo').value = item.nhietdo || '';
+            document.getElementById('modalTrangThai').value = item.trangthai || 'Đang điều trị';
+            document.getElementById('modalTrieuChung').value = item.trieuchung || '';
+            document.getElementById('modalChanDoan').value = item.chandoan || '';
+            document.getElementById('modalDieuTri').value = item.dieutri || '';
+            document.getElementById('modalChiPhi').value = item.chiphi || '';
+            document.getElementById('editingHinhanhOld').value = item.hinhanh || '';
+            document.getElementById('modalHinhAnh').value = '';
+        }
+
+        async function xoaKhamBenh(id) {
+            if (!confirm('Bạn có chắc chắn muốn xóa phiếu khám bệnh này không?')) return;
+
+            const { error } = await db.from('khambenh').delete().eq('id', id);
+            if (error) {
+                alert('Không thể xóa phiếu khám này.');
+                return;
+            }
+
+            alert('Đã xóa phiếu khám bệnh thành công!');
+            await loadKhamBenhMobile();
+        }
+
+        // --- HÀM XỬ LÝ MODAL CHỈ ĐỊNH ---
+        function moModalChiDinh(idKham, maKB = '') {
+            document.getElementById('modalChiDinh').style.display = 'flex';
+            document.getElementById('formChiDinh').reset();
+            document.getElementById('cdIdKham').value = idKham;
+            document.getElementById('cdMaKhamHienThi').value = idKham + ' (' + maKB + ')';
+            
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('cdNgayChiDinh').value = now.toISOString().slice(0, 16);
+
+            document.getElementById('danhSachDichVuContainer').innerHTML = '';
+            themDongDichVu();
+        }
+
+        function dongModalChiDinh() {
+            document.getElementById('modalChiDinh').style.display = 'none';
+        }
+
+        function themDongDichVu(tenChon = '', giaChon = 0) {
+            const container = document.getElementById('danhSachDichVuContainer');
+
+            let optionsHtml = '<option value="">-- Chọn dịch vụ từ danh mục --</option>';
+            danhSachDichVuGoc.forEach(dv => {
+                const tenDV = dv.tendichvu || dv.ten || '';
+                const giaDV = dv.dongia || dv.gia || dv.giaban || 0;
+                const selected = tenDV === tenChon ? 'selected' : '';
+                optionsHtml += `<option value="${tenDV}" data-gia="${giaDV}" ${selected}>${tenDV} (${Number(giaDV).toLocaleString()}đ)</option>`;
+            });
+
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'service-row';
+            rowDiv.style.cssText = 'background: #ffffff; padding: 6px; border-radius: 4px; border: 1px solid #cbd5e1; margin-bottom: 6px;';
+            rowDiv.innerHTML = `
+                <div style="margin-bottom: 4px;">
+                    <select class="form-control dv-select" onchange="xuLyChonDichVu(this)" style="margin-bottom: 2px; font-size: 11px; padding: 5px;">
+                        ${optionsHtml}
+                        <option value="custom">✏️ Tự nhập tên khác...</option>
+                    </select>
+                    <input type="text" class="form-control dv-custom-input" placeholder="Nhập tên dịch vụ tùy chỉnh..." style="display: none; margin-bottom: 0; font-size: 11px; padding: 5px;" oninput="tinhTongTien()">
+                </div>
+                <div style="display: flex; gap: 4px; align-items: center;">
+                    <div style="flex: 1;">
+                        <input type="number" class="form-control dv-gia" placeholder="Đơn giá (VNĐ)" value="${giaChon}" style="margin-bottom: 0; font-size: 11px; padding: 5px;" oninput="tinhTongTien()">
+                    </div>
+                    <div>
+                        <button type="button" style="padding: 5px 8px; background: #ef4444; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: bold;" onclick="xoaDongDichVu(this)">✕ Xóa</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(rowDiv);
+            tinhTongTien();
+        }
+
+        function xuLyChonDichVu(selectEl) {
+            const row = selectEl.closest('.service-row');
+            const customInput = row.querySelector('.dv-custom-input');
+            const inputGia = row.querySelector('.dv-gia');
+
+            if (selectEl.value === 'custom') {
+                customInput.style.display = 'block';
+                customInput.value = '';
+                customInput.focus();
+                inputGia.value = 0;
+            } else {
+                customInput.style.display = 'none';
+                const selectedOption = selectEl.options[selectEl.selectedIndex];
+                const gia = selectedOption.getAttribute('data-gia') || 0;
+                inputGia.value = gia;
+            }
+            tinhTongTien();
+        }
+
+        function xoaDongDichVu(btn) {
+            const container = document.getElementById('danhSachDichVuContainer');
+            if (container.children.length > 1) {
+                btn.closest('.service-row').remove();
+                tinhTongTien();
+            } else {
+                alert('Phiếu chỉ định cần ít nhất một dịch vụ!');
+            }
+        }
+
+        function tinhTongTien() {
+            let tong = 0;
+            document.querySelectorAll('.service-row').forEach(row => {
+                const inputGia = row.querySelector('.dv-gia');
+                tong += Number(inputGia.value) || 0;
+            });
+            document.getElementById('tongTienHienThi').textContent = tong.toLocaleString() + ' đ';
+        }
+
+        async function luuChiDinh(event) {
+            event.preventDefault();
+            const makhambenh = parseInt(document.getElementById('cdIdKham').value);
+            const ngaychidinh = document.getElementById('cdNgayChiDinh').value;
+            const ketluan = document.getElementById('cdKetLuan').value.trim();
+            const trangthai = document.getElementById('cdTrangThai').value;
+
+            let chiTietArr = [];
+            let tongTien = 0;
+
+            document.querySelectorAll('.service-row').forEach(row => {
+                const select = row.querySelector('.dv-select');
+                const customInput = row.querySelector('.dv-custom-input');
+                const gia = Number(row.querySelector('.dv-gia').value) || 0;
+
+                let tenDV = select.value === 'custom' ? customInput.value.trim() : select.value;
+                if (tenDV) {
+                    chiTietArr.push(`${tenDV} - Giá: ${gia.toLocaleString()}đ`);
+                    tongTien += gia;
+                }
+            });
+
+            if (chiTietArr.length === 0) {
+                alert('Vui lòng chọn ít nhất một dịch vụ chỉ định!');
+                return;
+            }
+
+            const chitietdichvu = chiTietArr.join('; ');
+            const fileInput = document.getElementById('cdHinhAnh');
+            let hinhanhUrl = '';
+
+            const btn = document.getElementById('btnSaveChiDinh');
+            btn.disabled = true;
+            btn.textContent = 'Đang lưu...';
+
+            if (fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                const fileName = `chidinh_${Date.now()}_${file.name}`;
+                const { error: uploadError } = await db.storage.from('images').upload(fileName, file);
+                if (!uploadError) {
+                    const { data: publicUrlData } = db.storage.from('images').getPublicUrl(fileName);
+                    hinhanhUrl = publicUrlData.publicUrl;
+                }
+            }
+
+            const { error } = await db.from('phieuchidinh').insert([{
+                makhambenh, ngaychidinh, chitietdichvu, ketluan, trangthai, tongtien: tongTien, hinhanh: hinhanhUrl
+            }]);
+
+            btn.disabled = false;
+            btn.textContent = '💾 Lưu dữ liệu';
+
+            if (error) {
+                alert('Lỗi lưu chỉ định: ' + error.message);
+                return;
+            }
+
+            alert('Lập phiếu chỉ định thành công!');
+            dongModalChiDinh();
+        }
+
+        // --- HÀM XỬ LÝ MODAL NHẬP VIỆN / NỘI TRÚ ---
+        function moModalNhapVien(idKham, maKB = '') {
+            document.getElementById('modalNhapVien').style.display = 'flex';
+            document.getElementById('formNhapVien').reset();
+            document.getElementById('nvIdKham').value = idKham;
+            document.getElementById('nvMaKhamHienThi').value = idKham;
+
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('nvNgayVao').value = now.toISOString().slice(0, 16);
+            document.getElementById('nvChiPhiNgay').value = 100000;
+            document.getElementById('nvTamUng').value = 0;
+            tinhTienNhapVien();
+        }
+
+        function dongModalNhapVien() {
+            document.getElementById('modalNhapVien').style.display = 'none';
+        }
+
+        function tinhTienNhapVien() {
+            const ngayVaoVal = document.getElementById('nvNgayVao').value;
+            const ngayRaVal = document.getElementById('nvNgayRa').value;
+            const chiPhiNgay = parseFloat(document.getElementById('nvChiPhiNgay').value) || 0;
+
+            if (ngayVaoVal && ngayRaVal) {
+                const d1 = new Date(ngayVaoVal);
+                const d2 = new Date(ngayRaVal);
+                let diffTime = d2 - d1;
+                let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (diffDays < 1) diffDays = 1;
+
+                const tongChiPhi = diffDays * chiPhiNgay;
+                document.getElementById('nvTongChiPhi').value = tongChiPhi;
+            } else {
+                document.getElementById('nvTongChiPhi').value = chiPhiNgay;
+            }
+            tinhThanhTienNhapVien();
+        }
+
+        function tinhThanhTienNhapVien() {
+            const tongChiPhi = parseFloat(document.getElementById('nvTongChiPhi').value) || 0;
+            const tamUng = parseFloat(document.getElementById('nvTamUng').value) || 0;
+            document.getElementById('nvThanhTien').value = tongChiPhi - tamUng;
+        }
+
+        async function luuNhapVien(event) {
+            event.preventDefault();
+            const makhambenh = parseInt(document.getElementById('nvIdKham').value);
+            const malongSelect = document.getElementById('nvMaLong').value;
+            const malong = isNaN(malongSelect) ? malongSelect : parseInt(malongSelect);
+            
+            const ngayvao = document.getElementById('nvNgayVao').value;
+            const ngayra = document.getElementById('nvNgayRa').value || null;
+            const bacsiphutrach = document.getElementById('nvBacSi').value.trim();
+            const trangthai = document.getElementById('nvTrangThai').value;
+            const chiphingay = parseFloat(document.getElementById('nvChiPhiNgay').value) || 0;
+            const tongchiphi = parseFloat(document.getElementById('nvTongChiPhi').value) || 0;
+            const tamung = parseFloat(document.getElementById('nvTamUng').value) || 0;
+            const thanhtien = parseFloat(document.getElementById('nvThanhTien').value) || 0;
+            const ghichu = document.getElementById('nvGhiChu').value.trim();
+
+            const btn = document.getElementById('btnSaveNhapVien');
+            btn.disabled = true;
+            btn.textContent = 'Đang lưu...';
+
+            const payload = {
+                makhambenh,
+                malong,
+                ngayvao: ngayvao ? new Date(ngayvao).toISOString() : null,
+                ngayra: ngayra ? new Date(ngayra).toISOString() : null,
+                bacsiphutrach,
+                trangthai,
+                chiphingay,
+                tongchiphi,
+                tamung,
+                thanhtien,
+                ghichu
+            };
+
+            const { error } = await db.from('nhatkynoitru').insert([payload]);
+
+            btn.disabled = false;
+            btn.textContent = '💾 Lưu nhập viện';
+
+            if (error) {
+                alert('Lỗi khi lập hồ sơ nội trú: ' + error.message);
+                return;
+            }
+
+            alert('Đã chuyển bệnh nhân sang nội trú (nhập viện) thành công!');
+            dongModalNhapVien();
+        }
+
+        // --- HÀM XỬ LÝ MODAL VACCINE ---
+        function moModalVaccine(petId = '', maKB = '') {
+            document.getElementById('modalVaccine').style.display = 'flex';
+            document.getElementById('formVaccine').reset();
+            if (petId) document.getElementById('khamMathucung').value = petId;
+            if (maKB) document.getElementById('khamMakham').value = maKB;
+            document.getElementById('khamNgaytiem').value = new Date().toISOString().split('T')[0];
+        }
+
+        function dongModalVaccine() {
+            document.getElementById('modalVaccine').style.display = 'none';
+        }
+
+        async function luuVaccineKhamBenh(event) {
+            event.preventDefault();
+            const mathucung = parseInt(document.getElementById('khamMathucung').value);
+            const makham = document.getElementById('khamMakham').value.trim();
+            const tenvaccine = document.getElementById('khamTenvaccine').value.trim();
+            const ngaytiem = document.getElementById('khamNgaytiem').value;
+            const ngaynhaclai = document.getElementById('khamNgaynhaclai').value;
+            const bacsi = document.getElementById('khamBacsi').value.trim();
+            const trangthai = document.getElementById('khamTrangthai').value;
+
+            if (!tenvaccine) {
+                alert('Vui lòng chọn hoặc nhập tên vắc-xin!');
+                return;
+            }
+
+            const btn = document.getElementById('btnSaveKhamVaccine');
+            btn.disabled = true;
+            btn.textContent = 'Đang lưu...';
+
+            const { error } = await db.from('nhatkylamvaccine').insert([{
+                mathucung, tenvaccine, ngaytiem: ngaytiem || null, ngaynhaclai: ngaynhaclai || null, bacsi, trangthai,
+                ghichu: makham ? `Từ phiếu khám: ${makham}` : null
+            }]);
+
+            btn.disabled = false;
+            btn.textContent = '💾 Lưu dữ liệu';
+
+            if (error) {
+                alert('Lỗi khi lưu dữ liệu: ' + error.message);
+                return;
+            }
+
+            alert('Đã thêm mũi tiêm vắc-xin thành công!');
+            dongModalVaccine();
+        }
+    </script>
+
+    <!-- NHÚNG MENU ĐIỀU HƯỚNG ĐÁY MOBILE -->
+    <script src="js/menu-mobile.js"></script>
+    <script>
+        if (typeof taoMenuMobile === 'function') {
+            taoMenuMobile('khambenh');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+/* Style điểm nhấn cho menu POS */
+.sidebar-menu .menu-pos-item {
+    margin-top: 15px; /* Tạo khoảng cách tách biệt với các menu khác */
+    border-top: 1px dashed rgba(255, 255, 255, 0.2);
+    padding-top: 15px;
+}
+
+.sidebar-menu .menu-pos-item a.active-pos {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    color: #ffffff !important;
+    font-weight: bold;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    transition: all 0.3s ease;
+    animation: pulsePos 2s infinite;
+}
+
+.sidebar-menu .menu-pos-item a.active-pos:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(37, 99, 235, 0.6);
+}
+
+.sidebar-menu .menu-pos-item .pos-icon {
+    font-size: 18px;
+    margin-right: 8px;
+}
+
+.sidebar-menu .menu-pos-item .pos-text {
+    flex: 1;
+    letter-spacing: 0.5px;
+}
+
+/* Thêm huy hiệu chữ HOT nhấp nháy */
+.sidebar-menu .menu-pos-item .pos-badge {
+    background-color: #dc2626;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    text-transform: uppercase;
+    animation: blinkBadge 1s infinite alternate;
+}
+
+/* Hiệu ứng nhấp nháy cho nhãn HOT */
+@keyframes blinkBadge {
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0.7; transform: scale(1.1); }
+}
+
+/* Hiệu ứng tỏa sáng nhẹ cho toàn bộ nút POS */
+@keyframes pulsePos {
+    0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+    70% { box-shadow: 0 0 0 8px rgba(37, 99, 235, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}

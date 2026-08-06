@@ -1,0 +1,50 @@
+ <style>
+/* Tự động tối ưu khi xem trên điện thoại hoặc màn hình nhỏ dưới 768px */
+@media screen and (max-width: 992px) {
+    .sidebar {
+        left: -260px; /* Ẩn sidebar sang trái */
+    }
+    .sidebar.mobile-open {
+        left: 0; /* Hiện sidebar khi có class mobile-open */
+    }
+    .main-content {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+
+    
+    /* Khi sidebar mở trên mobile */
+    .sidebar.active {
+        transform: translateX(0);
+    }
+
+    /* Đưa nội dung chính tràn toàn màn hình điện thoại */
+    .main-content {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+
+    /* Thu nhỏ các nút bấm hoặc hộp tìm kiếm cho vừa vặn màn hình điện thoại */
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .card-header-actions {
+        width: 100%;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .search-box {
+        width: 100% !important;
+    }
+
+    .modal-container {
+        width: 90% !important;
+        margin: 0 auto;
+        padding: 15px;
+    }
+}
+</style>

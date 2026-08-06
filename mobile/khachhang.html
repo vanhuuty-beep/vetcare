@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Khách hàng - Mobile</title>
+    
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Kết nối các file cấu hình ở thư mục gốc -->
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="js/chuongbao.js"></script>
+
+    <!-- CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="css/button.css">
+    <style>
+        /* CSS NÚT PHÂN TRANG TRUYỀN THỐNG */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            margin: 20px 0 10px 0;
+            flex-wrap: wrap;
+        }
+        .page-btn {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .page-btn.active {
+            background: #0284c7;
+            color: #ffffff;
+            border-color: #0284c7;
+        }
+        .page-btn:disabled {
+            background: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container">
+        <!-- THANH TIÊU ĐỀ PHÍA TRÊN -->
+        <div class="top-header">
+            <h3>👤 Quản lý Khách hàng</h3>
+            <a href="../page/thongke.html" class="btn-desktop">💻</a>
+            <button onclick="dangXuatMobile()" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                <span>🚪</span> Thoát
+            </button>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
+            <input type="text" id="searchMobile" class="search-box" placeholder="🔍 Tìm tên hoặc SĐT..." onkeyup="timKiemMobile()" style="flex: 1; margin: 0;">
+            <button class="btn-add" onclick="moModalThem()" style="white-space: nowrap; margin: 0; padding: 6px 10px; font-size: 12px;">➕ Thêm</button>
+        </div>
+        <!-- DANH SÁCH THẺ HIỂN THỊ -->
+        <div id="mobile-list">
+            <div style="text-align: center; color: #666; padding: 20px;">Đang tải dữ liệu...</div>
+        </div>
+
+        <!-- KHUNG CHỨA CÁC NÚT PHÂN TRANG -->
+        <div id="paginationContainer" class="pagination-container"></div>
+    </div>
+
+    <!-- MODAL THÊM KHÁCH HÀNG -->
+    <div id="modalThemKhachHang" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4>➕ Thêm Khách Hàng Mới</h4>
+                <button class="btn-close" onclick="dongModalThem()">&times;</button>
+            </div>
+            <form id="formThemKH" onsubmit="luuKhachHangMoi(event)">
+                <div class="form-group">
+                    <label>Họ và tên (*)</label>
+                    <input type="text" id="modalHovaten" class="form-control" placeholder="Nhập họ và tên..." required>
+                </div>
+                <div class="form-group">
+                    <label>Số điện thoại</label>
+                    <input type="tel" id="modalSodienthoai" class="form-control" placeholder="Nhập số điện thoại...">
+                </div>
+                <div class="form-group">
+                    <label>Địa chỉ</label>
+                    <input type="text" id="modalDiachi" class="form-control" placeholder="Nhập địa chỉ...">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="dongModalThem()">Hủy</button>
+                    <button type="submit" class="btn-save" id="btnSaveModal">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM THÚ CƯNG -->
+    <div id="modalThemThuCung" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 id="titleModalPet">Thêm thú cưng mới</h4>
+                <button class="btn-close" onclick="dongModalPet()">&times;</button>
+            </div>
+            <form id="formThemTC" onsubmit="luuThuCungMoi(event)">
+                <div class="form-group">
+                    <label>Tên thú cưng (*):</label>
+                    <input type="text" id="modalTenthucung" class="form-control" placeholder="Nhập tên thú cưng..." required>
+                </div>
+
+                <div class="form-group">
+                    <label>Loài:</label>
+                    <input type="text" id="modalLoai" class="form-control" placeholder="Ví dụ: Chó, Mèo...">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group form-col">
+                        <label>Giống:</label>
+                        <input type="text" id="modalGiong" class="form-control" placeholder="Ví dụ: Poodle...">
+                    </div>
+                    <div class="form-group form-col">
+                        <label>Màu lông:</label>
+                        <input type="text" id="modalMaulong" class="form-control" placeholder="Ví dụ: Vàng, Trắng...">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group form-col">
+                        <label>Tuổi:</label>
+                        <input type="text" id="modalTuoi" class="form-control" placeholder="Ví dụ: 2">
+                    </div>
+                    <div class="form-group form-col">
+                        <label>Cân nặng (kg):</label>
+                        <input type="text" id="modalCannang" class="form-control" placeholder="Ví dụ: 4.5">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Hình ảnh thú cưng:</label>
+                    <input type="file" id="modalHinhAnhPet" accept="image/*" capture="environment" class="form-control" style="font-size: 11px; padding: 6px;">
+                </div>
+
+                <div class="form-group">
+                    <label>Mã chủ nuôi (ID khách hàng):</label>
+                    <input type="text" id="modalMachunuoi" class="form-control" readonly style="background: #f1f5f9; color: #64748b;">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="dongModalPet()">Hủy</button>
+                    <button type="submit" class="btn-save" id="btnSavePet">Lưu dữ liệu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL SỬA KHÁCH HÀNG -->
+    <div id="modalSuaKhachHang" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4>✏️ Sửa thông tin Khách hàng</h4>
+                <button class="btn-close" onclick="dongModalSua()">&times;</button>
+            </div>
+            <form id="formSuaKH" onsubmit="capNhatKhachHang(event)">
+                <input type="hidden" id="suaId">
+                <div class="form-group">
+                    <label>Họ và tên (*)</label>
+                    <input type="text" id="suaHovaten" class="form-control" placeholder="Nhập họ và tên..." required>
+                </div>
+                <div class="form-group">
+                    <label>Số điện thoại</label>
+                    <input type="tel" id="suaSodienthoai" class="form-control" placeholder="Nhập số điện thoại...">
+                </div>
+                <div class="form-group">
+                    <label>Địa chỉ</label>
+                    <input type="text" id="suaDiachi" class="form-control" placeholder="Nhập địa chỉ...">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="dongModalSua()">Hủy</button>
+                    <button type="submit" class="btn-save" id="btnSaveSua">Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Hàm xử lý đăng xuất cho mobile
+        function dangXuatMobile() {
+            if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?')) {
+                sessionStorage.removeItem('currentUser');
+                window.location.href = '../index.html';
+            }
+        }
+    </script>
+
+    <!-- SCRIPT XỬ LÝ DỮ LIỆU, MODAL VÀ PHÂN TRANG -->
+    <script>
+        let danhSachKhachHangGoc = [];
+        let danhSachHienThiHienTai = [];
+
+        // Cấu hình phân trang trực tiếp
+        let trangThaiPhanTrang = {
+            trangHienTai: 1,
+            soDongMoiTrang: 3 // Hiển thị 3 khách hàng mỗi trang
+        };
+
+        // --- HÀM ẨN SỐ ĐIỆN THOẠI (TRỪ ADMIN) CHO MOBILE ---
+        function anSoDienThoaiMobile(sdt) {
+            if (!sdt) return 'Chưa có SĐT';
+            
+            let sdtStr = String(sdt).trim();
+            let displaySdt = sdtStr.startsWith('0') ? sdtStr : '0' + sdtStr;
+            
+            let isAdmin = false;
+            try {
+                let rawUser = sessionStorage.getItem('currentUser');
+                if (rawUser) {
+                    let currentUser = JSON.parse(rawUser);
+                    let role = String(currentUser.vaitro || currentUser.role || '').trim().toLowerCase();
+                    let username = String(currentUser.tentaikhoan || currentUser.username || '').trim().toLowerCase();
+                    
+                    if (role === 'admin' || username === 'admin') {
+                        isAdmin = true;
+                    }
+                }
+            } catch (e) {
+                let rawStr = sessionStorage.getItem('currentUser') || '';
+                if (rawStr.toLowerCase().includes('admin')) {
+                    isAdmin = true;
+                }
+            }
+            
+            if (isAdmin) {
+                return `<a href="tel:${displaySdt}" style="color: #059669; font-weight: bold; text-decoration: none;">${displaySdt} 📞</a>`;
+            }
+            
+            let sdtBiDau = '*'.repeat(displaySdt.length);
+            return `<span style="color: #d97706; font-weight: bold;" title="Số điện thoại đã được bảo mật">${sdtBiDau} 🔒</span>`;
+        }
+
+        // --- TẢI DỮ LIỆU CÓ LỌC THEO MÃ PHÒNG KHÁM ---
+        async function loadKhachHangMobile() {
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+            const maPK = currentUser.maphongkham;
+
+            let query = db.from('khachhang').select('*');
+            
+            // Lọc chính xác theo phòng khám hiện tại
+            if (maPK) {
+                query = query.eq('maphongkham', maPK);
+            }
+
+            const { data, error } = await query.order('id', { ascending: false });
+
+            if (error) {
+                console.error('Lỗi tải dữ liệu:', error);
+                document.getElementById('mobile-list').innerHTML = `<div style="text-align:center; color:red; padding:20px;">Lỗi tải dữ liệu từ cơ sở dữ liệu</div>`;
+                return;
+            }
+
+            danhSachKhachHangGoc = data || [];
+            danhSachHienThiHienTai = danhSachKhachHangGoc;
+            trangThaiPhanTrang.trangHienTai = 1;
+            hienThiDanhSach();
+        }
+
+        function hienThiDanhSach() {
+            const container = document.getElementById('mobile-list');
+            container.innerHTML = '';
+
+            if (!danhSachHienThiHienTai || danhSachHienThiHienTai.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:#777; padding:20px;">Không tìm thấy khách hàng phù hợp</div>`;
+                document.getElementById('paginationContainer').innerHTML = '';
+                return;
+            }
+
+            const { trangHienTai, soDongMoiTrang } = trangThaiPhanTrang;
+            const tongSoTrang = Math.ceil(danhSachHienThiHienTai.length / soDongMoiTrang);
+            
+            const viTriBatDau = (trangHienTai - 1) * soDongMoiTrang;
+            const viTriKetThuc = viTriBatDau + soDongMoiTrang;
+            const duLieuTrangNay = danhSachHienThiHienTai.slice(viTriBatDau, viTriKetThuc);
+
+            duLieuTrangNay.forEach(item => {
+                const maKH = typeof formatMaKhachHang === 'function' ? formatMaKhachHang(item.id) : ('KH' + String(item.id).padStart(4, '0'));
+                const sdtHtml = anSoDienThoaiMobile(item.sodienthoai);
+
+                container.innerHTML += `
+                    <div class="mobile-card">
+                        <div class="card-title">
+                            <span>${item.hovaten || 'Khách lẻ'}</span>
+                            <span style="color: #2563eb; font-size: 13px;">${maKH}</span>
+                        </div>
+                        <div class="card-info">
+                            📞 SĐT: ${sdtHtml}
+                        </div>
+                        <div class="card-info" style="color: #64748b;">
+                            🏠 Địa chỉ: ${item.diachi || '---'}
+                        </div>
+                        <div class="card-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                            <button class="btn-add-pet" onclick="moModalPet('${item.id}', '${item.hovaten || ''}')" style="padding: 3px 8px; font-size: 11px;">➕ Pet</button>
+                            <div>
+                                <button onclick="moModalSua(${item.id}, '${item.hovaten || ''}', '${item.sodienthoai || ''}', '${item.diachi || ''}')" style="background: #eab308; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-right: 4px;">✏️ Sửa</button>
+                                <button onclick="xoaKhachHang(${item.id})" style="background: #ef4444; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">🗑️ Xóa</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            veNutPhanTrang(tongSoTrang);
+        }
+
+        function veNutPhanTrang(tongSoTrang) {
+            const paginationContainer = document.getElementById('paginationContainer');
+            paginationContainer.innerHTML = '';
+
+            if (tongSoTrang <= 1) return;
+
+            const { trangHienTai } = trangThaiPhanTrang;
+
+            paginationContainer.innerHTML += `
+                <button class="page-btn" ${trangHienTai === 1 ? 'disabled' : ''} onclick="chuyenTrang(${trangHienTai - 1})">◀ Trước</button>
+            `;
+
+            for (let i = 1; i <= tongSoTrang; i++) {
+                if (i === 1 || i === tongSoTrang || (i >= trangHienTai - 1 && i <= trangHienTai + 1)) {
+                    paginationContainer.innerHTML += `
+                        <button class="page-btn ${i === trangHienTai ? 'active' : ''}" onclick="chuyenTrang(${i})">${i}</button>
+                    `;
+                } else if (i === trangHienTai - 2 || i === trangHienTai + 2) {
+                    paginationContainer.innerHTML += `<span style="color: #64748b; font-size: 12px; padding: 0 2px;">...</span>`;
+                }
+            }
+
+            paginationContainer.innerHTML += `
+                <button class="page-btn" ${trangHienTai === tongSoTrang ? 'disabled' : ''} onclick="chuyenTrang(${trangHienTai + 1})">Sau ▶</button>
+            `;
+        }
+
+        function chuyenTrang(trangMoi) {
+            trangThaiPhanTrang.trangHienTai = trangMoi;
+            hienThiDanhSach();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function timKiemMobile() {
+            const tuKhoa = document.getElementById('searchMobile').value.toLowerCase().trim();
+            danhSachHienThiHienTai = danhSachKhachHangGoc.filter(item => {
+                const ten = (item.hovaten || '').toLowerCase();
+                const sdt = (item.sodienthoai || '').toLowerCase();
+                return ten.includes(tuKhoa) || sdt.includes(tuKhoa);
+            });
+            
+            trangThaiPhanTrang.trangHienTai = 1;
+            hienThiDanhSach();
+        }
+
+        // --- CÁC HÀM XỬ LÝ MODAL KHÁCH HÀNG ---
+        function moModalThem() {
+            document.getElementById('modalThemKhachHang').style.display = 'flex';
+            document.getElementById('formThemKH').reset();
+        }
+
+        function dongModalThem() {
+            document.getElementById('modalThemKhachHang').style.display = 'none';
+        }
+
+        // --- THÊM KHÁCH HÀNG MỚI CÓ GẮN MÃ PHÒNG KHÁM ---
+        async function luuKhachHangMoi(event) {
+            event.preventDefault();
+
+            const hovaten = document.getElementById('modalHovaten').value.trim();
+            const sodienthoai = document.getElementById('modalSodienthoai').value.trim();
+            const diachi = document.getElementById('modalDiachi').value.trim();
+            const btnSave = document.getElementById('btnSaveModal');
+
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+            const maPK = currentUser.maphongkham;
+
+            if (!maPK) {
+                alert('⚠️ Chưa xác định được thông tin phòng khám!');
+                return;
+            }
+
+            btnSave.disabled = true;
+            btnSave.textContent = 'Đang lưu...';
+
+            const { error } = await db.from('khachhang').insert([
+                { 
+                    hovaten: hovaten, 
+                    sodienthoai: sodienthoai, 
+                    diachi: diachi,
+                    maphongkham: maPK // 👈 Gắn mã phòng khám để phân tách dữ liệu
+                }
+            ]);
+
+            btnSave.disabled = false;
+            btnSave.textContent = 'Lưu';
+
+            if (error) {
+                console.error('Lỗi thêm khách hàng:', error);
+                alert('Lỗi khi thêm khách hàng! Vui lòng thử lại.');
+                return;
+            }
+
+            dongModalThem();
+            loadKhachHangMobile();
+        }
+
+        // --- CÁC HÀM XỬ LÝ MODAL THÊM PET ---
+        function moModalPet(khId, khTen) {
+            document.getElementById('modalThemThuCung').style.display = 'flex';
+            document.getElementById('formThemTC').reset();
+            document.getElementById('modalMachunuoi').value = khId;
+            document.getElementById('titleModalPet').textContent = `Thêm Pet cho: ${khTen} (ID: ${khId})`;
+        }
+
+        function dongModalPet() {
+            document.getElementById('modalThemThuCung').style.display = 'none';
+        }
+
+        async function luuThuCungMoi(event) {
+            event.preventDefault();
+
+            const tenthucung = document.getElementById('modalTenthucung').value.trim();
+            const loai = document.getElementById('modalLoai').value.trim();
+            const giong = document.getElementById('modalGiong').value.trim();
+            const maulong = document.getElementById('modalMaulong').value.trim();
+            const tuoi = document.getElementById('modalTuoi').value.trim();
+            const cannang = document.getElementById('modalCannang').value.trim();
+            const makhachhang = document.getElementById('modalMachunuoi').value.trim();
+            
+            const fileInput = document.getElementById('modalHinhAnhPet');
+            let hinhanhUrl = '';
+
+            const btnSave = document.getElementById('btnSavePet');
+            btnSave.disabled = true;
+            btnSave.textContent = 'Đang lưu...';
+
+            if (fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                const fileName = `pet_${Date.now()}_${file.name}`;
+                const { error: uploadError } = await db.storage.from('images').upload(fileName, file);
+
+                if (!uploadError) {
+                    const { data: publicUrlData } = db.storage.from('images').getPublicUrl(fileName);
+                    hinhanhUrl = publicUrlData.publicUrl;
+                }
+            }
+
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+            const maPK = currentUser.maphongkham;
+
+            const payload = {
+                tenthucung, loai, giong, maulong, tuoi, cannang, makhachhang, hinhanh: hinhanhUrl
+            };
+            if (maPK) payload.maphongkham = maPK;
+
+            const { error } = await db.from('thucung').insert([payload]);
+
+            btnSave.disabled = false;
+            btnSave.textContent = 'Lưu dữ liệu';
+
+            if (error) {
+                console.error(error);
+                alert('Lỗi khi thêm thú cưng!');
+                return;
+            }
+
+            alert('Thêm thú cưng thành công!');
+            dongModalPet();
+        }
+
+        // Khởi chạy tải dữ liệu ban đầu
+        loadKhachHangMobile();
+
+        // --- CÁC HÀM XỬ LÝ SỬA & XÓA KHÁCH HÀNG ---
+        function moModalSua(id, hovaten, sodienthoai, diachi) {
+            document.getElementById('modalSuaKhachHang').style.display = 'flex';
+            document.getElementById('suaId').value = id;
+            document.getElementById('suaHovaten').value = hovaten;
+            document.getElementById('suaSodienthoai').value = sodienthoai !== 'null' ? sodienthoai : '';
+            document.getElementById('suaDiachi').value = diachi !== 'null' ? diachi : '';
+        }
+
+        function dongModalSua() {
+            document.getElementById('modalSuaKhachHang').style.display = 'none';
+        }
+
+        async function capNhatKhachHang(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('suaId').value;
+            const hovaten = document.getElementById('suaHovaten').value.trim();
+            const sodienthoai = document.getElementById('suaSodienthoai').value.trim();
+            const diachi = document.getElementById('suaDiachi').value.trim();
+            const btnSave = document.getElementById('btnSaveSua');
+
+            btnSave.disabled = true;
+            btnSave.textContent = 'Đang lưu...';
+
+            const { error } = await db.from('khachhang')
+                .update({ hovaten: hovaten, sodienthoai: sodienthoai, diachi: diachi })
+                .eq('id', id);
+
+            btnSave.disabled = false;
+            btnSave.textContent = 'Cập nhật';
+
+            if (error) {
+                console.error('Lỗi cập nhật khách hàng:', error);
+                alert('Lỗi khi cập nhật khách hàng! Vui lòng thử lại.');
+                return;
+            }
+
+            dongModalSua();
+            loadKhachHangMobile();
+        }
+
+        async function xoaKhachHang(id) {
+            if (!confirm('Bạn có chắc chắn muốn xóa khách hàng này không?')) {
+                return;
+            }
+
+            const { error } = await db.from('khachhang').delete().eq('id', id);
+
+            if (error) {
+                console.error('Lỗi xóa khách hàng:', error);
+                alert('Không thể xóa khách hàng này (có thể đang có dữ liệu thú cưng liên quan).');
+                return;
+            }
+
+            alert('Đã xóa khách hàng thành công!');
+            loadKhachHangMobile();
+        }
+    </script>
+
+    <!-- NHÚNG MENU ĐIỀU HƯỚNG ĐÁY MOBILE -->
+    <script src="js/menu-mobile.js"></script>
+    <script>
+        taoMenuMobile('khachhang');
+    </script>
+</body>
+</html>

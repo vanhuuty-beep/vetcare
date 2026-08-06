@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Dịch vụ - VetCare Pro</title>
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	<script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+	<script src="../js/smart-search.js"></script>
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+	<link rel="stylesheet" href="../css/smart-search.css">
+
+
+    <style>
+        .search-box {
+            padding: 8px 12px;
+            width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: #2563eb;
+        }
+        .card-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* Tối ưu modal gọn gàng */
+        .modal-container {
+            width: 500px;
+            padding: 20px 24px;
+        }
+        .modal-header {
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+        }
+        .form-group-modal {
+            margin-bottom: 10px;
+        }
+        .form-group-modal label {
+            font-size: 13px;
+            margin-bottom: 3px;
+            display: block;
+            font-weight: 500;
+        }
+        .form-group-modal input, .form-group-modal textarea {
+            width: 100%;
+            padding: 7px 10px;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .modal-footer {
+            margin-top: 15px;
+            padding-top: 10px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+        <div id="topnav-container"></div>
+
+        <div class="content-body">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Danh mục Dịch vụ</h3>
+                    <div class="card-header-actions">
+                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm tên dịch vụ, nhóm..." onkeyup="timKiemDichVu()">
+                        <button class="btn-primary" onclick="moModalThem()">+ Thêm dịch vụ mới</button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã dịch vụ</th>
+                                <th>Tên dịch vụ</th>
+                                <th>Nhóm dịch vụ</th>
+                                <th>Đơn giá</th>
+                                <th>Mô tả</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table">
+                            <!-- Dữ liệu được nạp tự động từ Supabase -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP FORM THÊM / SỬA DỊCH VỤ -->
+    <div class="modal-overlay" id="dichVuModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thêm dịch vụ mới</h3>
+                <button class="close-modal" onclick="dongModal()">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingId">
+            
+            <div class="form-group-modal">
+                <label>Tên dịch vụ (tendichvu) (*):</label>
+                <input type="text" id="tendichvu" placeholder="Nhập tên dịch vụ...">
+            </div>
+
+            <div class="form-group-modal">
+                <label>Nhóm dịch vụ (nhomdichvu):</label>
+                <input type="text" id="nhomdichvu" placeholder="Ví dụ: Khám bệnh, Phẫu thuật, Xét nghiệm...">
+            </div>
+
+            <div class="form-group-modal">
+                <label>Đơn giá (dongia - VNĐ):</label>
+                <input type="number" step="1000" id="dongia" placeholder="VD: 100000">
+            </div>
+
+            <div class="form-group-modal">
+                <label>Mô tả (mota):</label>
+                <textarea id="mota" rows="2" placeholder="Mô tả chi tiết về dịch vụ..."></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="dongModal()">Hủy</button>
+                <button class="btn-primary" onclick="luuDichVu()">Lưu dữ liệu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let danhSachDichVuGoc = [];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchDuLieuDichVu();
+        });
+
+        // Tải danh sách dịch vụ từ Supabase
+        async function fetchDuLieuDichVu() {
+            const { data, error } = await db.from('dichvu').select('*').order('id', { ascending: false });
+
+            if (error) {
+                console.error('Lỗi tải danh mục dịch vụ:', error);
+            } else {
+                danhSachDichVuGoc = data;
+                hienThiBang(danhSachDichVuGoc);
+            }
+        }
+
+        // Hiển thị ra bảng giao diện
+        function hienThiBang(data) {
+            const tableBody = document.getElementById('data-table');
+            tableBody.innerHTML = '';
+            
+            if(data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#777;">Chưa có dịch vụ nào</td></tr>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const maDichVuFormatted = 'DV' + String(item.id).padStart(4, '0');
+                const donGiaFormatted = item.dongia !== null && item.dongia !== undefined ? Number(item.dongia).toLocaleString('vi-VN') + ' đ' : '0 đ';
+
+                tableBody.innerHTML += `<tr>
+                    <td><strong>${maDichVuFormatted}</strong></td>
+                    <td>${item.tendichvu || ''}</td>
+                    <td><span style="color: #0284c7; font-weight: 600;">${item.nhomdichvu || 'Chưa phân nhóm'}</span></td>
+                    <td><strong style="color: #059669;">${donGiaFormatted}</strong></td>
+                    <td>${item.mota || ''}</td>
+                    <td>
+                        <button class="btn-edit" onclick="moModalSua(${item.id}, '${item.tendichvu || ''}', '${item.nhomdichvu || ''}', '${item.dongia !== null ? item.dongia : ''}', '${item.mota || ''}')">Sửa</button>
+                        <button class="btn-delete" onclick="xoaDichVu(${item.id})">Xóa</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        // Tìm kiếm dịch vụ
+        function timKiemDichVu() {
+            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+            const ketQuaLoc = danhSachDichVuGoc.filter(item => {
+                const tenDV = (item.tendichvu || '').toLowerCase();
+                const nhom = (item.nhomdichvu || '').toLowerCase();
+                return tenDV.includes(tuKhoa) || nhom.includes(tuKhoa);
+            });
+            hienThiBang(ketQuaLoc);
+        }
+
+        // Mở Modal Thêm
+        function moModalThem() {
+            document.getElementById('editingId').value = '';
+            document.getElementById('tendichvu').value = '';
+            document.getElementById('nhomdichvu').value = '';
+            document.getElementById('dongia').value = '';
+            document.getElementById('mota').value = '';
+            
+            document.getElementById('modalTitle').innerText = 'Thêm dịch vụ mới';
+            document.getElementById('dichVuModal').style.display = 'flex';
+        }
+
+        // Mở Modal Sửa
+        function moModalSua(id, tendichvu, nhomdichvu, dongia, mota) {
+            document.getElementById('editingId').value = id;
+            document.getElementById('tendichvu').value = tendichvu;
+            document.getElementById('nhomdichvu').value = nhomdichvu;
+            document.getElementById('dongia').value = dongia;
+            document.getElementById('mota').value = mota;
+            
+            document.getElementById('modalTitle').innerText = 'Cập nhật dịch vụ (ID: ' + id + ')';
+            document.getElementById('dichVuModal').style.display = 'flex';
+        }
+
+        // Đóng Modal
+        function dongModal() {
+            document.getElementById('dichVuModal').style.display = 'none';
+        }
+
+        // Lưu dữ liệu (Thêm hoặc Cập nhật)
+        async function luuDichVu() {
+            const id = document.getElementById('editingId').value;
+            const tendichvu = document.getElementById('tendichvu').value.trim();
+            const nhomdichvu = document.getElementById('nhomdichvu').value.trim();
+            const donGiaStr = document.getElementById('dongia').value.trim();
+            const mota = document.getElementById('mota').value.trim();
+
+            if (!tendichvu) {
+                alert('Vui lòng nhập tên dịch vụ!');
+                return;
+            }
+
+            const payload = {
+                tendichvu: tendichvu,
+                nhomdichvu: nhomdichvu,
+                dongia: donGiaStr !== "" ? parseFloat(donGiaStr) : 0,
+                mota: mota
+            };
+
+            if (id === "") {
+                const { error } = await db.from('dichvu').insert([payload]);
+                if (error) {
+                    alert('Lỗi thêm dịch vụ: ' + error.message);
+                } else {
+                    alert('Thêm dịch vụ thành công!');
+                    dongModal();
+                    fetchDuLieuDichVu();
+                }
+            } else {
+                const { error } = await db.from('dichvu').update(payload).eq('id', id);
+                if (error) {
+                    alert('Lỗi cập nhật dịch vụ: ' + error.message);
+                } else {
+                    alert('Cập nhật thành công!');
+                    dongModal();
+                    fetchDuLieuDichVu();
+                }
+            }
+        }
+
+        // Xóa dịch vụ
+        async function xoaDichVu(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa dịch vụ ID: ' + id + ' này không?')) {
+                const { error } = await db.from('dichvu').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa: ' + error.message);
+                } else {
+                    alert('Xóa thành công!');
+                    fetchDuLieuDichVu();
+                }
+            }
+        }
+    </script>
+</body>
+</html>

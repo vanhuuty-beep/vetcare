@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng Nhập Hệ Thống - VetCare Pro</title>
+    <!-- Thư viện Supabase JS và CryptoJS (Hỗ trợ giải mã MD5 cho Chủ phòng khám) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/smart-search.js"></script>
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+    <link rel="stylesheet" href="../css/smart-search.css">
+
+    <style>
+        body {
+            background-color: #1e56a0;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+        }
+
+        .login-card {
+            background: #ffffff;
+            padding: 35px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 380px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .login-logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #0284c7;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .login-subtitle {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+
+        .form-group-login {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .form-group-login label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #334155;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .input-with-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-with-icon span {
+            position: absolute;
+            left: 10px;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .input-with-icon input {
+            width: 100%;
+            padding: 10px 10px 10px 35px;
+            font-size: 13px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .input-with-icon input:focus {
+            border-color: #0284c7;
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.1);
+        }
+
+        .btn-dangnhap {
+            width: 100%;
+            background-color: #0284c7;
+            color: white;
+            border: none;
+            padding: 11px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+
+        .btn-dangnhap:hover {
+            background-color: #0369a1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="login-logo">
+            <span>🏥</span> VETCARE PRO
+        </div>
+        <div class="login-subtitle">Hệ thống Quản lý Phòng Khám Thú Y</div>
+
+        <div class="form-group-login">
+            <label>Tên Tài Khoản / Số Điện Thoại</label>
+            <div class="input-with-icon">
+                <span>👤</span>
+                <input type="text" id="username" placeholder="Nhập tên tài khoản hoặc SĐT..." autocomplete="off">
+            </div>
+        </div>
+
+        <div class="form-group-login">
+            <label>Mật Khẩu</label>
+            <div class="input-with-icon">
+                <span>🔒</span>
+                <input type="password" id="password" placeholder="Nhập mật khẩu..." autocomplete="current-password">
+            </div>
+        </div>
+
+        <button type="button" class="btn-dangnhap" onclick="xuLyDangNhap()">🔑 ĐĂNG NHẬP HỆ THỐNG</button>
+
+        <div style="margin-top: 18px; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+            <a href="chunuoi/login.html" style="font-size: 12px; color: #0284c7; text-decoration: none; font-weight: bold;">📱 Bạn là khách hàng? Bấm vào đây để vào Cổng Chủ Nuôi</a>
+        </div>
+    </div>
+
+   <script>
+        // Kiểm tra nếu đã đăng nhập trước đó thì tự động chuyển hướng
+        window.addEventListener('DOMContentLoaded', () => {
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (currentUser && currentUser !== "null" && currentUser !== "undefined") {
+                try {
+                    dieuHuongTrang(JSON.parse(currentUser));
+                } catch (e) {
+                    sessionStorage.clear();
+                }
+            }
+        });
+
+        // Hàm mã hóa mật khẩu SHA-256 (Dùng cho nhân viên)
+        async function maHoaMatKhauSHA256(password) {
+            const msgBuffer = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        // Bắt sự kiện phím Enter khi nhập mật khẩu
+        document.getElementById('password').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                xuLyDangNhap();
+            }
+        });
+
+        async function xuLyDangNhap() {
+            const user = document.getElementById('username').value.trim();
+            const passPlain = document.getElementById('password').value.trim();
+
+            if (!user || !passPlain) {
+                alert('Vui lòng nhập đầy đủ tên tài khoản và mật khẩu!');
+                return;
+            }
+
+            try {
+                // Chuẩn bị trước các định dạng mã hóa mật khẩu để so khớp quét sạch lỗi
+                const passSha256 = await maHoaMatKhauSHA256(passPlain);
+                const passMd5 = CryptoJS.MD5(passPlain).toString();
+                let userData = null;
+
+                // 1. Kiểm tra trong bảng nhân viên (`user`)[cite: 1]
+                let { data: staffList, error: staffErr } = await db
+                    .from('user')
+                    .select('*');
+
+                if (staffList) {
+                    const matchedStaff = staffList.find(item => {
+                        const dbUser = item.tentaikhoan ? String(item.tentaikhoan).trim() : '';
+                        const dbPass = item.matkhau ? String(item.matkhau).trim() : '';
+                        
+                        const isUserMatch = dbUser.toLowerCase() === user.toLowerCase();
+                        // Chấp nhận khớp SHA-256 hoặc mật khẩu thô dự phòng
+                        const isPassMatch = (dbPass === passSha256 || dbPass === passPlain || dbPass === passMd5);
+                        
+                        return isUserMatch && isPassMatch;
+                    });
+
+                    if (matchedStaff) {
+                        userData = matchedStaff;
+                    }
+                }
+
+                // 2. Nếu không tìm thấy trong bảng nhân viên, kiểm tra tiếp trong bảng Chủ phòng khám (`chupk`)[cite: 2]
+                if (!userData) {
+                    let { data: ownerList, error: ownerErr } = await db
+                        .from('chupk')
+                        .select('*');
+
+                    if (ownerList) {
+                        const matchedOwner = ownerList.find(item => {
+                            const dbSdt = item.sodienthoai ? String(item.sodienthoai).trim() : '';
+                            const dbTen = item.hovaten ? String(item.hovaten).trim().toLowerCase() : '';
+                            const dbPk = item.tenphongkham ? String(item.tenphongkham).trim().toLowerCase() : '';
+                            const inputUser = user.toLowerCase();
+
+                            const isOwnerMatch = (dbSdt === user || dbTen === inputUser || dbPk.includes(inputUser));
+                            const dbPass = item.matkhau ? String(item.matkhau).trim() : '';
+                            
+                            // Hỗ trợ so khớp linh hoạt cả MD5, SHA-256 hoặc mật khẩu thô
+                            const isPassMatch = (dbPass === passMd5 || dbPass === passSha256 || dbPass === passPlain);
+
+                            return isOwnerMatch && isPassMatch;
+                        });
+
+                        if (matchedOwner) {
+                            // Kiểm tra hạn sử dụng bản quyền của phòng khám[cite: 2]
+                            if (matchedOwner.ngayhethan) {
+                                const ngayHetHan = new Date(matchedOwner.ngayhethan);
+                                if (ngayHetHan < new Date()) {
+                                    alert('⚠️ Tài khoản phòng khám của bạn đã hết hạn bản quyền sử dụng app!');
+                                    return;
+                                }
+                            }
+
+                            userData = {
+                                id: matchedOwner.id,
+                                tentaikhoan: matchedOwner.hovaten || matchedOwner.tenphongkham,
+                                sodienthoai: matchedOwner.sodienthoai,
+                                maphongkham: matchedOwner.maphongkham, // Lấy chuẩn mã phòng khám
+                                vaitro: 'Chủ phòng khám',
+                                trangthai: matchedOwner.trangthai || 'Hoạt động'
+                            };
+                        }
+                    }
+                }
+
+                if (!userData) {
+                    alert('Tên đăng nhập hoặc mật khẩu không chính xác!');
+                    return;
+                }
+
+                if (userData.trangthai === 'Khóa' || userData.trangthai === 'Ngừng hoạt động') {
+                    alert('Tài khoản của bạn đã bị khóa!');
+                    return;
+                }
+
+                alert('Đăng nhập thành công! Xin chào ' + (userData.tentaikhoan || 'Admin'));
+                
+                // Lưu session an toàn tuyệt đối
+                sessionStorage.setItem('currentUser', JSON.stringify(userData));
+                if (userData.maphongkham) {
+                    sessionStorage.setItem('maphongkham', userData.maphongkham);
+                }
+                
+                dieuHuongTrang(userData);
+
+            } catch (err) {
+                console.error('Lỗi đăng nhập:', err);
+                alert('Có lỗi xảy ra khi kết nối cơ sở dữ liệu!');
+            }
+        }
+
+        function dieuHuongTrang(userObj) {
+            const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            if (isMobile) {
+                window.location.replace('../mobile/khachhang.html');
+            } else {
+                const userRole = (userObj.vaitro || userObj.role || '').toLowerCase();
+                
+                if (userRole.includes('bac si') || userRole === 'bacsi') {
+                    window.location.replace('../page/khambenh.html');
+                } else if (userRole.includes('letan') || userRole.includes('le tan')) {
+                    window.location.replace('../page/lichhen.html');
+                } else {
+                    window.location.replace('../page/thongke.html');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

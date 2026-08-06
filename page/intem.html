@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>In Tem Mã Vạch 2 Cột (Khổ Giấy 80mm) - VetCare Pro</title>
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Thêm thư viện JsBarcode để hiển thị mã vạch -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+	<script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+	<script src="../js/smart-search.js"></script>
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+	<link rel="stylesheet" href="../css/smart-search.css">
+
+    <style>
+        .print-setup-card {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-row-print {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .form-group-print {
+            flex: 1;
+            min-width: 250px;
+        }
+        .form-group-print label {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            display: block;
+            color: #1e293b;
+        }
+        .form-group-print input, .form-group-print select {
+            width: 100%;
+            padding: 9px 12px;
+            font-size: 13px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        /* KHU VỰC HIỂN THỊ TEM TRÊN GIAO DIỆN WEB */
+        .preview-container {
+            background: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 400px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .sheet-80mm {
+            width: 80mm;
+            background: white;
+            padding: 4mm;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 3mm;
+            align-content: start;
+        }
+
+        .barcode-item {
+            border: 1px dashed #94a3b8;
+            padding: 4px;
+            text-align: center;
+            background: #fff;
+            box-sizing: border-box;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 32mm;
+            overflow: hidden;
+        }
+
+        .store-name {
+            font-size: 9px;
+            font-weight: bold;
+            color: #0f172a;
+            margin-bottom: 1px;
+        }
+
+        .product-name-label {
+            font-size: 8px;
+            color: #334155;
+            margin-bottom: 2px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.1;
+            height: 18px;
+        }
+
+        .product-price {
+            font-size: 10px;
+            font-weight: bold;
+            color: #dc2626;
+            margin-top: 2px;
+        }
+
+        /* --- CẤU HÌNH IN ẤN CHUẨN XÁC TUYỆT ĐỐI KHỔ 80MM --- */
+        @media print {
+            @page{
+                size: 80mm auto;
+                margin: 0;
+            }
+
+            html, body{
+                width: 80mm;
+                margin: 0;
+                padding: 0;
+                background: #fff;
+            }
+
+            #menu-container,
+            .top-navbar,
+            .print-setup-card{
+                display: none !important;
+            }
+
+            .main-content{
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            #khungInTem{
+                width: 80mm;
+                display: grid;
+                grid-template-columns: 35mm 35mm;
+                column-gap: 2mm;
+                row-gap: 2mm;
+                justify-content: center;
+            }
+
+            .barcode-item{
+                width: 35mm;
+                height: 22mm;
+                box-sizing: border-box;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+        <div class="top-navbar">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+                <h2 style="margin: 0; font-size: 18px; font-weight: bold;">IN TEM MÃ VẠCH 2 CỘT (KHỔ GIẤY 80MM)</h2>
+            </div>
+        </div>
+
+        <div class="content-body">
+            <div class="print-setup-card">
+                <div class="form-row-print">
+                    <div class="form-group-print" style="flex: 2;">
+                        <label>Chọn sản phẩm cần in tem (*):</label>
+                        <select id="chonSanPham">
+                            <option value="">-- Gõ hoặc chọn sản phẩm từ danh mục --</option>
+                        </select>
+                    </div>
+                    <div class="form-group-print" style="flex: 1;">
+                        <label>Số lượng tem in:</label>
+                        <input type="number" id="soLuongTem" value="10" min="1" max="100">
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn-primary" onclick="taoTemIn()" style="background-color: #059669; padding: 10px 16px; height: 38px; cursor: pointer;">📥 Tạo tem</button>
+                        <button class="btn-primary" onclick="inTem()" style="background-color: #2563eb; padding: 10px 16px; height: 38px; cursor: pointer;">In ra máy</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-container">
+                <div class="sheet-80mm" id="khungInTem">
+                    <div style="grid-column: span 2; text-align: center; color: #64748b; font-size: 12px; padding: 40px 0;">
+                        Chưa có tem nào được tạo. Vui lòng chọn sản phẩm và bấm "Tạo tem" ở trên!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let danhSachSanPham = [];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await taiDanhMucSanPham();
+        });
+
+        async function taiDanhMucSanPham() {
+            const { data, error } = await db.from('danhmucsanpham').select('*').order('id', { ascending: false });
+            if (!error && data) {
+                danhSachSanPham = data;
+                const select = document.getElementById('chonSanPham');
+                select.innerHTML = '<option value="">-- Chọn sản phẩm từ danh mục --</option>';
+                data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    const barcodeVal = item.mabarcode || ('86' + String(item.id).padStart(8, '0'));
+                    option.textContent = `${item.tensanpham} - Giá: ${Number(item.giaban || 0).toLocaleString('vi-VN')}đ (Barcode: ${barcodeVal})`;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function taoTemIn() {
+            const selectedId = document.getElementById('chonSanPham').value;
+            const soLuong = parseInt(document.getElementById('soLuongTem').value) || 10;
+            const khungIn = document.getElementById('khungInTem');
+
+            if (!selectedId) {
+                alert('Vui lòng chọn sản phẩm cần in tem!');
+                return;
+            }
+
+            const sp = danhSachSanPham.find(x => x.id == selectedId);
+            if (!sp) return;
+
+            const barcodeVal = sp.mabarcode || ('86' + String(sp.id).padStart(8, '0'));
+            const tenSP = sp.tensanpham || '';
+            const giaBan = Number(sp.giaban || 0).toLocaleString('vi-VN') + ' đ';
+
+            let htmlContent = '';
+            for (let i = 0; i < soLuong; i++) {
+                htmlContent += `
+                    <div class="barcode-item">
+                        <div class="store-name">VETCARE PRO</div>
+                        <div class="product-name-label" title="${tenSP}">${tenSP}</div>
+                        <svg class="barcode-elem" data-code="${barcodeVal}"></svg>
+                        <div class="product-price">${giaBan}</div>
+                    </div>
+                `;
+            }
+
+            khungIn.innerHTML = htmlContent;
+
+            setTimeout(() => {
+                document.querySelectorAll('.barcode-elem').forEach(svg => {
+                    const code = svg.getAttribute('data-code');
+                    try {
+                        JsBarcode(svg, code, {
+                            format: "CODE128",
+                            width: 1.1,
+                            height: 22,
+                            displayValue: true,
+                            fontSize: 9,
+                            margin: 0
+                        });
+                    } catch(e) {
+                        svg.outerHTML = `<span style="font-size:9px;">${code}</span>`;
+                    }
+                });
+            }, 200);
+        }
+
+        function inTem() {
+            taoTemIn();
+
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        }
+    </script>
+</body>
+</html>

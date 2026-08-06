@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh Mục Sản Phẩm & Hàng Hóa - VetCare Pro</title>
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	<script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+	<script src="../js/smart-search.js"></script>
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+	<link rel="stylesheet" href="../css/smart-search.css">
+
+    <style>
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #ffffff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid #2563eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stat-card:nth-child(2) { border-left-color: #059669; }
+        .stat-card:nth-child(3) { border-left-color: #d97706; }
+        .stat-card:nth-child(4) { border-left-color: #0284c7; }
+        
+        .stat-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1e293b;
+        }
+        .stat-icon {
+            font-size: 24px;
+            opacity: 0.8;
+        }
+
+        .search-box {
+            padding: 9px 12px;
+            width: 320px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+        
+        .card-header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            width: 100%;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .modal-container {
+            width: 750px;
+            padding: 20px 24px;
+        }
+        .modal-header {
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .form-group-modal {
+            margin-bottom: 12px;
+        }
+        .form-group-modal label {
+            font-size: 13px;
+            margin-bottom: 4px;
+            display: block;
+            font-weight: 500;
+        }
+        .form-group-modal input, .form-group-modal select, .form-group-modal textarea {
+            width: 100%;
+            padding: 8px 10px;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+        .form-row .form-group-modal {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .modal-footer {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .product-img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+       <div id="topnav-container"></div>
+
+        <div class="content-body">
+            <!-- 4 KHỐI THỐNG KÊ PHÍA TRÊN (CÓ BỔ SUNG LỢI NHUẬN) -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div>
+                        <div class="stat-title">Số lượng mặt hàng</div>
+                        <div class="stat-value" id="statSoMatHang">0</div>
+                    </div>
+                    <div class="stat-icon">📦</div>
+                </div>
+                <div class="stat-card">
+                    <div>
+                        <div class="stat-title">Tổng sản phẩm tồn kho</div>
+                        <div class="stat-value" id="statTongTon">0</div>
+                    </div>
+                    <div class="stat-icon">📊</div>
+                </div>
+                <div class="stat-card">
+                    <div>
+                        <div class="stat-title">Ước tính giá trị kho</div>
+                        <div class="stat-value" id="statGiaTriKho" style="color: #2563eb;">0 đ</div>
+                    </div>
+                    <div class="stat-icon">💰</div>
+                </div>
+                <div class="stat-card">
+                    <div>
+                        <div class="stat-title">Lợi nhuận dự kiến (Lời/Lỗ)</div>
+                        <div class="stat-value" id="statLoiNhuan" style="color: #059669;">0 đ</div>
+                    </div>
+                    <div class="stat-icon">📈</div>
+                </div>
+            </div>
+
+            <!-- BẢNG DANH MỤC SẢN PHẨM -->
+            <div class="card">
+                <div class="card-header" style="flex-direction: column; align-items: flex-start; gap: 15px;">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <span>📦</span> Danh Mục Sản Phẩm & Hàng Hóa
+                    </h3>
+                    <div class="card-header-actions">
+                        <input type="text" id="searchInput" class="search-box" placeholder="Nhập tên sản phẩm hoặc mã Barcode để tìm kiếm..." onkeyup="timKiemSanPham()">
+                        <button class="btn-primary" onclick="moModalThem()" style="background-color: #0284c7; padding: 9px 16px;">+ Thêm Hàng</button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr style="background: #1e3a8a; color: #ffffff;">
+                                <th style="padding: 10px;">Ảnh</th>
+                                <th style="padding: 10px;">Mã SP</th>
+                                <th style="padding: 10px;">Tên Sản Phẩm</th>
+                                <th style="padding: 10px;">Giá Niêm Yết</th>
+                                <th style="padding: 10px;">Giá Nhập</th>
+                                <th style="padding: 10px;">ĐVT</th>
+                                <th style="padding: 10px;">Tồn Kho</th>
+                                <th style="padding: 10px;">Mã Vạch</th>
+                                <th style="padding: 10px;">Nhóm Hàng</th>
+                                <th style="padding: 10px;">Mô Tả SP</th>
+                                <th style="padding: 10px; text-align: center;">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table">
+                            <!-- Dữ liệu được nạp tự động từ Supabase -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP FORM THÊM / SỬA SẢN PHẨM -->
+    <div class="modal-overlay" id="sanPhamModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle" style="margin:0; font-size: 16px;">Thêm hàng hóa mới</h3>
+                <button class="close-modal" onclick="dongModal()" style="background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingId">
+            
+            <div class="form-row">
+                <div class="form-group-modal" style="flex: 2;">
+                    <label>Tên sản phẩm (tensanpham) (*):</label>
+                    <input type="text" id="tensanpham" placeholder="Nhập tên sản phẩm, thức ăn, phụ kiện...">
+                </div>
+                <div class="form-group-modal" style="flex: 1;">
+                    <label>Mã vạch (mabarcode):</label>
+                    <input type="text" id="mabarcode" placeholder="Tự sinh đầu 86..." readonly style="background: #f1f5f9; font-weight: bold; color: #2563eb;">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Nhóm hàng (nhomsanpham):</label>
+                    <select id="nhomsanpham">
+                        <option value="">-- Chọn nhóm hàng --</option>
+                        <option value="Thức ăn">Thức ăn</option>
+                        <option value="Thức ăn hạt">Thức ăn hạt</option>
+                        <option value="Thức ăn ướt">Thức ăn ướt</option>
+                        <option value="Phụ kiện - Đồ chơi">Phụ kiện - Đồ chơi</option>
+                        <option value="Sữa tắm - Vệ sinh">Sữa tắm - Vệ sinh</option>
+                        <option value="Thực phẩm chức năng">Thực phẩm chức năng</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                </div>
+                <div class="form-group-modal">
+                    <label>Đơn vị tính (donvi):</label>
+                    <input type="text" id="donvi" placeholder="VD: Cái, Gói, Hộp, Chai, Kg...">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Giá nhập (gianhap - VNĐ):</label>
+                    <input type="number" id="gianhap" placeholder="0">
+                </div>
+                <div class="form-group-modal">
+                    <label>Giá niêm yết / Bán (giaban) (*):</label>
+                    <input type="number" id="giaban" placeholder="0">
+                </div>
+                <div class="form-group-modal">
+                    <label>Tồn kho (soluongton):</label>
+                    <input type="number" id="soluongton" value="0">
+                </div>
+            </div>
+
+            <div class="form-group-modal">
+                <label>Hình ảnh sản phẩm (Tải lên file):</label>
+                <input type="file" id="fileHinhanh" accept="image/*" style="padding: 6px;">
+                <input type="hidden" id="hinhanh">
+            </div>
+
+            <div class="form-group-modal">
+                <label>Mô tả sản phẩm (mota):</label>
+                <textarea id="mota" rows="2" placeholder="Thông tin chi tiết về sản phẩm..."></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <div>
+                    <button type="button" id="btnXoaModal" class="btn-delete" style="display: none; background-color: #dc2626; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;" onclick="xoaSanPhamTuModal()">Xóa sản phẩm này</button>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-secondary" onclick="dongModal()">Hủy</button>
+                    <button type="button" class="btn-primary" onclick="luuSanPham()">Lưu sản phẩm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thư viện JsBarcode hỗ trợ mã vạch -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+
+    <script>
+        let danhSachSanPhamGoc = [];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await taiDanhSachSanPham();
+        });
+
+        async function taiDanhSachSanPham() {
+            const { data, error } = await db.from('danhmucsanpham').select('*').order('id', { ascending: false });
+            if (error) {
+                console.error('Lỗi tải danh mục sản phẩm:', error);
+                alert('Không thể tải dữ liệu sản phẩm từ Supabase!');
+            } else {
+                danhSachSanPhamGoc = data || [];
+                tinhToanThongKe(danhSachSanPhamGoc);
+                hienThiBang(danhSachSanPhamGoc);
+            }
+        }
+
+        function tinhToanThongKe(data) {
+            const soMatHang = data.length;
+            let tongTon = 0;
+            let giaTriKho = 0;
+            let loiNhuanDuKien = 0;
+
+            data.forEach(item => {
+                const ton = parseInt(item.soluongton) || 0;
+                const giaNhap = parseFloat(item.gianhap) || 0;
+                const giaBan = parseFloat(item.giaban) || 0;
+                
+                tongTon += ton;
+                giaTriKho += (ton * giaNhap);
+                
+                // Tính lợi nhuận dự kiến = (Giá bán - Giá nhập) * Tồn kho
+                loiNhuanDuKien += (giaBan - giaNhap) * ton;
+            });
+
+            document.getElementById('statSoMatHang').innerText = soMatHang;
+            document.getElementById('statTongTon').innerText = tongTon;
+            document.getElementById('statGiaTriKho').innerText = giaTriKho.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('statLoiNhuan').innerText = loiNhuanDuKien.toLocaleString('vi-VN') + ' đ';
+        }
+
+        function hienThiBang(data) {
+            const tableBody = document.getElementById('data-table');
+            tableBody.innerHTML = '';
+            
+            if(data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:#777; padding: 20px;">Chưa có sản phẩm nào trong hệ thống</td></tr>`;
+                return;
+            }
+
+            data.forEach((item) => {
+                const maSP = 'SP' + String(item.id).padStart(4, '0');
+                
+                const imgTag = item.hinhanh 
+                    ? `<img src="${item.hinhanh}" class="product-img" onerror="this.src='https://via.placeholder.com/40?text=No+Img'">`
+                    : `<div class="product-img" style="display:flex;align-items:center;justify-content:center;background:#e2e8f0;font-size:9px;color:#64748b;">No Img</div>`;
+
+                const barcodeVal = item.mabarcode || ('86' + String(item.id).padStart(8, '0'));
+                
+                tableBody.innerHTML += `<tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 8px;">${imgTag}</td>
+                    <td style="padding: 8px; font-weight: bold; color: #1e3a8a;">${maSP}</td>
+                    <td style="padding: 8px; font-weight: 500; color: #0f172a;">${item.tensanpham || ''}</td>
+                    <td style="padding: 8px; color: #dc2626; font-weight: bold;">${Number(item.giaban || 0).toLocaleString('vi-VN')} đ</td>
+                    <td style="padding: 8px; color: #334155;">${Number(item.gianhap || 0).toLocaleString('vi-VN')} đ</td>
+                    <td style="padding: 8px;">${item.donvi || '---'}</td>
+                    <td style="padding: 8px; font-weight: bold; color: ${item.soluongton > 0 ? '#0284c7' : '#dc2626'}">${item.soluongton || 0}</td>
+                    <td style="padding: 8px;">
+                        <svg class="barcode-elem" data-code="${barcodeVal}"></svg>
+                    </td>
+                    <td style="padding: 8px;"><span style="background: #f1f5f9; padding: 3px 6px; border-radius: 4px; font-size: 12px; border: 1px solid #e2e8f0;">${item.nhomsanpham || '---'}</span></td>
+                    <td style="padding: 8px; font-size: 12px; color: #64748b; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${item.mota || ''}">${item.mota || '---'}</td>
+                    <td style="padding: 8px; text-align: center; white-space: nowrap;">
+                        <button class="btn-edit" onclick="moModalSua(${item.id})" style="background: #0284c7; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; margin-right: 4px;">Sửa</button>
+                        <button class="btn-delete" onclick="xoaSanPham(${item.id})" style="background: #dc2626; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Xóa</button>
+                    </td>
+                </tr>`;
+            });
+
+            setTimeout(() => {
+                document.querySelectorAll('.barcode-elem').forEach(svg => {
+                    const code = svg.getAttribute('data-code');
+                    try {
+                        JsBarcode(svg, code, {
+                            format: "CODE128",
+                            width: 1.2,
+                            height: 25,
+                            displayValue: true,
+                            fontSize: 10,
+                            margin: 0
+                        });
+                    } catch(e) {
+                        svg.outerHTML = `<span style="font-size:11px;">${code}</span>`;
+                    }
+                });
+            }, 50);
+        }
+
+        function sinhMaBarcodeTuDong() {
+            let randomPart = Math.floor(10000000 + Math.random() * 90000000);
+            return '86' + randomPart;
+        }
+
+        function timKiemSanPham() {
+            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+            const ketQuaLoc = danhSachSanPhamGoc.filter(item => {
+                const tenSP = (item.tensanpham || '').toLowerCase();
+                const barcode = (item.mabarcode || '').toLowerCase();
+                const maSP = ('sp' + String(item.id)).toLowerCase();
+                const nhom = (item.nhomsanpham || '').toLowerCase();
+                return tenSP.includes(tuKhoa) || barcode.includes(tuKhoa) || maSP.includes(tuKhoa) || nhom.includes(tuKhoa);
+            });
+            hienThiBang(ketQuaLoc);
+        }
+
+        function moModalThem() {
+            document.getElementById('editingId').value = '';
+            document.getElementById('tensanpham').value = '';
+            document.getElementById('mabarcode').value = sinhMaBarcodeTuDong();
+            document.getElementById('nhomsanpham').value = '';
+            document.getElementById('donvi').value = '';
+            document.getElementById('gianhap').value = '';
+            document.getElementById('giaban').value = '';
+            document.getElementById('soluongton').value = '0';
+            document.getElementById('fileHinhanh').value = '';
+            document.getElementById('hinhanh').value = '';
+            document.getElementById('mota').value = '';
+            
+            document.getElementById('btnXoaModal').style.display = 'none';
+            document.getElementById('modalTitle').innerText = 'Thêm hàng hóa mới';
+            document.getElementById('sanPhamModal').style.display = 'flex';
+        }
+
+        function moModalSua(id) {
+            const item = danhSachSanPhamGoc.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('editingId').value = item.id;
+            document.getElementById('tensanpham').value = item.tensanpham || '';
+            document.getElementById('mabarcode').value = item.mabarcode || sinhMaBarcodeTuDong();
+            document.getElementById('nhomsanpham').value = item.nhomsanpham || '';
+            document.getElementById('donvi').value = item.donvi || '';
+            document.getElementById('gianhap').value = item.gianhap || '';
+            document.getElementById('giaban').value = item.giaban || '';
+            document.getElementById('soluongton').value = item.soluongton || 0;
+            document.getElementById('fileHinhanh').value = '';
+            document.getElementById('hinhanh').value = item.hinhanh || '';
+            document.getElementById('mota').value = item.mota || '';
+
+            document.getElementById('btnXoaModal').style.display = 'block';
+            document.getElementById('modalTitle').innerText = 'Cập nhật hàng hóa (ID: SP' + String(id).padStart(4, '0') + ')';
+            document.getElementById('sanPhamModal').style.display = 'flex';
+        }
+
+        function dongModal() {
+            document.getElementById('sanPhamModal').style.display = 'none';
+        }
+
+        async function luuSanPham() {
+            const id = document.getElementById('editingId').value;
+            const tensanpham = document.getElementById('tensanpham').value.trim();
+            const mabarcode = document.getElementById('mabarcode').value.trim();
+            const nhomsanpham = document.getElementById('nhomsanpham').value;
+            const donvi = document.getElementById('donvi').value.trim();
+            const gianhap = parseFloat(document.getElementById('gianhap').value) || 0;
+            const giaban = parseFloat(document.getElementById('giaban').value) || 0;
+            const soluongton = parseInt(document.getElementById('soluongton').value) || 0;
+            const mota = document.getElementById('mota').value.trim();
+            
+            let hinhanh = document.getElementById('hinhanh').value;
+            const fileInput = document.getElementById('fileHinhanh');
+            if (fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                hinhanh = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            if (!tensanpham || !giaban) {
+                alert('Vui lòng nhập Tên sản phẩm và Giá niêm yết (giá bán)!');
+                return;
+            }
+
+            const payload = {
+                tensanpham,
+                mabarcode,
+                nhomsanpham,
+                donvi,
+                gianhap,
+                giaban,
+                soluongton,
+                hinhanh,
+                mota
+            };
+
+            if (id === "") {
+                const { error } = await db.from('danhmucsanpham').insert([payload]);
+                if (error) {
+                    alert('Lỗi thêm sản phẩm: ' + error.message);
+                } else {
+                    alert('Thêm hàng hóa thành công!');
+                    dongModal();
+                    taiDanhSachSanPham();
+                }
+            } else {
+                const { error } = await db.from('danhmucsanpham').update(payload).eq('id', id);
+                if (error) {
+                    alert('Lỗi cập nhật sản phẩm: ' + error.message);
+                } else {
+                    alert('Cập nhật thành công!');
+                    dongModal();
+                    taiDanhSachSanPham();
+                }
+            }
+        }
+
+        async function xoaSanPham(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi hệ thống không?')) {
+                const { error } = await db.from('danhmucsanpham').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa: ' + error.message);
+                } else {
+                    alert('Xóa sản phẩm thành công!');
+                    taiDanhSachSanPham();
+                }
+            }
+        }
+
+        async function xoaSanPhamTuModal() {
+            const id = document.getElementById('editingId').value;
+            if (!id) return;
+
+            if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi hệ thống không?')) {
+                const { error } = await db.from('danhmucsanpham').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa: ' + error.message);
+                } else {
+                    alert('Xóa sản phẩm thành công!');
+                    dongModal();
+                    taiDanhSachSanPham();
+                }
+            }
+        }
+    </script>
+</body>
+</html>

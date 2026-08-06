@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Phiếu Chỉ Định - VetCare Pro</title>
+    <!-- Thư viện Supabase JS -->
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	<script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+	<script src="../js/smart-search.js"></script>
+	
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+	<link rel="stylesheet" href="../css/smart-search.css">
+
+    <style>
+        .search-box {
+            padding: 8px 12px;
+            width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: #2563eb;
+        }
+        .card-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .modal-container {
+            width: 850px;
+            padding: 20px 24px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+        }
+        .form-group-modal {
+            margin-bottom: 10px;
+            position: relative; /* Giúp neo hộp gợi ý tìm kiếm */
+        }
+        .form-group-modal label {
+            font-size: 13px;
+            margin-bottom: 3px;
+            display: block;
+            font-weight: 500;
+        }
+        .form-group-modal input, .form-group-modal select, .form-group-modal textarea {
+            width: 100%;
+            padding: 7px 10px;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        /* Hộp gợi ý tìm kiếm thông minh cho mã khám bệnh */
+        #suggestions-box-kb {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #cbd5e1;
+            border-radius: 0 0 6px 6px;
+            max-height: 180px;
+            overflow-y: auto;
+            z-index: 99999;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: none;
+            margin-top: 2px;
+        }
+        .suggestion-item {
+            padding: 9px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .suggestion-item:hover {
+            background-color: #f8fafc;
+            color: #2563eb;
+            font-weight: 500;
+        }
+        
+        .table-chitiet-modal {
+            width: 100%;
+            margin-top: 10px;
+            border-collapse: collapse;
+        }
+        .table-chitiet-modal th, .table-chitiet-modal td {
+            border: 1px solid #e2e8f0;
+            padding: 6px;
+            font-size: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        .table-chitiet-modal th {
+            background-color: #f8fafc;
+            font-weight: 600;
+        }
+        
+        .btn-add-row {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        .btn-add-row:hover {
+            background-color: #059669;
+        }
+        .btn-remove-row {
+            background-color: #dc2626;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .btn-print-invoice {
+            background-color: #0284c7;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        #p-hinhanh {
+            max-width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border: 1px solid #cbd5e1;
+            padding: 3px;
+            border-radius: 4px;
+        }
+
+        /* Giao diện phân trang */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            font-size: 13px;
+            color: #475569;
+        }
+        .pagination-buttons {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .btn-page {
+            background: #fff;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .btn-page:hover:not(:disabled) {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+        .btn-page:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-page.active {
+            background: #2563eb;
+            color: #fff;
+            border-color: #2563eb;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+        <div id="topnav-container"></div>
+
+        <div class="content-body">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Danh sách Phiếu Chỉ Định</h3>
+                    <div class="card-header-actions">
+                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm theo mã khám, kết luận..." onkeyup="timKiemPhiếuChỉĐịnh()">
+                        <button class="btn-primary" onclick="moModalThem()">+ Lập phiếu chỉ định mới</button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã phiếu</th>
+                                <th>Mã khám bệnh</th>
+                                <th>Ngày chỉ định</th>
+                                <th>Chi tiết dịch vụ & Đơn giá</th>
+                                <th>Kết luận</th>
+                                <th style="text-align: center;">Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table">
+                            <!-- Dữ liệu được nạp tự động -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PHÂN TRANG -->
+                <div class="pagination-container">
+                    <div id="pageInfo">Hiển thị 0 - 0 của 0 bản ghi</div>
+                    <div class="pagination-buttons" id="paginationControls">
+                        <!-- Nút phân trang tạo tự động -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP FORM THÊM / SỬA PHIẾU CHỈ ĐỊNH -->
+    <div class="modal-overlay" id="phieuChiDinhModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Lập phiếu chỉ định mới</h3>
+                <button class="close-modal" onclick="dongModal()">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingId">
+            <input type="hidden" id="editingHinhanhOld">
+            
+            <div style="display: flex; gap: 10px;">
+                <div class="form-group-modal" style="flex: 1;">
+                    <label>Tìm kiếm & Chọn mã khám bệnh (makhambenh) (*):</label>
+                    <input type="text" id="makhambenh_search" placeholder="Gõ mã khám, tên thú cưng hoặc chủ..." autocomplete="off" oninput="xuLyTimKiemMaKham(this.value)">
+                    <input type="hidden" id="makhambenh">
+                    <!-- Hộp gợi ý tìm kiếm thông minh -->
+                    <div id="suggestions-box-kb"></div>
+                </div>
+                <div class="form-group-modal" style="flex: 1;">
+                    <label>Ngày chỉ định (ngaychidinh):</label>
+                    <input type="datetime-local" id="ngaychidinh">
+                </div>
+            </div>
+
+            <div class="form-group-modal" style="margin-top: 10px;">
+                <label><strong>Danh sách dịch vụ chỉ định:</strong></label>
+                <table class="table-chitiet-modal">
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">Tên dịch vụ</th>
+                            <th style="width: 20%;">Đơn giá (dongia)</th>
+                            <th style="width: 35%;">Thành tiền (thanhtien)</th>
+                            <th style="width: 10%; text-align: center;">Xóa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dsDichVuContainer">
+                        <!-- Các dòng dịch vụ thêm động -->
+                    </tbody>
+                </table>
+                <button type="button" class="btn-add-row" onclick="themDongDichVu()">+ Thêm dịch vụ</button>
+            </div>
+
+            <div style="margin-top: 10px;" class="form-group-modal">
+                <label>Kết luận (ketluan):</label>
+                <textarea id="ketluan" rows="2" placeholder="Nhập kết luận chuyên môn..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <div class="form-group-modal" style="flex: 1;">
+                    <label>Trạng thái (trangthai):</label>
+                    <select id="trangthai">
+                        <option value="Chờ thực hiện">Chờ thực hiện</option>
+                        <option value="Đang thực hiện">Đang thực hiện</option>
+                        <option value="Đã hoàn thành">Đã hoàn thành</option>
+                    </select>
+                </div>
+                <div class="form-group-modal" style="flex: 1;">
+                    <label>Hình ảnh (hinhanh):</label>
+                    <input type="file" id="hinhanh" accept="image/*" capture="environment" style="padding: 4px;">
+                </div>
+            </div>
+
+            <div style="margin-top: 10px; text-align: right; font-size: 15px; font-weight: bold;">
+                Tổng tiền: <span id="tongTienHienThi" style="color: #dc2626;">0 đ</span>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="dongModal()">Hủy</button>
+                <button class="btn-primary" onclick="luuPhiếuChỉĐịnh()">Lưu dữ liệu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHUNG IN PHIẾU CHỈ ĐỊNH -->
+    <div id="printArea" style="display: none;">
+            <div class="print-header"></div>
+        
+        <div class="print-title">
+            <h3>PHIẾU CHỈ ĐỊNH CẬN LÂM SÀNG</h3>
+            <p id="p-maphieu">Mã phiếu: PCD0001</p>
+        </div>
+        
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 10px; margin-bottom: 10px; border-radius: 4px; font-size: 11px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <div><strong>Mã khám bệnh:</strong> <span id="p-makhambenh"></span></div>
+                <div><strong>Ngày chỉ định:</strong> <span id="p-ngaychidinh"></span></div>
+            </div>
+            <div><strong>Trạng thái:</strong> <span id="p-trangthai" style="color: #0284c7; font-weight: bold;"></span></div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px;">
+            <thead>
+                <tr style="background: #f1f5f9;">
+                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: left;">Tên dịch vụ</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: right;">Đơn giá</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: right;">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody id="p-table-body">
+                <!-- Dữ liệu in -->
+            </tbody>
+        </table>
+
+        <div style="text-align: right; font-size: 12px; font-weight: bold; margin-bottom: 15px;">
+            Tổng cộng: <span id="p-tongtien" style="color: #dc2626; font-size: 13px;">0 đ</span>
+        </div>
+
+        <div style="margin-bottom: 10px; font-size: 11px;">
+            <strong>Kết luận:</strong>
+            <div id="p-ketluan" style="border: 1px solid #e2e8f0; padding: 5px; min-height: 25px; margin-top: 3px; border-radius: 3px;"></div>
+        </div>
+
+        <div id="p-image-container" style="display: none; margin-bottom: 15px; text-align: center;">
+            <div style="font-size: 11px; font-weight: bold; margin-bottom: 4px; text-align: left;">Hình ảnh kết quả:</div>
+            <img id="p-hinhanh" src="" alt="Hình ảnh chỉ định">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; text-align: center; font-size: 11px; margin-top: 20px;">
+            <div>
+                <p><strong>Khách hàng / Chủ vật nuôi</strong></p>
+                <p style="font-size: 10px; color: #666; font-style: italic;">(Ký và ghi rõ họ tên)</p>
+            </div>
+            <div>
+                <p><strong>Bác sĩ chỉ định</strong></p>
+                <p style="font-size: 10px; color: #666; font-style: italic;">(Ký và ghi rõ họ tên)</p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    @media print {
+        body * {
+            visibility: hidden !important;
+        }
+        
+        #printArea, #printArea * {
+            visibility: visible !important;
+        }
+        
+        #printArea {
+            display: block !important;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            font-family: 'Arial', sans-serif;
+            color: #111;
+            background: #fff;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        #menu-container,
+        #topnav-container,
+        .main-content,
+        .card,
+        .modal-overlay {
+            display: none !important;
+            visibility: hidden !important;
+        }
+
+        .print-header {
+            text-align: center;
+            border-bottom: 2px solid #0284c7;
+            padding-bottom: 6px;
+            margin-bottom: 10px;
+        }
+        .print-header h2 { font-size: 15px; margin: 0; color: #0284c7; font-weight: bold; }
+        .print-header p { font-size: 10px; margin: 2px 0; color: #555; }
+        .print-title {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .print-title h3 { font-size: 13px; margin: 0; text-transform: uppercase; color: #1e293b; font-weight: bold; }
+        .print-title p { font-size: 10px; margin: 2px 0; color: #64748b; }
+    }
+    </style>
+
+    <script>
+        let danhSachPhieuGoc = [];
+        let danhSachDichVuGoc = [];
+        let mapKhamBenh = {}; 
+        let mapThuCung = {};    
+        let mapKhachHang = {}; 
+        
+        // Biến cho tìm kiếm thông minh mã khám
+        let dsMaKhamChoSearch = [];
+
+        // Biến phục vụ phân trang
+        let currentPage = 1;
+        const rowsPerPage = 10;
+        let filteredDataCache = [];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const maKBParam = urlParams.get('makhambenh');
+            if (maKBParam) {
+                document.getElementById('makhambenh').value = maKBParam;
+            }
+            await fetchDuLieuBanDau();
+
+            // Đóng hộp gợi ý tìm kiếm khi click ra ngoài
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.form-group-modal')) {
+                    const box = document.getElementById('suggestions-box-kb');
+                    if (box) box.style.display = 'none';
+                }
+            });
+
+            // Đăng ký Realtime tự động cập nhật bảng khi có thay đổi từ thiết bị khác
+            if (typeof db !== 'undefined' && db) {
+                db.channel('realtime-phieuchidinh-pc')
+                  .on('postgres_changes', { event: '*', schema: 'public', table: 'phieuchidinh' }, async () => {
+                      await fetchDuLieuBanDau();
+                  })
+                  .subscribe();
+            }
+
+            if (maKBParam) {
+                moModalThem();
+            }
+        });
+
+        async function fetchDuLieuBanDau() {
+            const { data: khData } = await db.from('khachhang').select('*');
+            if (khData) {
+                khData.forEach(kh => { mapKhachHang[kh.id] = kh.hovaten; });
+            }
+
+            const { data: tcData } = await db.from('thucung').select('*');
+            if (tcData) {
+                tcData.forEach(tc => {
+                    mapThuCung[tc.id] = {
+                        tenthucung: tc.tenthucung,
+                        tenchu: mapKhachHang[tc.makhachhang || tc.makh || tc.khachhang_id] || 'Không rõ chủ'
+                    };
+                });
+            }
+
+            const { data: kbData } = await db.from('khambenh').select('*').order('id', { ascending: false });
+            dsMaKhamChoSearch = [];
+            if (kbData) {
+                kbData.forEach(kb => {
+                    let petInfo = mapThuCung[kb.mathucung] || { tenthucung: 'Thú cưng #' + kb.mathucung, tenchu: 'Không rõ' };
+                    if (kb.mathucung && mapThuCung[kb.mathucung]) {
+                        mapKhamBenh[kb.id] = mapThuCung[kb.mathucung];
+                    }
+
+                    let labelStr = `KB #${kb.id} - Thú cưng: ${petInfo.tenthucung} (Chủ: ${petInfo.tenchu})`;
+                    dsMaKhamChoSearch.push({
+                        id: kb.id,
+                        label: labelStr,
+                        searchKey: `kb #${kb.id} ${petInfo.tenthucung} ${petInfo.tenchu}`.toLowerCase()
+                    });
+                });
+            }
+
+            const { data: dvData, error: dvErr } = await db.from('dichvu').select('*');
+            if (!dvErr && dvData) {
+                danhSachDichVuGoc = dvData;
+            }
+
+            const { data, error } = await db.from('phieuchidinh').select('*').order('id', { ascending: false });
+            if (error) {
+                console.error('Lỗi tải phiếu chỉ định:', error);
+            } else {
+                danhSachPhieuGoc = data;
+                timKiemPhiếuChỉĐịnh(); // Khởi tạo phân trang và lọc dữ liệu
+            }
+        }
+
+        // Xử lý tìm kiếm thông minh cho mã khám bệnh trong modal
+        function xuLyTimKiemMaKham(tuKhoa) {
+            const box = document.getElementById('suggestions-box-kb');
+            document.getElementById('makhambenh').value = ''; 
+
+            if (!tuKhoa || tuKhoa.trim() === '') {
+                box.style.display = 'none';
+                return;
+            }
+
+            const keyword = tuKhoa.toLowerCase().trim();
+            const filtered = dsMaKhamChoSearch.filter(item => item.searchKey.includes(keyword));
+
+            if (filtered.length === 0) {
+                box.innerHTML = `<div class="suggestion-item" style="color: #777;">Không tìm thấy mã khám phù hợp</div>`;
+                box.style.display = 'block';
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(item => {
+                html += `<div class="suggestion-item" onclick="chonMaKham(${item.id}, '${item.label.replace(/'/g, "\\'")}')">
+                    <strong>${item.label}</strong>
+                </div>`;
+            });
+
+            box.innerHTML = html;
+            box.style.display = 'block';
+        }
+
+        function chonMaKham(id, label) {
+            document.getElementById('makhambenh').value = id;
+            document.getElementById('makhambenh_search').value = label;
+            document.getElementById('suggestions-box-kb').style.display = 'none';
+        }
+
+        function themDongDichVu(chiTietData = {}) {
+            const container = document.getElementById('dsDichVuContainer');
+            const rowId = 'row_' + Date.now() + Math.random().toString(36).substring(2, 5);
+            
+            let optionsHtml = `<option value="">-- Chọn dịch vụ --</option>`;
+            danhSachDichVuGoc.forEach(dv => {
+                const selected = (chiTietData.tendichvu === dv.tendichvu) ? 'selected' : '';
+                optionsHtml += `<option value="${dv.tendichvu}" data-gia="${dv.dongia || 0}" ${selected}>${dv.tendichvu} (${Number(dv.dongia || 0).toLocaleString('vi-VN')}đ)</option>`;
+            });
+
+            const tr = document.createElement('tr');
+            tr.id = rowId;
+            tr.innerHTML = `
+                <td>
+                    <select class="select-dichvu" onchange="chonDichVuTuBang(this)" style="width:100%; padding:5px; font-size:12px;">
+                        ${optionsHtml}
+                    </select>
+                </td>
+                <td>
+                    <input type="number" class="input-dongia" value="${chiTietData.dongia !== undefined ? chiTietData.dongia : 0}" oninput="tinhThanhTienRow(this)" style="width:100%; padding:4px; font-size:12px; box-sizing: border-box;">
+                </td>
+                <td>
+                    <input type="number" class="input-thanhtien" value="${chiTietData.thanhtien !== undefined ? chiTietData.thanhtien : 0}" readonly style="width:100%; padding:4px; font-size:12px; background:#f1f5f9; box-sizing: border-box;">
+                </td>
+                <td style="text-align: center;">
+                    <button type="button" class="btn-remove-row" onclick="xoaDongDichVu('${rowId}')">Xóa</button>
+                </td>
+            `;
+            container.appendChild(tr);
+            tinhTongTien();
+        }
+
+        function chonDichVuTuBang(selectEl) {
+            const selectedOption = selectEl.options[selectEl.selectedIndex];
+            const gia = selectedOption.getAttribute('data-gia');
+            const tr = selectEl.closest('tr');
+            
+            if (gia !== null && gia !== "") {
+                const giaNum = parseFloat(gia) || 0;
+                tr.querySelector('.input-dongia').value = giaNum;
+                tr.querySelector('.input-thanhtien').value = giaNum;
+            }
+            tinhTongTien();
+        }
+
+        function tinhThanhTienRow(inputEl) {
+            const tr = inputEl.closest('tr');
+            const dongia = parseFloat(tr.querySelector('.input-dongia').value) || 0;
+            tr.querySelector('.input-thanhtien').value = dongia;
+            tinhTongTien();
+        }
+
+        function xoaDongDichVu(rowId) {
+            const row = document.getElementById(rowId);
+            if (row) {
+                row.remove();
+                tinhTongTien();
+            }
+        }
+
+        function tinhTongTien() {
+            let tong = 0;
+            const rows = document.querySelectorAll('#dsDichVuContainer tr');
+            rows.forEach(tr => {
+                const thanhtien = parseFloat(tr.querySelector('.input-thanhtien').value) || 0;
+                tong += thanhtien;
+            });
+            document.getElementById('tongTienHienThi').innerText = tong.toLocaleString('vi-VN') + ' đ';
+        }
+
+        // HÀM HIỂN THỊ BẢNG KÈM PHÂN TRANG
+        function hienThiBang(data) {
+            filteredDataCache = data;
+            const totalRows = data.length;
+            const totalPages = Math.ceil(totalRows / rowsPerPage) || 1;
+            
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const startIdx = (currentPage - 1) * rowsPerPage;
+            const endIdx = startIdx + rowsPerPage;
+            const pageData = data.slice(startIdx, endIdx);
+
+            const tableBody = document.getElementById('data-table');
+            tableBody.innerHTML = '';
+            
+            if(pageData.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#777;">Chưa có phiếu chỉ định nào</td></tr>`;
+                renderPagination(0, 0, 0, 1);
+                return;
+            }
+
+            pageData.forEach(item => {
+                const maPhieuFormatted = 'PCD' + String(item.id).padStart(4, '0');
+                const maKBText = 'KB' + String(item.makhambenh).padStart(4, '0');
+                const ngayFormatted = item.ngaychidinh ? new Date(item.ngaychidinh).toLocaleString('vi-VN') : '';
+
+                const infoPet = mapKhamBenh[item.makhambenh] || { tenthucung: 'Không rõ', tenchu: 'Không rõ' };
+
+                let chiTietHtml = '';
+                let danhSachChiTiet = [];
+                try {
+                    danhSachChiTiet = typeof item.chitiet === 'string' ? JSON.parse(item.chitiet) : (item.chitiet || []);
+                } catch (e) {
+                    danhSachChiTiet = [];
+                }
+
+                if (danhSachChiTiet.length > 0) {
+                    chiTietHtml = `<ul style="margin: 0; padding-left: 15px; font-size: 12px;">`;
+                    danhSachChiTiet.forEach(d => {
+                        chiTietHtml += `<li><b>${d.tendichvu || ''}</b> - Giá: ${Number(d.dongia || 0).toLocaleString('vi-VN')}đ - TT: ${Number(d.thanhtien || 0).toLocaleString('vi-VN')}đ</li>`;
+                    });
+                    chiTietHtml += `</ul>`;
+                } else {
+                    chiTietHtml = `<b>${item.tendichvu || ''}</b> - TT: ${Number(item.thanhtien || 0).toLocaleString('vi-VN')}đ`;
+                }
+
+                const trangThaiHienTai = item.trangthai || 'Chờ thực hiện';
+                let badgeColor = '#d97706'; 
+                let nextStatus = 'Đang thực hiện';
+
+                if (trangThaiHienTai === 'Đang thực hiện') {
+                    badgeColor = '#2563eb'; 
+                    nextStatus = 'Đã hoàn thành';
+                } else if (trangThaiHienTai === 'Đã hoàn thành') {
+                    badgeColor = '#059669'; 
+                    nextStatus = 'Chờ thực hiện';
+                }
+
+                tableBody.innerHTML += `<tr>
+                    <td><strong>${maPhieuFormatted}</strong></td>
+                    <td>
+                        <span style="color: #2563eb; font-weight: bold;">${maKBText}</span><br>
+                        <span style="color: #111; font-weight: 600;">Pet: ${infoPet.tenthucung}</span><br>
+                        <span style="color: #555; font-size: 12px;">Chủ: ${infoPet.tenchu}</span>
+                    </td>
+                    <td>${ngayFormatted}</td>
+                    <td>${chiTietHtml}</td>
+                    <td>${item.ketluan || ''}</td>
+                    <td style="text-align: center;">
+                        <span onclick="capNhatTrangThaiPhieuChiDinhPC(${item.id}, '${nextStatus}')" 
+                              style="background-color: ${badgeColor}; color: white; font-size: 11px; padding: 3px 8px; border-radius: 12px; cursor: pointer; font-weight: bold; display: inline-block; white-space: nowrap;" 
+                              title="Bấm để đổi trạng thái">
+                            ${trangThaiHienTai} 🔄
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn-print-invoice" onclick="inPhiếuChỉĐịnh(${item.id})">In</button>
+                        <button class="btn-edit" onclick="moModalSua(${item.id})">Sửa</button>
+                        <button class="btn-delete" onclick="xoaPhiếuChỉĐịnh(${item.id})">Xóa</button>
+                    </td>
+                </tr>`;
+            });
+
+            renderPagination(startIdx + 1, Math.min(endIdx, totalRows), totalRows, totalPages);
+        }
+
+        function renderPagination(start, end, total, totalPages) {
+            document.getElementById('pageInfo').innerText = total === 0 ? 'Không có bản ghi' : `Hiển thị ${start} - ${end} của ${total} bản ghi`;
+            
+            const controls = document.getElementById('paginationControls');
+            controls.innerHTML = '';
+
+            if (total === 0) return;
+
+            // Nút Trước
+            const btnPrev = document.createElement('button');
+            btnPrev.className = 'btn-page';
+            btnPrev.innerText = '‹ Trước';
+            btnPrev.disabled = currentPage === 1;
+            btnPrev.onclick = () => { if (currentPage > 1) { currentPage--; hienThiBang(filteredDataCache); } };
+            controls.appendChild(btnPrev);
+
+            // Các nút số trang
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    const btn = document.createElement('button');
+                    btn.className = `btn-page ${i === currentPage ? 'active' : ''}`;
+                    btn.innerText = i;
+                    btn.onclick = (function(page) {
+                        return function() {
+                            currentPage = page;
+                            hienThiBang(filteredDataCache);
+                        };
+                    })(i);
+                    controls.appendChild(btn);
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    const span = document.createElement('span');
+                    span.innerText = '...';
+                    span.style.padding = '0 4px';
+                    controls.appendChild(span);
+                }
+            }
+
+            // Nút Sau
+            const btnNext = document.createElement('button');
+            btnNext.className = 'btn-page';
+            btnNext.innerText = 'Sau ›';
+            btnNext.disabled = currentPage === totalPages;
+            btnNext.onclick = () => { if (currentPage < totalPages) { currentPage++; hienThiBang(filteredDataCache); } };
+            controls.appendChild(btnNext);
+        }
+
+        async function capNhatTrangThaiPhieuChiDinhPC(id, trangThaiMoi) {
+            if (typeof db === 'undefined' || !db) return;
+
+            const { error } = await db
+                .from('phieuchidinh')
+                .update({ trangthai: trangThaiMoi })
+                .eq('id', id);
+
+            if (error) {
+                alert('Lỗi cập nhật trạng thái: ' + error.message);
+            } else {
+                await fetchDuLieuBanDau();
+            }
+        }
+
+        function timKiemPhiếuChỉĐịnh() {
+            currentPage = 1; // Reset về trang 1 khi tìm kiếm
+            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+            const ketQuaLoc = danhSachPhieuGoc.filter(item => {
+                const maPCD = ('pcd' + String(item.id)).toLowerCase();
+                const maKB = String(item.makhambenh || '').toLowerCase();
+                const ketLuan = String(item.ketluan || '').toLowerCase();
+                return maPCD.includes(tuKhoa) || maKB.includes(tuKhoa) || ketLuan.includes(tuKhoa);
+            });
+            hienThiBang(ketQuaLoc);
+        }
+
+        function moModalThem() {
+            document.getElementById('editingId').value = '';
+            document.getElementById('editingHinhanhOld').value = '';
+            document.getElementById('makhambenh').value = '';
+            document.getElementById('makhambenh_search').value = '';
+            
+            const box = document.getElementById('suggestions-box-kb');
+            if (box) box.style.display = 'none';
+
+            if (!window.location.search.includes('makhambenh')) {
+                document.getElementById('makhambenh').value = '';
+            } else {
+                const urlParams = new URLSearchParams(window.location.search);
+                const maKBParam = urlParams.get('makhambenh');
+                if (maKBParam) {
+                    document.getElementById('makhambenh').value = maKBParam;
+                    let kbObj = dsMaKhamChoSearch.find(x => x.id == maKBParam);
+                    if (kbObj) document.getElementById('makhambenh_search').value = kbObj.label;
+                }
+            }
+
+            document.getElementById('ngaychidinh').value = new Date().toISOString().slice(0, 16);
+            document.getElementById('ketluan').value = '';
+            document.getElementById('trangthai').value = 'Chờ thực hiện';
+            document.getElementById('hinhanh').value = '';
+            document.getElementById('dsDichVuContainer').innerHTML = '';
+            themDongDichVu();
+            
+            document.getElementById('modalTitle').innerText = 'Lập phiếu chỉ định mới';
+            document.getElementById('phieuChiDinhModal').style.display = 'flex';
+        }
+
+        function moModalSua(id) {
+            const box = document.getElementById('suggestions-box-kb');
+            if (box) box.style.display = 'none';
+
+            const item = danhSachPhieuGoc.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('editingId').value = item.id;
+            document.getElementById('makhambenh').value = item.makhambenh || '';
+            
+            let kbObj = dsMaKhamChoSearch.find(x => x.id == item.makhambenh);
+            if (kbObj) {
+                document.getElementById('makhambenh_search').value = kbObj.label;
+            } else {
+                document.getElementById('makhambenh_search').value = item.makhambenh ? 'KB #' + item.makhambenh : '';
+            }
+
+            document.getElementById('ngaychidinh').value = item.ngaychidinh ? item.ngaychidinh.slice(0, 16) : '';
+            document.getElementById('ketluan').value = item.ketluan || '';
+            document.getElementById('trangthai').value = item.trangthai || 'Chờ thực hiện';
+            document.getElementById('editingHinhanhOld').value = item.hinhanh || '';
+            document.getElementById('hinhanh').value = '';
+
+            document.getElementById('dsDichVuContainer').innerHTML = '';
+            let danhSachChiTiet = [];
+            try {
+                danhSachChiTiet = typeof item.chitiet === 'string' ? JSON.parse(item.chitiet) : (item.chitiet || []);
+            } catch (e) {
+                danhSachChiTiet = [];
+            }
+
+            if (danhSachChiTiet.length > 0) {
+                danhSachChiTiet.forEach(d => themDongDichVu(d));
+            } else {
+                themDongDichVu({
+                    tendichvu: item.tendichvu,
+                    dongia: item.dongia,
+                    thanhtien: item.thanhtien
+                });
+            }
+
+            document.getElementById('modalTitle').innerText = 'Cập nhật phiếu chỉ định (ID: ' + id + ')';
+            document.getElementById('phieuChiDinhModal').style.display = 'flex';
+        }
+
+        function dongModal() {
+            document.getElementById('phieuChiDinhModal').style.display = 'none';
+        }
+
+        async function luuPhiếuChỉĐịnh() {
+            const id = document.getElementById('editingId').value;
+            let rawMaKB = document.getElementById('makhambenh').value.trim().replace(/[^0-9]/g, '');
+            const makhambenh = rawMaKB ? parseInt(rawMaKB) : null;
+            const ngaychidinh = document.getElementById('ngaychidinh').value;
+            const ketluan = document.getElementById('ketluan').value.trim();
+            const trangthai = document.getElementById('trangthai').value;
+
+            if (!makhambenh) {
+                alert('Vui lòng tìm và chọn mã khám bệnh hợp lệ từ danh sách gợi ý!');
+                return;
+            }
+
+            let chiTietDichVu = [];
+            const rows = document.querySelectorAll('#dsDichVuContainer tr');
+            if (rows.length === 0) {
+                alert('Vui lòng thêm ít nhất một dịch vụ chỉ định!');
+                return;
+            }
+
+            rows.forEach(tr => {
+                const selectEl = tr.querySelector('.select-dichvu');
+                const tendichvu = selectEl.value;
+                const dongia = parseFloat(tr.querySelector('.input-dongia').value) || 0;
+                const thanhtien = parseFloat(tr.querySelector('.input-thanhtien').value) || 0;
+
+                if (tendichvu) {
+                    chiTietDichVu.push({ tendichvu, dongia, thanhtien });
+                }
+            });
+
+            if (chiTietDichVu.length === 0) {
+                alert('Vui lòng chọn tên dịch vụ cho các dòng!');
+                return;
+            }
+
+            const fileInput = document.getElementById('hinhanh');
+            let hinhanhUrl = document.getElementById('editingHinhanhOld').value;
+
+            if (fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                const fileName = `phieuchidinh_${Date.now()}_${file.name}`;
+                
+                const { error: uploadError } = await db.storage
+                    .from('images')
+                    .upload(fileName, file);
+
+                if (uploadError) {
+                    alert('Lỗi upload ảnh: ' + uploadError.message);
+                    return;
+                }
+
+                const { data: publicUrlData } = db.storage
+                    .from('images')
+                    .getPublicUrl(fileName);
+
+                hinhanhUrl = publicUrlData.publicUrl;
+            }
+
+            let tongThanhTien = chiTietDichVu.reduce((sum, item) => sum + item.thanhtien, 0);
+
+            const payload = {
+                makhambenh: makhambenh,
+                ngaychidinh: ngaychidinh ? new Date(ngaychidinh).toISOString() : new Date().toISOString(),
+                dongia: chiTietDichVu[0].dongia,
+                thanhtien: tongThanhTien,
+                ketluan: ketluan,
+                hinhanh: hinhanhUrl,
+                trangthai: trangthai,
+                chitiet: JSON.stringify(chiTietDichVu)
+            };
+
+            if (id === "") {
+                const { error } = await db.from('phieuchidinh').insert([payload]);
+                if (error) {
+                    alert('Lỗi lưu phiếu chỉ định: ' + error.message);
+                } else {
+                    alert('Lập phiếu chỉ định thành công!');
+                    dongModal();
+                    fetchDuLieuBanDau();
+                }
+            } else {
+                const { error } = await db.from('phieuchidinh').update(payload).eq('id', id);
+                if (error) {
+                    alert('Lỗi cập nhật phiếu chỉ định: ' + error.message);
+                } else {
+                    alert('Cập nhật thành công!');
+                    dongModal();
+                    fetchDuLieuBanDau();
+                }
+            }
+        }
+
+        async function xoaPhiếuChỉĐịnh(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa phiếu chỉ định ID: ' + id + ' này không?')) {
+                const { error } = await db.from('phieuchidinh').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa: ' + error.message);
+                } else {
+                    alert('Xóa thành công!');
+                    fetchDuLieuBanDau();
+                }
+            }
+        }
+
+        function inPhiếuChỉĐịnh(id) {
+            const item = danhSachPhieuGoc.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('p-maphieu').innerText = 'Mã phiếu: PCD' + String(item.id).padStart(4, '0');
+            document.getElementById('p-makhambenh').innerText = 'KB' + String(item.makhambenh).padStart(4, '0');
+            document.getElementById('p-ngaychidinh').innerText = item.ngaychidinh ? new Date(item.ngaychidinh).toLocaleString('vi-VN') : '';
+            document.getElementById('p-trangthai').innerText = item.trangthai || '';
+            document.getElementById('p-ketluan').innerText = item.ketluan || 'Chưa có kết luận';
+
+            let danhSachChiTiet = [];
+            try {
+                danhSachChiTiet = typeof item.chitiet === 'string' ? JSON.parse(item.chitiet) : (item.chitiet || []);
+            } catch (e) {
+                danhSachChiTiet = [];
+            }
+
+            if (danhSachChiTiet.length === 0) {
+                danhSachChiTiet = [{ tendichvu: item.tendichvu, dongia: item.dongia, thanhtien: item.thanhtien }];
+            }
+
+            const tbody = document.getElementById('p-table-body');
+            tbody.innerHTML = '';
+
+            let tongTien = 0;
+            danhSachChiTiet.forEach(d => {
+                const dongia = parseFloat(d.dongia) || 0;
+                const thanhtien = parseFloat(d.thanhtien) || 0;
+                tongTien += thanhtien;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px;">${d.tendichvu || ''}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px; text-align: right;">${dongia.toLocaleString('vi-VN')} đ</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px; text-align: right;">${thanhtien.toLocaleString('vi-VN')} đ</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('p-tongtien').innerText = tongTien.toLocaleString('vi-VN') + ' đ';
+
+            const imgContainer = document.getElementById('p-image-container');
+            const imgElement = document.getElementById('p-hinhanh');
+            if (item.hinhanh && item.hinhanh.trim() !== '') {
+                imgElement.src = item.hinhanh;
+                imgContainer.style.display = 'block';
+                imgElement.onload = function() { window.print(); };
+            } else {
+                imgElement.src = '';
+                imgContainer.style.display = 'none';
+                window.print();
+            }
+        }
+    </script>
+</body>
+</html>

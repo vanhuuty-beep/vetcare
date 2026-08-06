@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- CÁC THẺ META CHUẨN SEO -->
+    <title>Hệ Thống Quản Lý Thú Y</title>
+    <meta name="description" content="Hệ thống y tế và chăm sóc thú cưng chuyên nghiệp. Đặt lịch khám nhanh chóng, quản lý thú y thông minh[cite: 5].">
+    
+    <!-- Thư viện hệ thống -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/env.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    
+    <style>
+        body { 
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1e293b; 
+        }
+        .container { 
+            width: 100%;
+            max-width: 420px; 
+            margin: 20px; 
+            padding: 24px; 
+            box-sizing: border-box;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .header-title { 
+            margin-bottom: 24px; 
+        }
+        .header-title h1 { 
+            color: #0284c7; 
+            margin: 0 0 6px 0; 
+            font-size: 22px; 
+            font-weight: 800;
+            line-height: 1.3;
+        }
+        .header-title p { 
+            font-size: 13px; 
+            color: #64748b; 
+            margin: 0; 
+            font-weight: 500;
+        }
+
+        /* Khung phân luồng chức năng */
+        .action-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 18px;
+            box-sizing: border-box;
+        }
+        .action-box p {
+            margin: 0 0 14px 0;
+            font-weight: bold;
+            color: #475569;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-action {
+            display: block;
+            width: 100%;
+            padding: 14px 16px; /* Tăng độ cao và không gian bấm cho nút */
+            margin-bottom: 12px; /* Tạo khoảng hở thoáng đãng giữa các nút, không bị dính */
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 13px;
+            text-decoration: none;
+            box-sizing: border-box;
+            text-align: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .btn-action:last-child {
+            margin-bottom: 0; /* Bỏ lề dưới của nút cuối cùng */
+        }
+        .btn-action:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .btn-owner { background: #0284c7; color: white; }
+        .btn-owner:hover { background: #0369a1; }
+        
+        .btn-admin { background: #334155; color: white; }
+        .btn-admin:hover { background: #1e293b; }
+        
+        .btn-booking { background: #10b981; color: white; }
+        .btn-booking:hover { background: #059669; }
+
+        .footer-note {
+            margin-top: 20px;
+            font-size: 11px;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Logo và tiêu đề tự động nhận diện theo phòng khám -->
+        <div class="header-title">
+            <div style="font-size: 36px; margin-bottom: 8px;">🐾</div>
+            <h1 id="clinic-title">VetCare Pro</h1>
+            <p id="clinic-slogan">Hệ thống Y tế & Chăm sóc Thú cưng Chuyên nghiệp</p>
+        </div>
+
+        <!-- Bảng lựa chọn dịch vụ hệ thống -->
+        <div class="action-box">
+            <p>Lựa chọn dịch vụ hệ thống</p>
+            <a href="chunuoi/login.html" class="btn-action btn-owner">📱 Đăng Nhập Cổng Chủ Nuôi</a>
+            <a href="chunuoi/datlich.html" class="btn-action btn-booking">📅 Đặt Lịch Khám (Không cần tài khoản)</a>
+            <a href="login.html" class="btn-action btn-admin">🔐 Đăng Nhập Quản Lý (Nhân viên/Bác sĩ)</a>
+        </div>
+
+        <div class="footer-note">
+            &copy; 2026 Hệ thống quản lý thú y thông minh
+        </div>
+    </div>
+
+    <!-- Script tự động cập nhật tên và slogan theo file config.js tùy vào tên miền -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            if (typeof CLINIC_INFO !== 'undefined') {
+                const titleEl = document.getElementById('clinic-title');
+                const sloganEl = document.getElementById('clinic-slogan');
+                
+                if (titleEl) titleEl.innerText = CLINIC_INFO.ten;
+                if (sloganEl) sloganEl.innerText = CLINIC_INFO.slogan;
+                document.title = CLINIC_INFO.ten;
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cổng Chủ Nuôi - VetCare Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body { 
+            background: #f1f5f9; 
+            margin: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            display: flex;
+            justify-content: center;
+        }
+        .mobile-shell {
+            width: 100%;
+            max-width: 480px;
+            background: #f8fafc;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+            padding: 12px;
+            padding-bottom: 80px;
+        }
+        .header-card { 
+            background: linear-gradient(135deg, #0284c7, #0369a1); 
+            color: white; 
+            padding: 16px; 
+            border-radius: 14px; 
+            margin-bottom: 15px; 
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2); 
+        }
+        .pet-card { 
+            background: white; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 12px; 
+            padding: 12px; 
+            margin-bottom: 10px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
+        }
+        .pet-avatar { 
+            width: 55px; 
+            height: 55px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            background: #e2e8f0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 22px; 
+            flex-shrink: 0;
+        }
+        .btn-logout { 
+            background: rgba(255,255,255,0.2); 
+            color: white; 
+            border: none; 
+            padding: 5px 10px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 11px; 
+            font-weight: bold; 
+            float: right; 
+        }
+        .btn-logout:active { background: rgba(255,255,255,0.3); }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 10px;
+            font-size: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            outline: none;
+            box-sizing: border-box;
+            margin-bottom: 8px;
+            background: #fff;
+            color: #1e293b;
+        }
+
+        /* Thanh menu đáy phong cách Mobile App */
+        .mobile-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            height: 60px;
+            background: #ffffff;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 9999;
+            border-top: 1px solid #e2e8f0;
+            box-sizing: border-box;
+        }
+        .mobile-bottom-nav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 500;
+            flex: 1;
+        }
+        .mobile-bottom-nav a span { font-size: 20px; margin-bottom: 2px; }
+        .mobile-bottom-nav a.active { color: #0284c7; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-shell">
+        <!-- THÔNG TIN CHỦ NUÔI -->
+        <div class="header-card">
+            <button class="btn-logout" onclick="dangXuat()">Thoát</button>
+            <h3 id="tenChuNuoi" style="margin: 0 0 4px 0; font-size: 17px;">Xin chào!</h3>
+            <p id="sdtChuNuoi" style="margin: 0 0 2px 0; font-size: 11px; opacity: 0.9;">SĐT: ---</p>
+            <p id="diaChiChuNuoi" style="margin: 0 0 8px 0; font-size: 11px; opacity: 0.9;">Địa chỉ: ---</p>
+            
+            <button onclick="moModalSuaThongTin()" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; margin-bottom: 8px;">✏️ Sửa SĐT & Địa chỉ</button>
+
+            <div style="background: rgba(255,255,255,0.15); padding: 8px 12px; border-radius: 8px; display: flex; justify-content: space-between; font-size: 12px; align-items: center;">
+                <span>Điểm tích lũy thành viên:</span>
+                <div>
+                    <strong id="diemTichLuy" style="font-size: 14px;">0 điểm</strong>
+                    <span id="hangThanhVien" style="margin-left: 6px; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; background: #94a3b8; color: white;">Thành viên mới</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- DANH SÁCH THÚ CƯNG -->
+        <div style="font-weight: bold; font-size: 12px; color: #334155; margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
+            <span>🐾 Thú cưng của bạn:</span>
+        </div>
+        <div id="danhSachThuCung">
+            <div style="text-align: center; color: #64748b; padding: 25px; background: white; border-radius: 12px; font-size: 12px;">Đang tải danh sách thú cưng...</div>
+        </div>
+    </div>
+
+    <!-- THANH MENU ĐÁY MOBILE -->
+    <div class="mobile-bottom-nav">
+         <a href="trangchu.html">
+            <span>🏠</span>
+            Trang chủ
+        </a>
+        <a href="lichsu.html">
+            <span>📋</span>
+            Lịch sử khám
+        </a>
+        <a href="ketquachidinh-chunuoi.html" class="active">
+            <span>🔬</span>
+            Chỉ định
+        </a>
+        <a href="noitru-chunuoi.html">
+            <span>🏨</span>
+            Lịch trình
+        </a>
+		<a href="muahang.html">
+            <span>🛍️</span>
+            Cửa hàng
+        </a>
+        <a href="datlich.html">
+            <span>📅</span>
+            Đặt lịch hẹn
+        </a>
+    </div>
+
+    <!-- MODAL SỬA THÔNG TIN CÁ NHÂN -->
+    <div id="modalSuaThongTin" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: #fff; width: 90%; max-width: 360px; padding: 16px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #1e293b;">✏️ Cập nhật thông tin cá nhân</h4>
+            
+            <div style="margin-bottom: 8px;">
+                <label style="font-size: 11px; font-weight: bold; color: #475569;">Số điện thoại:</label>
+                <input type="tel" id="editSDT" class="form-control" placeholder="Nhập số điện thoại...">
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label style="font-size: 11px; font-weight: bold; color: #475569;">Địa chỉ giao hàng:</label>
+                <textarea id="editDiaChi" class="form-control" rows="2" placeholder="Nhập địa chỉ..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                <button type="button" onclick="dongModalSuaThongTin()" style="padding: 6px 10px; font-size: 11px; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer;">Hủy</button>
+                <button type="button" onclick="luuThongTinCaNhan()" style="padding: 6px 14px; font-size: 11px; background: #0284c7; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ownerData = null;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const ownerStr = sessionStorage.getItem('currentPetOwner');
+            if (!ownerStr) {
+                alert('Vui lòng đăng nhập trước!');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            ownerData = JSON.parse(ownerStr);
+            
+            // Đồng bộ dữ liệu mới nhất từ bảng khachhang
+            await taiThongTinKhachHangMoiNhat(ownerData.id || ownerData.sodienthoai || ownerData.sdt);
+        });
+
+        async function taiThongTinKhachHangMoiNhat(identifier) {
+            try {
+                let query = db.from('khachhang').select('*');
+                if (typeof identifier === 'number' || !isNaN(identifier)) {
+                    query = query.eq('id', identifier);
+                } else {
+                    query = query.eq('sodienthoai', identifier);
+                }
+                const { data } = await query.single();
+                if (data) {
+                    ownerData = data;
+                    sessionStorage.setItem('currentPetOwner', JSON.stringify(data));
+                }
+            } catch(e) {
+                console.log('Dùng dữ liệu session sẵn có');
+            }
+
+            const ten = ownerData.hovaten || ownerData.tenkhachhang || 'Chủ nuôi';
+            const sdt = ownerData.sodienthoai || ownerData.sdt || '---';
+            const diachi = ownerData.diachi || 'Chưa cập nhật';
+
+            document.getElementById('tenChuNuoi').innerText = '👋 ' + ten;
+            document.getElementById('sdtChuNuoi').innerText = 'SĐT: ' + sdt;
+            document.getElementById('diaChiChuNuoi').innerText = 'Địa chỉ: ' + diachi;
+
+            // Tính điểm tích lũy và tải danh sách thú cưng
+            await tinhToanDiemTuChiTieu(ownerData.id);
+            await taiDanhSachThucung(ownerData.id);
+        }
+
+        async function tinhToanDiemTuChiTieu(ownerId) {
+            try {
+                const { data: tcData } = await db.from('thucung').select('*');
+                let petToKhach = {};
+                if (tcData) {
+                    tcData.forEach(tc => {
+                        let maKH = tc.makhachhang || tc.makh || tc.khachhang_id || tc.id_khachhang;
+                        petToKhach[tc.id] = maKH;
+                    });
+                }
+
+                let tongChiTieu = 0;
+
+                function congTien(row) {
+                    let maKH = row.makhachhang || row.makh || row.khachhang_id;
+                    if (!maKH && row.mathucung) {
+                        maKH = petToKhach[row.mathucung];
+                    }
+                    if (maKH == ownerId) {
+                        let tien = parseFloat(row.tongchiphi || row.thanhtien || row.tongtien || row.giatien || row.chiphi || row.Gia || 0);
+                        tongChiTieu += tien;
+                    }
+                }
+
+                const [kbData, vcData, dhData, ntData, dtData, pcdData, spaData] = await Promise.all([
+                    db.from('khambenh').select('*'),
+                    db.from('nhatkylamvaccine').select('*'),
+                    db.from('donhang').select('*'),
+                    db.from('nhatkynoitru').select('*'),
+                    db.from('hoadonthuoc').select('*'),
+                    db.from('phieuchidinh').select('*'),
+                    db.from('nhatkyspa').select('*')
+                ]);
+
+                if (kbData.data) kbData.data.forEach(congTien);
+                if (vcData.data) vcData.data.forEach(congTien);
+                if (dhData.data) dhData.data.forEach(congTien);
+                if (ntData.data) ntData.data.forEach(congTien);
+                if (dtData.data) dtData.data.forEach(congTien);
+                if (pcdData.data) pcdData.data.forEach(congTien);
+                if (spaData.data) spaData.data.forEach(congTien);
+
+                // Quy tắc: 10.000 VNĐ = 1 điểm
+                const diem = Math.floor(tongChiTieu / 10000);
+                document.getElementById('diemTichLuy').innerText = diem + ' điểm';
+
+                // Xếp hạng thành viên
+                const badge = document.getElementById('hangThanhVien');
+                if (diem >= 20000) {
+                    badge.innerText = 'VIP 👑';
+                    badge.style.background = '#eab308';
+                } else if (diem >= 10000) {
+                    badge.innerText = 'Vàng 🥇';
+                    badge.style.background = '#d97706';
+                } else if (diem >= 5000) {
+                    badge.innerText = 'Bạc 🥈';
+                    badge.style.background = '#64748b';
+                } else {
+                    badge.innerText = 'Thành viên mới';
+                    badge.style.background = '#0284c7';
+                }
+
+            } catch (err) {
+                console.error('Lỗi tính điểm:', err);
+                document.getElementById('diemTichLuy').innerText = '0 điểm';
+            }
+        }
+
+        async function taiDanhSachThucung(ownerId) {
+            const { data, error } = await db
+                .from('thucung')
+                .select('*  ')
+                .eq('makhachhang', ownerId);
+
+            const container = document.getElementById('danhSachThuCung');
+            container.innerHTML = '';
+
+            if (error || !data || data.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 25px; background: white; border-radius: 12px; font-size: 12px;">Chưa có thú cưng nào liên kết với tài khoản này.</div>`;
+                return;
+            }
+
+            data.forEach(pet => {
+                const tenPet = pet.tenthecung || pet.ten || pet.tenthucung || 'Thú cưng';
+                const maPet = pet.mathucung || pet.matc || ('TC' + String(pet.id).padStart(4, '0'));
+                const giong = pet.giong || pet.giongloai || 'Chưa cập nhật';
+                const loai = pet.loai || pet.loaithucung || 'Thú cưng';
+                const avatar = pet.hinhanh || 'https://via.placeholder.com/55?text=🐶';
+
+                container.innerHTML += `
+                    <div class="pet-card">
+                        <img src="${avatar}" class="pet-avatar" onerror="this.src='https://via.placeholder.com/55?text=🐶'">
+                        <div style="flex: 1; overflow: hidden;">
+                            <div style="font-weight: bold; font-size: 13px; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ${tenPet} <span style="font-size: 11px; color: #0284c7; font-weight: normal;">(Mã: ${maPet})</span>
+                            </div>
+                            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Loại: ${loai} | Giống: ${giong}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function moModalSuaThongTin() {
+            document.getElementById('editSDT').value = ownerData.sodienthoai || ownerData.sdt || '';
+            document.getElementById('editDiaChi').value = ownerData.diachi || '';
+            document.getElementById('modalSuaThongTin').style.display = 'flex';
+        }
+
+        function dongModalSuaThongTin() {
+            document.getElementById('modalSuaThongTin').style.display = 'none';
+        }
+
+        async function luuThongTinCaNhan() {
+            const sdtMoi = document.getElementById('editSDT').value.trim();
+            const diaChiMoi = document.getElementById('editDiaChi').value.trim();
+            const idKhach = ownerData.id;
+
+            if (!sdtMoi) {
+                alert('Số điện thoại không được để trống!');
+                return;
+            }
+
+            const { error } = await db.from('khachhang')
+                .update({ sodienthoai: sdtMoi, diachi: diaChiMoi })
+                .eq('id', idKhach);
+
+            if (error) {
+                alert('Lỗi cập nhật: ' + error.message);
+            } else {
+                alert('Cập nhật thông tin thành công!');
+                ownerData.sodienthoai = sdtMoi;
+                ownerData.sdt = sdtMoi;
+                ownerData.diachi = diaChiMoi;
+                sessionStorage.setItem('currentPetOwner', JSON.stringify(ownerData));
+                dongModalSuaThongTin();
+                await taiThongTinKhachHangMoiNhat(idKhach);
+            }
+        }
+
+        function dangXuat() {
+            sessionStorage.removeItem('currentPetOwner');
+            window.location.href = '../index.html';
+        }
+    </script>
+</body>
+</html>

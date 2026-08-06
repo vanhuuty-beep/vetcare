@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Hóa đơn & Đơn thuốc - VetCare Pro</title>
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+    <script src="../js/smart-search.js"></script>
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+    <link rel="stylesheet" href="../css/smart-search.css">
+
+    <style>
+        .search-box {
+            padding: 8px 12px;
+            width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: #2563eb;
+        }
+        .card-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .modal-container {
+            width: 820px;
+            padding: 20px 24px;
+        }
+        .modal-header {
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+        }
+        .form-group-modal {
+            margin-bottom: 10px;
+        }
+        .form-group-modal label {
+            font-size: 13px;
+            margin-bottom: 3px;
+            display: block;
+            font-weight: 500;
+        }
+        .form-group-modal input, .form-group-modal select, .form-group-modal textarea {
+            width: 100%;
+            padding: 7px 10px;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        .table-thuoc-modal {
+            width: 100%;
+            margin-top: 10px;
+            border-collapse: collapse;
+        }
+        .table-thuoc-modal th, .table-thuoc-modal td {
+            border: 1px solid #e2e8f0;
+            padding: 6px;
+            font-size: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        .table-thuoc-modal th {
+            background-color: #f8fafc;
+            font-weight: 600;
+        }
+        
+        .btn-add-row {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        .btn-add-row:hover {
+            background-color: #059669;
+        }
+        .btn-remove-row {
+            background-color: #dc2626;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .btn-print-invoice {
+            background-color: #0284c7;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+        <div id="topnav-container"></div>
+
+        <div class="content-body">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Danh sách Hóa đơn / Đơn thuốc</h3>
+                    <div class="card-header-actions">
+                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm theo mã khám, tên chủ, tên thuốc..." onkeyup="timKiemDonThuoc()">
+                        <button class="btn-primary" onclick="moModalThem()">+ Lập hóa đơn thuốc mới</button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Mã khám bệnh & Chủ nuôi</th>
+                                <th>Chi tiết thuốc & Hướng dẫn</th>
+                                <th>Tổng tiền</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table">
+                            <!-- Dữ liệu được nạp tự động -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP FORM THÊM / SỬA HÓA ĐƠN THUỐC -->
+    <div class="modal-overlay" id="donThuocModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Lập hóa đơn thuốc mới</h3>
+                <button class="close-modal" onclick="dongModal()">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingId">
+            
+            <div class="form-group-modal">
+                <label>Mã khám bệnh (makhambenh) (*):</label>
+                <input type="text" id="makhambenh" placeholder="Nhập mã khám bệnh (VD: 1)...">
+            </div>
+
+            <div class="form-group-modal" style="margin-top: 15px;">
+                <label><strong>Danh sách thuốc sử dụng (Tự động trừ kho khi lưu):</strong></label>
+                <table class="table-thuoc-modal" id="bangChonThuoc">
+                    <thead>
+                        <tr>
+                            <th style="width: 28%;">Tên thuốc (mathuoc)</th>
+                            <th style="width: 12%;">Số lượng</th>
+                            <th style="width: 18%;">Đơn giá</th>
+                            <th style="width: 32%;">Hướng dẫn (huongdan)</th>
+                            <th style="width: 10%; text-align: center;">Xóa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dsThuocContainer">
+                        <!-- Các dòng thuốc thêm động -->
+                    </tbody>
+                </table>
+                <button type="button" class="btn-add-row" onclick="themDongThuoc()">+ Thêm thuốc</button>
+            </div>
+
+            <div style="margin-top: 15px; text-align: right; font-size: 15px; font-weight: bold;">
+                Tổng tiền: <span id="tongTienHienThi" style="color: #dc2626;">0 đ</span>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="dongModal()">Hủy</button>
+                <button class="btn-primary" onclick="luuDonThuoc()">Lưu hóa đơn & Trừ kho</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHUNG IN HÓA ĐƠN THUỐC -->
+    <div id="printInvoiceArea" style="display: none;">
+        <div class="print-header"></div>
+        
+        <div class="print-title">
+            <h3>HÓA ĐƠN THANH TOÁN & ĐƠN THUỐC</h3>
+            <p id="inv-madon">Mã đơn: HD0001</p>
+        </div>
+        
+        <div class="print-grid" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 10px; margin-bottom: 10px; border-radius: 4px; font-size: 11px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <div><strong>Mã khám bệnh:</strong> <span id="inv-makhambenh"></span></div>
+                <div><strong>Chủ vật nuôi:</strong> <span id="inv-chusohuu"></span></div>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <div><strong>Ngày lập:</strong> <span id="inv-ngaylap"></span></div>
+            </div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px;">
+            <thead>
+                <tr style="background: #f1f5f9;">
+                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: left;">Tên thuốc</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">Số lượng</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: right;">Đơn giá</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: right;">Thành tiền</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: left;">Hướng dẫn</th>
+                </tr>
+            </thead>
+            <tbody id="inv-table-body">
+                <!-- Dữ liệu thuốc in -->
+            </tbody>
+        </table>
+
+        <div style="text-align: right; font-size: 12px; font-weight: bold; margin-bottom: 25px;">
+            Tổng thanh toán: <span id="inv-tongtien" style="color: #dc2626; font-size: 14px;">0 đ</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; text-align: center; font-size: 11px; margin-top: 20px;">
+            <div>
+                <p><strong>Khách hàng / Chủ vật nuôi</strong></p>
+                <p style="font-size: 10px; color: #666; font-style: italic;">(Ký và ghi rõ họ tên)</p>
+            </div>
+            <div>
+                <p><strong>Người lập hóa đơn / Bác sĩ</strong></p>
+                <p style="font-size: 10px; color: #666; font-style: italic;">(Ký và đóng dấu)</p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    @media print {
+        body, body * {
+            visibility: hidden !important;
+        }
+        
+        #menu-container,
+        #topnav-container,
+        .main-content,
+        .card,
+        .modal-overlay {
+            display: none !important;
+            visibility: hidden !important;
+        }
+
+        #printInvoiceArea, #printInvoiceArea * {
+            visibility: visible !important;
+        }
+        
+        #printInvoiceArea {
+            display: block !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            font-family: 'Arial', sans-serif !important;
+            color: #111 !important;
+            background: #fff !important;
+            padding: 15px !important;
+            box-sizing: border-box !important;
+            z-index: 999999 !important;
+        }
+
+        #printInvoiceArea table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+        #printInvoiceArea th, #printInvoiceArea td {
+            visibility: visible !important;
+        }
+
+        .print-header {
+            text-align: center;
+            border-bottom: 2px solid #0284c7;
+            padding-bottom: 6px;
+            margin-bottom: 10px;
+        }
+        .print-header h2 { font-size: 15px; margin: 0; color: #0284c7; font-weight: bold; }
+        .print-header p { font-size: 10px; margin: 2px 0; color: #555; }
+        .print-title {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .print-title h3 { font-size: 13px; margin: 0; text-transform: uppercase; color: #1e293b; font-weight: bold; }
+        .print-title p { font-size: 10px; margin: 2px 0; color: #64748b; }
+    }
+    </style>
+
+    <script>
+        let danhSachDonThuocGoc = [];
+        let danhSachKhoThuocGoc = [];
+        let mapKhamBenh = {}; 
+        let mapThuCung = {};    
+        let mapKhachHang = {};  
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const maKBParam = urlParams.get('makhambenh');
+            if (maKBParam) {
+                document.getElementById('makhambenh').value = maKBParam;
+            }
+            await fetchDuLieuBanDau();
+
+            if (maKBParam) {
+                moModalThem();
+            }
+        });
+
+        async function fetchDuLieuBanDau() {
+            const { data: khData } = await db.from('khachhang').select('*');
+            if (khData) {
+                khData.forEach(kh => { mapKhachHang[kh.id] = kh.hovaten; });
+            }
+
+            const { data: tcData } = await db.from('thucung').select('*');
+            if (tcData) {
+                tcData.forEach(tc => {
+                    let maKH = tc.makhachhang || tc.makh || tc.khachhang_id;
+                    if (maKH && mapKhachHang[maKH]) {
+                        mapThuCung[tc.id] = mapKhachHang[maKH];
+                    }
+                });
+            }
+
+            const { data: kbData } = await db.from('khambenh').select('*');
+            if (kbData) {
+                kbData.forEach(kb => {
+                    if (kb.mathucung && mapThuCung[kb.mathucung]) {
+                        mapKhamBenh[kb.id] = mapThuCung[kb.mathucung];
+                    }
+                });
+            }
+
+            const { data: khoData, error: khoErr } = await db.from('khothuoc').select('*');
+            if (!khoErr && khoData) {
+                danhSachKhoThuocGoc = khoData;
+            }
+
+            const { data, error } = await db.from('hoadonthuoc').select('*').order('id', { ascending: false });
+            if (error) {
+                console.error('Lỗi tải hóa đơn thuốc:', error);
+            } else {
+                danhSachDonThuocGoc = data;
+                hienThiBang(danhSachDonThuocGoc);
+            }
+        }
+
+        function themDongThuoc(thuocData = {}) {
+            const container = document.getElementById('dsThuocContainer');
+            const rowId = 'row_' + Date.now() + Math.random().toString(36).substring(2, 5);
+            
+            let optionsHtml = `<option value="">-- Chọn thuốc từ kho --</option>`;
+            danhSachKhoThuocGoc.forEach(tk => {
+                const tenT = tk.tenthuoc || tk.ten || '';
+                const giaT = tk.giaban !== undefined ? tk.giaban : (tk.gia !== undefined ? tk.gia : (tk.dongia !== undefined ? tk.dongia : 0));
+                const selected = (thuocData.mathuoc === tenT) ? 'selected' : '';
+                optionsHtml += `<option value="${tenT}" data-gia="${giaT}" ${selected}>${tenT} (Tồn: ${tk.soluong || 0})</option>`;
+            });
+
+            let giaKhoiDau = thuocData.Gia !== undefined ? thuocData.Gia : (thuocData.gia !== undefined ? thuocData.gia : '');
+
+            const tr = document.createElement('tr');
+            tr.id = rowId;
+            tr.innerHTML = `
+                <td>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <select class="select-thuoc" onchange="chonThuocTuKho(this)" style="width:100%; padding:5px; font-size:12px;">
+                            ${optionsHtml}
+                        </select>
+                        <input type="text" class="input-mathuoc" placeholder="Hoặc gõ tên thuốc..." value="${thuocData.mathuoc || ''}" style="width:100%; padding:4px; font-size:12px; box-sizing: border-box;">
+                    </div>
+                </td>
+                <td>
+                    <input type="number" class="input-soluong" value="${thuocData.soluong || 1}" min="1" oninput="tinhTongTien()" style="width:100%; padding:4px; font-size:12px; box-sizing: border-box;">
+                </td>
+                <td>
+                    <input type="number" class="input-gia" value="${giaKhoiDau}" placeholder="Nhập giá..." oninput="tinhTongTien()" style="width:100%; padding:4px; font-size:12px; box-sizing: border-box;">
+                </td>
+                <td>
+                    <input type="text" class="input-huongdan" value="${thuocData.huongdan || ''}" placeholder="VD: Sáng 1 viên..." style="width:100%; padding:4px; font-size:12px; box-sizing: border-box;">
+                </td>
+                <td style="text-align: center;">
+                    <button type="button" class="btn-remove-row" onclick="xoaDongThuoc('${rowId}')">Xóa</button>
+                </td>
+            `;
+            container.appendChild(tr);
+            tinhTongTien();
+        }
+
+        function chonThuocTuKho(selectEl) {
+            const selectedOption = selectEl.options[selectEl.selectedIndex];
+            const gia = selectedOption.getAttribute('data-gia');
+            const tr = selectEl.closest('tr');
+            
+            if (selectedOption.value) {
+                tr.querySelector('.input-mathuoc').value = selectedOption.value;
+            }
+            const inputGia = tr.querySelector('.input-gia');
+            if (gia !== null && gia !== "" && parseFloat(gia) > 0) {
+                inputGia.value = gia; 
+            } else {
+                inputGia.value = ''; 
+            }
+            tinhTongTien();
+        }
+
+        function xoaDongThuoc(rowId) {
+            const row = document.getElementById(rowId);
+            if (row) {
+                row.remove();
+                tinhTongTien();
+            }
+        }
+
+        function tinhTongTien() {
+            let tong = 0;
+            const rows = document.querySelectorAll('#dsThuocContainer tr');
+            rows.forEach(tr => {
+                const sl = parseFloat(tr.querySelector('.input-soluong').value) || 0;
+                const gia = parseFloat(tr.querySelector('.input-gia').value) || 0;
+                tong += sl * gia;
+            });
+            document.getElementById('tongTienHienThi').innerText = tong.toLocaleString('vi-VN') + ' đ';
+        }
+
+        function hienThiBang(data) {
+            const tableBody = document.getElementById('data-table');
+            tableBody.innerHTML = '';
+            
+            if(data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777;">Chưa có hóa đơn thuốc nào</td></tr>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const maDonFormatted = 'HD' + String(item.id).padStart(4, '0');
+                const maKBText = typeof formatMaKham === 'function' ? formatMaKham(item.makhambenh) : ('KB' + String(item.makhambenh).padStart(4, '0'));
+                const tenChuSoHuu = mapKhamBenh[item.makhambenh] || 'Không rõ chủ';
+
+                let chiTietHtml = '';
+                let danhSachChiTiet = [];
+                
+                try {
+                    if (typeof item.chitiet === 'string') {
+                        danhSachChiTiet = JSON.parse(item.chitiet);
+                    } else if (Array.isArray(item.chitiet)) {
+                        danhSachChiTiet = item.chitiet;
+                    }
+                } catch (e) {
+                    danhSachChiTiet = [];
+                }
+
+                if (danhSachChiTiet.length > 0) {
+                    chiTietHtml = `<ul style="margin: 0; padding-left: 15px; font-size: 12px;">`;
+                    danhSachChiTiet.forEach(t => {
+                        const itemGia = t.Gia !== undefined ? t.Gia : (t.gia !== undefined ? t.gia : 0);
+                        chiTietHtml += `<li><b>${t.mathuoc || ''}</b> - SL: ${t.soluong || 0} - Giá: ${Number(itemGia).toLocaleString('vi-VN')}đ <i>(${t.huongdan || ''})</i></li>`;
+                    });
+                    chiTietHtml += `</ul>`;
+                } else {
+                    const itemGia = item.Gia !== undefined ? item.Gia : (item.gia !== undefined ? item.gia : 0);
+                    chiTietHtml = `<b>${item.mathuoc || ''}</b> - SL: ${item.soluong || 0} - Giá: ${Number(itemGia).toLocaleString('vi-VN')}đ<br><small>HD: ${item.huongdan || ''}</small>`;
+                }
+
+                let tongTienVal = 0;
+                if (danhSachChiTiet.length > 0) {
+                    danhSachChiTiet.forEach(t => {
+                        const g = t.Gia !== undefined ? t.Gia : (t.gia !== undefined ? t.gia : 0);
+                        tongTienVal += (parseFloat(t.soluong) || 0) * (parseFloat(g) || 0);
+                    });
+                } else {
+                    const g = item.Gia !== undefined ? item.Gia : (item.gia !== undefined ? item.gia : 0);
+                    tongTienVal = (parseFloat(item.soluong) || 0) * (parseFloat(g) || 0);
+                }
+
+                tableBody.innerHTML += `<tr>
+                    <td><strong>${maDonFormatted}</strong></td>
+                    <td>
+                        <span style="color: #2563eb; font-weight: bold;">${maKBText}</span><br>
+                        <span style="color: #555; font-size: 13px;">Chủ: ${tenChuSoHuu}</span>
+                    </td>
+                    <td>${chiTietHtml}</td>
+                    <td><strong style="color: #059669;">${tongTienVal.toLocaleString('vi-VN')} đ</strong></td>
+                    <td>
+                        <button class="btn-print-invoice" onclick="inHoaDonThuoc(${item.id})">In</button>
+                        <button class="btn-edit" onclick="moModalSua(${item.id})">Sửa</button>
+                        <button class="btn-delete" onclick="xoaDonThuoc(${item.id})">Xóa</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        function moModalThem() {
+            document.getElementById('editingId').value = '';
+            if (!window.location.search.includes('makhambenh')) {
+                document.getElementById('makhambenh').value = '';
+            }
+            document.getElementById('dsThuocContainer').innerHTML = '';
+            themDongThuoc();
+            document.getElementById('modalTitle').innerText = 'Lập hóa đơn thuốc mới';
+            document.getElementById('donThuocModal').style.display = 'flex';
+        }
+
+        function moModalSua(id) {
+            const item = danhSachDonThuocGoc.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('editingId').value = item.id;
+            document.getElementById('makhambenh').value = item.makhambenh || '';
+            document.getElementById('dsThuocContainer').innerHTML = '';
+
+            let danhSachChiTiet = [];
+            try {
+                if (typeof item.chitiet === 'string') {
+                    danhSachChiTiet = JSON.parse(item.chitiet);
+                } else if (Array.isArray(item.chitiet)) {
+                    danhSachChiTiet = item.chitiet;
+                }
+            } catch (e) {
+                danhSachChiTiet = [];
+            }
+
+            if (danhSachChiTiet.length > 0) {
+                danhSachChiTiet.forEach(t => themDongThuoc(t));
+            } else {
+                themDongThuoc({
+                    mathuoc: item.mathuoc,
+                    soluong: item.soluong,
+                    Gia: item.Gia !== undefined ? item.Gia : item.gia,
+                    huongdan: item.huongdan
+                });
+            }
+
+            document.getElementById('modalTitle').innerText = 'Cập nhật hóa đơn thuốc (ID: ' + id + ')';
+            document.getElementById('donThuocModal').style.display = 'flex';
+        }
+
+        function dongModal() {
+            document.getElementById('donThuocModal').style.display = 'none';
+        }
+
+        async function luuDonThuoc() {
+            const id = document.getElementById('editingId').value;
+            let rawMaKB = document.getElementById('makhambenh').value.trim();
+            rawMaKB = rawMaKB.replace(/[^0-9]/g, '');
+            const makhambenh = rawMaKB ? parseInt(rawMaKB) : null;
+
+            if (!makhambenh) {
+                alert('Vui lòng nhập mã khám bệnh hợp lệ!');
+                return;
+            }
+
+            let chiTietThuoc = [];
+            const rows = document.querySelectorAll('#dsThuocContainer tr');
+            
+            if (rows.length === 0) {
+                alert('Vui lòng thêm ít nhất một loại thuốc!');
+                return;
+            }
+
+            rows.forEach(tr => {
+                const mathuoc = tr.querySelector('.input-mathuoc').value.trim();
+                const soluong = parseFloat(tr.querySelector('.input-soluong').value) || 0;
+                const Gia = parseFloat(tr.querySelector('.input-gia').value) || 0;
+                const huongdan = tr.querySelector('.input-huongdan').value.trim();
+
+                if (mathuoc) {
+                    chiTietThuoc.push({ mathuoc, soluong, Gia, huongdan });
+                }
+            });
+
+            if (chiTietThuoc.length === 0) {
+                alert('Vui lòng nhập tên thuốc cho các dòng!');
+                return;
+            }
+
+            // 1. Hoàn lại kho nếu là sửa hóa đơn cũ
+            if (id !== "") {
+                const itemCu = danhSachDonThuocGoc.find(x => x.id == id);
+                if (itemCu) {
+                    let chiTietCu = [];
+                    try {
+                        chiTietCu = typeof itemCu.chitiet === 'string' ? JSON.parse(itemCu.chitiet) : (itemCu.chitiet || [{ mathuoc: itemCu.mathuoc, soluong: itemCu.soluong }]);
+                    } catch(e) {
+                        chiTietCu = [{ mathuoc: itemCu.mathuoc, soluong: itemCu.soluong }];
+                    }
+
+                    for (let cu of chiTietCu) {
+                        const thuocTrongKho = danhSachKhoThuocGoc.find(tk => (tk.tenthuoc || tk.ten) === cu.mathuoc);
+                        if (thuocTrongKho) {
+                            const slMoi = (thuocTrongKho.soluong || 0) + parseFloat(cu.soluong || 0);
+                            await db.from('khothuoc').update({ soluong: slMoi }).eq('id', thuocTrongKho.id);
+                        }
+                    }
+                }
+            }
+
+            // 2. Trừ kho thuốc mới
+            for (let t of chiTietThuoc) {
+                const thuocTrongKho = danhSachKhoThuocGoc.find(tk => (tk.tenthuoc || tk.ten) === t.mathuoc);
+                if (thuocTrongKho) {
+                    const slConLai = (thuocTrongKho.soluong || 0) - t.soluong;
+                    await db.from('khothuoc').update({ soluong: slConLai >= 0 ? slConLai : 0 }).eq('id', thuocTrongKho.id);
+                }
+            }
+
+            // Sử dụng trường 'Gia' (viết hoa chữ G) khớp chuẩn với tên cột trên CSDL của bạn
+            const payload = {
+                makhambenh: makhambenh,
+                chitiet: JSON.stringify(chiTietThuoc),
+                mathuoc: chiTietThuoc[0].mathuoc,
+                soluong: chiTietThuoc[0].soluong,
+                Gia: chiTietThuoc[0].Gia,
+                huongdan: chiTietThuoc[0].huongdan
+            };
+
+            if (id === "") {
+                const { error } = await db.from('hoadonthuoc').insert([payload]);
+                if (error) {
+                    alert('Lỗi lưu hóa đơn thuốc: ' + error.message);
+                } else {
+                    alert('Lập hóa đơn và trừ kho thành công!');
+                    dongModal();
+                    fetchDuLieuBanDau();
+                }
+            } else {
+                const { error } = await db.from('hoadonthuoc').update(payload).eq('id', id);
+                if (error) {
+                    alert('Lỗi cập nhật hóa đơn thuốc: ' + error.message);
+                } else {
+                    alert('Cập nhật hóa đơn và kho thành công!');
+                    dongModal();
+                    fetchDuLieuBanDau();
+                }
+            }
+        }
+
+        async function xoaDonThuoc(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa hóa đơn thuốc ID: ' + id + ' này không?')) {
+                const itemCu = danhSachDonThuocGoc.find(x => x.id == id);
+                if (itemCu) {
+                    let chiTietCu = [];
+                    try {
+                        chiTietCu = typeof itemCu.chitiet === 'string' ? JSON.parse(itemCu.chitiet) : (itemCu.chitiet || [{ mathuoc: itemCu.mathuoc, soluong: itemCu.soluong }]);
+                    } catch(e) {
+                        chiTietCu = [{ mathuoc: itemCu.mathuoc, soluong: itemCu.soluong }];
+                    }
+
+                    for (let cu of chiTietCu) {
+                        const thuocTrongKho = danhSachKhoThuocGoc.find(tk => (tk.tenthuoc || tk.ten) === cu.mathuoc);
+                        if (thuocTrongKho) {
+                            const slMoi = (thuocTrongKho.soluong || 0) + parseFloat(cu.soluong || 0);
+                            await db.from('khothuoc').update({ soluong: slMoi }).eq('id', thuocTrongKho.id);
+                        }
+                    }
+                }
+
+                const { error } = await db.from('hoadonthuoc').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa: ' + error.message);
+                } else {
+                    alert('Xóa thành công và đã hoàn lại tồn kho!');
+                    fetchDuLieuBanDau();
+                }
+            }
+        }
+
+        function timKiemDonThuoc() {
+            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+            const ketQuaLoc = danhSachDonThuocGoc.filter(item => {
+                const maDon = ('hd' + String(item.id)).toLowerCase();
+                const maKB = String(item.makhambenh || '').toLowerCase();
+                const tenChu = String(mapKhamBenh[item.makhambenh] || '').toLowerCase();
+                const chitiet = String(item.chitiet || '').toLowerCase();
+                return maDon.includes(tuKhoa) || maKB.includes(tuKhoa) || tenChu.includes(tuKhoa) || chitiet.includes(tuKhoa);
+            });
+            hienThiBang(ketQuaLoc);
+        }
+
+        function inHoaDonThuoc(id) {
+            const item = danhSachDonThuocGoc.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('inv-madon').innerText = 'Mã đơn: HD' + String(item.id).padStart(4, '0');
+            document.getElementById('inv-makhambenh').innerText = typeof formatMaKham === 'function' ? formatMaKham(item.makhambenh) : ('KB' + String(item.makhambenh).padStart(4, '0'));
+            document.getElementById('inv-chusohuu').innerText = mapKhamBenh[item.makhambenh] || 'Không rõ chủ';
+            document.getElementById('inv-ngaylap').innerText = new Date().toLocaleDateString('vi-VN');
+
+            let danhSachChiTiet = [];
+            try {
+                danhSachChiTiet = typeof item.chitiet === 'string' ? JSON.parse(item.chitiet) : (item.chitiet || []);
+            } catch (e) {
+                danhSachChiTiet = [];
+            }
+
+            if (danhSachChiTiet.length === 0) {
+                const gVal = item.Gia !== undefined ? item.Gia : (item.gia !== undefined ? item.gia : 0);
+                danhSachChiTiet = [{ mathuoc: item.mathuoc, soluong: item.soluong, Gia: gVal, huongdan: item.huongdan }];
+            }
+
+            const tbody = document.getElementById('inv-table-body');
+            tbody.innerHTML = '';
+
+            let tongTien = 0;
+            danhSachChiTiet.forEach(t => {
+                const sl = parseFloat(t.soluong) || 0;
+                const gia = parseFloat(t.Gia !== undefined ? t.Gia : t.gia) || 0;
+                const thanhTien = sl * gia;
+                tongTien += thanhTien;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px;">${t.mathuoc || ''}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${sl}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px; text-align: right;">${gia.toLocaleString('vi-VN')} đ</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px; text-align: right;">${thanhTien.toLocaleString('vi-VN')} đ</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px;">${t.huongdan || ''}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('inv-tongtien').innerText = tongTien.toLocaleString('vi-VN') + ' đ';
+            window.print();
+        }
+    </script>
+</body>
+</html>

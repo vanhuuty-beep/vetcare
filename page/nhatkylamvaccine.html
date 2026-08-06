@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Nhật ký Tiêm Vắc-xin - VetCare Pro</title>
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	<script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+	<script src="../js/smart-search.js"></script>
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+	<link rel="stylesheet" href="../css/smart-search.css">
+
+    <style>
+        .search-box {
+            padding: 8px 12px;
+            width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: #2563eb;
+        }
+        .card-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .modal-container {
+            width: 600px;
+            padding: 20px 24px;
+        }
+        .modal-header {
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+        }
+        .form-group-modal {
+            margin-bottom: 10px;
+        }
+        .form-group-modal label {
+            font-size: 13px;
+            margin-bottom: 3px;
+            display: block;
+            font-weight: 500;
+        }
+        .form-group-modal input, .form-group-modal select, .form-group-modal textarea {
+            width: 100%;
+            padding: 7px 10px;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .form-row .form-group-modal {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .modal-footer {
+            margin-top: 15px;
+            padding-top: 10px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+        <div id="topnav-container"></div>
+
+        <div class="content-body">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Nhật ký Tiêm Vắc-xin</h3>
+                    <div class="card-header-actions">
+                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm tên vắc-xin, bác sĩ, thú cưng..." onkeyup="timKiemNhatKy()">
+                        <button class="btn-primary" onclick="moModalThem()">+ Thêm mũi tiêm mới</button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã nhật ký</th>
+                                <th>Khám bệnh & Thú cưng</th>
+                                <th>Vắc-xin (Mã & Tên)</th>
+                                <th>Ngày tiêm</th>
+                                <th>Bác sĩ tiêm</th>
+                                <th>Ngày nhắc lại</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table">
+                            <!-- Dữ liệu được nạp tự động -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP FORM THÊM / SỬA NHẬT KÝ TIÊM -->
+    <div class="modal-overlay" id="nhatKyModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thêm mũi tiêm vắc-xin mới</h3>
+                <button class="close-modal" onclick="dongModal()">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingId">
+            
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Mã khám bệnh (makhambenh):</label>
+                    <input type="text" id="makhambenh" placeholder="Nhập mã khám bệnh (nếu có)...">
+                </div>
+                <div class="form-group-modal">
+                    <label>Mã thú cưng (mathucung) (*):</label>
+                    <input type="text" id="mathucung" placeholder="Nhập ID thú cưng...">
+                </div>
+            </div>
+
+            <div class="form-group-modal">
+                <label>Chọn vắc-xin từ kho (mavaccine & tenvaccine) (*):</label>
+                <select id="selectVaccine" onchange="chonVaccineKho(this)">
+                    <option value="">-- Chọn vắc-xin trong kho --</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Ngày tiêm (ngaytiem):</label>
+                    <input type="date" id="ngaytiem">
+                </div>
+                <div class="form-group-modal">
+                    <label>Ngày nhắc lại (ngaynhaclai):</label>
+                    <input type="date" id="ngaynhaclai">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Bác sĩ phụ trách (bacsi):</label>
+                    <input type="text" id="bacsi" placeholder="Nhập tên bác sĩ...">
+                </div>
+                <div class="form-group-modal">
+                    <label>Trạng thái (trangthai):</label>
+                    <select id="trangthai">
+                        <option value="Đã tiêm">Đã tiêm</option>
+                        <option value="Chờ nhắc lịch">Chờ nhắc lịch</option>
+                        <option value="Đã hủy">Đã hủy</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="dongModal()">Hủy</button>
+                <button class="btn-primary" onclick="luuNhatKy()">Lưu & Cập nhật kho</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let danhSachNhatKyGoc = [];
+        let danhSachKhoVaccineGoc = [];
+        let mapThuCung = {};
+        let mapKhachHang = {};
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const maTCParam = urlParams.get('mathucung');
+            const maKBParam = urlParams.get('makhambenh');
+            if (maTCParam) document.getElementById('mathucung').value = maTCParam;
+            if (maKBParam) document.getElementById('makhambenh').value = maKBParam;
+
+            await fetchDuLieuBanDau();
+
+            if (maTCParam || maKBParam) {
+                moModalThem();
+            }
+        });
+
+        async function fetchDuLieuBanDau() {
+            // 1. Tải khách hàng
+            const { data: khData } = await db.from('khachhang').select('*');
+            if (khData) {
+                khData.forEach(kh => { mapKhachHang[kh.id] = kh.hovaten; });
+            }
+
+            // 2. Tải thú cưng
+            const { data: tcData } = await db.from('thucung').select('*');
+            if (tcData) {
+                tcData.forEach(tc => {
+                    let maKH = tc.makhachhang || tc.makh || tc.khachhang_id;
+                    mapThuCung[tc.id] = {
+                        tenthucung: tc.tenthucung,
+                        tenchu: mapKhachHang[maKH] || 'Không rõ chủ'
+                    };
+                });
+            }
+
+            // 3. Tải kho vắc-xin để đổ vào select box
+            const { data: khoData } = await db.from('khovaccine').select('*');
+            if (khoData) {
+                danhSachKhoVaccineGoc = khoData;
+                const selectEl = document.getElementById('selectVaccine');
+                selectEl.innerHTML = `<option value="">-- Chọn vắc-xin trong kho --</option>`;
+                khoData.forEach(v => {
+                    const tonKho = (parseInt(v.soluongnhap) || 0) - (parseInt(v.datiem) || 0);
+                    selectEl.innerHTML += `<option value="${v.id}" data-mavc="VX${String(v.id).padStart(4, '0')}" data-ten="${v.tenvaccine}">${v.tenvaccine} (Lô: ${v.solo || 'N/A'} - Tồn: ${tonKho})</option>`;
+                });
+            }
+
+            // 4. Tải danh sách nhật ký tiêm vắc-xin
+            const { data, error } = await db.from('nhatkylamvaccine').select('*').order('id', { ascending: false });
+            if (error) {
+                console.error('Lỗi tải nhật ký tiêm vắc-xin:', error);
+            } else {
+                danhSachNhatKyGoc = data;
+                hienThiBang(danhSachNhatKyGoc);
+            }
+        }
+
+        function chonVaccineKho(selectEl) {
+            // Xử lý tự động nếu cần lấy thông tin thêm
+        }
+
+        function hienThiBang(data) {
+            const tableBody = document.getElementById('data-table');
+            tableBody.innerHTML = '';
+            
+            if(data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#777;">Chưa có lịch sử tiêm vắc-xin nào</td></tr>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const maNKFormatted = 'NK' + String(item.id).padStart(4, '0');
+                const maKBText = item.makhambenh ? 'KB' + String(item.makhambenh).padStart(4, '0') : 'Không có';
+                const infoPet = mapThuCung[item.mathucung] || { tenthucung: 'Không rõ', tenchu: 'Không rõ' };
+                const ngayTiemFormatted = item.ngaytiem ? new Date(item.ngaytiem).toLocaleDateString('vi-VN') : '';
+                const ngayNhacLaiFormatted = item.ngaynhaclai ? new Date(item.ngaynhaclai).toLocaleDateString('vi-VN') : 'Không có';
+
+                tableBody.innerHTML += `<tr>
+                    <td><strong>${maNKFormatted}</strong></td>
+                    <td>
+                        <span style="color: #2563eb; font-weight: bold;">${maKBText}</span><br>
+                        <span>Pet: <b>${infoPet.tenthucung}</b></span><br>
+                        <span style="color: #555; font-size: 11px;">Chủ: ${infoPet.tenchu}</span>
+                    </td>
+                    <td>
+                        <span style="color: #0284c7; font-weight: bold;">${item.mavaccine || ''}</span><br>
+                        <strong>${item.tenvaccine || ''}</strong>
+                    </td>
+                    <td>${ngayTiemFormatted}</td>
+                    <td>${item.bacsi || ''}</td>
+                    <td><span style="color: #d97706; font-weight: 600;">${ngayNhacLaiFormatted}</span></td>
+                    <td><span style="padding: 3px 8px; border-radius: 4px; font-size: 12px; background: #e0f2fe; color: #0369a1;">${item.trangthai || ''}</span></td>
+                    <td>
+                        <button class="btn-edit" onclick="moModalSua(${item.id})">Sửa</button>
+                        <button class="btn-delete" onclick="xoaNhatKy(${item.id})">Xóa</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        function timKiemNhatKy() {
+            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+            const ketQuaLoc = danhSachNhatKyGoc.filter(item => {
+                const tenVC = (item.tenvaccine || '').toLowerCase();
+                const maVC = (item.mavaccine || '').toLowerCase();
+                const bacSi = (item.bacsi || '').toLowerCase();
+                const maNK = ('nk' + String(item.id)).toLowerCase();
+                return tenVC.includes(tuKhoa) || maVC.includes(tuKhoa) || bacSi.includes(tuKhoa) || maNK.includes(tuKhoa);
+            });
+            hienThiBang(ketQuaLoc);
+        }
+
+        function moModalThem() {
+            document.getElementById('editingId').value = '';
+            if (!window.location.search.includes('makhambenh')) {
+                document.getElementById('makhambenh').value = '';
+            }
+            if (!window.location.search.includes('mathucung')) {
+                document.getElementById('mathucung').value = '';
+            }
+            document.getElementById('ngaytiem').value = new Date().toISOString().split('T')[0];
+            document.getElementById('selectVaccine').value = '';
+            document.getElementById('ngaynhaclai').value = '';
+            document.getElementById('bacsi').value = '';
+            document.getElementById('trangthai').value = 'Đã tiêm';
+            
+            document.getElementById('modalTitle').innerText = 'Thêm mũi tiêm vắc-xin mới';
+            document.getElementById('nhatKyModal').style.display = 'flex';
+        }
+
+        function moModalSua(id) {
+            const item = danhSachNhatKyGoc.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('editingId').value = item.id;
+            document.getElementById('makhambenh').value = item.makhambenh || '';
+            document.getElementById('mathucung').value = item.mathucung || '';
+            document.getElementById('ngaytiem').value = item.ngaytiem || '';
+            document.getElementById('ngaynhaclai').value = item.ngaynhaclai || '';
+            document.getElementById('bacsi').value = item.bacsi || '';
+            document.getElementById('trangthai').value = item.trangthai || 'Đã tiêm';
+            
+            // Chọn đúng vắc-xin trong select box
+            const selectEl = document.getElementById('selectVaccine');
+            for (let option of selectEl.options) {
+                if (option.text.includes(item.tenvaccine)) {
+                    selectEl.value = option.value;
+                    break;
+                }
+            }
+
+            document.getElementById('modalTitle').innerText = 'Cập nhật nhật ký tiêm (ID: ' + id + ')';
+            document.getElementById('nhatKyModal').style.display = 'flex';
+        }
+
+        function dongModal() {
+            document.getElementById('nhatKyModal').style.display = 'none';
+        }
+
+        async function luuNhatKy() {
+            const id = document.getElementById('editingId').value;
+            let rawMaKB = document.getElementById('makhambenh').value.trim().replace(/[^0-9]/g, '');
+            let rawMaTC = document.getElementById('mathucung').value.trim().replace(/[^0-9]/g, '');
+            
+            const makhambenh = rawMaKB ? parseInt(rawMaKB) : null;
+            const mathucung = rawMaTC ? parseInt(rawMaTC) : null;
+            const ngaytiem = document.getElementById('ngaytiem').value;
+            const selectVaccine = document.getElementById('selectVaccine');
+            const vaccineId = selectVaccine.value;
+            const ngaynhaclai = document.getElementById('ngaynhaclai').value;
+            const bacsi = document.getElementById('bacsi').value.trim();
+            const trangthai = document.getElementById('trangthai').value;
+
+            if (!mathucung || !vaccineId) {
+                alert('Vui lòng nhập Mã thú cưng và chọn Vắc-xin!');
+                return;
+            }
+
+            const selectedOption = selectVaccine.options[selectVaccine.selectedIndex];
+            const mavaccine = selectedOption.getAttribute('data-mavc');
+            const tenvaccine = selectedOption.getAttribute('data-ten');
+
+            // 1. Hoàn lại số lượng 'datiem' trong kho nếu sửa mũi tiêm cũ
+            if (id !== "") {
+                const itemCu = danhSachNhatKyGoc.find(x => x.id == id);
+                if (itemCu) {
+                    const khoCu = danhSachKhoVaccineGoc.find(v => v.tenvaccine === itemCu.tenvaccine);
+                    if (khoCu) {
+                        const daTiemMoi = Math.max(0, (parseInt(khoCu.datiem) || 0) - 1);
+                        await db.from('khovaccine').update({ datiem: daTiemMoi }).eq('id', khoCu.id);
+                    }
+                }
+            }
+
+            // 2. Tăng số lượng 'datiem' trong kho vắc-xin mới
+            const khoMoi = danhSachKhoVaccineGoc.find(v => v.id == vaccineId);
+            if (khoMoi) {
+                const daTiemMoi = (parseInt(khoMoi.datiem) || 0) + 1;
+                await db.from('khovaccine').update({ datiem: daTiemMoi }).eq('id', khoMoi.id);
+            }
+
+            const payload = {
+                makhambenh: makhambenh,
+                mathucung: mathucung,
+                mavaccine: mavaccine,
+                tenvaccine: tenvaccine,
+                ngaytiem: ngaytiem || null,
+                ngaynhaclai: ngaynhaclai || null,
+                bacsi: bacsi,
+                trangthai: trangthai
+            };
+
+            if (id === "") {
+                const { error } = await db.from('nhatkylamvaccine').insert([payload]);
+                if (error) {
+                    alert('Lỗi lưu nhật ký: ' + error.message);
+                } else {
+                    alert('Lưu nhật ký và trừ kho vắc-xin thành công!');
+                    dongModal();
+                    fetchDuLieuBanDau();
+                }
+            } else {
+                const { error } = await db.from('nhatkylamvaccine').update(payload).eq('id', id);
+                if (error) {
+                    alert('Lỗi cập nhật nhật ký: ' + error.message);
+                } else {
+                    alert('Cập nhật thành công!');
+                    dongModal();
+                    fetchDuLieuBanDau();
+                }
+            }
+        }
+
+        async function xoaNhatKy(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa mũi tiêm này không?')) {
+                // Hoàn lại số lượng tiêm vào kho trước khi xóa
+                const itemCu = danhSachNhatKyGoc.find(x => x.id == id);
+                if (itemCu) {
+                    const khoCu = danhSachKhoVaccineGoc.find(v => v.tenvaccine === itemCu.tenvaccine);
+                    if (khoCu) {
+                        const daTiemMoi = Math.max(0, (parseInt(khoCu.datiem) || 0) - 1);
+                        await db.from('khovaccine').update({ datiem: daTiemMoi }).eq('id', khoCu.id);
+                    }
+                }
+
+                const { error } = await db.from('nhatkylamvaccine').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa: ' + error.message);
+                } else {
+                    alert('Xóa thành công và đã hoàn lại số lượng kho vắc-xin!');
+                    fetchDuLieuBanDau();
+                }
+            }
+        }
+    </script>
+</body>
+</html>

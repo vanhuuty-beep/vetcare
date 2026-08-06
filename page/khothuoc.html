@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Kho thuốc - VetCare Pro</title>
+    <!-- Thư viện Supabase JS -->
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	<script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+	<script src="../js/smart-search.js"></script>
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+	<link rel="stylesheet" href="../css/smart-search.css">
+
+
+    <style>
+        .search-box {
+            padding: 8px 12px;
+            width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: #2563eb;
+        }
+        .card-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* Tối ưu modal gọn gàng */
+        .modal-container {
+            width: 500px;
+            padding: 20px 24px;
+        }
+        .modal-header {
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+        }
+        .form-group-modal {
+            margin-bottom: 10px;
+        }
+        .form-group-modal label {
+            font-size: 13px;
+            margin-bottom: 3px;
+            display: block;
+            font-weight: 500;
+        }
+        .form-group-modal input, .form-group-modal select {
+            width: 100%;
+            padding: 7px 10px;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .form-row .form-group-modal {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .modal-footer {
+            margin-top: 15px;
+            padding-top: 10px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+   <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+	<div class="main-content">
+   <div id="topnav-container"></div>
+
+        <div class="content-body">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Danh mục thuốc</h3>
+                    <div class="card-header-actions">
+                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm tên thuốc, số lô, nhóm..." onkeyup="timKiemThuoc()">
+                        <button class="btn-primary" onclick="moModalThem()">+ Thêm thuốc mới</button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã thuốc</th>
+                                <th>Tên thuốc</th>
+                                <th>Nhóm thuốc</th>
+                                <th>Số lô (solo)</th>
+                                <th>Đơn vị</th>
+                                <th>Hạn dùng</th>
+                                <th>Số lượng</th>
+                                <th>Giá bán</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table">
+                            <!-- Dữ liệu được nạp tự động từ Supabase -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP FORM THÊM / SỬA THUỐC -->
+    <div class="modal-overlay" id="thuocModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thêm thuốc mới</h3>
+                <button class="close-modal" onclick="dongModal()">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingId">
+            
+            <div class="form-group-modal">
+                <label>Tên thuốc (*):</label>
+                <input type="text" id="tenthuoc" placeholder="Nhập tên thuốc...">
+            </div>
+
+            <div class="form-group-modal">
+                <label>Nhóm thuốc:</label>
+                <input type="text" id="nhomthuoc" placeholder="Ví dụ: Kháng sinh, Vắc-xin, Vitamin...">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Số lô (solo):</label>
+                    <input type="text" id="solo" placeholder="VD: L00123...">
+                </div>
+                <div class="form-group-modal">
+                    <label>Đơn vị (donvi):</label>
+                    <input type="text" id="donvi" placeholder="VD: Viên, Lọ, Chai...">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Hạn dùng (handung):</label>
+                    <input type="date" id="handung">
+                </div>
+                <div class="form-group-modal">
+                    <label>Số lượng (soluong):</label>
+                    <input type="number" id="soluong" placeholder="VD: 100">
+                </div>
+            </div>
+
+            <div class="form-group-modal">
+                <label>Giá bán (gia - VNĐ):</label>
+                <input type="number" step="1000" id="gia" placeholder="VD: 50000">
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="dongModal()">Hủy</button>
+                <button class="btn-primary" onclick="luuThuoc()">Lưu dữ liệu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let danhSachThuocGoc = [];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchDuLieuKhoThuoc();
+        });
+
+        // Tải danh sách kho thuốc từ Supabase
+        async function fetchDuLieuKhoThuoc() {
+            const { data, error } = await db.from('khothuoc').select('*').order('id', { ascending: false });
+
+            if (error) {
+                console.error('Lỗi tải kho thuốc:', error);
+            } else {
+                danhSachThuocGoc = data;
+                hienThiBang(danhSachThuocGoc);
+            }
+        }
+
+        // Hiển thị ra bảng giao diện
+        function hienThiBang(data) {
+            const tableBody = document.getElementById('data-table');
+            tableBody.innerHTML = '';
+            
+            if(data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#777;">Kho thuốc hiện chưa có dữ liệu</td></tr>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const maThuocFormatted = 'T' + String(item.id).padStart(4, '0');
+                const giaFormatted = item.gia ? Number(item.gia).toLocaleString('vi-VN') + ' đ' : '0 đ';
+
+                tableBody.innerHTML += `<tr>
+                    <td><strong>${maThuocFormatted}</strong></td>
+                    <td>${item.tenthuoc || ''}</td>
+                    <td><span style="color: #0284c7; font-weight: 600;">${item.nhomthuoc || 'Chưa phân nhóm'}</span></td>
+                    <td>${item.solo || ''}</td>
+                    <td>${item.donvi || ''}</td>
+                    <td>${item.handung || ''}</td>
+                    <td><strong style="color: #d97706;">${item.soluong !== null ? item.soluong : 0}</strong></td>
+                    <td><strong style="color: #059669;">${giaFormatted}</strong></td>
+                    <td>
+                        <button class="btn-edit" onclick="moModalSua(${item.id}, '${item.tenthuoc || ''}', '${item.nhomthuoc || ''}', '${item.solo || ''}', '${item.donvi || ''}', '${item.handung || ''}', '${item.soluong !== null ? item.soluong : ''}', '${item.gia !== null ? item.gia : ''}')">Sửa</button>
+                        <button class="btn-delete" onclick="xoaThuoc(${item.id})">Xóa</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        // Tìm kiếm thuốc
+        function timKiemThuoc() {
+            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+            const ketQuaLoc = danhSachThuocGoc.filter(item => {
+                const tenThuoc = (item.tenthuoc || '').toLowerCase();
+                const soLo = (item.solo || '').toLowerCase();
+                const nhom = (item.nhomthuoc || '').toLowerCase();
+                
+                return tenThuoc.includes(tuKhoa) || soLo.includes(tuKhoa) || nhom.includes(tuKhoa);
+            });
+            hienThiBang(ketQuaLoc);
+        }
+
+        // Mở Modal Thêm
+        function moModalThem() {
+            document.getElementById('editingId').value = '';
+            document.getElementById('tenthuoc').value = '';
+            document.getElementById('nhomthuoc').value = '';
+            document.getElementById('solo').value = '';
+            document.getElementById('donvi').value = '';
+            document.getElementById('handung').value = '';
+            document.getElementById('soluong').value = '';
+            document.getElementById('gia').value = '';
+            
+            document.getElementById('modalTitle').innerText = 'Thêm thuốc mới vào kho';
+            document.getElementById('thuocModal').style.display = 'flex';
+        }
+
+        // Mở Modal Sửa
+        function moModalSua(id, tenthuoc, nhomthuoc, solo, donvi, handung, soluong, gia) {
+            document.getElementById('editingId').value = id;
+            document.getElementById('tenthuoc').value = tenthuoc;
+            document.getElementById('nhomthuoc').value = nhomthuoc;
+            document.getElementById('solo').value = solo;
+            document.getElementById('donvi').value = donvi;
+            document.getElementById('handung').value = handung;
+            document.getElementById('soluong').value = soluong;
+            document.getElementById('gia').value = gia;
+            
+            document.getElementById('modalTitle').innerText = 'Cập nhật thông tin thuốc (ID: ' + id + ')';
+            document.getElementById('thuocModal').style.display = 'flex';
+        }
+
+        // Đóng Modal
+        function dongModal() {
+            document.getElementById('thuocModal').style.display = 'none';
+        }
+
+        // Lưu dữ liệu (Thêm hoặc Cập nhật)
+        async function luuThuoc() {
+            const id = document.getElementById('editingId').value;
+            const tenthuoc = document.getElementById('tenthuoc').value.trim();
+            const nhomthuoc = document.getElementById('nhomthuoc').value.trim();
+            const solo = document.getElementById('solo').value.trim();
+            const donvi = document.getElementById('donvi').value.trim();
+            const handung = document.getElementById('handung').value;
+            const soluongStr = document.getElementById('soluong').value.trim();
+            const giaStr = document.getElementById('gia').value.trim();
+
+            if (!tenthuoc) {
+                alert('Vui lòng nhập tên thuốc!');
+                return;
+            }
+
+            const payload = {
+                tenthuoc: tenthuoc,
+                nhomthuoc: nhomthuoc,
+                solo: solo,
+                donvi: donvi,
+                handung: handung !== "" ? handung : null,
+                soluong: soluongStr !== "" ? parseFloat(soluongStr) : 0,
+                gia: giaStr !== "" ? parseFloat(giaStr) : 0
+            };
+
+            if (id === "") {
+                const { error } = await db.from('khothuoc').insert([payload]);
+                if (error) {
+                    alert('Lỗi thêm thuốc: ' + error.message);
+                } else {
+                    alert('Thêm thuốc thành công!');
+                    dongModal();
+                    fetchDuLieuKhoThuoc();
+                }
+            } else {
+                const { error } = await db.from('khothuoc').update(payload).eq('id', id);
+                if (error) {
+                    alert('Lỗi cập nhật thuốc: ' + error.message);
+                } else {
+                    alert('Cập nhật thành công!');
+                    dongModal();
+                    fetchDuLieuKhoThuoc();
+                }
+            }
+        }
+
+        // Xóa thuốc
+        async function xoaThuoc(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa thuốc ID: ' + id + ' này không?')) {
+                const { error } = await db.from('khothuoc').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa: ' + error.message);
+                } else {
+                    alert('Xóa thành công!');
+                    fetchDuLieuKhoThuoc();
+                }
+            }
+        }
+    </script>
+</body>
+</html>

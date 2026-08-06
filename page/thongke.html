@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Tổng Quan Doanh Thu & Báo Cáo - VetCare Pro</title>
+    <!-- Thư viện Supabase JS -->
+     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	<script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+	 <script src="../js/vaccine-popup.js"></script>
+	<script src="../js/smart-search.js"></script>
+
+    <!-- Thư viện Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+	<link rel="stylesheet" href="../css/smart-search.css">
+
+    <style>
+        .page-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        /* Bộ lọc */
+        .filter-card {
+            background: #ffffff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        .filter-group label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #64748b;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .filter-group input {
+            width: 100%;
+            padding: 8px 10px;
+            font-size: 13px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        /* Thẻ thống kê tổng quan (Style mới theo mẫu) */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .overview-card {
+            background: #ffffff;
+            padding: 18px 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 5px solid #2563eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .overview-card:nth-child(1) { border-left-color: #2563eb; }
+        .overview-card:nth-child(2) { border-left-color: #059669; }
+        .overview-card:nth-child(3) { border-left-color: #d97706; }
+        .overview-card:nth-child(4) { border-left-color: #7c3aed; }
+
+        .ov-content .ov-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #475569;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        .ov-content .ov-value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #0f172a;
+        }
+        .ov-icon {
+            font-size: 24px;
+            opacity: 0.8;
+        }
+
+        /* 4 Thẻ doanh thu tổng quan */
+        .revenue-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .revenue-card {
+            background: #ffffff;
+            padding: 15px 18px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 5px solid #0284c7;
+        }
+        .revenue-card:nth-child(2) { border-left-color: #059669; }
+        .revenue-card:nth-child(3) { border-left-color: #be185d; }
+        .revenue-card:nth-child(4) { border-left-color: #d97706; }
+
+        .rev-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #475569;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        .rev-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        /* Biểu đồ */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .chart-card {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .chart-header {
+            font-size: 13px;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .chart-container {
+            position: relative;
+            height: 260px;
+            width: 100%;
+        }
+
+        /* Khối thông tin phụ bên dưới */
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .info-card {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .info-header {
+            font-size: 13px;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 6px;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 12px;
+        }
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        .badge-count {
+            background: #fef3c7;
+            color: #b45309;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        .badge-code {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+        <div id="topnav-container"></div>
+
+        <div class="content-body">
+            <div class="page-title">
+                <span>📈</span> Tổng Quan Doanh Thu & Báo Cáo
+            </div>
+
+            <!-- CÁC THẺ THỐNG KÊ TỔNG QUAN (MẪU MỚI) -->
+            <div class="overview-grid">
+                <div class="overview-card">
+                    <div class="ov-content">
+                        <div class="ov-title">Tổng Khách Hàng</div>
+                        <div class="ov-value" id="tongKhachHang">0</div>
+                    </div>
+                    <div class="ov-icon">👤</div>
+                </div>
+                <div class="overview-card">
+                    <div class="ov-content">
+                        <div class="ov-title">Tổng Thú Cưng</div>
+                        <div class="ov-value" id="tongThuCung">0</div>
+                    </div>
+                    <div class="ov-icon">🐶</div>
+                </div>
+                <div class="overview-card">
+                    <div class="ov-content">
+                        <div class="ov-title">Lịch Hẹn Hôm Nay</div>
+                        <div class="ov-value" id="tongLichHenHomNay">0</div>
+                    </div>
+                    <div class="ov-icon">📅</div>
+                </div>
+                <div class="overview-card">
+                    <div class="ov-content">
+                        <div class="ov-title">Nội Trú Đang Nằm Viện</div>
+                        <div class="ov-value" id="tongNoiTruDangNam">0</div>
+                    </div>
+                    <div class="ov-icon">🏨</div>
+                </div>
+            </div>
+
+            <!-- BỘ LỌC DOANH THU TOÀN VIỆN -->
+            <div class="filter-card">
+                <div style="font-size: 13px; font-weight: bold; color: #1e293b; margin-bottom: 10px;">🔍 Bộ Lọc Doanh Thu Toàn Viện</div>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>Từ ngày:</label>
+                        <input type="date" id="tuNgay">
+                    </div>
+                    <div class="filter-group">
+                        <label>Đến ngày:</label>
+                        <input type="date" id="denNgay">
+                    </div>
+                    <div>
+                        <button class="btn-primary" onclick="chayBaoCao()" style="padding: 8px 16px; background: #0284c7; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: 500;"> Chạy Báo Cáo</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4 Ô DOANH THU TỔNG QUAN -->
+            <div class="revenue-grid">
+                <div class="revenue-card">
+                    <div class="rev-title">🏥 Lưu Trú Nội Trú</div>
+                    <div class="rev-value" id="doanhThuNoiTru">0 đ</div>
+                </div>
+                <div class="revenue-card">
+                    <div class="rev-title">🩺 Khám Lâm Sàng</div>
+                    <div class="rev-value" id="doanhThuKham">0 đ</div>
+                </div>
+                <div class="revenue-card">
+                    <div class="rev-title">💉 Tiêm Chủng Vắc-xin</div>
+                    <div class="rev-value" id="doanhThuVaccine">0 đ</div>
+                </div>
+                <div class="revenue-card">
+                    <div class="rev-title">💊 Thuốc & Cửa Hàng</div>
+                    <div class="rev-value" id="doanhThuThuoc">0 đ</div>
+                </div>
+            </div>
+
+            <!-- 2 BIỂU ĐỒ TRỰC QUAN -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <span>📊 Cơ cấu đóng góp doanh thu</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="doughnutChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <span>📊 Biểu đồ thu nhập chi tiết</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KHỐI THÔNG TIN BÊN DƯỚI (Sắp hết, Khách mới, Lịch hẹn) -->
+            <div class="bottom-grid">
+                <!-- Vắc-xin sắp hết -->
+                <div class="info-card">
+                    <div class="info-header">💉 Vắc-xin sắp hết</div>
+                    <div id="listVaccineSapHet">
+                        <div style="text-align: center; color: #777; padding: 10px;">Đang tải...</div>
+                    </div>
+                </div>
+
+                <!-- Thuốc sắp hết -->
+                <div class="info-card">
+                    <div class="info-header">💊 Thuốc sắp hết</div>
+                    <div id="listThuocSapHet">
+                        <div style="text-align: center; color: #777; padding: 10px;">Đang tải...</div>
+                    </div>
+                </div>
+
+                <!-- Khách mới hệ thống -->
+                <div class="info-card">
+                    <div class="info-header">👤 Khách mới hệ thống</div>
+                    <div id="listKhachMoi">
+                        <div style="text-align: center; color: #777; padding: 10px;">Đang tải...</div>
+                    </div>
+                </div>
+
+                <!-- Lịch hẹn hôm nay -->
+                <div class="info-card">
+                    <div class="info-header">📅 Lịch hẹn hôm nay</div>
+                    <div id="listLichHenHomNay">
+                        <div style="text-align: center; color: #777; padding: 10px;">Đang tải...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let doughnutChartInstance = null;
+        let barChartInstance = null;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await taiThongKeTongQuan();
+            await chayBaoCao();
+            await taiThongTinPhu();
+        });
+
+        // Hàm tải các chỉ số tổng quan ở phía trên
+        async function taiThongKeTongQuan() {
+            try {
+                // 1. Tổng khách hàng
+                const { count: countKH } = await db.from('khachhang').select('*', { count: 'exact', head: true });
+                document.getElementById('tongKhachHang').innerText = countKH || 0;
+
+                // 2. Tổng thú cưng (giả định bảng chứa thú cưng là 'thucung')
+                const { count: countTC } = await db.from('thucung').select('*', { count: 'exact', head: true });
+                document.getElementById('tongThuCung').innerText = countTC || 0;
+
+                // 3. Lịch hẹn hôm nay
+                const todayStr = new Date().toISOString().split('T')[0];
+                const { data: lhData } = await db.from('lichhen').select('ngayhen');
+                let countLhToday = 0;
+                if(lhData) {
+                    lhData.forEach(lh => {
+                        if(lh.ngayhen && lh.ngayhen.startsWith(todayStr)) {
+                            countLhToday++;
+                        }
+                    });
+                }
+                document.getElementById('tongLichHenHomNay').innerText = countLhToday;
+
+                // 4. Nội trú đang nằm viện (giả định điều kiện chưa xuất viện, ví dụ cột trangthai hoặc ngayra is null)
+                const { count: countNoiTru } = await db.from('nhatkynoitru').select('*', { count: 'exact', head: true }).is('ngayra', null);
+                document.getElementById('tongNoiTruDangNam').innerText = countNoiTru || 0;
+
+            } catch (e) {
+                console.error("Lỗi tải thống kê tổng quan:", e);
+            }
+        }
+
+        async function chayBaoCao() {
+            // Lấy giá trị lọc ngày nếu có
+            const tuNgay = document.getElementById('tuNgay').value;
+            const denNgay = document.getElementById('denNgay').value;
+
+            // 1. Doanh thu Nội trú từ bảng nhatkynoitru (cột thanhtien hoặc tongchiphi)
+            let queryNoiTru = db.from('nhatkynoitru').select('tongchiphi, ngayvao');
+            if(tuNgay) queryNoiTru = queryNoiTru.gte('ngayvao', tuNgay);
+            if(denNgay) queryNoiTru = queryNoiTru.lte('ngayvao', denNgay + 'T23:59:59');
+            const { data: dataNoiTru } = await queryNoiTru;
+            let sumNoiTru = 0;
+            if(dataNoiTru) dataNoiTru.forEach(x => sumNoiTru += parseFloat(x.tongchiphi || 0));
+
+            // 2. Doanh thu Khám lâm sàng từ bảng khambenh (cột chiphi)
+            let queryKham = db.from('khambenh').select('chiphi, ngaykham');
+            if(tuNgay) queryKham = queryKham.gte('ngaykham', tuNgay);
+            if(denNgay) queryKham = queryKham.lte('ngaykham', denNgay);
+            const { data: dataKham } = await queryKham;
+            let sumKham = 0;
+            if(dataKham) dataKham.forEach(x => sumKham += parseFloat(x.chiphi || 0));
+
+            // 3. Doanh thu Tiêm chủng vắc-xin từ bảng khovaccine hoặc nhatkylamvaccine
+            let sumVaccine = 0;
+            const { data: dataVaccineLog } = await db.from('nhatkylamvaccine').select('tenvaccine');
+            const { data: dataKhoVc } = await db.from('khovaccine').select('tenvaccine, giaban');
+            if(dataVaccineLog && dataKhoVc) {
+                dataVaccineLog.forEach(log => {
+                    const found = dataKhoVc.find(v => v.tenvaccine === log.tenvaccine);
+                    if(found) sumVaccine += parseFloat(found.giaban || 0);
+                });
+            }
+
+            // 4. Doanh thu Thuốc & Cửa hàng từ hoadonthuoc và danhmucsanpham
+            let sumThuoc = 0;
+            const { data: dataHoaDon } = await db.from('hoadonthuoc').select('chitiet, soluong, Gia');
+            if(dataHoaDon) {
+                dataHoaDon.forEach(item => {
+                    try {
+                        const chitiet = typeof item.chitiet === 'string' ? JSON.parse(item.chitiet) : item.chitiet;
+                        if(Array.isArray(chitiet)) {
+                            chitiet.forEach(t => sumThuoc += (parseFloat(t.soluong) || 0) * (parseFloat(t.Gia) || 0));
+                        } else {
+                            sumThuoc += (parseFloat(item.soluong) || 0) * (parseFloat(item.Gia) || 0);
+                        }
+                    } catch(e) {
+                        sumThuoc += (parseFloat(item.soluong) || 0) * (parseFloat(item.Gia) || 0);
+                    }
+                });
+            }
+
+            // Hiển thị lên giao diện
+            document.getElementById('doanhThuNoiTru').innerText = sumNoiTru.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('doanhThuKham').innerText = sumKham.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('doanhThuVaccine').innerText = sumVaccine.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('doanhThuThuoc').innerText = sumThuoc.toLocaleString('vi-VN') + ' đ';
+
+            // Vẽ lại biểu đồ
+            veBieuDo(sumNoiTru, sumKham, sumVaccine, sumThuoc);
+        }
+
+        async function taiThongTinPhu() {
+            // Vắc-xin sắp hết (tồn kho < 10)
+            const { data: vcData } = await db.from('khovaccine').select('*');
+            const listVcDiv = document.getElementById('listVaccineSapHet');
+            listVcDiv.innerHTML = '';
+            let vcCount = 0;
+            if(vcData) {
+                vcData.forEach(v => {
+                    const ton = (parseInt(v.soluongnhap) || 0) - (parseInt(v.datiem) || 0);
+                    if(ton <= 10) {
+                        vcCount++;
+                        const maVC = 'VX' + String(v.id).padStart(4, '0');
+                        listVcDiv.innerHTML += `
+                            <div class="info-item">
+                                <span><b>${maVC}</b> - ${v.tenvaccine}</span>
+                                <span class="badge-count">Còn ${ton} liều</span>
+                            </div>
+                        `;
+                    }
+                });
+            }
+            if(vcCount === 0) listVcDiv.innerHTML = `<div style="color:#777; font-size:12px; padding:5px;">Không có vắc-xin sắp hết</div>`;
+
+            // Thuốc sắp hết (soluong < 10)
+            const { data: thuocData } = await db.from('khothuoc').select('*');
+            const listThuocDiv = document.getElementById('listThuocSapHet');
+            listThuocDiv.innerHTML = '';
+            let thuocCount = 0;
+            if(thuocData) {
+                thuocData.forEach(t => {
+                    const ton = parseInt(t.soluong) || 0;
+                    if(ton <= 10) {
+                        thuocCount++;
+                        const maT = 'TH' + String(t.id).padStart(4, '0');
+                        listThuocDiv.innerHTML += `
+                            <div class="info-item">
+                                <span><b>${maT}</b> - ${t.tenthuoc}</span>
+                                <span class="badge-count">Còn ${ton}</span>
+                            </div>
+                        `;
+                    }
+                });
+            }
+            if(thuocCount === 0) listThuocDiv.innerHTML = `<div style="color:#777; font-size:12px; padding:5px;">Không có thuốc sắp hết</div>`;
+
+            // Khách mới hệ thống (lấy 3 khách hàng gần nhất)
+            const { data: khData } = await db.from('khachhang').select('*').order('id', { ascending: false }).limit(3);
+            const listKhDiv = document.getElementById('listKhachMoi');
+            listKhDiv.innerHTML = '';
+            if(khData && khData.length > 0) {
+                khData.forEach(kh => {
+                    const maKH = 'KH' + String(kh.id).padStart(4, '0');
+                    listKhDiv.innerHTML += `
+                        <div class="info-item">
+                            <span><b>${kh.hovaten || 'Không tên'}</b></span>
+                            <span class="badge-code">${maKH}</span>
+                        </div>
+                    `;
+                });
+            } else {
+                listKhDiv.innerHTML = `<div style="color:#777; font-size:12px; padding:5px;">Chưa có khách hàng mới</div>`;
+            }
+
+            // Lịch hẹn hôm nay
+            const todayStr = new Date().toISOString().split('T')[0];
+            const { data: lhData } = await db.from('lichhen').select('*');
+            const listLhDiv = document.getElementById('listLichHenHomNay');
+            listLhDiv.innerHTML = '';
+            let lhCount = 0;
+            if(lhData) {
+                lhData.forEach(lh => {
+                    if(lh.ngayhen && lh.ngayhen.startsWith(todayStr)) {
+                        lhCount++;
+                        listLhDiv.innerHTML += `
+                            <div class="info-item">
+                                <span><b>${lh.tenchunuoi}</b> (${lh.noidung || 'Khám'})</span>
+                                <span style="font-weight:bold; color:#0284c7;">${lh.ngayhen.split('T')[1]?.substring(0,5) || ''}</span>
+                            </div>
+                        `;
+                    }
+                });
+            }
+            if(lhCount === 0) {
+                listLhDiv.innerHTML = `<div style="color:#777; font-size:12px; padding:5px;">Không có lịch hẹn hôm nay</div>`;
+            }
+        }
+
+        function veBieuDo(noiTru, kham, vaccine, thuoc) {
+            // Biểu đồ tròn (Doughnut)
+            const ctxDoughnut = document.getElementById('doughnutChart').getContext('2d');
+            if(doughnutChartInstance) doughnutChartInstance.destroy();
+            doughnutChartInstance = new Chart(ctxDoughnut, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Lưu trú nội trú', 'Khám lâm sàng', 'Tiêm vắc-xin', 'Thuốc & Cửa hàng'],
+                    datasets: [{
+                        data: [noiTru || 1, kham || 1, vaccine || 1, thuoc || 1],
+                        backgroundColor: ['#0284c7', '#059669', '#be185d', '#d97706']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+                }
+            });
+
+            // Biểu đồ cột (Bar)
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            if(barChartInstance) barChartInstance.destroy();
+            barChartInstance = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['Nội trú', 'Khám', 'Vắc-xin', 'Thuốc'],
+                    datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: [noiTru, kham, vaccine, thuoc],
+                        backgroundColor: ['#0284c7', '#059669', '#be185d', '#d97706']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

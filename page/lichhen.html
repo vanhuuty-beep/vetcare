@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Lý Lịch Hẹn - VetCare Pro</title>
+    <!-- Thư viện Supabase JS -->
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	<script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+	<script src="../js/smart-search.js"></script>
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+	<link rel="stylesheet" href="../css/smart-search.css">
+	
+    <style>
+        .search-box {
+            padding: 8px 12px;
+            width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: #2563eb;
+        }
+        .card-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .modal-container {
+            width: 650px;
+            padding: 20px 24px;
+        }
+        .modal-header {
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+        }
+        .form-group-modal {
+            margin-bottom: 10px;
+        }
+        .form-group-modal label {
+            font-size: 13px;
+            margin-bottom: 3px;
+            display: block;
+            font-weight: 500;
+        }
+        .form-group-modal input, .form-group-modal select, .form-group-modal textarea {
+            width: 100%;
+            padding: 7px 10px;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .form-row .form-group-modal {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .modal-footer {
+            margin-top: 15px;
+            padding-top: 10px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        table th:last-child, table td:last-child {
+            white-space: nowrap;
+            width: 160px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+        <div id="topnav-container"></div>
+
+        <div class="content-body">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Danh sách lịch hẹn</h3>
+                    <div class="card-header-actions">
+                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm tên chủ nuôi, SĐT, nội dung..." onkeyup="timKiemLichHen()">
+                        <button class="btn-primary" onclick="moModalThem()">+ Thêm lịch hẹn mới</button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Ngày hẹn</th>
+                                <th>Chủ nuôi & SĐT</th>
+                                <th>Địa chỉ</th>
+                                <th>Nội dung hẹn</th>
+                                <th style="text-align: center;">Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table">
+                            <!-- Dữ liệu được nạp tự động -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP FORM THÊM / SỬA LỊCH HẸN -->
+    <div class="modal-overlay" id="lichHenModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Tạo lịch hẹn mới</h3>
+                <button class="close-modal" onclick="dongModal()">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingId">
+            
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Tên chủ nuôi (tenchunuoi) (*):</label>
+                    <input type="text" id="tenchunuoi" placeholder="Nhập tên chủ nuôi...">
+                </div>
+                <div class="form-group-modal">
+                    <label>Số điện thoại (sdt):</label>
+                    <input type="text" id="sdt" placeholder="Nhập số điện thoại...">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Ngày hẹn (ngayhen) (*):</label>
+                    <input type="datetime-local" id="ngayhen">
+                </div>
+                <div class="form-group-modal">
+                    <label>Trạng thái (trangthai):</label>
+                    <select id="trangthai">
+                        <option value="Chờ khám">Chờ khám</option>
+                        <option value="Đã hoàn thành">Đã hoàn thành</option>
+                        <option value="Đã hủy">Đã hủy</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group-modal">
+                <label>Địa chỉ (diachi):</label>
+                <input type="text" id="diachi" placeholder="Nhập địa chỉ khách hàng...">
+            </div>
+
+            <div class="form-group-modal">
+                <label>Nội dung hẹn (noidung):</label>
+                <textarea id="noidung" rows="3" placeholder="Nhập nội dung khám, tiêm phòng, spa..."></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="dongModal()">Hủy</button>
+                <button class="btn-primary" onclick="luuLichHen()">Lưu dữ liệu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let danhSachLichHenGoc = [];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await taiDanhSachLichHen();
+
+            // Đăng ký Realtime tự động cập nhật bảng khi có thay đổi từ thiết bị khác
+            if (typeof db !== 'undefined' && db) {
+                db.channel('realtime-lichhen-pc')
+                  .on('postgres_changes', { event: '*', schema: 'public', table: 'lichhen' }, async () => {
+                      await taiDanhSachLichHen();
+                  })
+                  .subscribe();
+            }
+        });
+
+        async function taiDanhSachLichHen() {
+            const { data, error } = await db.from('lichhen').select('*').order('ngayhen', { ascending: true });
+            if (error) {
+                console.error('Lỗi tải lịch hẹn:', error);
+            } else {
+                danhSachLichHenGoc = data || [];
+                hienThiBang(danhSachLichHenGoc);
+            }
+        }
+
+        function hienThiBang(data) {
+            const tableBody = document.getElementById('data-table');
+            tableBody.innerHTML = '';
+            
+            if(data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#777;">Chưa có lịch hẹn nào</td></tr>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const ngayHenFormatted = item.ngayhen ? new Date(item.ngayhen).toLocaleString('vi-VN') : '---';
+                
+                // Xử lý huy hiệu trạng thái dạng bấm đổi trực tiếp trên bảng PC
+                const trangThaiHienTai = item.trangthai || 'Chờ khám';
+                let badgeColor = '#d97706'; // Cam: Chờ khám
+                let bgBadge = '#fef3c7';
+                let nextStatus = 'Đã hoàn thành';
+
+                if(trangThaiHienTai === 'Đã hoàn thành') {
+                    badgeColor = '#059669'; // Xanh lá: Đã hoàn thành
+                    bgBadge = '#d1fae5';
+                    nextStatus = 'Đã hủy';
+                } else if(trangThaiHienTai === 'Đã hủy') {
+                    badgeColor = '#dc2626'; // Đỏ: Đã hủy
+                    bgBadge = '#fee2e2';
+                    nextStatus = 'Chờ khám';
+                }
+
+                // Tự động thêm số 0 ở đầu nếu SĐT bị thiếu số 0
+                let rawSdt = String(item.sdt || '').trim();
+                let displaySdt = rawSdt ? (rawSdt.startsWith('0') ? rawSdt : '0' + rawSdt) : '';
+
+                tableBody.innerHTML += `<tr>
+                    <td><strong>#${item.id}</strong></td>
+                    <td style="font-weight: 600; color: #1e3a8a;">${ngayHenFormatted}</td>
+                    <td>
+                        <b>${item.tenchunuoi || '---'}</b><br>
+                        <span style="font-size: 12px;">
+                            ${displaySdt ? `<a href="tel:${displaySdt}" style="color: #0284c7; text-decoration: none; font-weight: bold;" title="Bấm để gọi điện">📞 ${displaySdt}</a>` : 'Không có SĐT'}
+                        </span>
+                    </td>
+                    <td>${item.diachi || '---'}</td>
+                    <td style="font-size: 12px; max-width: 250px; word-break: break-word;">${item.noidung || '---'}</td>
+                    <td style="text-align: center;">
+                        <span onclick="capNhatTrangThaiLichHenPC(${item.id}, '${nextStatus}')" 
+                              style="padding: 4px 10px; border-radius: 12px; font-size: 11px; background: ${bgBadge}; color: ${badgeColor}; font-weight: bold; cursor: pointer; display: inline-block; white-space: nowrap;" 
+                              title="Bấm để đổi trạng thái">
+                            ${trangThaiHienTai} 🔄
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            <button class="btn-edit" style="padding: 5px 10px; font-size: 11px; border-radius: 4px;" onclick="moModalSua(${item.id})">Sửa</button>
+                            <button class="btn-delete" style="padding: 5px 10px; font-size: 11px; border-radius: 4px;" onclick="xoaLichHen(${item.id})">Xóa</button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        // Hàm gọi Database cập nhật trạng thái trực tiếp trên bảng PC
+        async function capNhatTrangThaiLichHenPC(id, trangThaiMoi) {
+            if (typeof db === 'undefined' || !db) return;
+
+            const { error } = await db
+                .from('lichhen')
+                .update({ trangthai: trangThaiMoi })
+                .eq('id', id);
+
+            if (error) {
+                alert('Lỗi cập nhật trạng thái: ' + error.message);
+            } else {
+                await taiDanhSachLichHen();
+            }
+        }
+
+        function timKiemLichHen() {
+            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+            const ketQuaLoc = danhSachLichHenGoc.filter(item => {
+                const ten = (item.tenchunuoi || '').toLowerCase();
+                const sdt = (item.sdt || '').toLowerCase();
+                const noidung = (item.noidung || '').toLowerCase();
+                return ten.includes(tuKhoa) || sdt.includes(tuKhoa) || noidung.includes(tuKhoa);
+            });
+            hienThiBang(ketQuaLoc);
+        }
+
+        function moModalThem() {
+            document.getElementById('editingId').value = '';
+            document.getElementById('tenchunuoi').value = '';
+            document.getElementById('sdt').value = '';
+            document.getElementById('diachi').value = '';
+            document.getElementById('noidung').value = '';
+            document.getElementById('trangthai').value = 'Chờ khám';
+            
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('ngayhen').value = now.toISOString().slice(0, 16);
+            
+            document.getElementById('modalTitle').innerText = 'Tạo lịch hẹn mới';
+            document.getElementById('lichHenModal').style.display = 'flex';
+        }
+
+        function moModalSua(id) {
+            const item = danhSachLichHenGoc.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('editingId').value = item.id;
+            document.getElementById('tenchunuoi').value = item.tenchunuoi || '';
+            document.getElementById('sdt').value = item.sdt || '';
+            document.getElementById('diachi').value = item.diachi || '';
+            document.getElementById('noidung').value = item.noidung || '';
+            document.getElementById('trangthai').value = item.trangthai || 'Chờ khám';
+            
+            document.getElementById('ngayhen').value = item.ngayhen ? new Date(new Date(item.ngayhen).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+
+            document.getElementById('modalTitle').innerText = 'Cập nhật lịch hẹn (ID: ' + id + ')';
+            document.getElementById('lichHenModal').style.display = 'flex';
+        }
+
+        function dongModal() {
+            document.getElementById('lichHenModal').style.display = 'none';
+        }
+
+        async function luuLichHen() {
+            const id = document.getElementById('editingId').value;
+            const tenchunuoi = document.getElementById('tenchunuoi').value.trim();
+            const sdt = document.getElementById('sdt').value.trim();
+            const ngayhen = document.getElementById('ngayhen').value;
+            const diachi = document.getElementById('diachi').value.trim();
+            const noidung = document.getElementById('noidung').value.trim();
+            const trangthai = document.getElementById('trangthai').value;
+
+            if (!tenchunuoi || !ngayhen) {
+                alert('Vui lòng nhập Tên chủ nuôi và Thời gian Ngày hẹn!');
+                return;
+            }
+
+            const payload = {
+                tenchunuoi: tenchunuoi,
+                sdt: sdt,
+                ngayhen: ngayhen ? new Date(ngayhen).toISOString() : null,
+                diachi: diachi,
+                noidung: noidung,
+                trangthai: trangthai
+            };
+
+            if (id === "") {
+                const { error } = await db.from('lichhen').insert([payload]);
+                if (error) {
+                    alert('Lỗi tạo lịch hẹn: ' + error.message);
+                } else {
+                    alert('Tạo lịch hẹn thành công!');
+                    dongModal();
+                    await taiDanhSachLichHen();
+                }
+            } else {
+                const { error } = await db.from('lichhen').update(payload).eq('id', id);
+                if (error) {
+                    alert('Lỗi cập nhật lịch hẹn: ' + error.message);
+                } else {
+                    alert('Cập nhật lịch hẹn thành công!');
+                    dongModal();
+                    await taiDanhSachLichHen();
+                }
+            }
+        }
+
+        async function xoaLichHen(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa lịch hẹn này không?')) {
+                const { error } = await db.from('lichhen').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa: ' + error.message);
+                } else {
+                    alert('Xóa lịch hẹn thành công!');
+                    await taiDanhSachLichHen();
+                }
+            }
+        }
+    </script>
+</body>
+</html>

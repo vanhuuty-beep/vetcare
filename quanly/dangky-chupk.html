@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký Chủ Phòng Khám - VetCare Pro</title>
+    <!-- Thư viện Supabase JS và CryptoJS (Mã hóa mật khẩu) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/smart-search.js"></script>
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+    <link rel="stylesheet" href="../css/smart-search.css">
+    <style>
+        body {
+            background: #f8fafc;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .register-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 480px;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            box-sizing: border-box;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .register-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .register-header h2 {
+            margin: 0 0 6px 0;
+            color: #1e3a8a;
+            font-size: 22px;
+            font-weight: 700;
+        }
+        .register-header p {
+            margin: 0;
+            color: #64748b;
+            font-size: 13px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 11px 14px;
+            font-size: 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            outline: none;
+            box-sizing: border-box;
+            background: #ffffff;
+            transition: all 0.2s;
+        }
+        .form-control:focus {
+            border-color: #0284c7;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+        }
+        .btn-register {
+            width: 100%;
+            padding: 12px;
+            background: #0284c7;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        .btn-register:hover {
+            background: #0369a1;
+        }
+        .back-login {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 13px;
+        }
+        .back-login a {
+            color: #0284c7;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-login a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="register-card">
+        <div class="register-header">
+            <h2>🏥 VETCARE PRO</h2>
+            <p>Đăng ký tài khoản Chủ Phòng Khám mới</p>
+        </div>
+
+        <form onsubmit="xuLyDangKyChuPK(event)">
+            <div class="form-group">
+                <label>Tên Phòng Khám (*):</label>
+                <input type="text" id="tenphongkham" class="form-control" placeholder="Ví dụ: Phòng Khám Thú Y An Khang" required>
+            </div>
+
+            <div class="form-group">
+                <label>Họ và Tên Chủ Phòng Khám (*):</label>
+                <input type="text" id="hovaten" class="form-control" placeholder="Ví dụ: Nguyễn Văn A" required>
+            </div>
+
+            <div class="form-group">
+                <label>Số Điện Thoại (Dùng để đăng nhập) (*):</label>
+                <input type="text" id="sodienthoai" class="form-control" placeholder="Ví dụ: 0905123456" required>
+            </div>
+
+            <div class="form-group">
+                <label>Mật Khẩu (*):</label>
+                <input type="password" id="matkhau" class="form-control" placeholder="Nhập mật khẩu..." required>
+            </div>
+
+            <div class="form-group">
+                <label>Tải Lên Logo Phòng Khám (Chọn file ảnh):</label>
+                <input type="file" id="logoFile" class="form-control" accept="image/*">
+                <small style="color: #64748b; font-size: 11px;">Ảnh sẽ tự động upload lên Supabase Storage (Bucket: logo).</small>
+            </div>
+
+            <div class="form-group">
+                <label>Địa Chỉ Phòng Khám:</label>
+                <input type="text" id="diachi" class="form-control" placeholder="Ví dụ: 123 Nguyễn Văn Linh, Đà Nẵng">
+            </div>
+
+            <button type="submit" id="btnSubmit" class="btn-register">Đăng Ký Tài Khoản</button>
+        </form>
+
+        <div class="back-login">
+            <a href="login-chupk.html">⬅️ Quay lại trang đăng nhập</a>
+        </div>
+    </div>
+
+    <script>
+        async function xuLyDangKyChuPK(event) {
+            event.preventDefault();
+            
+            const tenphongkham = document.getElementById('tenphongkham').value.trim();
+            const hovaten = document.getElementById('hovaten').value.trim();
+            const sodienthoai = document.getElementById('sodienthoai').value.trim();
+            const matkhauRaw = document.getElementById('matkhau').value.trim();
+            const fileInput = document.getElementById('logoFile');
+            const diachi = document.getElementById('diachi').value.trim();
+            const btn = document.getElementById('btnSubmit');
+
+            btn.disabled = true;
+            btn.textContent = 'Đang xử lý tạo tài khoản...';
+
+            try {
+                // Kiểm tra số điện thoại đã tồn tại chưa[cite: 2]
+                let { data: checkExist } = await db.from('chupk')
+                    .select('sodienthoai')
+                    .eq('sodienthoai', sodienthoai)
+                    .maybeSingle();
+
+                if (checkExist) {
+                    alert('Số điện thoại này đã được đăng ký hệ thống trước đó!');
+                    btn.disabled = false;
+                    btn.textContent = 'Đăng Ký Tài Khoản';
+                    return;
+                }
+
+                let logoUrl = '';
+
+                // Xử lý upload file logo lên Supabase Storage (Bucket: logo)[cite: 2]
+                if (fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = 'logo_reg_' + Date.now() + '_' + Math.floor(Math.random() * 1000) + '.' + fileExt;
+                    const filePath = `${fileName}`;
+
+                    let { error: uploadError } = await db.storage.from('logo').upload(filePath, file);
+                    if (uploadError) {
+                        throw new Error('Lỗi upload logo: ' + uploadError.message);
+                    }
+
+                    let { data: publicURLData } = db.storage.from('logo').getPublicUrl(filePath);
+                    logoUrl = publicURLData.publicUrl;
+                }
+
+                // Tự sinh mã phòng khám độc lập[cite: 2]
+                const autoMaPK = 'PK_' + Math.floor(100000 + Math.random() * 900000);
+
+                // Cấp 30 ngày dùng thử (trải nghiệm sản phẩm) cho tài khoản mới đăng ký
+                const ngayHienTai = new Date();
+                const ngayHetHanMacDinh = new Date();
+                ngayHetHanMacDinh.setDate(ngayHienTai.getDate() + 30);
+
+                // Mã hóa mật khẩu an toàn bằng MD5[cite: 2]
+                const hashedPassword = CryptoJS.MD5(matkhauRaw).toString();
+
+                const payload = {
+                    maphongkham: autoMaPK,
+                    tenphongkham: tenphongkham,
+                    hovaten: hovaten,
+                    sodienthoai: sodienthoai,
+                    matkhau: hashedPassword,
+                    logo: logoUrl,
+                    diachi: diachi,
+                    vaitro: 'Chủ phòng khám',
+                    trangthai: 'Hoạt động',
+                    ngaytao: ngayHienTai.toISOString(),
+                    ngayhethan: ngayHetHanMacDinh.toISOString()
+                };
+
+                let { error } = await db.from('chupk').insert([payload]);
+
+                if (error) throw error;
+
+                alert('🎉 Đăng ký thành công! Bạn được tặng 30 ngày trải nghiệm miễn phí. Mã phòng khám của bạn là: ' + autoMaPK);
+                window.location.href = 'login-chupk.html';
+
+            } catch (err) {
+                console.error('Lỗi đăng ký:', err);
+                alert('Lỗi khi đăng ký: ' + err.message);
+                btn.disabled = false;
+                btn.textContent = 'Đăng Ký Tài Khoản';
+            }
+        }
+    </script>
+</body>
+</html>

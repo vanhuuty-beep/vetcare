@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Lịch hẹn - Mobile</title>
+    
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Kết nối các file cấu hình ở thư mục gốc (thêm ../) -->
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+
+    <!-- CSS chung và CSS riêng mobile -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="css/button.css">
+    <style>
+        /* Thu nhỏ toàn bộ giao diện mặc định về 80% nếu xem trên màn hình lớn / PC */
+        html {
+            zoom: 80%;
+            -moz-transform: scale(0.8);
+            -moz-transform-origin: top left;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+        body { background: #f8fafc; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        .mobile-container { max-width: 480px; margin: 0 auto; background: #ffffff; min-height: 100vh; padding: 10px; padding-bottom: 80px; box-shadow: 0 0 15px rgba(0,0,0,0.05); }
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; background: #1e3a8a; padding: 10px; border-radius: 6px; }
+        .top-header h3 { margin: 0; font-size: 16px; color: white; }
+        .btn-desktop { background: #3b82f6; color: white; text-decoration: none; padding: 5px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .form-control { width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; box-sizing: border-box; margin-bottom: 8px; }
+        .appointment-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        
+        /* CSS Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-content-custom { background: #fff; width: 90%; max-width: 380px; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container">
+        <!-- THANH TIÊU ĐỀ PHÍA TRÊN -->
+        <div class="top-header">
+            <h3>📅 Lịch Hẹn Khách Hàng</h3>
+            <div style="display: flex; gap: 5px; align-items: center;">
+                <a href="../page/thongke.html" class="btn-desktop">💻</a>
+                <button onclick="dangXuatMobile()" style="background: #ef4444; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">🚪 Thoát</button>
+            </div>
+        </div>
+
+        <!-- NÚT MỞ MODAL THÊM LỊCH HẸN -->
+        <div style="margin-bottom: 12px;">
+            <button type="button" onclick="moModalThem()" style="width: 100%; padding: 9px; background: #059669; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">➕ Thêm Lịch Hẹn Mới</button>
+        </div>
+
+        <!-- DANH SÁCH LỊCH HẸN -->
+        <div style="font-weight: bold; font-size: 12px; color: #334155; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span>📋 Danh Sách Lịch Hẹn:</span>
+            <span id="tongSoLich" style="color: #2563eb; font-size: 11px;">0 lịch</span>
+        </div>
+        <div id="danhSachLichHenContainer" style="max-height: 400px; overflow-y: auto;">
+            <div style="text-align: center; color: #777; padding: 15px; background: #fff; border-radius: 6px; border: 1px dashed #cbd5e1; font-size: 11px;">Đang tải danh sách lịch hẹn...</div>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM / SỬA LỊCH HẸN -->
+    <div id="modalLichHen" class="modal-overlay">
+        <div class="modal-content-custom">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+                <h4 id="modalTitle" style="margin: 0; font-size: 14px; color: #1e293b;">➕ Thêm Lịch Hẹn Mới</h4>
+                <button type="button" onclick="dongModal()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            <form id="formLichHen" onsubmit="luuLichHen(event)">
+                <input type="hidden" id="editId">
+                <div style="margin-bottom: 6px;">
+                    <label style="font-size: 11px; font-weight: bold; color: #475569;">Tên chủ nuôi (*):</label>
+                    <input type="text" id="tenKhachHen" class="form-control" placeholder="Nhập tên chủ nuôi..." required>
+                </div>
+                <div style="margin-bottom: 6px;">
+                    <label style="font-size: 11px; font-weight: bold; color: #475569;">Số điện thoại:</label>
+                    <input type="tel" id="sdtKhachHen" class="form-control" placeholder="Nhập số điện thoại...">
+                </div>
+                <div style="margin-bottom: 6px;">
+                    <label style="font-size: 11px; font-weight: bold; color: #475569;">Địa chỉ:</label>
+                    <input type="text" id="diaChiHen" class="form-control" placeholder="Nhập địa chỉ khách hàng...">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                    <div>
+                        <label style="font-size: 11px; font-weight: bold; color: #475569;">Ngày hẹn (*):</label>
+                        <input type="date" id="ngayHen" class="form-control" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: bold; color: #475569;">Trạng thái:</label>
+                        <select id="trangThaiHen" class="form-control">
+                            <option value="Chờ khám">Chờ khám</option>
+                            <option value="Đã hoàn thành">Đã hoàn thành</option>
+                            <option value="Đã hủy">Đã hủy</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <label style="font-size: 11px; font-weight: bold; color: #475569;">Nội dung hẹn:</label>
+                    <textarea id="noiDungHen" class="form-control" placeholder="Nhập nội dung khám, tiêm phòng..." style="height: 60px; resize: none;"></textarea>
+                </div>
+                <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                    <button type="button" onclick="dongModal()" style="padding: 6px 10px; font-size: 11px; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer;">Hủy</button>
+                    <button type="submit" id="btnSaveLich" style="padding: 6px 12px; font-size: 11px; background: #059669; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Lưu dữ liệu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT XỬ LÝ LỊCH HẸN MOBILE -->
+    <script>
+        let danhSachLichHenToanCuc = [];
+
+        function dangXuatMobile() {
+            if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?')) {
+                sessionStorage.removeItem('currentUser');
+                window.location.href = '../index.html';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadDanhSachLichHen();
+
+            // Đăng ký Realtime tự động cập nhật bảng khi có thay đổi dữ liệu từ thiết bị khác
+            if (typeof db !== 'undefined' && db) {
+                db.channel('realtime-lichhen-mobile')
+                  .on('postgres_changes', { event: '*', schema: 'public', table: 'lichhen' }, async () => {
+                      await loadDanhSachLichHen();
+                  })
+                  .subscribe();
+            }
+        });
+
+        async function loadDanhSachLichHen() {
+            if (typeof db === 'undefined' || !db) {
+                console.error('Chưa kết nối Supabase!');
+                return;
+            }
+
+            const { data, error } = await db.from('lichhen').select('*').order('ngayhen', { ascending: true });
+            const container = document.getElementById('danhSachLichHenContainer');
+            
+            if (error) {
+                console.error('Lỗi tải lịch hẹn:', error);
+                container.innerHTML = `<div style="text-align:center; color:red; font-size:11px;">Lỗi tải dữ liệu lịch hẹn</div>`;
+                return;
+            }
+
+            danhSachLichHenToanCuc = data || [];
+
+            if (danhSachLichHenToanCuc.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #777; padding: 15px; font-size: 11px;">Không có lịch hẹn nào</div>`;
+                document.getElementById('tongSoLich').innerText = '0 lịch';
+                return;
+            }
+
+            document.getElementById('tongSoLich').innerText = danhSachLichHenToanCuc.length + ' lịch';
+            container.innerHTML = '';
+
+            data.forEach(item => {
+                const ten = item.tenchunuoi || 'Chủ nuôi';
+                
+                let sdtGoc = item.sdt ? String(item.sdt).trim() : '';
+                let sdtHienThi = 'Không có SĐT';
+                if (sdtGoc !== '') {
+                    sdtHienThi = '0' + sdtGoc.replace(/^0+/, '');
+                }
+
+                const diachi = item.diachi || 'Chưa cập nhật';
+                const ngay = item.ngayhen || '';
+                const noidung = item.noidung || 'Khám/Dịch vụ';
+                
+                // Xử lý huy hiệu trạng thái bấm đổi nhanh trên Mobile
+                const trangthai = item.trangthai || 'Chờ khám';
+                let mauTrangThai = '#d97706'; // Cam: Chờ khám
+                let nextStatus = 'Đã hoàn thành';
+
+                if (trangthai === 'Đã hoàn thành') {
+                    mauTrangThai = '#059669'; // Xanh lá: Đã hoàn thành
+                    nextStatus = 'Đã hủy';
+                } else if (trangthai === 'Đã hủy') {
+                    mauTrangThai = '#dc2626'; // Đỏ: Đã hủy
+                    nextStatus = 'Chờ khám';
+                }
+
+                container.innerHTML += `
+                    <div class="appointment-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                            <span style="font-weight: bold; font-size: 12px; color: #1e293b;">${ten}</span>
+                            <span style="font-size: 10px; background: #dbeafe; color: #1d4ed8; padding: 2px 6px; border-radius: 4px; font-weight: bold;">${ngay}</span>
+                        </div>
+                        <div style="font-size: 11px; color: #475569; margin-bottom: 2px;">
+                            📞 SĐT: ${sdtGoc ? `<a href="tel:${sdtHienThi}" style="color: #2563eb; font-weight: bold; text-decoration: none;">${sdtHienThi}</a>` : 'Không có SĐT'}
+                        </div>
+                        <div style="font-size: 11px; color: #475569; margin-bottom: 2px;">📍 Địa chỉ: ${diachi}</div>
+                        <div style="font-size: 11px; color: #059669; font-weight: 500; margin-bottom: 4px;">📝 Nội dung: ${noidung}</div>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; border-top: 1px solid #f1f5f9; padding-top: 4px;">
+                            <span onclick="capNhatTrangThaiLichHenMobile(${item.id}, '${nextStatus}')" 
+                                  style="background-color: ${mauTrangThai}; color: white; font-size: 10px; padding: 3px 8px; border-radius: 12px; cursor: pointer; font-weight: bold; display: inline-block;" 
+                                  title="Bấm để đổi trạng thái">
+                                ${trangthai} 🔄
+                            </span>
+                            <div style="display: flex; gap: 4px;">
+                                <button onclick="moModalSua(${item.id})" style="background: #3b82f6; color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; font-weight: bold;">✏️ Sửa</button>
+                                <button onclick="xoaLichHen(${item.id})" style="background: #ef4444; color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; font-weight: bold;">🗑️ Xóa</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Hàm gọi Database cập nhật trạng thái trực tiếp bằng cách bấm vào huy hiệu trên Mobile
+        async function capNhatTrangThaiLichHenMobile(id, trangThaiMoi) {
+            if (typeof db === 'undefined' || !db) return;
+
+            const { error } = await db
+                .from('lichhen')
+                .update({ trangthai: trangThaiMoi })
+                .eq('id', id);
+
+            if (error) {
+                alert('Lỗi cập nhật trạng thái: ' + error.message);
+            } else {
+                await loadDanhSachLichHen();
+            }
+        }
+
+        function moModalThem() {
+            document.getElementById('modalTitle').innerText = '➕ Thêm Lịch Hẹn Mới';
+            document.getElementById('formLichHen').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('modalLichHen').style.display = 'flex';
+        }
+
+        function moModalSua(id) {
+            const item = danhSachLichHenToanCuc.find(x => x.id === id);
+            if (!item) return;
+
+            let sdtGoc = item.sdt ? String(item.sdt).trim() : '';
+            if (sdtGoc !== '') {
+                sdtGoc = '0' + sdtGoc.replace(/^0+/, '');
+            }
+
+            document.getElementById('modalTitle').innerText = '✏️ Chỉnh Sửa Lịch Hẹn';
+            document.getElementById('editId').value = item.id;
+            document.getElementById('tenKhachHen').value = item.tenchunuoi || '';
+            document.getElementById('sdtKhachHen').value = sdtGoc;
+            document.getElementById('diaChiHen').value = item.diachi || '';
+            document.getElementById('ngayHen').value = item.ngayhen || '';
+            document.getElementById('trangThaiHen').value = item.trangthai || 'Chờ khám';
+            document.getElementById('noiDungHen').value = item.noidung || '';
+
+            document.getElementById('modalLichHen').style.display = 'flex';
+        }
+
+        function dongModal() {
+            document.getElementById('modalLichHen').style.display = 'none';
+        }
+
+        async function luuLichHen(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('editId').value;
+            const tenchunuoi = document.getElementById('tenKhachHen').value.trim();
+            const sdt = document.getElementById('sdtKhachHen').value.trim();
+            const diachi = document.getElementById('diaChiHen').value.trim();
+            const ngayhen = document.getElementById('ngayHen').value;
+            const trangthai = document.getElementById('trangThaiHen').value;
+            const noidung = document.getElementById('noiDungHen').value.trim();
+            const btn = document.getElementById('btnSaveLich');
+
+            btn.disabled = true;
+            btn.textContent = 'Đang lưu...';
+
+            const payload = {
+                tenchunuoi: tenchunuoi,
+                sdt: sdt,
+                diachi: diachi,
+                ngayhen: ngayhen,
+                trangthai: trangthai,
+                noidung: noidung
+            };
+
+            let error = null;
+            if (id) {
+                const res = await db.from('lichhen').update(payload).eq('id', id);
+                error = res.error;
+            } else {
+                const res = await db.from('lichhen').insert([payload]);
+                error = res.error;
+            }
+
+            btn.disabled = false;
+            btn.textContent = '💾 Lưu dữ liệu';
+
+            if (error) {
+                console.error('Lỗi lưu lịch hẹn:', error);
+                alert('Lỗi khi lưu lịch hẹn: ' + error.message);
+                return;
+            }
+
+            alert(id ? 'Cập nhật lịch hẹn thành công!' : 'Thêm lịch hẹn thành công!');
+            dongModal();
+            await loadDanhSachLichHen();
+        }
+
+        async function xoaLichHen(id) {
+            if (!confirm('Bạn có chắc chắn muốn xóa lịch hẹn này không?')) return;
+
+            const { error } = await db.from('lichhen').delete().eq('id', id);
+            if (error) {
+                console.error('Lỗi xóa lịch hẹn:', error);
+                alert('Lỗi khi xóa lịch hẹn: ' + error.message);
+                return;
+            }
+
+            alert('Đã xóa lịch hẹn thành công!');
+            await loadDanhSachLichHen();
+        }
+    </script>
+
+    <!-- NHÚNG MENU ĐIỀU HƯỚNG ĐÁY MOBILE -->
+    <script src="js/menu-mobile.js"></script>
+    <script>
+        if (typeof taoMenuMobile === 'function') {
+            taoMenuMobile('lichhen');
+        }
+    </script>
+</body>
+</html>

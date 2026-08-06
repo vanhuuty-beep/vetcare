@@ -1,0 +1,269 @@
+ body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background: #e2e8f0; 
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+        }
+        .mobile-container {
+            width: 100%;
+            max-width: 480px;
+            background: #f1f5f9;
+            min-height: 100vh;
+            padding: 10px;
+            box-sizing: border-box;
+            padding-bottom: 80px;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1e3a8a;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .top-header h3 { margin: 0; font-size: 16px; }
+        .btn-desktop {
+            background: #fbbf24;
+            color: #1e3a8a;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .search-box { 
+            width: 100%; 
+            padding: 10px 12px; 
+            box-sizing: border-box; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 6px; 
+            font-size: 15px; 
+            margin-bottom: 10px; 
+            outline: none; 
+            background: #fff;
+        }
+        .btn-add {
+            display: block;
+            width: 100%;
+            background: #059669;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            border: none;
+            cursor: pointer;
+        }
+        .btn-add:hover {
+            background: #047857;
+        }
+        #mobile-list {
+            width: 100% !important;
+            display: block !important;
+        }
+        .mobile-card { 
+            background: white; 
+            padding: 12px; 
+            margin-bottom: 10px; 
+            border-radius: 8px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .card-title {
+            display: flex; 
+            justify-content: space-between; 
+            font-weight: bold; 
+            color: #1e293b; 
+            margin-bottom: 6px;
+            font-size: 15px;
+        }
+        .card-info {
+            font-size: 13px; 
+            color: #475569; 
+            margin-bottom: 4px;
+        }
+
+        /* CSS CHO MODAL POPUP */
+        .modal-overlay {
+            display: none; /* Mặc định ẩn */
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 420px;
+            border-radius: 10px;
+            padding: 20px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: fadeIn 0.2s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        .modal-header h4 { margin: 0; color: #1e3a8a; font-size: 17px; }
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #64748b;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            box-sizing: border-box;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 15px;
+            background: #fff;
+            outline: none;
+        }
+        .form-control:focus {
+            border-color: #2563eb;
+        }
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .btn-cancel {
+            flex: 1;
+            background: #cbd5e1;
+            color: #334155;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-save {
+            flex: 1;
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-save:hover { background: #047857; }
+		/* Cân chỉnh lại footer của thẻ card khách hàng */
+.card-footer {
+    display: flex;
+    justify-content: flex-end; /* Đẩy nút sang góc phải cho gọn gàng */
+    margin-top: 6px;
+    border-top: 1px dashed #e2e8f0; /* Đường nét đứt nhẹ nhàng ngăn cách */
+    padding-top: 8px;
+}
+
+
+/* --- TỐI ƯU CHIỀU CAO VÀ THANH CUỘN CHO MODAL DÀI --- */
+.modal-content {
+    max-height: 85vh; /* Giới hạn chiều cao tối đa không bị tràn màn hình */
+    overflow-y: auto; /* Tự động hiển thị thanh cuộn khi nội dung dài */
+    padding: 12px 15px; /* Thu gọn padding để tiết kiệm không gian */
+}
+
+/* Thu gọn khoảng cách các nhóm input trong modal */
+.modal-content .form-group {
+    margin-bottom: 8px;
+}
+.modal-content .form-group label {
+    font-size: 11px;
+    margin-bottom: 2px;
+}
+.modal-content .form-control {
+    padding: 6px 8px;
+    font-size: 13px;
+}
+
+/* Hỗ trợ chia 2 cột cân đối cho các trường ngắn */
+.form-row {
+    display: flex;
+    gap: 8px;
+}
+.form-col {
+    flex: 1;
+}
+/* Tối ưu hiển thị dòng dịch vụ trên mobile */
+    .service-row {
+        display: flex;
+        flex-direction: column; /* Trên màn hình nhỏ xếp dọc cho rộng rãi */
+        gap: 8px;
+        background: #f8fafc;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 10px;
+    }
+    @media (min-width: 480px) {
+        .service-row {
+            flex-direction: row; /* Màn hình lớn hơn thì nằm ngang */
+            align-items: center;
+        }
+    }
+    .service-row .dv-select-col {
+        flex: 3;
+    }
+    .service-row .dv-gia-col {
+        flex: 1.5;
+    }
+    .service-row .dv-action-col {
+        width: 40px;
+        display: flex;
+        justify-content: flex-end;
+    }
+	/* Thu gọn và căn giữa thanh tìm kiếm và nút thêm mới */
+    .search-box, .btn-add {
+        max-width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+    }
+    
+    /* Tinh chỉnh riêng nút thêm cho vừa vặn */
+    .btn-add {
+        width: auto;
+        padding: 8px 16px;
+        font-size: 14px;
+    }

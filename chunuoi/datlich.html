@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Đặt Lịch Hẹn - Cổng Chủ Nuôi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body { 
+            background: #f1f5f9; 
+            margin: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            display: flex;
+            justify-content: center;
+        }
+        .mobile-shell {
+            width: 100%;
+            max-width: 480px;
+            background: #f8fafc;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+            padding: 12px;
+            padding-bottom: 80px;
+        }
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            font-weight: bold;
+            color: #1e293b;
+            font-size: 15px;
+        }
+        .form-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .form-group-block {
+            margin-bottom: 12px;
+        }
+        .form-group-block label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #334155;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .form-group-block input, 
+        .form-group-block select, 
+        .form-group-block textarea {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 13px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            box-sizing: border-box;
+            outline: none;
+            background: #fff;
+        }
+        .form-group-block input:focus, 
+        .form-group-block select:focus, 
+        .form-group-block textarea:focus {
+            border-color: #0284c7;
+        }
+        .form-row-block {
+            display: flex;
+            gap: 10px;
+        }
+        .form-row-block .form-group-block {
+            flex: 1;
+        }
+        .btn-submit {
+            width: 100%;
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 8px;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.2);
+        }
+        .btn-submit:active {
+            background: #0369a1;
+        }
+
+        /* Thanh menu đáy cố định chuẩn mobile */
+        .mobile-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            height: 60px;
+            background: #ffffff;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 9999;
+            border-top: 1px solid #e2e8f0;
+            box-sizing: border-box;
+        }
+        .mobile-bottom-nav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 500;
+            flex: 1;
+        }
+        .mobile-bottom-nav a span { font-size: 20px; margin-bottom: 2px; }
+        .mobile-bottom-nav a.active { color: #0284c7; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-shell">
+        <div class="top-bar">
+            <span>📅 Đặt Lịch Hẹn Khám</span>
+            <span id="tenChuNuoiLabel" style="font-size: 11px; color: #64748b; font-weight: normal;">---</span>
+        </div>
+
+        <div class="form-card">
+            <div class="form-group-block">
+                <label>Chọn thú cưng của bạn (*):</label>
+                <select id="selectThuCung">
+                    <option value="">-- Đang tải danh sách thú cưng --</option>
+                </select>
+            </div>
+
+            <div class="form-group-block">
+                <label>Dịch vụ đăng ký (*):</label>
+                <select id="selectDichVu">
+                    <option value="Khám tổng quát">🩺 Khám tổng quát & Điều trị</option>
+                    <option value="Tiêm phòng vaccine">💉 Tiêm phòng Vaccine</option>
+                    <option value="Spa & Cắt tỉa lông">✂️ Spa & Cắt tỉa lông</option>
+                    <option value="Gửi nội trú">🏥 Gửi nội trú</option>
+                </select>
+            </div>
+
+            <div class="form-row-block">
+                <div class="form-group-block">
+                    <label>Ngày hẹn (*):</label>
+                    <input type="date" id="ngayHen">
+                </div>
+                <div class="form-group-block">
+                    <label>Giờ hẹn:</label>
+                    <input type="time" id="gioHen" value="09:00">
+                </div>
+            </div>
+
+            <div class="form-group-block">
+                <label>Ghi chú / Triệu chứng của bé:</label>
+                <textarea id="ghiChu" rows="3" placeholder="Nhập triệu chứng hoặc yêu cầu thêm..."></textarea>
+            </div>
+
+            <button type="button" class="btn-submit" onclick="guiLichHen()">GỬI LỊCH HẸN NGAY</button>
+        </div>
+    </div>
+
+    <!-- THANH MENU ĐÁY -->
+    <div class="mobile-bottom-nav">
+        <a href="trangchu.html">
+            <span>🏠</span>
+            Trang chủ
+        </a>
+        <a href="lichsu.html">
+            <span>📋</span>
+            Lịch sử khám
+        </a>
+        <a href="ketquachidinh-chunuoi.html" class="active">
+            <span>🔬</span>
+            Chỉ định
+        </a>
+        <a href="noitru-chunuoi.html">
+            <span>🏨</span>
+            Lịch trình
+        </a>
+		<a href="muahang.html">
+            <span>🛍️</span>
+            Cửa hàng
+        </a>
+        <a href="datlich.html">
+            <span>📅</span>
+            Đặt lịch hẹn
+        </a>
+    </div>
+
+    <script>
+        let ownerData = null;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const ownerStr = sessionStorage.getItem('currentPetOwner');
+            if (!ownerStr) {
+                alert('Vui lòng đăng nhập trước!');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            ownerData = JSON.parse(ownerStr);
+            document.getElementById('tenChuNuoiLabel').innerText = ownerData.hovaten || ownerData.tenkhachhang || '';
+
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('ngayHen').value = tomorrow.toISOString().split('T')[0];
+
+            await taiDanhSachThuCung(ownerData.id);
+        });
+
+        async function taiDanhSachThuCung(ownerId) {
+            let listPets = null;
+            for (let col of ['makhachhang', 'makh', 'khachhang_id', 'idkhachhang']) {
+                let { data } = await db.from('thucung').select('*').eq(col, ownerId);
+                if (data && data.length > 0) {
+                    listPets = data;
+                    break;
+                }
+            }
+
+            const selectEl = document.getElementById('selectThuCung');
+            selectEl.innerHTML = '';
+
+            if (!listPets || listPets.length === 0) {
+                selectEl.innerHTML = `<option value="">Không có thú cưng nào liên kết</option>`;
+                return;
+            }
+
+            listPets.forEach(pet => {
+                const tenPet = pet.tenthecung || pet.tenthucung || pet.ten || 'Thú cưng';
+                selectEl.innerHTML += `<option value="${pet.id}">${tenPet} (${pet.loai || 'Thú cưng'})</option>`;
+            });
+        }
+
+        async function guiLichHen() {
+            const mathucung = document.getElementById('selectThuCung').value;
+            const dichvu = document.getElementById('selectDichVu').value;
+            const ngayhen = document.getElementById('ngayHen').value;
+            const giohen = document.getElementById('gioHen').value;
+            const ghichuInput = document.getElementById('ghiChu').value.trim();
+
+            if (!mathucung) {
+                alert('Vui lòng chọn thú cưng cần đặt lịch!');
+                return;
+            }
+            if (!ngayhen) {
+                alert('Vui lòng chọn ngày hẹn!');
+                return;
+            }
+
+            const ngayGioHen = `${ngayhen}T${giohen || '09:00'}:00`;
+            const noiDungHen = `Dịch vụ: ${dichvu} ${ghichuInput ? ' - Ghi chú: ' + ghichuInput : ''}`;
+
+            const payload = {
+                tenchunuoi: ownerData.hovaten || ownerData.tenkhachhang || 'Chủ nuôi',
+                sdt: ownerData.sodienthoai || ownerData.sdt || '',
+                ngayhen: ngayGioHen,
+                diachi: ownerData.diachi || '',
+                noidung: noiDungHen,
+                trangthai: 'Chờ khám'
+            };
+
+            const { error } = await db.from('lichhen').insert([payload]);
+
+            if (error) {
+                console.error('Lỗi lưu lịch hẹn:', error);
+                alert('Lỗi khi gửi lịch hẹn: ' + error.message);
+            } else {
+                alert('🎉 Gửi lịch hẹn thành công! Lịch hẹn đã được chuyển về phần mềm của phòng khám.');
+                window.location.href = 'trangchu.html';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Giới thiệu Phòng khám - VetCare Pro</title>
+    <!-- Thư viện Supabase JS (nếu cần dùng chung cấu hình) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/menu.js"></script>
+    <script src="js/smart-search.js"></script>
+    
+    <!-- Gọi file CSS chung giống trang Dịch vụ -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="css/style1.css">
+    <link rel="stylesheet" href="css/smart-search.css">
+
+    <style>
+        /* Tùy chỉnh riêng cho trang Giới thiệu */
+        .intro-section {
+            margin-bottom: 24px;
+        }
+        .intro-section h4 {
+            color: #2563eb;
+            margin-bottom: 12px;
+            font-size: 18px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 6px;
+        }
+        .intro-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .feature-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            transition: transform 0.2s;
+        }
+        .feature-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .feature-box h5 {
+            color: #0f172a;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        .feature-box p {
+            color: #475569;
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 0;
+        }
+        .clinic-info-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .clinic-info-list li {
+            padding: 8px 0;
+            border-bottom: 1px dashed #e2e8f0;
+            font-size: 14px;
+            color: #334155;
+        }
+        .clinic-info-list li strong {
+            color: #0f172a;
+            display: inline-block;
+            width: 140px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+        <div id="topnav-container"></div>
+
+        <div class="content-body">
+            
+            <!-- Card 1: Tổng quan về phòng khám -->
+            <div class="card" style="margin-bottom: 20px;">
+                <div class="card-header">
+                    <h3>Giới thiệu về VetCare Pro</h3>
+                </div>
+                <div style="padding: 20px;">
+                    <p style="font-size: 15px; color: #334155; line-height: 1.6; margin-bottom: 15px;">
+                        Chào mừng bạn đến với hệ thống Quản lý và Chăm sóc Thú cưng <strong>VetCare Pro</strong>. Phòng khám của chúng tôi được thành lập với sứ mệnh mang lại cuộc sống khỏe mạnh, hạnh phúc cho các bé thú cưng thông qua dịch vụ y tế chuẩn mực, trang thiết bị hiện đại và tình yêu thương tận tâm từ đội ngũ y bác sĩ thú y.
+                    </p>
+                    <div class="intro-grid">
+                        <div class="feature-box">
+                            <h5>🌟 Tầm nhìn</h5>
+                            <p>Trở thành hệ thống phòng khám thú y hàng đầu, ứng dụng công nghệ hiện đại vào quản lý và điều trị, mang lại trải nghiệm dịch vụ tốt nhất cho thú cưng.</p>
+                        </div>
+                        <div class="feature-box">
+                            <h5>🎯 Sứ mệnh</h5>
+                            <p>Luôn đặt sức khỏe và sự an toàn của thú cưng lên hàng đầu. Cung cấp giải pháp chăm sóc toàn diện từ Khám chữa bệnh, Phẫu thuật đến Spa & Grooming.</p>
+                        </div>
+                        <div class="feature-box">
+                            <h5>💎 Giá trị cốt lõi</h5>
+                            <p>Tận tâm - Chuyên nghiệp - Yêu thương động vật - Không ngừng cập nhật kiến thức y khoa tiên tiến và công nghệ chăm sóc thú cưng.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Cơ sở vật chất & Dịch vụ trọng tâm -->
+            <div class="card" style="margin-bottom: 20px;">
+                <div class="card-header">
+                    <h3>Cơ sở vật chất & Năng lực chuyên môn</h3>
+                </div>
+                <div style="padding: 20px;">
+                    <div class="intro-section">
+                        <h4>Trang thiết bị hiện đại</h4>
+                        <p style="color: #475569; font-size: 14px; line-height: 1.5;">
+                            Phòng khám được đầu tư đồng bộ với hệ thống máy siêu âm màu, máy X-quang kỹ thuật số, phòng xét nghiệm sinh hóa máu tự động và phòng mổ vô trùng đạt chuẩn. Điều này giúp chẩn đoán chính xác bệnh lý và đưa ra phác đồ điều trị nhanh chóng, hiệu quả cao cho chó, mèo và các vật nuôi khác.
+                        </p>
+                    </div>
+                    
+                    <div class="intro-section" style="margin-bottom: 0;">
+                        <h4>Các lĩnh vực chuyên sâu</h4>
+                        <div class="intro-grid">
+                            <div class="feature-box">
+                                <h5>Khám & Điều trị nội khoa</h5>
+                                <p>Chẩn đoán và điều trị các bệnh truyền nhiễm, ký sinh trùng, tiêu hóa, hô hấp và da liễu.</p>
+                            </div>
+                            <div class="feature-box">
+                                <h5>Phẫu thuật ngoại khoa</h5>
+                                <p>Thực hiện các ca phẫu thuật triệt sản, mổ đẻ, xử lý chấn thương và phẫu thuật mô mềm an toàn.</p>
+                            </div>
+                            <div class="feature-box">
+                                <h5>Xét nghiệm & Chẩn đoán hình ảnh</h5>
+                                <p>Xét nghiệm máu, soi tươi ký sinh trùng, test nhanh bệnh truyền nhiễm (Parvo, Distemper)...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Thông tin liên hệ -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Thông tin liên hệ & Giờ làm việc</h3>
+                </div>
+                <div style="padding: 20px;">
+                    <ul class="clinic-info-list">
+                        <li><strong>Tên đơn vị:</strong> Phòng khám Thú y VetCare Pro</li>
+                        <li><strong>Địa chỉ:</strong> Số 123, Đường Thú Cưng, Quận X, TP. Hồ Chí Minh</li>
+                        <li><strong>Hotline / Zalo:</strong> 0909.123.456</li>
+                        <li><strong>Email hỗ trợ:</strong> support@vetcarepro.vn</li>
+                        <li><strong>Giờ làm việc:</strong> Thứ Hai - Chủ Nhật (8:00 - 20:00 hàng ngày)</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

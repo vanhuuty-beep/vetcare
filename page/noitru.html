@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Nội trú - VetCare Pro</title>
+    <!-- Thư viện Supabase JS -->
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	<script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+	<script src="../js/smart-search.js"></script>
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+	<link rel="stylesheet" href="../css/smart-search.css">
+
+
+    <style>
+        .search-box {
+            padding: 8px 12px;
+            width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: #2563eb;
+        }
+        .card-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .modal-container {
+            width: 480px;
+            padding: 20px 24px;
+        }
+        .modal-header {
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+        }
+        .form-group-modal {
+            margin-bottom: 10px;
+        }
+        .form-group-modal label {
+            font-size: 13px;
+            margin-bottom: 3px;
+            display: block;
+            font-weight: 500;
+        }
+        .form-group-modal input, .form-group-modal select {
+            width: 100%;
+            padding: 7px 10px;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .form-row .form-group-modal {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .modal-footer {
+            margin-top: 15px;
+            padding-top: 10px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+       <div id="topnav-container"></div>
+
+        <div class="content-body">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Quản lý Nội trú</h3>
+                    <div class="card-header-actions">
+                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm phòng, lồng, trạng thái..." onkeyup="timKiemNoiTru()">
+                        <button class="btn-primary" onclick="moModalThem()">+ Thêm chuồng nội trú</button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã nội trú</th>
+                                <th>Phòng (phong)</th>
+                                <th>Lồng (long)</th>
+                                <th>Trạng thái (trangthai)</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table">
+                            <!-- Dữ liệu được nạp tự động -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP FORM THÊM / SỬA NỘI TRÚ -->
+    <div class="modal-overlay" id="noiTruModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thêm thông tin nội trú</h3>
+                <button class="close-modal" onclick="dongModal()">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingId">
+
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Phòng (phong):</label>
+                    <input type="text" id="phong" placeholder="VD: Phòng A...">
+                </div>
+                <div class="form-group-modal">
+                    <label>Lồng (long):</label>
+                    <input type="text" id="long" placeholder="VD: Lồng 01...">
+                </div>
+            </div>
+
+            <div class="form-group-modal">
+                <label>Trạng thái (trangthai):</label>
+                <select id="trangthai">
+                    <option value="Trống">Trống</option>
+                    <option value="Đang sử dụng">Đang sử dụng</option>
+                    <option value="Đang dọn dẹp">Đang dọn dẹp</option>
+                </select>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="dongModal()">Hủy</button>
+                <button class="btn-primary" onclick="luuNoiTru()">Lưu dữ liệu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let danhSachNoiTruGoc = [];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchDuLieuNoiTru();
+        });
+
+        async function fetchDuLieuNoiTru() {
+            const { data, error } = await db.from('noitru').select('*').order('id', { ascending: false });
+            if (error) {
+                console.error('Lỗi tải dữ liệu nội trú:', error);
+            } else {
+                danhSachNoiTruGoc = data;
+                hienThiBang(danhSachNoiTruGoc);
+            }
+        }
+
+        function hienThiBang(data) {
+            const tableBody = document.getElementById('data-table');
+            tableBody.innerHTML = '';
+            
+            if(data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777;">Chưa có bản ghi nội trú nào</td></tr>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const maNTFormatted = 'NT' + String(item.id).padStart(4, '0');
+
+                tableBody.innerHTML += `<tr>
+                    <td><strong>${maNTFormatted}</strong></td>
+                    <td><strong style="color: #0284c7;">${item.phong || ''}</strong></td>
+                    <td><strong style="color: #d97706;">${item.long || ''}</strong></td>
+                    <td><span style="padding: 3px 8px; border-radius: 4px; font-size: 12px; background: #e0f2fe; color: #0369a1;">${item.trangthai || ''}</span></td>
+                    <td>
+                        <button class="btn-edit" onclick="moModalSua(${item.id}, '${item.phong || ''}', '${item.long || ''}', '${item.trangthai || ''}')">Sửa</button>
+                        <button class="btn-delete" onclick="xoaNoiTru(${item.id})">Xóa</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        function timKiemNoiTru() {
+            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+            const ketQuaLoc = danhSachNoiTruGoc.filter(item => {
+                const phong = (item.phong || '').toLowerCase();
+                const long = (item.long || '').toLowerCase();
+                const trangthai = (item.trangthai || '').toLowerCase();
+                const maNT = ('nt' + String(item.id)).toLowerCase();
+                return phong.includes(tuKhoa) || long.includes(tuKhoa) || trangthai.includes(tuKhoa) || maNT.includes(tuKhoa);
+            });
+            hienThiBang(ketQuaLoc);
+        }
+
+        function moModalThem() {
+            document.getElementById('editingId').value = '';
+            document.getElementById('phong').value = '';
+            document.getElementById('long').value = '';
+            document.getElementById('trangthai').value = 'Trống';
+            
+            document.getElementById('modalTitle').innerText = 'Thêm thông tin nội trú';
+            document.getElementById('noiTruModal').style.display = 'flex';
+        }
+
+        function moModalSua(id, phong, long, trangthai) {
+            document.getElementById('editingId').value = id;
+            document.getElementById('phong').value = phong;
+            document.getElementById('long').value = long;
+            document.getElementById('trangthai').value = trangthai || 'Trống';
+            
+            document.getElementById('modalTitle').innerText = 'Cập nhật thông tin nội trú (ID: ' + id + ')';
+            document.getElementById('noiTruModal').style.display = 'flex';
+        }
+
+        function dongModal() {
+            document.getElementById('noiTruModal').style.display = 'none';
+        }
+
+        async function luuNoiTru() {
+            const id = document.getElementById('editingId').value;
+            const phong = document.getElementById('phong').value.trim();
+            const long = document.getElementById('long').value.trim();
+            const trangthai = document.getElementById('trangthai').value;
+
+            if (!phong) {
+                alert('Vui lòng nhập tên phòng!');
+                return;
+            }
+
+            const payload = {
+                phong: phong,
+                long: long,
+                trangthai: trangthai
+            };
+
+            if (id === "") {
+                const { error } = await db.from('noitru').insert([payload]);
+                if (error) {
+                    alert('Lỗi lưu nội trú: ' + error.message);
+                } else {
+                    alert('Thêm nội trú thành công!');
+                    dongModal();
+                    fetchDuLieuNoiTru();
+                }
+            } else {
+                const { error } = await db.from('noitru').update(payload).eq('id', id);
+                if (error) {
+                    alert('Lỗi cập nhật nội trú: ' + error.message);
+                } else {
+                    alert('Cập nhật thành công!');
+                    dongModal();
+                    fetchDuLieuNoiTru();
+                }
+            }
+        }
+
+        async function xoaNoiTru(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa bản ghi nội trú ID: ' + id + ' này không?')) {
+                const { error } = await db.from('noitru').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa: ' + error.message);
+                } else {
+                    alert('Xóa thành công!');
+                    fetchDuLieuNoiTru();
+                }
+            }
+        }
+    </script>
+</body>
+</html>

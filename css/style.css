@@ -1,0 +1,295 @@
+ <style>
+ 
+ html {
+    zoom: 80%; /* Hỗ trợ tốt cho Chrome, Cốc Cốc, Edge, Safari */
+    -moz-transform: scale(0.8); /* Hỗ trợ cho Firefox */
+    -moz-transform-origin: top left; /* Cố định điểm neo thu nhỏ từ góc trên bên trái */
+}
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { display: flex; height: 100vh; background-color: #f4f6f9; overflow: hidden; }
+
+    /* --- THANH MENU BÊN TRÁI (SIDEBAR) --- */
+    .sidebar {
+    width: 260px;
+    background-color: #1e3a8a;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1000;
+    transition: all 0.3s ease;
+    /* Đã xóa bỏ thuộc tính bo góc ở đây */
+    overflow-y: auto;
+}
+
+.main-content {
+    margin-left: 260px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    transition: margin-left 0.3s ease;
+}
+
+/* Nếu bạn muốn khi sidebar thu nhỏ (chỉ hiện icon) mà nội dung tự động tràn rộng ra lấp đầy khoảng trống: */
+body.sidebar-collapsed .main-content {
+    margin-left: 70px; /* Chỉ chừa lại khoảng nhỏ vừa đủ cho phần icon của sidebar */
+}
+    .sidebar.collapsed { width: 75px; }
+    .sidebar.collapsed .menu-text { display: none; }
+
+    .sidebar-header {
+        padding: 20px;
+        font-size: 22px; /* Tăng kích thước icon tiêu đề đầu sidebar */
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .menu-list { list-style: none; padding: 20px 0; }
+    .menu-item {
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .menu-item:hover, .menu-item.active {
+        background-color: rgba(255,255,255,0.15);
+        border-left: 5px solid #60a5fa;
+    }
+    
+    /* ĐÃ TĂNG CỠ ICON Ở ĐÂY (từ 16px lên 22px) */
+    .menu-item span:first-child { 
+        font-size: 22px; 
+    }
+    .menu-item span.menu-text { 
+        font-size: 16px; 
+    }
+
+    /* --- KHU VỰC NỘI DUNG CHÍNH BÊN PHẢI --- */
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+    
+    .top-navbar {
+    background: #1e3a8a !important; /* Cùng màu xanh với sidebar */
+    padding: 0 20px !important;     /* Căn chỉnh khoảng cách trái phải */
+    display: flex;
+    align-items: center;
+    height: 60px;
+    width: 100%;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;    /* Loại bỏ hoàn toàn bo góc nếu có */
+    box-shadow: none !important;    /* Xóa bóng đổ để không bị lộ đường viền */
+}
+   .top-navbar h2, 
+.top-navbar .toggle-btn {
+    color: #ffffff !important;
+}
+.toggle-btn:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+    .content-body { padding: 20px; }
+    
+    .card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+    .card h3 { margin-bottom: 15px; color: #1e3a8a; }
+    
+    .form-group { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr 1fr auto auto; 
+        gap: 10px; 
+        align-items: center; 
+    }
+    @media (max-width: 1200px) {
+        .form-group { grid-template-columns: 1fr 1fr; }
+    }
+
+    .form-group input {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        width: 100%;
+    }
+
+    .btn-add {
+        background-color: #2563eb;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        white-space: nowrap;
+    }
+    .btn-add:hover { background-color: #1d4ed8; }
+
+    .btn-cancel {
+        background-color: #6b7280;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        display: none;
+        white-space: nowrap;
+    }
+    .btn-cancel:hover { background-color: #4b5563; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 600px; }
+    th, td { border: 1px solid #e5e7eb; padding: 12px; text-align: left; }
+    th { background-color: #f9fafb; color: #374151; }
+
+    .btn-edit { background-color: #f59e0b; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-right: 5px; }
+    .btn-delete { background-color: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+	
+	/* --- CSS CHO MODAL POPUP --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: none; /* Mặc định ẩn đi */
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-container {
+    background: white;
+    width: 450px;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h3 {
+    color: #1e3a8a;
+    font-size: 18px;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.form-group-modal {
+    margin-bottom: 15px;
+}
+
+.form-group-modal label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #374151;
+    font-size: 14px;
+}
+
+.form-group-modal input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+.btn-primary {
+    background-color: #10b981; /* Đổi sang màu xanh lá tươi nổi bật (hoặc dùng #2563eb nếu thích xanh dương) */
+    color: white;
+    border: none;
+    padding: 12px 22px; /* Tăng kích thước nút to hơn */
+    border-radius: 8px; /* Bo góc mềm mại hơn */
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 15px; /* Tăng cỡ chữ */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); /* Tạo hiệu ứng nổi khối 3D */
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary:hover {
+    background-color: #059669; /* Đổi màu đậm hơn một chút khi rê chuột vào */
+    box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
+    transform: translateY(-2px); /* Hiệu ứng nhô lên nhẹ khi di chuột */
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between; /* Đẩy tiêu đề sang trái, nút sang phải */
+    align-items: center;
+    margin-bottom: 20px;
+}
+/* Đảm bảo khung chứa bảng có thanh cuộn mượt mà khi màn hình hẹp */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Giữ chữ trong bảng nằm trên 1 hàng, không bị rớt dòng chữ xấu xí */
+table th, table td {
+    white-space: nowrap !important;
+}
+
+/* Đảm bảo phần tiêu đề card không bị co ép quá đà */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.top-navbar {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    height: 60px;
+}
+
+.toggle-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: #1e293b;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+
+</style>

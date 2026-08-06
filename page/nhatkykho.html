@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Nhật Ký Kho - VetCare Pro</title>
+    <!-- Thư viện Supabase JS -->
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	<script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+	<script src="../js/smart-search.js"></script>
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+	<link rel="stylesheet" href="../css/smart-search.css">
+
+    <style>
+        .search-box {
+            padding: 9px 12px;
+            width: 300px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+        .card-header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .modal-container {
+            width: 650px;
+            padding: 20px 24px;
+        }
+        .modal-header {
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .form-group-modal {
+            margin-bottom: 12px;
+        }
+        .form-group-modal label {
+            font-size: 13px;
+            margin-bottom: 4px;
+            display: block;
+            font-weight: 500;
+        }
+        .form-group-modal input, .form-group-modal select, .form-group-modal textarea {
+            width: 100%;
+            padding: 8px 10px;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+        .form-row .form-group-modal {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .modal-footer {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+        <div id="topnav-container"></div>
+
+        <div class="content-body">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Lịch Sử Giao Dịch Kho (Nhật Ký Kho)</h3>
+                    <div class="card-header-actions">
+                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm tên sản phẩm, hình thức, ghi chú..." onkeyup="timKiemNhatKyKho()">
+                        <button class="btn-primary" onclick="moModalThem()" style="background-color: #0284c7; padding: 9px 16px;">+ Thêm Giao Dịch</button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr style="background: #1e3a8a; color: #ffffff;">
+                                <th style="padding: 10px;">ID</th>
+                                <th style="padding: 10px;">Tên Sản Phẩm</th>
+                                <th style="padding: 10px;">Hình Thức</th>
+                                <th style="padding: 10px;">Số Lượng</th>
+                                <th style="padding: 10px;">Ghi Chú</th>
+                                <th style="padding: 10px; text-align: center;">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table">
+                            <!-- Dữ liệu được nạp tự động từ Supabase -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP FORM THÊM / SỬA NHẬT KÝ KHO -->
+    <div class="modal-overlay" id="nhatKyKhoModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle" style="margin:0; font-size: 16px;">Thêm giao dịch kho</h3>
+                <button class="close-modal" onclick="dongModal()" style="background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingId">
+            
+            <div class="form-group-modal">
+                <label>Tên sản phẩm (tensanpham) (*):</label>
+                <input type="text" id="tensanpham" list="listSanPham" placeholder="Nhập hoặc chọn tên sản phẩm từ danh mục...">
+                <datalist id="listSanPham">
+                    <!-- Danh sách sản phẩm tự động nạp từ Supabase -->
+                </datalist>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Hình thức (hinhthuc) (*):</label>
+                    <select id="hinhthuc">
+                        <option value="Nhập kho">Nhập kho</option>
+                        <option value="Xuất kho">Xuất kho</option>
+                    </select>
+                </div>
+                <div class="form-group-modal">
+                    <label>Số lượng (soluong) (*):</label>
+                    <input type="number" id="soluong" placeholder="0" value="1">
+                </div>
+            </div>
+
+            <div class="form-group-modal">
+                <label>Ghi chú (ghichu):</label>
+                <textarea id="ghichu" rows="3" placeholder="Lý do nhập/xuất kho, tên nhà cung cấp hoặc khách mua..."></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="dongModal()">Hủy</button>
+                <button type="button" class="btn-primary" onclick="luuNhatKyKho()">Lưu giao dịch</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let danhSachNhatKyGoc = [];
+        let danhSachSanPhamDanhMuc = [];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await taiDanhSachNhatKyKho();
+            await taiDanhMucSanPhamChoKho();
+        });
+
+        // Tự động tải danh mục sản phẩm từ bảng 'danhmucsanpham' để đưa vào ô gợi ý
+        async function taiDanhMucSanPhamChoKho() {
+            const { data, error } = await db.from('danhmucsanpham').select('id, tensanpham, soluongton');
+            if (!error && data) {
+                danhSachSanPhamDanhMuc = data;
+                const datalist = document.getElementById('listSanPham');
+                datalist.innerHTML = '';
+                data.forEach(item => {
+                    if (item.tensanpham) {
+                        const option = document.createElement('option');
+                        option.value = item.tensanpham;
+                        datalist.appendChild(option);
+                    }
+                });
+            }
+        }
+
+        async function taiDanhSachNhatKyKho() {
+            const { data, error } = await db.from('nhatkykho').select('*').order('id', { ascending: false });
+            if (error) {
+                console.error('Lỗi tải nhật ký kho:', error);
+                alert('Không thể tải dữ liệu nhật ký kho từ Supabase!');
+            } else {
+                danhSachNhatKyGoc = data || [];
+                hienThiBang(danhSachNhatKyGoc);
+            }
+        }
+
+        function hienThiBang(data) {
+            const tableBody = document.getElementById('data-table');
+            tableBody.innerHTML = '';
+            
+            if(data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#777; padding: 20px;">Chưa có bản ghi nhật ký kho nào</td></tr>`;
+                return;
+            }
+
+            data.forEach((item) => {
+                const isNhap = (item.hinhthuc || '').toLowerCase().includes('nhập');
+                const badgeColor = isNhap ? '#059669' : '#dc2626';
+                const badgeBg = isNhap ? '#d1fae5' : '#fee2e2';
+
+                tableBody.innerHTML += `<tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 10px; font-weight: bold;">#${item.id}</td>
+                    <td style="padding: 10px; font-weight: 500; color: #1e3a8a;">${item.tensanpham || ''}</td>
+                    <td style="padding: 10px;">
+                        <span style="background: ${badgeBg}; color: ${badgeColor}; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">${item.hinhthuc || ''}</span>
+                    </td>
+                    <td style="padding: 10px; font-weight: bold; font-size: 14px;">${item.soluong || 0}</td>
+                    <td style="padding: 10px; color: #64748b; font-size: 13px;">${item.ghichu || '---'}</td>
+                    <td style="padding: 10px; text-align: center; white-space: nowrap;">
+                        <button onclick="moModalSua(${item.id})" style="background: #0284c7; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; margin-right: 4px;">Sửa</button>
+                        <button onclick="xoaNhatKyKho(${item.id})" style="background: #dc2626; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Xóa</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        function timKiemNhatKyKho() {
+            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+            const ketQuaLoc = danhSachNhatKyGoc.filter(item => {
+                const tenSP = (item.tensanpham || '').toLowerCase();
+                const hinhThuc = (item.hinhthuc || '').toLowerCase();
+                const ghiChu = (item.ghichu || '').toLowerCase();
+                return tenSP.includes(tuKhoa) || hinhThuc.includes(tuKhoa) || ghiChu.includes(tuKhoa);
+            });
+            hienThiBang(ketQuaLoc);
+        }
+
+        function moModalThem() {
+            document.getElementById('editingId').value = '';
+            document.getElementById('tensanpham').value = '';
+            document.getElementById('hinhthuc').value = 'Nhập kho';
+            document.getElementById('soluong').value = '1';
+            document.getElementById('ghichu').value = '';
+            
+            document.getElementById('modalTitle').innerText = 'Thêm giao dịch kho mới';
+            document.getElementById('nhatKyKhoModal').style.display = 'flex';
+        }
+
+        function moModalSua(id) {
+            const item = danhSachNhatKyGoc.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('editingId').value = item.id;
+            document.getElementById('tensanpham').value = item.tensanpham || '';
+            document.getElementById('hinhthuc').value = item.hinhthuc || 'Nhập kho';
+            document.getElementById('soluong').value = item.soluong || 1;
+            document.getElementById('ghichu').value = item.ghichu || '';
+
+            document.getElementById('modalTitle').innerText = 'Cập nhật giao dịch kho (ID: #' + id + ')';
+            document.getElementById('nhatKyKhoModal').style.display = 'flex';
+        }
+
+        function dongModal() {
+            document.getElementById('nhatKyKhoModal').style.display = 'none';
+        }
+
+        // Hàm hỗ trợ tự động cộng/trừ tồn kho của sản phẩm tương ứng trong bảng danhmucsanpham
+        async function capNhatTonKhoSanPham(tenSanPham, soLuongThayDoi, hinhThuc) {
+            // Tìm sản phẩm trong danh mục dựa vào tên
+            const sanPham = danhSachSanPhamDanhMuc.find(x => x.tensanpham.toLowerCase() === tenSanPham.toLowerCase());
+            if (!sanPham) return; // Nếu sản phẩm không có trong danh mục thì bỏ qua
+
+            let tonKhoHienTai = parseInt(sanPham.soluongton) || 0;
+            let tonKhoMoi = tonKhoHienTai;
+
+            if (hinhThuc.toLowerCase().includes('nhập')) {
+                tonKhoMoi += soLuongThayDoi; // Nhập kho thì cộng thêm
+            } else {
+                tonKhoMoi -= soLuongThayDoi; // Xuất kho thì trừ đi (có thể âm nếu kho không đủ)
+            }
+
+            // Cập nhật lại vào bảng danhmucsanpham trên Supabase
+            await db.from('danhmucsanpham').update({ soluongton: tonKhoMoi }).eq('id', sanPham.id);
+            
+            // Cập nhật lại mảng cache tạm thời
+            sanPham.soluongton = tonKhoMoi;
+        }
+
+        async function luuNhatKyKho() {
+            const id = document.getElementById('editingId').value;
+            const tensanpham = document.getElementById('tensanpham').value.trim();
+            const hinhthuc = document.getElementById('hinhthuc').value;
+            const soluong = parseInt(document.getElementById('soluong').value) || 0;
+            const ghichu = document.getElementById('ghichu').value.trim();
+
+            if (!tensanpham || !soluong) {
+                alert('Vui lòng nhập Tên sản phẩm và Số lượng!');
+                return;
+            }
+
+            const payload = {
+                tensanpham,
+                hinhthuc,
+                soluong,
+                ghichu
+            };
+
+            if (id === "") {
+                // Thêm mới giao dịch kho
+                const { error } = await db.from('nhatkykho').insert([payload]);
+                if (error) {
+                    alert('Lỗi thêm nhật ký kho: ' + error.message);
+                } else {
+                    // Tự động điều chỉnh tồn kho sản phẩm tương ứng
+                    await capNhatTonKhoSanPham(tensanpham, soluong, hinhthuc);
+
+                    alert('Thêm giao dịch kho và cập nhật tồn kho thành công!');
+                    dongModal();
+                    await taiDanhMucSanPhamChoKho();
+                    taiDanhSachNhatKyKho();
+                }
+            } else {
+                // Sửa giao dịch kho cũ: Lấy dữ liệu cũ để hoàn tác tác động trước, sau đó áp dụng giao dịch mới
+                const giaoDichCu = danhSachNhatKyGoc.find(x => x.id == id);
+                if (giaoDichCu) {
+                    // Hoàn tác giao dịch cũ (Đảo ngược hình thức cũ)
+                    let hinhThucHoanTac = giaoDichCu.hinhthuc.toLowerCase().includes('nhập') ? 'Xuất kho' : 'Nhập kho';
+                    await capNhatTonKhoSanPham(giaoDichCu.tensanpham, parseInt(giaoDichCu.soluong), hinhThucHoanTac);
+                }
+
+                const { error } = await db.from('nhatkykho').update(payload).eq('id', id);
+                if (error) {
+                    alert('Lỗi cập nhật nhật ký kho: ' + error.message);
+                } else {
+                    // Áp dụng giao dịch mới
+                    await capNhatTonKhoSanPham(tensanpham, soluong, hinhthuc);
+
+                    alert('Cập nhật giao dịch và tồn kho thành công!');
+                    dongModal();
+                    await taiDanhMucSanPhamChoKho();
+                    taiDanhSachNhatKyKho();
+                }
+            }
+        }
+
+        async function xoaNhatKyKho(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa bản ghi nhật ký kho này không?')) {
+                const giaoDichCu = danhSachNhatKyGoc.find(x => x.id == id);
+                
+                const { error } = await db.from('nhatkykho').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa: ' + error.message);
+                } else {
+                    // Khi xóa một giao dịch kho, cần hoàn tác lại số lượng tồn kho tương ứng
+                    if (giaoDichCu) {
+                        let hinhThucHoanTac = giaoDichCu.hinhthuc.toLowerCase().includes('nhập') ? 'Xuất kho' : 'Nhập kho';
+                        await capNhatTonKhoSanPham(giaoDichCu.tensanpham, parseInt(giaoDichCu.soluong), hinhThucHoanTac);
+                    }
+
+                    alert('Xóa và hoàn tác tồn kho thành công!');
+                    await taiDanhMucSanPhamChoKho();
+                    taiDanhSachNhatKyKho();
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Đơn hàng - Mobile</title>
+    
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Kết nối các file cấu hình ở thư mục gốc (thêm ../) -->
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="out.js"></script>
+
+    <!-- CSS chung và CSS riêng mobile -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="css/button.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { background: #f8fafc; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        .mobile-container { max-width: 480px; margin: 0 auto; background: #ffffff; min-height: 100vh; padding: 10px; padding-bottom: 80px; box-shadow: 0 0 15px rgba(0,0,0,0.05); }
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; background: #10b981; padding: 10px; border-radius: 6px; }
+        .top-header h3 { margin: 0; font-size: 16px; color: white; }
+        .btn-desktop { background: #059669; color: white; text-decoration: none; padding: 5px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        
+        .search-container { display: flex; gap: 6px; margin-bottom: 10px; align-items: stretch; }
+        .search-box { flex: 1; height: 36px; padding: 0 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; }
+        .search-box:focus { border-color: #10b981; }
+        .btn-them-custom { height: 36px; padding: 0 14px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap; display: flex; align-items: center; justify-content: center; }
+
+        .order-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        
+        /* Badge trạng thái giao hàng */
+        .badge-chuagiao { background: #fef3c7; color: #d97706; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; display: inline-block; }
+        .badge-dagiao { background: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; display: inline-block; }
+
+        /* CSS Modal chuẩn popup */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-content-custom { background: #fff; width: 95%; max-width: 420px; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
+        .form-control { width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; box-sizing: border-box; margin-bottom: 8px; background: #fff; }
+
+        /* --- CSS NÚT PHÂN TRANG TRUYỀN THỐNG --- */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            margin: 20px 0 10px 0;
+            flex-wrap: wrap;
+        }
+        .page-btn {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .page-btn.active {
+            background: #10b981;
+            color: #ffffff;
+            border-color: #10b981;
+        }
+        .page-btn:disabled {
+            background: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container">
+        <!-- THANH TIÊU ĐỀ PHÍA TRÊN -->
+        <div class="top-header">
+            <h3>📦 Quản Lý Đơn Hàng</h3>
+            <div style="display: flex; gap: 5px; align-items: center;">
+                <a href="../page/thongke.html" class="btn-desktop">💻</a>
+                <button onclick="dangXuatMobile()" style="background: #ef4444; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">🚪 Thoát</button>
+            </div>
+        </div>
+
+        <!-- THANH TÌM KIẾM VÀ NÚT THÊM -->
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-box" placeholder="🔍 Tìm tên KH, SĐT, tên sản phẩm..." onkeyup="timKiemDonHang()">
+            <button type="button" onclick="moModalThem()" class="btn-them-custom">➕ Lập Đơn</button>
+        </div>
+
+        <!-- DANH SÁCH ĐƠN HÀNG -->
+        <div style="font-weight: bold; font-size: 12px; color: #334155; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span>📋 Danh Sách Đơn Hàng:</span>
+            <span id="tongSoDonHang" style="color: #10b981; font-size: 11px;">0 đơn hàng</span>
+        </div>
+        <div id="danhSachDonHangContainer">
+            <div style="text-align: center; color: #777; padding: 15px; background: #fff; border-radius: 6px; border: 1px dashed #cbd5e1; font-size: 11px;">Đang tải danh sách đơn hàng...</div>
+        </div>
+
+        <!-- KHUNG CHỨA NÚT PHÂN TRANG -->
+        <div id="paginationContainer" class="pagination-container"></div>
+    </div>
+
+    <!-- MODAL THÊM / SỬA ĐƠN HÀNG -->
+    <div id="modalDonHang" class="modal-overlay">
+        <div class="modal-content-custom">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+                <h4 id="modalTitle" style="margin: 0; font-size: 14px; color: #1e293b;">➕ Lập đơn hàng mới</h4>
+                <button type="button" onclick="dongModal()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            <form id="formDonHang" onsubmit="luuDonHang(event)">
+                <input type="hidden" id="editId">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                    <div>
+                        <label style="font-size: 11px; font-weight: bold; color: #475569;">Mã sản phẩm:</label>
+                        <input type="text" id="masanpham" class="form-control" placeholder="VD: SP0001">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: bold; color: #475569;">Tên sản phẩm (*):</label>
+                        <input type="text" id="tensanpham" class="form-control" placeholder="Tên sản phẩm..." required>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                    <div>
+                        <label style="font-size: 11px; font-weight: bold; color: #475569;">Số lượng (*):</label>
+                        <input type="number" id="soluongban" class="form-control" value="1" min="1" oninput="tinhThanhTienModal()" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: bold; color: #475569;">Đơn giá (*):</label>
+                        <input type="number" id="dongia" class="form-control" value="0" oninput="tinhThanhTienModal()" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: bold; color: #475569;">Thành tiền:</label>
+                        <input type="number" id="thanhtien" class="form-control" readonly style="background: #f1f5f9; font-weight: bold; color: #dc2626;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                    <div>
+                        <label style="font-size: 11px; font-weight: bold; color: #475569;">Tên khách hàng:</label>
+                        <input type="text" id="tenkhachhang" class="form-control" placeholder="Tên khách hàng...">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: bold; color: #475569;">Số điện thoại:</label>
+                        <input type="text" id="sodienthoai" class="form-control" placeholder="SĐT khách...">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 6px;">
+                    <label style="font-size: 11px; font-weight: bold; color: #475569;">Địa chỉ giao hàng:</label>
+                    <input type="text" id="diachigiaohang" class="form-control" placeholder="Địa chỉ nhận hàng...">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+                    <div>
+                        <label style="font-size: 11px; font-weight: bold; color: #475569;">Nhân viên bán:</label>
+                        <input type="text" id="nguoiban" class="form-control" placeholder="Tên nhân viên...">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: bold; color: #475569;">Trạng thái:</label>
+                        <select id="trangthaiModal" class="form-control">
+                            <option value="Chưa giao hàng">Chưa giao hàng</option>
+                            <option value="Đã giao hàng">Đã giao hàng</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                    <button type="button" onclick="dongModal()" style="padding: 6px 10px; font-size: 11px; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer;">Hủy</button>
+                    <button type="submit" id="btnSaveDonHang" style="padding: 6px 12px; font-size: 11px; background: #10b981; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Lưu đơn hàng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT XỬ LÝ DỮ LIỆU KẾT HỢP PHÂN TRANG -->
+    <script>
+	
+        let danhSachDonHangToanCuc = [];
+        let danhSachHienThiHienTai = [];
+        let danhSachKhachHangMap = [];
+
+        // Cấu hình phân trang (Hiển thị 4 đơn hàng mỗi trang trên mobile)
+        let trangThaiPhanTrang = {
+            trangHienTai: 1,
+            soDongMoiTrang: 4
+        };
+
+        function dangXuatMobile() {
+            if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?')) {
+                sessionStorage.removeItem('currentUser');
+                window.location.href = '../index.html';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await taiDanhSachKhachHang();
+            await loadDanhSachDonHang();
+        });
+
+        async function taiDanhSachKhachHang() {
+            const { data } = await db.from('khachhang').select('*');
+            if (data) {
+                danhSachKhachHangMap = data;
+            }
+        }
+
+        async function loadDanhSachDonHang() {
+            if (typeof db === 'undefined' || !db) {
+                console.error('Chưa kết nối Supabase!');
+                return;
+            }
+
+            const { data, error } = await db.from('donhang').select('*').order('id', { ascending: false });
+            const container = document.getElementById('danhSachDonHangContainer');
+            
+            if (error) {
+                console.error('Lỗi tải danh sách đơn hàng:', error);
+                container.innerHTML = `<div style="text-align:center; color:red; font-size:11px;">Lỗi tải dữ liệu: ${error.message}</div>`;
+                return;
+            }
+
+            danhSachDonHangToanCuc = data || [];
+            danhSachHienThiHienTai = danhSachDonHangToanCuc;
+            trangThaiPhanTrang.trangHienTai = 1;
+            hienThiDanhSach();
+        }
+
+        function layDiaChiKhachHang(item) {
+            let diaChi = item.ghichu || item.diachi || '';
+            if (!diaChi && item.sdt) {
+                const sdtDon = String(item.sdt).trim();
+                const khMatch = danhSachKhachHangMap.find(x => {
+                    const sdtKh = x.sodienthoai ? String(x.sodienthoai).trim() : '';
+                    return sdtKh && (sdtDon.includes(sdtKh) || sdtKh.includes(sdtDon));
+                });
+                if (khMatch && khMatch.diachi) {
+                    diaChi = khMatch.diachi;
+                }
+            }
+            return diaChi || '---';
+        }
+
+        function hienThiDanhSach() {
+            const container = document.getElementById('danhSachDonHangContainer');
+            
+            if (!danhSachHienThiHienTai || danhSachHienThiHienTai.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #777; padding: 15px; font-size: 11px;">Không tìm thấy đơn hàng nào</div>`;
+                document.getElementById('tongSoDonHang').innerText = '0 đơn hàng';
+                document.getElementById('paginationContainer').innerHTML = '';
+                return;
+            }
+
+            document.getElementById('tongSoDonHang').innerText = danhSachHienThiHienTai.length + ' đơn hàng';
+            container.innerHTML = '';
+
+            // Tính toán cắt dữ liệu phân trang
+            const { trangHienTai, soDongMoiTrang } = trangThaiPhanTrang;
+            const tongSoTrang = Math.ceil(danhSachHienThiHienTai.length / soDongMoiTrang);
+            
+            const viTriBatDau = (trangHienTai - 1) * soDongMoiTrang;
+            const viTriKetThuc = viTriBatDau + soDongMoiTrang;
+            const duLieuTrangNay = danhSachHienThiHienTai.slice(viTriBatDau, viTriKetThuc);
+
+            duLieuTrangNay.forEach(item => {
+                const maDon = 'DH' + String(item.id).padStart(4, '0');
+                const ngayBan = item.ngayban ? new Date(item.ngayban).toLocaleString('vi-VN') : '---';
+                const tenKH = item.tenkhachhang || 'Khách lẻ';
+                const sdt = item.sdt || '---';
+                const thanhTien = Number(item.thanhtien || 0).toLocaleString('vi-VN') + 'đ';
+                const nguoiBan = item.nguoiban || '---';
+                const diaChi = layDiaChiKhachHang(item);
+                const trangThai = item.trangthai || 'Chưa giao hàng';
+                const badgeClass = trangThai === 'Đã giao hàng' ? 'badge-dagiao' : 'badge-chuagiao';
+
+                container.innerHTML += `
+                    <div class="order-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">
+                            <span style="font-weight: bold; font-size: 12px; color: #1e3a8a;">🛒 ${maDon}</span>
+                            <span class="${badgeClass}" style="cursor: pointer;" onclick="doiTrangThaiNhanh(${item.id}, '${trangThai}')" title="Bấm để đổi trạng thái">${trangThai} 🔄</span>
+                        </div>
+                        <div style="font-size: 11px; color: #1e293b; font-weight: bold; margin-bottom: 2px;">
+                            👤 ${tenKH} (<span style="color: #2563eb;">${sdt}</span>)
+                        </div>
+                        <div style="font-size: 11px; color: #334155; margin-bottom: 2px;">
+                            📦 <b>[${item.masanpham || 'SP'}]</b> ${item.tensanpham || ''} (SL: ${item.soluongban || 1})
+                        </div>
+                        <div style="font-size: 11px; color: #059669; font-weight: bold; margin-bottom: 2px;">
+                            💰 Thành tiền: ${thanhTien}
+                        </div>
+                        <div style="font-size: 10px; color: #64748b; margin-bottom: 2px;">
+                            👨‍💼 NV bán: ${nguoiBan} | 📅 Ngày: ${ngayBan}
+                        </div>
+                        <div style="font-size: 10px; color: #475569; margin-bottom: 4px;">
+                            📍 Địa chỉ: ${diaChi}
+                        </div>
+                        <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 4px; border-top: 1px solid #f1f5f9; padding-top: 4px; gap: 6px;">
+                            <button onclick="moModalSua(${item.id})" style="background: #3b82f6; color: white; border: none; padding: 2px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; font-weight: bold;">Sửa</button>
+                            <button onclick="xoaDonHang(${item.id})" style="background: #ef4444; color: white; border: none; padding: 2px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; font-weight: bold;">Xóa</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Vẽ thanh nút phân trang
+            veNutPhanTrang(tongSoTrang);
+        }
+
+        async function doiTrangThaiNhanh(id, trangThaiHienTai) {
+            const trangThaiMoi = trangThaiHienTai === 'Đã giao hàng' ? 'Chưa giao hàng' : 'Đã giao hàng';
+            const { error } = await db.from('donhang').update({ trangthai: trangThaiMoi }).eq('id', id);
+            if (error) {
+                alert('Lỗi cập nhật trạng thái: ' + error.message);
+            } else {
+                await loadDanhSachDonHang();
+            }
+        }
+
+        function veNutPhanTrang(tongSoTrang) {
+            const paginationContainer = document.getElementById('paginationContainer');
+            paginationContainer.innerHTML = '';
+
+            if (tongSoTrang <= 1) return;
+
+            const { trangHienTai } = trangThaiPhanTrang;
+
+            paginationContainer.innerHTML += `
+                <button class="page-btn" ${trangHienTai === 1 ? 'disabled' : ''} onclick="chuyenTrang(${trangHienTai - 1})">◀ Trước</button>
+            `;
+
+            for (let i = 1; i <= tongSoTrang; i++) {
+                if (i === 1 || i === tongSoTrang || (i >= trangHienTai - 1 && i <= trangHienTai + 1)) {
+                    paginationContainer.innerHTML += `
+                        <button class="page-btn ${i === trangHienTai ? 'active' : ''}" onclick="chuyenTrang(${i})">${i}</button>
+                    `;
+                } else if (i === trangHienTai - 2 || i === trangHienTai + 2) {
+                    paginationContainer.innerHTML += `<span style="color: #64748b; font-size: 12px; padding: 0 2px;">...</span>`;
+                }
+            }
+
+            paginationContainer.innerHTML += `
+                <button class="page-btn" ${trangHienTai === tongSoTrang ? 'disabled' : ''} onclick="chuyenTrang(${trangHienTai + 1})">Sau ▶</button>
+            `;
+        }
+
+        function chuyenTrang(trangMoi) {
+            trangThaiPhanTrang.trangHienTai = trangMoi;
+            hienThiDanhSach();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function timKiemDonHang() {
+            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+            danhSachHienThiHienTai = danhSachDonHangToanCuc.filter(item => {
+                const tenKH = (item.tenkhachhang || '').toLowerCase();
+                const sdt = (item.sdt || '').toLowerCase();
+                const tenSP = (item.tensanpham || '').toLowerCase();
+                const diaChi = layDiaChiKhachHang(item).toLowerCase();
+                const maDon = ('dh' + String(item.id)).toLowerCase();
+                return tenKH.includes(tuKhoa) || sdt.includes(tuKhoa) || tenSP.includes(tuKhoa) || diaChi.includes(tuKhoa) || maDon.includes(tuKhoa);
+            });
+            
+            trangThaiPhanTrang.trangHienTai = 1;
+            hienThiDanhSach();
+        }
+
+        function tinhThanhTienModal() {
+            const sl = parseFloat(document.getElementById('soluongban').value) || 0;
+            const gia = parseFloat(document.getElementById('dongia').value) || 0;
+            document.getElementById('thanhtien').value = sl * gia;
+        }
+
+        function moModalThem() {
+            document.getElementById('modalTitle').innerText = '➕ Lập đơn hàng mới';
+            document.getElementById('formDonHang').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('soluongban').value = '1';
+            document.getElementById('dongia').value = '0';
+            document.getElementById('thanhtien').value = '0';
+            document.getElementById('trangthaiModal').value = 'Chưa giao hàng';
+
+            document.getElementById('modalDonHang').style.display = 'flex';
+        }
+
+        function moModalSua(id) {
+            const item = danhSachDonHangToanCuc.find(x => x.id === id);
+            if (!item) return;
+
+            const diaChi = layDiaChiKhachHang(item);
+
+            document.getElementById('modalTitle').innerText = '✏️ Cập Nhật Đơn Hàng (DH' + String(id).padStart(4, '0') + ')';
+            document.getElementById('editId').value = item.id;
+            document.getElementById('masanpham').value = item.masanpham || '';
+            document.getElementById('tensanpham').value = item.tensanpham || '';
+            document.getElementById('soluongban').value = item.soluongban || 1;
+            document.getElementById('dongia').value = item.dongia || 0;
+            document.getElementById('thanhtien').value = item.thanhtien || (item.soluongban * item.dongia) || 0;
+            document.getElementById('tenkhachhang').value = item.tenkhachhang || '';
+            document.getElementById('sodienthoai').value = item.sdt || '';
+            document.getElementById('diachigiaohang').value = (diaChi !== '---' ? diaChi : '');
+            document.getElementById('nguoiban').value = item.nguoiban || '';
+            document.getElementById('trangthaiModal').value = item.trangthai || 'Chưa giao hàng';
+
+            document.getElementById('modalDonHang').style.display = 'flex';
+        }
+
+        function dongModal() {
+            document.getElementById('modalDonHang').style.display = 'none';
+        }
+
+        async function luuDonHang(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('editId').value;
+            const masanpham = document.getElementById('masanpham').value.trim();
+            const tensanpham = document.getElementById('tensanpham').value.trim();
+            const soluongban = parseInt(document.getElementById('soluongban').value) || 1;
+            const dongia = parseFloat(document.getElementById('dongia').value) || 0;
+            const thanhtien = soluongban * dongia;
+            const tenkhachhang = document.getElementById('tenkhachhang').value.trim();
+            const sdt = document.getElementById('sodienthoai').value.trim();
+            const ghichu = document.getElementById('diachigiaohang').value.trim();
+            const nguoiban = document.getElementById('nguoiban').value.trim();
+            const trangthai = document.getElementById('trangthaiModal').value;
+
+            const btn = document.getElementById('btnSaveDonHang');
+            btn.disabled = true;
+            btn.textContent = 'Đang lưu...';
+
+            const payload = {
+                masanpham,
+                tensanpham,
+                soluongban,
+                dongia,
+                thanhtien,
+                tenkhachhang,
+                sdt,
+                ghichu,
+                nguoiban,
+                trangthai
+            };
+
+            let error = null;
+            if (id) {
+                const res = await db.from('donhang').update(payload).eq('id', id);
+                error = res.error;
+            } else {
+                const res = await db.from('donhang').insert([payload]);
+                error = res.error;
+            }
+
+            btn.disabled = false;
+            btn.textContent = '💾 Lưu đơn hàng';
+
+            if (error) {
+                console.error('Lỗi lưu đơn hàng:', error);
+                alert('Lỗi khi lưu dữ liệu: ' + error.message);
+                return;
+            }
+
+            alert(id ? 'Cập nhật đơn hàng thành công!' : 'Lập đơn hàng thành công!');
+            dongModal();
+            await loadDanhSachDonHang();
+        }
+
+        async function xoaDonHang(id) {
+            if (!confirm('Bạn có chắc chắn muốn xóa đơn hàng này không?')) return;
+
+            const { error } = await db.from('donhang').delete().eq('id', id);
+            if (error) {
+                console.error('Lỗi xóa đơn hàng:', error);
+                alert('Lỗi khi xóa: ' + error.message);
+                return;
+            }
+
+            alert('Đã xóa đơn hàng thành công!');
+            await loadDanhSachDonHang();
+        }
+    </script>
+
+    <!-- NHÚNG MENU ĐIỀU HƯỚNG ĐÁY MOBILE -->
+    <script src="js/menu-mobile.js"></script>
+    <script>
+        if (typeof taoMenuMobile === 'function') {
+            taoMenuMobile('donhang');
+        }
+    </script>
+</body>
+</html>

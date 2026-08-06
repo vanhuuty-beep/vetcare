@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhật ký Nội trú - Mobile</title>
+    
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Kết nối các file cấu hình -->
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="out.js"></script>
+
+    <!-- CSS chung và CSS riêng mobile -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="css/button.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { background: #f8fafc; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        .mobile-container { max-width: 480px; margin: 0 auto; background: #ffffff; min-height: 100vh; padding: 10px; padding-bottom: 80px; box-shadow: 0 0 15px rgba(0,0,0,0.05); }
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding: 10px; background: #1e3a8a; border-radius: 6px; }
+        .top-header h3 { margin: 0; font-size: 16px; color: white; }
+        .btn-desktop { background: #3b82f6; color: white; text-decoration: none; padding: 5px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .form-control { width: 100%; padding: 6px 8px; font-size: 11px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; box-sizing: border-box; margin-bottom: 6px; background: #fff; }
+        .mobile-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        
+        /* THANH TÌM KIẾM VÀ NÚT THÊM */
+        .search-container { display: flex; gap: 6px; margin-bottom: 10px; align-items: stretch; }
+        .search-box { flex: 1; height: 36px; padding: 0 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; box-sizing: border-box; }
+        .search-box:focus { border-color: #2563eb; }
+        .btn-them-custom { height: 36px; padding: 0 14px; background: #059669; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap; display: flex; align-items: center; justify-content: center; }
+
+        /* CSS Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-content-custom { background: #fff; width: 94%; max-width: 420px; padding: 12px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 92vh; overflow-y: auto; }
+        label { font-size: 10px; font-weight: bold; color: #475569; display: block; margin-bottom: 2px; }
+
+        /* --- CẤU HÌNH IN HÓA ĐƠN TRÊN MOBILE --- */
+        @media print {
+            body * { visibility: hidden !important; }
+            #hoaDonModal, #hoaDonModal * { visibility: visible !important; }
+            #hoaDonModal {
+                position: absolute !important; left: 0 !important; top: 0 !important;
+                width: 100% !important; height: auto !important; background: white !important; display: block !important; z-index: 9999 !important;
+            }
+            .modal-content-custom { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: none !important; }
+            .modal-header, .modal-footer, button { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container">
+        <!-- THANH TIÊU ĐỀ PHÍA TRÊN -->
+        <div class="top-header">
+            <h3>🏥 Quản Lý Nội Trú</h3>
+            <div style="display: flex; gap: 5px; align-items: center;">
+                <a href="../page/thongke.html" class="btn-desktop">💻</a>
+                <button onclick="dangXuatMobile()" style="background: #ef4444; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">🚪 Thoát</button>
+            </div>
+        </div>
+
+        <!-- THANH TÌM KIẾM VÀ NÚT THÊM -->
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-box" placeholder="🔍 Tìm mã khám, lồng, bác sĩ..." onkeyup="timKiemNhatKyNoiTru()">
+            <button type="button" onclick="moModalThem()" class="btn-them-custom">➕ Nội trú</button>
+        </div>
+        
+        <div style="font-weight: bold; font-size: 12px; color: #334155; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span>📋 Danh Sách Hồ Sơ Nội Trú:</span>
+            <span id="tongSoNoiTru" style="color: #2563eb; font-size: 11px;">0 bản ghi</span>
+        </div>
+
+        <!-- DANH SÁCH THẺ HIỂN THỊ -->
+        <div id="mobile-list" style="max-height: 480px; overflow-y: auto;">
+            <div style="text-align: center; color: #666; padding: 20px; font-size: 11px;">Đang tải dữ liệu...</div>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM / SỬA HỒ SƠ NỘI TRÚ -->
+    <div id="nhatKyNoiTruModal" class="modal-overlay">
+        <div class="modal-content-custom">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
+                <h4 id="modalTitle" style="margin: 0; font-size: 13px; color: #1e293b;">Lập hồ sơ nội trú</h4>
+                <button type="button" onclick="dongModal()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingId">
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                <div>
+                    <label>Mã khám bệnh (*):</label>
+                    <input type="text" id="makhambenh" class="form-control" placeholder="Nhập mã khám...">
+                </div>
+                <div>
+                    <label>Chọn Lồng / Phòng (*):</label>
+                    <select id="malong" class="form-control">
+                        <option value="">-- Chọn lồng / phòng --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                <div>
+                    <label>Ngày vào:</label>
+                    <input type="datetime-local" id="ngayvao" class="form-control" onchange="tinhUocTinh()">
+                </div>
+                <div>
+                    <label>Ngày ra:</label>
+                    <input type="datetime-local" id="ngayra" class="form-control" onchange="tinhUocTinh()">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                <div>
+                    <label>Bác sĩ phụ trách:</label>
+                    <input type="text" id="bacsiphutrach" class="form-control" placeholder="Tên bác sĩ...">
+                </div>
+                <div>
+                    <label>Trạng thái:</label>
+                    <select id="trangthai" class="form-control">
+                        <option value="Đang nằm viện">Đang nằm viện</option>
+                        <option value="Chờ xuất viện">Chờ xuất viện</option>
+                        <option value="Đã xuất viện">Đã xuất viện</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                <div>
+                    <label>Chi phí / ngày (VNĐ):</label>
+                    <input type="number" id="chiphingay" class="form-control" placeholder="VD: 100000" oninput="tinhUocTinh()">
+                </div>
+                <div>
+                    <label>Tổng chi phí:</label>
+                    <input type="number" id="tongchiphi" class="form-control" placeholder="Tổng tiền..." oninput="tinhThanhTien()">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                <div>
+                    <label>Khách tạm ứng:</label>
+                    <input type="number" id="tamung" class="form-control" value="0" oninput="tinhThanhTien()">
+                </div>
+                <div>
+                    <label>Thành tiền (Còn lại):</label>
+                    <input type="number" id="thanhtien" class="form-control" readonly style="background: #f8fafc; font-weight: bold; color: #dc2626;">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 6px;">
+                <label>Ghi chú / Tình trạng:</label>
+                <textarea id="ghichu" class="form-control" rows="2" placeholder="Thức ăn, tình trạng sức khỏe..." style="resize: none;"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 6px; justify-content: flex-end; margin-top: 4px;">
+                <button type="button" onclick="dongModal()" style="padding: 6px 10px; font-size: 11px; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer;">Hủy</button>
+                <button type="button" onclick="luuNhatKyNoiTru()" style="padding: 6px 12px; font-size: 11px; background: #059669; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Lưu dữ liệu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP XEM VÀ IN HÓA ĐƠN NỘI TRÚ -->
+    <div class="modal-overlay" id="hoaDonModal">
+        <div class="modal-content-custom" style="max-width: 450px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
+                <h4 style="margin: 0; font-size: 13px; color: #1e293b;">Hóa đơn thanh toán nội trú</h4>
+                <button type="button" onclick="dongModalHoaDon()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            
+            <div id="printArea" style="padding: 10px; background: #fff; color: #000; font-size: 11px;">
+                <div style="text-align: center; margin-bottom: 10px;">
+                    <h4 style="margin: 0 0 4px 0; font-size: 14px; text-transform: uppercase;">Hóa Đơn Viện Phí</h4>
+                    <p id="hdMaNKNT" style="margin: 0; font-weight: bold; color: #2563eb;"></p>
+                </div>
+
+                <div style="margin-bottom: 10px; line-height: 1.5;">
+                    <div><b>Tên chủ nuôi:</b> <span id="hdTenChu">---</span></div>
+                    <div><b>Tên thú cưng:</b> <span id="hdTenThuCung">---</span></div>
+                    <div><b>Phòng / Lồng:</b> <span id="hdPhongLong">---</span></div>
+                    <div><b>Vào:</b> <span id="hdNgayVao">---</span> | <b>Ra:</b> <span id="hdNgayRa">---</span></div>
+                    <div><b>Bác sĩ:</b> <span id="hdBacSi">---</span></div>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px;">
+                    <thead>
+                        <tr style="background: #f1f5f9; border-bottom: 1px solid #cbd5e1;">
+                            <th style="padding: 5px; text-align: left; border: 1px solid #cbd5e1;">Nội dung</th>
+                            <th style="padding: 5px; text-align: center; border: 1px solid #cbd5e1;">Ngày</th>
+                            <th style="padding: 5px; text-align: right; border: 1px solid #cbd5e1;">Đơn giá</th>
+                            <th style="padding: 5px; text-align: right; border: 1px solid #cbd5e1;">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 5px; border: 1px solid #cbd5e1;">Phí lưu trú</td>
+                            <td id="hdSoNgay" style="padding: 5px; text-align: center; border: 1px solid #cbd5e1;">1</td>
+                            <td id="hdChiPhiNgay" style="padding: 5px; text-align: right; border: 1px solid #cbd5e1;">0</td>
+                            <td id="hdTongChiPhi" style="padding: 5px; text-align: right; border: 1px solid #cbd5e1; font-weight: bold;">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="display: flex; flex-direction: column; align-items: flex-end; font-size: 11px; gap: 3px; margin-bottom: 10px;">
+                    <div>Tổng cộng: <b id="hdTxtTongChiPhi">0 đ</b></div>
+                    <div>Tạm ứng: <b id="hdTxtTamUng" style="color: #059669;">0 đ</b></div>
+                    <div style="font-size: 12px; border-top: 1px solid #ccc; padding-top: 3px; margin-top: 2px;">
+                        <b>CÒN LẠI:</b> <span id="hdTxtThanhTien" style="color: #dc2626; font-weight: bold;">0 đ</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 6px; justify-content: flex-end; margin-top: 8px;">
+                <button type="button" onclick="dongModalHoaDon()" style="padding: 6px 10px; font-size: 11px; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer;">Đóng</button>
+                <button type="button" onclick="inHoaDon()" style="padding: 6px 12px; font-size: 11px; background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🖨️ In Hóa Đơn</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT XỬ LÝ DỮ LIỆU -->
+    <script>
+        let danhSachNhatKyGoc = [];
+        let mapKhamBenh = {}; 
+        let mapThuCung = {};
+        let mapKhachHang = {};
+        let mapLong = {};
+
+        function dangXuatMobile() {
+            if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?')) {
+                sessionStorage.removeItem('currentUser');
+                window.location.href = '../index.html';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const maKBParam = urlParams.get('makhambenh');
+            if (maKBParam) {
+                document.getElementById('makhambenh').value = maKBParam;
+            }
+            await fetchDuLieuBanDau();
+
+            // Đăng ký Realtime tự động cập nhật bảng khi có thay đổi từ thiết bị khác
+            if (typeof db !== 'undefined' && db) {
+                db.channel('realtime-nhatkynoitru-mobile')
+                  .on('postgres_changes', { event: '*', schema: 'public', table: 'nhatkynoitru' }, async () => {
+                      await fetchDuLieuBanDau();
+                  })
+                  .subscribe();
+            }
+
+            if (maKBParam) {
+                moModalThem();
+            }
+        });
+
+        async function fetchDuLieuBanDau() {
+            const { data: khData } = await db.from('khachhang').select('*');
+            if (khData) {
+                khData.forEach(kh => { mapKhachHang[kh.id] = kh.hovaten; });
+            }
+
+            const { data: tcData } = await db.from('thucung').select('*');
+            if (tcData) {
+                tcData.forEach(tc => {
+                    let maKH = tc.makhachhang || tc.makh || tc.khachhang_id;
+                    mapThuCung[tc.id] = {
+                        tenthucung: tc.tenthucung,
+                        tenchu: mapKhachHang[maKH] || 'Không rõ chủ'
+                    };
+                });
+            }
+
+            const { data: kbData } = await db.from('khambenh').select('*');
+            if (kbData) {
+                kbData.forEach(kb => {
+                    if (kb.mathucung && mapThuCung[kb.mathucung]) {
+                        mapKhamBenh[kb.id] = mapThuCung[kb.mathucung];
+                    }
+                });
+            }
+
+            const { data: longData } = await db.from('noitru').select('*');
+            if (longData) {
+                const selectLong = document.getElementById('malong');
+                selectLong.innerHTML = `<option value="">-- Chọn lồng / phòng trống --</option>`;
+                
+                longData.forEach(l => {
+                    mapLong[l.id] = { phong: l.phong, long: l.long, trangthai: l.trangthai };
+                    if (l.trangthai && l.trangthai.toLowerCase() === 'đang sử dụng') return; 
+                    selectLong.innerHTML += `<option value="${l.id}">${l.phong || ''} - ${l.long || ''}</option>`;
+                });
+            }
+
+            const { data, error } = await db.from('nhatkynoitru').select('*').order('id', { ascending: false });
+            if (error) {
+                console.error('Lỗi tải nhật ký nội trú:', error);
+                document.getElementById('mobile-list').innerHTML = `<div style="text-align:center; color:red; padding:15px; font-size:11px;">Lỗi tải dữ liệu</div>`;
+            } else {
+                danhSachNhatKyGoc = data || [];
+                locVaHienThiDanhSach(danhSachNhatKyGoc);
+            }
+        }
+
+        function locVaHienThiDanhSach(data) {
+            const activeData = data.filter(item => {
+                const tt = (item.trangthai || '').toLowerCase();
+                return !tt.includes('đã xuất viện');
+            });
+            hienThiBang(activeData);
+        }
+
+        function tinhUocTinh() {
+            const ngayvao = new Date(document.getElementById('ngayvao').value);
+            const ngayra = new Date(document.getElementById('ngayra').value);
+            const chiphingay = parseFloat(document.getElementById('chiphingay').value) || 0;
+
+            if (!isNaN(ngayvao.getTime()) && !isNaN(ngayra.getTime()) && chiphingay > 0) {
+                const diffTime = ngayra - ngayvao;
+                let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (diffDays <= 0) diffDays = 1;
+
+                const tongchiphi = diffDays * chiphingay;
+                document.getElementById('tongchiphi').value = tongchiphi;
+            }
+            tinhThanhTien();
+        }
+
+        function tinhThanhTien() {
+            const tongchiphi = parseFloat(document.getElementById('tongchiphi').value) || 0;
+            const tamung = parseFloat(document.getElementById('tamung').value) || 0;
+            document.getElementById('thanhtien').value = tongchiphi - tamung;
+        }
+
+        function hienThiBang(data) {
+            const container = document.getElementById('mobile-list');
+            container.innerHTML = '';
+            
+            if(data.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #777; padding: 15px; font-size: 11px;">Không có ca nội trú nào đang hoạt động</div>`;
+                document.getElementById('tongSoNoiTru').innerText = '0 bản ghi';
+                return;
+            }
+
+            document.getElementById('tongSoNoiTru').innerText = data.length + ' bản ghi';
+
+            data.forEach(item => {
+                const maNKNT = 'NKNT' + String(item.id).padStart(4, '0');
+                const maKBText = item.makhambenh ? 'KB' + String(item.makhambenh).padStart(4, '0') : 'N/A';
+                const infoPet = mapKhamBenh[item.makhambenh] || { tenthucung: 'Không rõ', tenchu: 'Không rõ' };
+                const infoLong = mapLong[item.malong] || { phong: 'N/A', long: 'N/A' };
+                
+                const ngayVao = item.ngayvao ? new Date(item.ngayvao).toLocaleString('vi-VN') : '---';
+                const ngayRa = item.ngayra ? new Date(item.ngayra).toLocaleString('vi-VN') : '---';
+                const thanhTien = Number(item.thanhtien || 0).toLocaleString('vi-VN');
+
+                // Xử lý trạng thái huy hiệu bấm đổi nhanh trên Mobile
+                const trangThaiHienTai = item.trangthai || 'Đang nằm viện';
+                let badgeColor = '#d97706'; // Cam: Đang nằm viện
+                let bgBadge = '#fef3c7';
+                let nextStatus = 'Chờ xuất viện';
+
+                if (trangThaiHienTai === 'Chờ xuất viện') {
+                    badgeColor = '#2563eb'; // Xanh dương: Chờ xuất viện
+                    bgBadge = '#e0f2fe';
+                    nextStatus = 'Đã xuất viện';
+                } else if (trangThaiHienTai === 'Đã xuất viện') {
+                    badgeColor = '#059669'; // Xanh lá: Đã xuất viện
+                    bgBadge = '#d1fae5';
+                    nextStatus = 'Đang nằm viện';
+                }
+
+                container.innerHTML += `
+                    <div class="mobile-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                            <span style="font-weight: bold; font-size: 12px; color: #1e293b;">🏠 ${infoLong.phong} - ${infoLong.long}</span>
+                            <span style="color: #2563eb; font-size: 11px; font-weight: bold;">${maNKNT}</span>
+                        </div>
+                        <div style="font-size: 11px; color: #059669; font-weight: bold; margin-bottom: 2px;">
+                            🐾 Pet: ${infoPet.tenthucung} | Chủ: ${infoPet.tenchu} <span style="color: #64748b;">(${maKBText})</span>
+                        </div>
+                        <div style="font-size: 10px; color: #64748b; margin-bottom: 2px;">
+                            📥 Vào: ${ngayVao} <br>📤 Ra: ${ngayRa}
+                        </div>
+                        <div style="font-size: 11px; color: #334155; margin-bottom: 2px;"><strong>Bác sĩ:</strong> ${item.bacsiphutrach || '---'}</div>
+                        <div style="font-size: 11px; color: #dc2626; font-weight: bold; text-align: right;">Còn lại: ${thanhTien} đ</div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; border-top: 1px solid #f1f5f9; padding-top: 6px;">
+                            <span onclick="capNhatTrangThaiNhatKyMobile(${item.id}, '${nextStatus}', ${item.malong})" 
+                                  style="padding: 3px 8px; border-radius: 12px; font-size: 10px; background: ${bgBadge}; color: ${badgeColor}; font-weight: bold; cursor: pointer; display: inline-block;" 
+                                  title="Bấm để đổi trạng thái">
+                                ${trangThaiHienTai} 🔄
+                            </span>
+                            <div style="display: flex; gap: 4px;">
+                                <button onclick="window.location.href='lichtrinh.html?makhambenh=${item.makhambenh}'" style="background: #0284c7; color: white; border: none; padding: 3px 6px; border-radius: 3px; font-size: 10px; cursor: pointer; font-weight: bold;">Lịch trình</button>
+                                <button onclick="moModalHoaDon(${item.id})" style="background: #059669; color: white; border: none; padding: 3px 6px; border-radius: 3px; font-size: 10px; cursor: pointer; font-weight: bold;">Hóa đơn</button>
+                                <button onclick="moModalSua(${item.id})" style="background: #3b82f6; color: white; border: none; padding: 3px 6px; border-radius: 3px; font-size: 10px; cursor: pointer; font-weight: bold;">Sửa</button>
+                                <button onclick="xoaNhatKyNoiTru(${item.id})" style="background: #ef4444; color: white; border: none; padding: 3px 6px; border-radius: 3px; font-size: 10px; cursor: pointer; font-weight: bold;">Xóa</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Hàm gọi Database cập nhật trạng thái trực tiếp bằng cách bấm vào huy hiệu trên Mobile
+        async function capNhatTrangThaiNhatKyMobile(id, trangThaiMoi, maLong) {
+            if (typeof db === 'undefined' || !db) return;
+
+            const { error } = await db
+                .from('nhatkynoitru')
+                .update({ trangthai: trangThaiMoi })
+                .eq('id', id);
+
+            if (error) {
+                alert('Lỗi cập nhật trạng thái: ' + error.message);
+            } else {
+                if (trangThaiMoi === 'Đã xuất viện' && maLong) {
+                    await db.from('noitru').update({ trangthai: 'Trống' }).eq('id', maLong);
+                }
+                await fetchDuLieuBanDau();
+            }
+        }
+
+        function timKiemNhatKyNoiTru() {
+            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+            const ketQuaLoc = danhSachNhatKyGoc.filter(item => {
+                const tt = (item.trangthai || '').toLowerCase();
+                if (tt.includes('đã xuất viện')) return false;
+
+                const maKB = String(item.makhambenh || '').toLowerCase();
+                const bacSi = (item.bacsiphutrach || '').toLowerCase();
+                const maNK = ('nknt' + String(item.id)).toLowerCase();
+                return maKB.includes(tuKhoa) || bacSi.includes(tuKhoa) || maNK.includes(tuKhoa);
+            });
+            hienThiBang(ketQuaLoc);
+        }
+
+        function moModalThem() {
+            document.getElementById('editingId').value = '';
+            if (!window.location.search.includes('makhambenh')) {
+                document.getElementById('makhambenh').value = '';
+            }
+            document.getElementById('malong').value = '';
+            
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('ngayvao').value = now.toISOString().slice(0, 16);
+            document.getElementById('ngayra').value = '';
+            
+            document.getElementById('bacsiphutrach').value = '';
+            document.getElementById('trangthai').value = 'Đang nằm viện';
+            document.getElementById('chiphingay').value = '';
+            document.getElementById('tongchiphi').value = '';
+            document.getElementById('tamung').value = '0';
+            document.getElementById('thanhtien').value = '0';
+            document.getElementById('ghichu').value = '';
+            
+            document.getElementById('modalTitle').innerText = 'Lập hồ sơ nội trú mới';
+            document.getElementById('nhatKyNoiTruModal').style.display = 'flex';
+        }
+
+        function moModalSua(id) {
+            const item = danhSachNhatKyGoc.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('editingId').value = item.id;
+            document.getElementById('makhambenh').value = item.makhambenh || '';
+            
+            const selectLong = document.getElementById('malong');
+            selectLong.innerHTML = `<option value="">-- Chọn lồng / phòng trống --</option>`;
+            
+            for (const [longId, l] of Object.entries(mapLong)) {
+                if (longId == item.malong || !l.trangthai || l.trangthai.toLowerCase() !== 'đang sử dụng') {
+                    selectLong.innerHTML += `<option value="${longId}">${l.phong || ''} - ${l.long || ''}</option>`;
+                }
+            }
+
+            document.getElementById('malong').value = item.malong || '';
+            document.getElementById('ngayvao').value = item.ngayvao ? new Date(new Date(item.ngayvao).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+            document.getElementById('ngayra').value = item.ngayra ? new Date(new Date(item.ngayra).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+            document.getElementById('bacsiphutrach').value = item.bacsiphutrach || '';
+            document.getElementById('trangthai').value = item.trangthai || 'Đang nằm viện';
+            document.getElementById('chiphingay').value = item.chiphingay || '';
+            document.getElementById('tongchiphi').value = item.tongchiphi || '';
+            document.getElementById('tamung').value = item.tamung || 0;
+            document.getElementById('thanhtien').value = item.thanhtien || 0;
+            document.getElementById('ghichu').value = item.ghichu || '';
+
+            document.getElementById('modalTitle').innerText = 'Cập nhật hồ sơ nội trú (ID: ' + id + ')';
+            document.getElementById('nhatKyNoiTruModal').style.display = 'flex';
+        }
+
+        function dongModal() {
+            document.getElementById('nhatKyNoiTruModal').style.display = 'none';
+        }
+
+        async function luuNhatKyNoiTru() {
+            const id = document.getElementById('editingId').value;
+            let rawMaKB = document.getElementById('makhambenh').value.trim().replace(/[^0-9]/g, '');
+            const makhambenh = rawMaKB ? parseInt(rawMaKB) : null;
+            const malong = document.getElementById('malong').value;
+            
+            const ngayvao = document.getElementById('ngayvao').value;
+            const ngayra = document.getElementById('ngayra').value;
+            const bacsiphutrach = document.getElementById('bacsiphutrach').value.trim();
+            const trangthai = document.getElementById('trangthai').value;
+            const ghichu = document.getElementById('ghichu').value.trim();
+            
+            const chiphingay = parseFloat(document.getElementById('chiphingay').value) || 0;
+            const tongchiphi = parseFloat(document.getElementById('tongchiphi').value) || 0;
+            const tamung = parseFloat(document.getElementById('tamung').value) || 0;
+            const thanhtien = parseFloat(document.getElementById('thanhtien').value) || 0;
+
+            if (!makhambenh || !malong) {
+                alert('Vui lòng nhập Mã khám bệnh và chọn Lồng/Phòng!');
+                return;
+            }
+
+            const payload = {
+                makhambenh: makhambenh,
+                malong: parseInt(malong),
+                ngayvao: ngayvao ? new Date(ngayvao).toISOString() : null,
+                ngayra: ngayra ? new Date(ngayra).toISOString() : null,
+                trangthai: trangthai,
+                chiphingay: chiphingay,
+                bacsiphutrach: bacsiphutrach,
+                ghichu: ghichu,
+                tongchiphi: tongchiphi,
+                tamung: tamung,
+                thanhtien: thanhtien
+            };
+
+            if (id === "") {
+                const { error } = await db.from('nhatkynoitru').insert([payload]);
+                if (error) {
+                    alert('Lỗi lưu nhật ký nội trú: ' + error.message);
+                } else {
+                    alert('Lập hồ sơ nội trú thành công!');
+                    await db.from('noitru').update({ trangthai: 'Đang sử dụng' }).eq('id', malong);
+                    dongModal();
+                    await fetchDuLieuBanDau();
+                }
+            } else {
+                const { error } = await db.from('nhatkynoitru').update(payload).eq('id', id);
+                if (error) {
+                    alert('Lỗi cập nhật hồ sơ: ' + error.message);
+                } else {
+                    alert('Cập nhật thành công!');
+                    if (trangthai === 'Đã xuất viện') {
+                        await db.from('noitru').update({ trangthai: 'Trống' }).eq('id', malong);
+                    }
+                    dongModal();
+                    await fetchDuLieuBanDau();
+                }
+            }
+        }
+
+        async function xoaNhatKyNoiTru(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa hồ sơ nội trú này không?')) {
+                const itemCu = danhSachNhatKyGoc.find(x => x.id == id);
+                const { error } = await db.from('nhatkynoitru').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa: ' + error.message);
+                } else {
+                    alert('Xóa thành công!');
+                    if (itemCu && itemCu.malong) {
+                        await db.from('noitru').update({ trangthai: 'Trống' }).eq('id', itemCu.malong);
+                    }
+                    await fetchDuLieuBanDau();
+                }
+            }
+        }
+        
+        function moModalHoaDon(id) {
+            const item = danhSachNhatKyGoc.find(x => x.id === id);
+            if (!item) return;
+
+            const maNKNT = 'NKNT' + String(item.id).padStart(4, '0');
+            const infoPet = mapKhamBenh[item.makhambenh] || { tenthucung: 'Không rõ', tenchu: 'Không rõ' };
+            const infoLong = mapLong[item.malong] || { phong: 'N/A', long: 'N/A' };
+            
+            let diffDays = 1;
+            if (item.ngayvao && item.ngayra) {
+                const diffTime = new Date(item.ngayra) - new Date(item.ngayvao);
+                diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (diffDays <= 0) diffDays = 1;
+            }
+
+            const chiPhiNgay = parseFloat(item.chiphingay) || 0;
+            const tongChiPhiTinhToan = diffDays * chiPhiNgay;
+            const tongChiPhi = (item.tongchiphi !== undefined && item.tongchiphi !== null && item.tongchiphi !== 0) 
+                ? parseFloat(item.tongchiphi) 
+                : tongChiPhiTinhToan;
+
+            const tamUng = parseFloat(item.tamung) || 0;
+            const thanhTienConLai = tongChiPhi - tamUng;
+
+            document.getElementById('hdMaNKNT').innerText = `Mã phiếu: ${maNKNT}`;
+            document.getElementById('hdTenChu').innerText = infoPet.tenchu;
+            document.getElementById('hdTenThuCung').innerText = infoPet.tenthucung;
+            document.getElementById('hdNgayVao').innerText = item.ngayvao ? new Date(item.ngayvao).toLocaleString('vi-VN') : '---';
+            document.getElementById('hdNgayRa').innerText = item.ngayra ? new Date(item.ngayra).toLocaleString('vi-VN') : '---';
+            document.getElementById('hdPhongLong').innerText = `${infoLong.phong} - ${infoLong.long}`;
+            document.getElementById('hdBacSi').innerText = item.bacsiphutrach || '---';
+
+            document.getElementById('hdSoNgay').innerText = diffDays;
+            document.getElementById('hdChiPhiNgay').innerText = chiPhiNgay.toLocaleString('vi-VN');
+            
+            document.getElementById('hdTongChiPhi').innerText = tongChiPhi.toLocaleString('vi-VN');
+            document.getElementById('hdTxtTongChiPhi').innerText = tongChiPhi.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('hdTxtTamUng').innerText = tamUng.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('hdTxtThanhTien').innerText = thanhTienConLai.toLocaleString('vi-VN') + ' đ';
+
+            document.getElementById('hoaDonModal').style.display = 'flex';
+        }
+
+        function dongModalHoaDon() {
+            document.getElementById('hoaDonModal').style.display = 'none';
+        }
+
+        function inHoaDon() {
+            window.print();
+        }
+    </script>
+
+    <!-- NHÚNG MENU ĐIỀU HƯỚNG ĐÁY MOBILE -->
+    <script src="js/menu-mobile.js"></script>
+    <script>
+        if (typeof taoMenuMobile === 'function') {
+            taoMenuMobile('noitru');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lịch Trình Nội Trú - Cổng Chủ Nuôi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body { 
+            background: #f1f5f9; 
+            margin: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            display: flex;
+            justify-content: center;
+        }
+        .mobile-shell {
+            width: 100%;
+            max-width: 480px;
+            background: #f8fafc;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+            padding: 12px;
+            padding-bottom: 80px;
+        }
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            font-weight: bold;
+            color: #1e293b;
+            font-size: 14px;
+        }
+        .timeline-card { 
+            background: white; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 12px; 
+            padding: 14px; 
+            margin-bottom: 10px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
+        }
+        .timeline-header {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .pet-name {
+            font-size: 14px;
+            color: #1e3a8a;
+            font-weight: bold;
+        }
+        .badge-noitru { 
+            background: #e0f2fe; 
+            color: #0369a1; 
+            padding: 3px 8px; 
+            border-radius: 6px; 
+            font-size: 10px; 
+            font-weight: bold; 
+        }
+        .timeline-content {
+            font-size: 12px;
+            color: #334155;
+            line-height: 1.5;
+        }
+        
+        /* Bố cục nội dung tiến trình và hình ảnh/video nằm cùng 1 hàng */
+        .progress-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            background: #f8fafc;
+            border-left: 3px solid #0284c7;
+            padding: 8px 10px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        .progress-text {
+            flex: 1;
+            font-size: 12px;
+            color: #1e293b;
+            white-space: pre-line;
+            line-height: 1.4;
+        }
+        .progress-gallery {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            max-width: 140px;
+        }
+        .progress-thumb {
+            width: 55px;
+            height: 55px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+        }
+        .progress-video-thumb {
+            width: 65px;
+            height: 55px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            background: #000;
+        }
+
+        /* Thanh menu đáy phong cách Mobile App */
+        .mobile-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            height: 60px;
+            background: #ffffff;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 9999;
+            border-top: 1px solid #e2e8f0;
+            box-sizing: border-box;
+        }
+        .mobile-bottom-nav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 500;
+            flex: 1;
+        }
+        .mobile-bottom-nav a span { font-size: 20px; margin-bottom: 2px; }
+        .mobile-bottom-nav a.active { color: #0284c7; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-shell">
+        <div class="top-bar">
+            <span>🏨 Lịch Trình Nội Trú</span>
+            <span id="tenChuNuoiLabel" style="font-size: 11px; color: #64748b; font-weight: normal;">---</span>
+        </div>
+
+        <div id="danhSachNoiTru">
+            <div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 12px; font-size: 12px;">Đang tải lịch trình nội trú...</div>
+        </div>
+    </div>
+
+    <!-- THANH MENU ĐÁY MOBILE -->
+    <div class="mobile-bottom-nav">
+        <a href="trangchu.html">
+            <span>🏠</span>
+            Trang chủ
+        </a>
+        <a href="lichsu.html">
+            <span>📋</span>
+            Lịch sử khám
+        </a>
+        <a href="ketquachidinh-chunuoi.html" class="active">
+            <span>🔬</span>
+            Chỉ định
+        </a>
+        <a href="noitru-chunuoi.html">
+            <span>🏨</span>
+            Lịch trình
+        </a>
+		<a href="muahang.html">
+            <span>🛍️</span>
+            Cửa hàng
+        </a>
+        <a href="datlich.html">
+            <span>📅</span>
+            Đặt lịch hẹn
+        </a>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', async () => {
+            const ownerStr = sessionStorage.getItem('currentPetOwner');
+            if (!ownerStr) {
+                alert('Vui lòng đăng nhập trước!');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const ownerData = JSON.parse(ownerStr);
+            document.getElementById('tenChuNuoiLabel').innerText = ownerData.hovaten || ownerData.tenkhachhang || '';
+
+            await taiLichTrinhNoiTruChuNuoi(ownerData.id);
+        });
+
+        async function taiLichTrinhNoiTruChuNuoi(ownerId) {
+            const container = document.getElementById('danhSachNoiTru');
+            container.innerHTML = '';
+
+            try {
+                // 1. Tìm danh sách thú cưng của chủ nuôi hiện tại
+                let listPets = null;
+                for (let col of ['makhachhang', 'makh', 'khachhang_id', 'idkhachhang']) {
+                    let { data } = await db.from('thucung').select('*').eq(col, ownerId);
+                    if (data && data.length > 0) {
+                        listPets = data;
+                        break;
+                    }
+                }
+
+                if (!listPets || listPets.length === 0) {
+                    container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 25px; background: white; border-radius: 12px; font-size: 12px;">Chưa tìm thấy thú cưng liên kết với tài khoản của bạn.</div>`;
+                    return;
+                }
+
+                const petIds = listPets.map(p => p.id);
+                const petMap = {};
+                listPets.forEach(p => {
+                    petMap[p.id] = p.tenthucung || p.tenthecung || p.ten || 'Thú cưng';
+                });
+
+                // 2. Lấy danh sách các ca khám bệnh tương ứng với thú cưng của chủ nuôi
+                let { data: kbData } = await db.from('khambenh').select('id, mathucung').in('mathucung', petIds);
+                if (!kbData || kbData.length === 0) {
+                    container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 25px; background: white; border-radius: 12px; font-size: 12px;">Hiện tại không có lịch trình nội trú nào cho thú cưng của bạn.</div>`;
+                    return;
+                }
+
+                const kbMap = {};
+                kbData.forEach(kb => {
+                    kbMap[kb.id] = petMap[kb.mathucung] || 'Thú cưng';
+                });
+                const kbIds = kbData.map(k => k.id);
+
+                // 3. Lấy dữ liệu trực tiếp từ bảng 'lichtrinh'
+                let { data: ltData, error } = await db.from('lichtrinh').select('*').in('makhambenh', kbIds).order('id', { ascending: false });
+                if (error) throw error;
+
+                if (!ltData || ltData.length === 0) {
+                    container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 25px; background: white; border-radius: 12px; font-size: 12px;">🐾 Hiện tại chưa có nhật ký lịch trình nào được cập nhật.</div>`;
+                    return;
+                }
+
+                container.innerHTML = '';
+                ltData.forEach(item => {
+                    const tenPet = kbMap[item.makhambenh] || 'Thú cưng';
+                    const ngayCapNhapStr = item.ngaycapnhap ? new Date(item.ngaycapnhap).toLocaleString('vi-VN') : '---';
+                    const ghiChu = item.ghichu || 'Chưa cập nhật chi tiết tiến trình điều trị.';
+
+                    // Xử lý hiển thị nhiều ảnh và video nằm cùng 1 hàng
+                    let imgGalleryHtml = '';
+                    if (item.hinhanh) {
+                        let listImg = [];
+                        try {
+                            listImg = JSON.parse(item.hinhanh);
+                            if (!Array.isArray(listImg)) listImg = [item.hinhanh];
+                        } catch (e) {
+                            listImg = [item.hinhanh];
+                        }
+
+                        if (listImg.length > 0) {
+                            imgGalleryHtml = `<div class="progress-gallery">`;
+                            listImg.forEach(url => {
+                                if (url && url.trim() !== '') {
+                                    const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i);
+                                    if (isVideo) {
+                                        imgGalleryHtml += `<a href="${url}" target="_blank"><video src="${url}" class="progress-video-thumb" muted></video></a>`;
+                                    } else {
+                                        imgGalleryHtml += `<a href="${url}" target="_blank"><img src="${url}" class="progress-thumb"></a>`;
+                                    }
+                                }
+                            });
+                            imgGalleryHtml += `</div>`;
+                        }
+                    }
+
+                    container.innerHTML += `
+                        <div class="timeline-card">
+                            <div class="timeline-header">
+                                <span class="pet-name">🐾 ${tenPet}</span>
+                                <span class="badge-noitru">Đang điều trị</span>
+                            </div>
+                            <div class="timeline-content">
+                                <div style="margin-bottom: 3px; color: #059669; font-weight: bold;">👨‍⚕️ Bác sĩ: ${item.bacsiphutrach || 'Chưa rõ'}</div>
+                                <div style="margin-bottom: 4px; color: #64748b; font-size: 11px;">📅 Cập nhật: ${ngayCapNhapStr}</div>
+                                
+                                <!-- TIẾN TRÌNH VÀ HÌNH ẢNH/VIDEO NẰM CÙNG 1 HÀNG -->
+                                <div class="progress-row">
+                                    <div class="progress-text">
+                                        <strong>📋 Lịch trình điều trị & Diễn biến:</strong><br>${ghiChu}
+                                    </div>
+                                    ${imgGalleryHtml}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+            } catch (err) {
+                console.error('Lỗi tải lịch trình chủ nuôi:', err);
+                container.innerHTML = `<div style="text-align: center; color: red; padding: 25px; background: white; border-radius: 12px; font-size: 12px;">Không thể tải dữ liệu lúc này. Vui lòng thử lại sau.</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

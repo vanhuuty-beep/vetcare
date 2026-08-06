@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt Lịch Khám Nhanh - VetCare Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <style>
+        body { 
+            background: #f1f5f9; 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 0 0 70px 0; 
+            color: #1e293b; 
+        }
+        .container { 
+            max-width: 480px; 
+            margin: 20px auto; 
+            padding: 0 12px; 
+            box-sizing: border-box;
+        }
+        .header-title { 
+            text-align: center; 
+            margin-bottom: 18px; 
+        }
+        .header-title h2 { 
+            color: #0284c7; 
+            margin: 0 0 4px 0; 
+            font-size: 18px; 
+        }
+        .header-title p { 
+            font-size: 12px; 
+            color: #64748b; 
+            margin: 0; 
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            border: 1px solid #e2e8f0;
+        }
+        .form-group {
+            margin-bottom: 12px;
+            text-align: left;
+        }
+        /* Cấu trúc chia đôi 1 hàng 2 cột */
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: bold;
+            color: #334155;
+            margin-bottom: 4px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px 10px;
+            font-size: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-sizing: border-box;
+            outline: none;
+            background: #fff;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: #0284c7;
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.1);
+        }
+        .btn-submit {
+            display: block;
+            width: 100%;
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 11px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.2s;
+        }
+        .btn-submit:hover {
+            background: #059669;
+        }
+
+        /* Thanh menu đáy cố định */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            background: #ffffff;
+            border-top: 1px solid #cbd5e1;
+            border-left: 1px solid #cbd5e1;
+            border-right: 1px solid #cbd5e1;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            box-shadow: 0 -2px 6px rgba(0,0,0,0.05);
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+        .nav-item {
+            text-align: center;
+            text-decoration: none;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: bold;
+            flex: 1;
+        }
+        .nav-item.active { color: #0284c7; }
+        .nav-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-title">
+            <h2>📅 Đặt Lịch Khám Nhanh</h2>
+            <p>Không cần đăng nhập - Phòng khám sẽ gọi điện xác nhận</p>
+        </div>
+
+        <div class="form-card">
+            <!-- HÀNG 1: Tên chủ nuôi & Tên thú cưng chung 1 hàng -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Họ tên chủ nuôi (*)</label>
+                    <input type="text" id="tenchunuoi" placeholder="Nhập tên chủ...">
+                </div>
+                <div class="form-group">
+                    <label>Tên thú cưng / Loài (*)</label>
+                    <input type="text" id="tenthucung" placeholder="Ví dụ: Luky (Chó)">
+                </div>
+            </div>
+
+            <!-- HÀNG 2: Số điện thoại & Thời gian hẹn chung 1 hàng -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Số điện thoại (*)</label>
+                    <input type="tel" id="sdt" placeholder="Nhập số ĐT...">
+                </div>
+                <div class="form-group">
+                    <label>Thời gian hẹn (*)</label>
+                    <input type="datetime-local" id="ngayhen">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Địa chỉ liên hệ</label>
+                <input type="text" id="diachi" placeholder="Ví dụ: 123 Lê Duẩn, Đà Nẵng">
+            </div>
+
+            <div class="form-group">
+                <label>Dịch vụ đăng ký (*)</label>
+                <select id="dichvu">
+                    <option value="Khám tổng quát & Điều trị">🩺 Khám tổng quát & Điều trị</option>
+                    <option value="Tiêm phòng Vaccine">💉 Tiêm phòng Vaccine</option>
+                    <option value="Spa & Cắt tỉa lông">✂️ Spa & Cắt tỉa lông</option>
+                    <option value="Gửi nội trú">🏨 Gửi nội trú</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Ghi chú / Triệu chứng của bé</label>
+                <textarea id="noidung" rows="2" placeholder="Nhập triệu chứng hoặc yêu cầu thêm..."></textarea>
+            </div>
+
+            <button type="button" class="btn-submit" onclick="guiLichHen()">🚀 GỬI LỊCH HẸN NGAY</button>
+        </div>
+    </div>
+
+    <!-- Thanh menu đáy -->
+    <div class="bottom-nav">
+        <a href="../index.html" class="nav-item">
+            <span class="nav-icon">ℹ️</span>Giới thiệu
+        </a>
+        <a href="booklich.html" class="nav-item active">
+            <span class="nav-icon">📅</span>Đặt lịch
+        </a>
+        <a href="login.html" class="nav-item">
+            <span class="nav-icon">👤</span>Chủ nuôi
+        </a>
+        <a href="../login.html" class="nav-item">
+            <span class="nav-icon">🔐</span>Quản lý
+        </a>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('ngayhen').value = now.toISOString().slice(0, 16);
+        });
+
+        async function guiLichHen() {
+            const tenchunuoi = document.getElementById('tenchunuoi').value.trim();
+            const sdt = document.getElementById('sdt').value.trim();
+            const diachi = document.getElementById('diachi').value.trim();
+            const tenthucung = document.getElementById('tenthucung').value.trim();
+            const dichvu = document.getElementById('dichvu').value;
+            const ngayhenInput = document.getElementById('ngayhen').value;
+            const noidungUser = document.getElementById('noidung').value.trim();
+
+            if (!tenchunuoi || !sdt || !tenthucung || !ngayhenInput) {
+                alert('Vui lòng điền đầy đủ các thông tin bắt buộc (*)!');
+                return;
+            }
+
+            try {
+                const noiDungTongHop = `[Thú cưng: ${tenthucung}] - [Dịch vụ: ${dichvu}] ${noidungUser ? '- Ghi chú: ' + noidungUser : ''}`;
+
+                const payload = {
+                    tenchunuoi: tenchunuoi,
+                    sdt: sdt,
+                    diachi: diachi,
+                    ngayhen: new Date(ngayhenInput).toISOString(),
+                    noidung: noiDungTongHop,
+                    trangthai: 'Chờ khám'
+                };
+
+                const { error: insertErr } = await db.from('lichhen').insert([payload]);
+
+                if (insertErr) {
+                    throw insertErr;
+                }
+
+                alert('🎉 Gửi lịch hẹn thành công! Phòng khám sẽ liên hệ lại với bạn sớm nhất.');
+                
+                document.getElementById('tenchunuoi').value = '';
+                document.getElementById('sdt').value = '';
+                document.getElementById('diachi').value = '';
+                document.getElementById('tenthucung').value = '';
+                document.getElementById('noidung').value = '';
+
+            } catch (error) {
+                console.error('Lỗi đặt lịch chi tiết:', error);
+                alert('Có lỗi xảy ra khi gửi lịch hẹn lên hệ thống: ' + (error.message || 'Lỗi không xác định'));
+            }
+        }
+    </script>
+</body>
+</html>

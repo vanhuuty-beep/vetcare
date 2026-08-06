@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập - Cổng Chủ Nuôi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Thư viện hỗ trợ quét mã QR qua Camera -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body { background: #f1f5f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; font-family: sans-serif; }
+        .login-card { background: white; padding: 24px; border-radius: 12px; width: 100%; max-width: 380px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); box-sizing: border-box; text-align: center; }
+        .login-card h2 { color: #0284c7; margin-bottom: 20px; font-size: 20px; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #334155; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }
+        .btn-login { width: 100%; background: #0284c7; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; margin-bottom: 10px; }
+        .btn-qr { width: 100%; background: #10b981; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        #reader { width: 100%; margin-top: 15px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h2>🐾 Cổng Chủ Nuôi VetCare</h2>
+        <div class="form-group">
+            <label>Nhập Số Điện Thoại Đăng Nhập:</label>
+            <input type="text" id="txtSdt" placeholder="Ví dụ: 0935123456">
+        </div>
+        <button type="button" class="btn-login" onclick="dangNhap()">ĐĂNG NHẬP NGAY</button>
+        <button type="button" class="btn-qr" onclick="batDauQuetQR()">📷 QUÉT MÃ QR BẰNG CAMERA</button>
+        
+        <!-- Khung hiển thị camera quét QR -->
+        <div id="reader"></div>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            let sdtParam = urlParams.get('sdt');
+            if (sdtParam) {
+                document.getElementById('txtSdt').value = sdtParam;
+                await thucHienDangNhap(sdtParam);
+            }
+        });
+
+        async function dangNhap() {
+            const sdt = document.getElementById('txtSdt').value.trim();
+            if (!sdt) {
+                alert('Vui lòng nhập số điện thoại!');
+                return;
+            }
+            await thucHienDangNhap(sdt);
+        }
+
+        async function thucHienDangNhap(sdt) {
+            const { data, error } = await db.from('khachhang').select('*').eq('sodienthoai', sdt);
+
+            if (error) {
+                alert('Lỗi kết nối cơ sở dữ liệu: ' + error.message);
+                return;
+            }
+
+            if (data && data.length > 0) {
+                const khachHang = data[0];
+                sessionStorage.setItem('currentPetOwner', JSON.stringify(khachHang));
+                alert('🎉 Đăng nhập thành công!');
+                window.location.href = 'trangchu.html';
+            } else {
+                alert('Không tìm thấy khách hàng với số điện thoại này trong hệ thống!');
+            }
+        }
+
+        // --- HÀM BẬT CAMERA QUÉT QR TRỰC TIẾP ---
+        function batDauQuetQR() {
+            const readerDiv = document.getElementById('reader');
+            readerDiv.style.display = 'block';
+
+            const html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                { facingMode: "environment" }, // Dùng camera sau của điện thoại
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                async (decodedText, decodedResult) => {
+                    // Khi quét thành công mã QR
+                    html5QrCode.stop().then(() => {
+                        readerDiv.style.display = 'none';
+                    }).catch(err => console.error(err));
+
+                    // Nếu mã QR chứa dạng link hoặc số điện thoại, ta trích xuất SĐT hoặc gán thẳng
+                    let sdtQuet = decodedText;
+                    if (decodedText.includes('sdt=')) {
+                        const url = new URL(decodedText);
+                        sdtQuet = url.searchParams.get('sdt');
+                    }
+
+                    document.getElementById('txtSdt').value = sdtQuet;
+                    await thucHienDangNhap(sdtQuet);
+                },
+                (errorMessage) => {
+                    // Lỗi quét khung hình (bỏ qua để camera liên tục quét)
+                }
+            ).catch(err => {
+                alert('Không thể mở camera. Vui lòng cấp quyền sử dụng camera cho trình duyệt!');
+                console.error(err);
+            });
+        }
+    </script>
+</body>
+</html>

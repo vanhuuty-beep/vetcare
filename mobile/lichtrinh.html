@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Trình Nội Trú - Mobile</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="css/button.css">
+    <style>
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-content-custom { background: #fff; width: 90%; max-width: 380px; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; font-family: system-ui, -apple-system, sans-serif; }
+        .form-control { width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; box-sizing: border-box; margin-bottom: 8px; background: #fff; }
+        .preview-img-container { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+        .preview-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; }
+        .preview-video-thumb { width: 60px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; background: #000; }
+        .mobile-container { padding-bottom: 80px; }
+
+        /* Bố cục nội dung tiến trình và hình ảnh/video nằm cùng 1 hàng */
+        .progress-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            background: #f8fafc;
+            border-left: 3px solid #0284c7;
+            padding: 8px 10px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        .progress-text {
+            flex: 1;
+            font-size: 12px;
+            color: #1e293b;
+            white-space: pre-line;
+            line-height: 1.4;
+        }
+        .progress-gallery {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            max-width: 140px;
+        }
+        .progress-thumb {
+            width: 55px;
+            height: 55px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+        }
+        .progress-video-thumb {
+            width: 65px;
+            height: 55px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            background: #000;
+        }
+
+        /* --- CSS CHO THANH PHÂN TRANG (PAGINATION) --- */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            margin: 20px 0 10px 0;
+            flex-wrap: wrap;
+        }
+        .page-btn {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .page-btn.active {
+            background: #0284c7;
+            color: #ffffff;
+            border-color: #0284c7;
+        }
+        .page-btn:disabled {
+            background: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container">
+        <!-- THANH TIÊU ĐỀ PHÍA TRÊN -->
+        <div class="top-header">
+            <h3>📖 Lịch Trình Điều Trị</h3>
+            <a href="../page/thongke.html" class="btn-desktop">🏥</a>
+            <button onclick="dangXuatMobile()" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                <span>🚪</span> Thoát
+            </button>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
+            <input type="text" id="searchMobile" class="search-box" placeholder="🔍 Tìm tên thú cưng, chủ nuôi, SĐT..." onkeyup="timKiemLichTrinh()" style="flex: 1; margin: 0;">
+            <button class="btn-add" onclick="moModalThem()" style="white-space: nowrap; margin: 0; padding: 6px 10px; font-size: 12px;">➕ Thêm tiến trình</button>
+        </div>
+
+        <!-- DANH SÁCH LỊCH TRÌNH HIỂN THỊ -->
+        <div id="mobile-list">
+            <div style="text-align: center; color: #666; padding: 20px;">Đang tải lịch trình điều trị...</div>
+        </div>
+
+        <!-- KHUNG CHỨA CÁC NÚT PHÂN TRANG -->
+        <div id="paginationContainer" class="pagination-container"></div>
+    </div>
+
+    <!-- MODAL THÊM / SỬA TIẾN TRÌNH LỊCH TRÌNH -->
+    <div id="modalLichTrinh" class="modal-overlay">
+        <div class="modal-content-custom">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+                <h4 id="modalTitle" style="margin: 0; font-size: 14px; color: #1e293b;">Thêm tiến trình lịch trình</h4>
+                <button type="button" onclick="dongModal()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingId">
+            <input type="hidden" id="hinhanhOld">
+            
+            <form id="formLichTrinh" onsubmit="luuLichTrinhMobile(event)">
+                <div style="margin-bottom: 6px;">
+                    <label style="font-size: 11px; font-weight: bold; color: #475569;">Chọn thú cưng / Mã khám (*):</label>
+                    <select id="makhambenh" class="form-control" required>
+                        <option value="">-- Chọn thú cưng nội trú --</option>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                    <div>
+                        <label style="font-size: 11px; font-weight: bold; color: #475569;">Thời gian cập nhật:</label>
+                        <input type="datetime-local" id="ngaycapnhap" class="form-control">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: bold; color: #475569;">Bác sĩ theo dõi:</label>
+                        <input type="text" id="bacsiphutrach" class="form-control" placeholder="Tên bác sĩ...">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 6px;">
+                    <label style="font-size: 11px; font-weight: bold; color: #475569;">Diễn biến sức khỏe / Lịch trình hằng ngày:</label>
+                    <textarea id="ghichu" rows="3" class="form-control" placeholder="Nhập tình trạng, ăn uống, truyền dịch..."></textarea>
+                </div>
+
+                <div style="margin-bottom: 8px;">
+                    <label style="font-size: 11px; font-weight: bold; color: #475569;">Chọn hoặc chụp ảnh / video:</label>
+                    <input type="file" id="hinhAnhFile" accept="image/*,video/*" multiple capture="environment" class="form-control" style="font-size: 11px; padding: 5px;" onchange="previewSelectedFiles(this)">
+                    <div id="previewImages" class="preview-img-container"></div>
+                </div>
+
+                <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                    <button type="button" onclick="dongModal()" style="padding: 6px 10px; font-size: 11px; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer;">Hủy</button>
+                    <button type="submit" id="btnSave" style="padding: 6px 12px; font-size: 11px; background: #059669; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Lưu tiến trình</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let danhSachLichTrinhGoc = [];
+        let danhSachHienThiHienTai = [];
+        let thongTinKhamBenh = {};
+        
+        let trangThaiPhanTrang = {
+            trangHienTai: 1,
+            soDongMoiTrang: 2
+        };
+
+        function dangXuatMobile() {
+            if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?')) {
+                sessionStorage.removeItem('currentUser');
+                window.location.href = '../index.html';
+            }
+        }
+
+        function previewSelectedFiles(input) {
+            const previewContainer = document.getElementById('previewImages');
+            previewContainer.innerHTML = '';
+            if (input.files) {
+                Array.from(input.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        if (file.type.startsWith('video/')) {
+                            previewContainer.innerHTML += `<video src="${e.target.result}" class="preview-video-thumb" controls muted></video>`;
+                        } else {
+                            previewContainer.innerHTML += `<img src="${e.target.result}" class="preview-thumb">`;
+                        }
+                    }
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
+    </script>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', async () => {
+            await taiDuLieuBanDau();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const maKBParam = urlParams.get('makhambenh');
+            if (maKBParam) {
+                document.getElementById('makhambenh').value = maKBParam;
+                moModalThem();
+                document.getElementById('makhambenh').value = maKBParam;
+            }
+        });
+
+        async function taiDuLieuBanDau() {
+            const container = document.getElementById('mobile-list');
+
+            const { data: khData } = await db.from('khachhang').select('*');
+            let mapKhachHang = {};
+            if (khData) {
+                khData.forEach(kh => {
+                    const tenKH = kh.hovaten || kh.tenkhachhang || kh.name || 'Khách lẻ';
+                    const sdtKH = kh.sodienthoai || kh.sdt || kh.phone || kh.dien_thoai || 'Chưa có SĐT';
+                    mapKhachHang[kh.id] = { hovaten: tenKH, sdt: sdtKH };
+                });
+            }
+
+            const { data: tcData } = await db.from('thucung').select('*');
+            let mapThuCung = {};
+            if (tcData) {
+                tcData.forEach(tc => {
+                    const tenPet = tc.tenthucung || tc.name || tc.pet_name || 'Chưa đặt tên';
+                    const maKH = tc.makhachhang || tc.machunuoi || tc.khachhang_id || tc.makh;
+                    mapThuCung[tc.id] = {
+                        tenthucung: tenPet,
+                        khachhang: mapKhachHang[maKH] || { hovaten: 'Khách lẻ', sdt: '---' }
+                    };
+                });
+            }
+
+            const { data: kbData } = await db.from('khambenh').select('*');
+            const selectKB = document.getElementById('makhambenh');
+            selectKB.innerHTML = `<option value="">-- Chọn thú cưng / ca khám --</option>`;
+
+            if (kbData) {
+                kbData.forEach(kb => {
+                    const maPet = kb.mathucung || kb.pet_id || kb.mapet;
+                    const petInfo = mapThuCung[maPet] || { tenthucung: 'Thú cưng #' + maPet, khachhang: { hovaten: '---', sdt: '---' } };
+                    thongTinKhamBenh[kb.id] = {
+                        tenPet: petInfo.tenthucung,
+                        tenChu: petInfo.khachhang.hovaten,
+                        sdtChu: petInfo.khachhang.sdt
+                    };
+                    selectKB.innerHTML += `<option value="${kb.id}">Ca #${kb.id} - ${petInfo.tenthucung} (Chủ: ${petInfo.khachhang.hovaten})</option>`;
+                });
+            }
+
+            const { data, error } = await db.from('lichtrinh').select('*').order('id', { ascending: false });
+            
+            if (error) {
+                console.error('Lỗi tải lịch trình:', error);
+                container.innerHTML = `<div style="text-align:center; color:red; padding:20px;">Lỗi tải dữ liệu lịch trình</div>`;
+                return;
+            }
+
+            danhSachLichTrinhGoc = data || [];
+            danhSachHienThiHienTai = danhSachLichTrinhGoc;
+            trangThaiPhanTrang.trangHienTai = 1;
+            hienThiDanhSachMobile();
+        }
+
+        function hienThiDanhSachMobile() {
+            const container = document.getElementById('mobile-list');
+            container.innerHTML = '';
+
+            if (!danhSachHienThiHienTai || danhSachHienThiHienTai.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:#777; padding:20px;">Chưa có tiến trình lịch trình nào được tạo</div>`;
+                document.getElementById('paginationContainer').innerHTML = '';
+                return;
+            }
+
+            const { trangHienTai, soDongMoiTrang } = trangThaiPhanTrang;
+            const tongSoTrang = Math.ceil(danhSachHienThiHienTai.length / soDongMoiTrang);
+            
+            const viTriBatDau = (trangHienTai - 1) * soDongMoiTrang;
+            const viTriKetThuc = viTriBatDau + soDongMoiTrang;
+            const duLieuTrangNay = danhSachHienThiHienTai.slice(viTriBatDau, viTriKetThuc);
+
+            duLieuTrangNay.forEach(item => {
+                const info = thongTinKhamBenh[item.makhambenh] || { tenPet: 'Ca khám #' + (item.makhambenh || '---'), tenChu: '---', sdtChu: '---' };
+                const ngayCapNhapStr = item.ngaycapnhap ? new Date(item.ngaycapnhap).toLocaleString('vi-VN') : '---';
+                const ghiChu = item.ghichu || 'Chưa cập nhật chi tiết.';
+
+                let imgGalleryHtml = '';
+                if (item.hinhanh) {
+                    let listImg = [];
+                    try {
+                        listImg = JSON.parse(item.hinhanh);
+                        if (!Array.isArray(listImg)) listImg = [item.hinhanh];
+                    } catch (e) {
+                        listImg = [item.hinhanh];
+                    }
+
+                    if (listImg.length > 0) {
+                        imgGalleryHtml = `<div class="progress-gallery">`;
+                        listImg.forEach(url => {
+                            if (url && url.trim() !== '') {
+                                const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i);
+                                if (isVideo) {
+                                    imgGalleryHtml += `<a href="${url}" target="_blank"><video src="${url}" class="progress-video-thumb" muted></video></a>`;
+                                } else {
+                                    imgGalleryHtml += `<a href="${url}" target="_blank"><img src="${url}" class="progress-thumb"></a>`;
+                                }
+                            }
+                        });
+                        imgGalleryHtml += `</div>`;
+                    }
+                }
+
+                container.innerHTML += `
+                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                            <span style="font-weight: bold; font-size: 13px; color: #1e3a8a;">🐾 ${info.tenPet}</span>
+                            <span style="font-size: 10px; color: #64748b;">ID: LT${String(item.id).padStart(4, '0')}</span>
+                        </div>
+                        <div style="font-size: 11px; color: #059669; font-weight: bold; margin-bottom: 2px;">
+                            👤 Chủ nuôi: ${info.tenChu} - SĐT: ${info.sdtChu}
+                        </div>
+                        <div style="font-size: 11px; color: #475569; margin-bottom: 4px;">
+                            👨‍⚕️ Bác sĩ: ${item.bacsiphutrach || 'Chưa rõ'} | 📅 Cập nhật: ${ngayCapNhapStr}
+                        </div>
+                        
+                        <div class="progress-row">
+                            <div class="progress-text">
+                                <strong>📋 Nội dung tiến trình:</strong><br>${ghiChu}
+                            </div>
+                            ${imgGalleryHtml}
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 8px; border-top: 1px solid #f1f5f9; padding-top: 6px; gap: 6px;">
+                            <button onclick="moModalSua(${item.id})" style="background: #eab308; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold;">✏️ Sửa</button>
+                            <button onclick="xoaLichTrinh(${item.id})" style="background: #ef4444; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold;">🗑️ Xóa</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            veNutPhanTrang(tongSoTrang);
+        }
+
+        function veNutPhanTrang(tongSoTrang) {
+            const paginationContainer = document.getElementById('paginationContainer');
+            paginationContainer.innerHTML = '';
+
+            if (tongSoTrang <= 1) return;
+
+            const { trangHienTai } = trangThaiPhanTrang;
+
+            paginationContainer.innerHTML += `
+                <button class="page-btn" ${trangHienTai === 1 ? 'disabled' : ''} onclick="chuyenTrang(${trangHienTai - 1})">◀ Trước</button>
+            `;
+
+            for (let i = 1; i <= tongSoTrang; i++) {
+                if (i === 1 || i === tongSoTrang || (i >= trangHienTai - 1 && i <= trangHienTai + 1)) {
+                    paginationContainer.innerHTML += `
+                        <button class="page-btn ${i === trangHienTai ? 'active' : ''}" onclick="chuyenTrang(${i})">${i}</button>
+                    `;
+                } else if (i === trangHienTai - 2 || i === trangHienTai + 2) {
+                    paginationContainer.innerHTML += `<span style="color: #64748b; font-size: 12px; padding: 0 2px;">...</span>`;
+                }
+            }
+
+            paginationContainer.innerHTML += `
+                <button class="page-btn" ${trangHienTai === tongSoTrang ? 'disabled' : ''} onclick="chuyenTrang(${trangHienTai + 1})">Sau ▶</button>
+            `;
+        }
+
+        function chuyenTrang(trangMoi) {
+            trangThaiPhanTrang.trangHienTai = trangMoi;
+            hienThiDanhSachMobile();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function timKiemLichTrinh() {
+            const tuKhoa = document.getElementById('searchMobile').value.toLowerCase().trim();
+            danhSachHienThiHienTai = danhSachLichTrinhGoc.filter(item => {
+                const bacSi = (item.bacsiphutrach || '').toLowerCase();
+                const ghiChu = (item.ghichu || '').toLowerCase();
+                const info = thongTinKhamBenh[item.makhambenh] || { tenPet: '', tenChu: '', sdtChu: '' };
+                
+                return bacSi.includes(tuKhoa) || ghiChu.includes(tuKhoa) || info.tenPet.toLowerCase().includes(tuKhoa) || info.tenChu.toLowerCase().includes(tuKhoa) || info.sdtChu.toLowerCase().includes(tuKhoa);
+            });
+            
+            trangThaiPhanTrang.trangHienTai = 1;
+            hienThiDanhSachMobile();
+        }
+
+        function moModalThem() {
+            document.getElementById('editingId').value = '';
+            document.getElementById('makhambenh').value = '';
+            document.getElementById('bacsiphutrach').value = '';
+            document.getElementById('ghichu').value = '';
+            document.getElementById('hinhAnhFile').value = '';
+            document.getElementById('hinhanhOld').value = '';
+            document.getElementById('previewImages').innerHTML = '';
+            
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('ngaycapnhap').value = now.toISOString().slice(0, 16);
+
+            document.getElementById('modalTitle').innerText = 'Thêm tiến trình lịch trình mới';
+            document.getElementById('modalLichTrinh').style.display = 'flex';
+        }
+
+        function moModalSua(id) {
+            const item = danhSachLichTrinhGoc.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('editingId').value = item.id;
+            document.getElementById('makhambenh').value = item.makhambenh || '';
+            document.getElementById('bacsiphutrach').value = item.bacsiphutrach || '';
+            document.getElementById('ghichu').value = item.ghichu || '';
+            document.getElementById('ngaycapnhap').value = item.ngaycapnhap ? new Date(new Date(item.ngaycapnhap).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+            
+            document.getElementById('hinhAnhFile').value = '';
+            document.getElementById('hinhanhOld').value = item.hinhanh || '';
+            
+            const previewContainer = document.getElementById('previewImages');
+            previewContainer.innerHTML = '';
+            if (item.hinhanh) {
+                try {
+                    let listImg = JSON.parse(item.hinhanh);
+                    if (!Array.isArray(listImg)) listImg = [item.hinhanh];
+                    listImg.forEach(url => {
+                        if (url) {
+                            if (url.match(/\.(mp4|webm|ogg|mov)$/i)) {
+                                previewContainer.innerHTML += `<video src="${url}" class="preview-video-thumb" controls muted></video>`;
+                            } else {
+                                previewContainer.innerHTML += `<img src="${url}" class="preview-thumb">`;
+                            }
+                        }
+                    });
+                } catch(e) {}
+            }
+
+            document.getElementById('modalTitle').innerText = 'Cập nhật tiến trình (ID: ' + id + ')';
+            document.getElementById('modalLichTrinh').style.display = 'flex';
+        }
+
+        function dongModal() {
+            document.getElementById('modalLichTrinh').style.display = 'none';
+        }
+
+        async function luuLichTrinhMobile(event) {
+            event.preventDefault();
+            const id = document.getElementById('editingId').value;
+            const makhambenh = parseInt(document.getElementById('makhambenh').value);
+            const bacsiphutrach = document.getElementById('bacsiphutrach').value.trim();
+            const ghichu = document.getElementById('ghichu').value.trim();
+            const ngaycapnhap = document.getElementById('ngaycapnhap').value;
+
+            const btn = document.getElementById('btnSave');
+            btn.disabled = true;
+            btn.textContent = 'Đang tải tệp và lưu...';
+
+            let imageUrls = [];
+            let oldHinhanh = document.getElementById('hinhanhOld').value;
+            if (oldHinhanh) {
+                try {
+                    let parsed = JSON.parse(oldHinhanh);
+                    if (Array.isArray(parsed)) imageUrls = parsed;
+                    else imageUrls = [oldHinhanh];
+                } catch(e) {
+                    imageUrls = [oldHinhanh];
+                }
+            }
+
+            const fileInput = document.getElementById('hinhAnhFile');
+            if (fileInput.files && fileInput.files.length > 0) {
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    const file = fileInput.files[i];
+                    const fileName = `lichtrinh_${Date.now()}_${i}_${file.name}`;
+                    const { error: uploadError } = await db.storage.from('images').upload(fileName, file);
+
+                    if (!uploadError) {
+                        const { data: publicUrlData } = db.storage.from('images').getPublicUrl(fileName);
+                        if (publicUrlData && publicUrlData.publicUrl) {
+                            imageUrls.push(publicUrlData.publicUrl);
+                        }
+                    }
+                }
+            }
+
+            const payload = {
+                makhambenh,
+                bacsiphutrach,
+                ghichu,
+                ngaycapnhap: ngaycapnhap ? new Date(ngaycapnhap).toISOString() : null,
+                hinhanh: imageUrls.length > 0 ? JSON.stringify(imageUrls) : null
+            };
+
+            let error;
+            if (id === "") {
+                const res = await db.from('lichtrinh').insert([payload]);
+                error = res.error;
+            } else {
+                const res = await db.from('lichtrinh').update(payload).eq('id', id);
+                error = res.error;
+            }
+
+            btn.disabled = false;
+            btn.textContent = '💾 Lưu tiến trình';
+
+            if (error) {
+                console.error('Lỗi lưu lịch trình:', error);
+                alert('Lỗi khi lưu: ' + error.message);
+                return;
+            }
+
+            alert('Đã lưu tiến trình lịch trình thành công!');
+            dongModal();
+            await taiDuLieuBanDau();
+        }
+
+        async function xoaLichTrinh(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa tiến trình này không?')) {
+                const { error } = await db.from('lichtrinh').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa: ' + error.message);
+                } else {
+                    alert('Đã xóa thành công!');
+                    await taiDuLieuBanDau();
+                }
+            }
+        }
+    </script>
+
+    <!-- NHÚNG MENU ĐIỀU HƯỚNG ĐÁY MOBILE -->
+    <script src="js/menu-mobile.js"></script>
+    <script>
+        if (typeof taoMenuMobile === 'function') {
+            taoMenuMobile('nhatkynoitru');
+        }
+    </script>
+</body>
+</html>

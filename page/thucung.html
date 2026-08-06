@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Thú cưng - VetCare Pro</title>
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+    <script src="../js/smart-search.js"></script>
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+    <link rel="stylesheet" href="../css/smart-search.css">
+
+    <style>
+        .search-box {
+            padding: 8px 12px;
+            width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: #2563eb;
+        }
+        .card-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .modal-container {
+            width: 520px;
+            padding: 20px 24px;
+        }
+        .modal-header {
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+        }
+        .form-group-modal {
+            margin-bottom: 10px;
+        }
+        .form-group-modal label {
+            font-size: 13px;
+            margin-bottom: 3px;
+            display: block;
+            font-weight: 600;
+        }
+        .form-group-modal input {
+            padding: 7px 10px;
+            font-size: 13px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .form-row .form-group-modal {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .modal-footer {
+            margin-top: 15px;
+            padding-top: 10px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        table td:last-child, 
+        table th:last-child {
+            width: 210px;
+            text-align: center;
+        }
+        table td:last-child {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+        }
+        table td:last-child button {
+            padding: 4px 6px;
+            font-size: 11px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        /* Giao diện thanh phân trang */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            font-size: 13px;
+            color: #475569;
+        }
+        .pagination-buttons {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .pagination-buttons button {
+            padding: 5px 10px;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #334155;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .pagination-buttons button:hover:not(:disabled) {
+            background: #e2e8f0;
+        }
+        .pagination-buttons button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .pagination-buttons button.active {
+            background: #2563eb;
+            color: #fff;
+            border-color: #2563eb;
+        }
+
+        @media print {
+            body * { visibility: hidden !important; }
+            #modalNhatKyThuCung, #modalNhatKyThuCung * { visibility: visible !important; }
+            #modalNhatKyThuCung { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; background: white !important; display: block !important; z-index: 9999 !important; }
+            .modal-container { width: 100% !important; max-width: 100% !important; margin: 0 !important; box-shadow: none !important; border: none !important; }
+            #printAreaTimeline { position: relative !important; width: 95% !important; margin: 30px auto !important; background: #fff !important; color: #000 !important; }
+            .modal-header, .modal-footer, .close-modal { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+        <div id="topnav-container"></div>
+
+        <div class="content-body">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Danh sách thú cưng</h3>
+                    <div class="card-header-actions">
+                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm tên, loài, giống, màu..." onkeyup="timKiemThuCung()">
+                        <button class="btn-primary" onclick="moModalThem()">+ Thêm thú cưng mới</button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã thú cưng</th>
+                                <th>Tên thú cưng</th>
+                                <th>Loài</th>
+                                <th>Giống</th>
+                                <th>Màu lông</th>
+                                <th>Tuổi</th>
+                                <th>Cân nặng</th>
+                                <th>Danh sách chủ nuôi</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table">
+                            <!-- Dữ liệu được nạp tự động -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Thanh phân trang -->
+                <div class="pagination-container">
+                    <div id="paginationInfo">Hiển thị 0 - 0 của 0 thú cưng</div>
+                    <div class="pagination-buttons" id="paginationButtons">
+                        <!-- Các nút phân trang tự động tạo -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP FORM THÊM / SỬA THÚ CƯNG -->
+    <div class="modal-overlay" id="petModal" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thêm thú cưng mới</h3>
+                <button class="close-modal" onclick="dongModal()">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingId">
+            
+            <div class="form-group-modal">
+                <label>Tên thú cưng (*):</label>
+                <input type="text" id="tenthucung" placeholder="Nhập tên thú cưng...">
+            </div>
+            
+            <div class="form-group-modal">
+                <label>Loài:</label>
+                <input type="text" id="loai" placeholder="Ví dụ: Chó, Mèo...">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Giống:</label>
+                    <input type="text" id="giong" placeholder="Ví dụ: Poodle...">
+                </div>
+                <div class="form-group-modal">
+                    <label>Màu lông:</label>
+                    <input type="text" id="maulong" placeholder="Ví dụ: Vàng, Trắng...">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Tuổi:</label>
+                    <input type="number" id="tuoi" placeholder="Ví dụ: 2">
+                </div>
+                <div class="form-group-modal">
+                    <label>Cân nặng (kg):</label>
+                    <input type="number" step="0.1" id="cannang" placeholder="Ví dụ: 4.5">
+                </div>
+            </div>
+
+            <div class="form-group-modal" style="position: relative; margin-top: 10px;">
+                <label style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Danh sách chủ nuôi:</span>
+                    <div style="display: flex; gap: 4px;">
+                        <button type="button" onclick="hienThiKhungTimKiemChu()" style="background: #0284c7; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">+ Chọn chủ có sẵn</button>
+                        <button type="button" onclick="hienThiKhungTaoChuMoi()" style="background: #059669; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">+ Tạo chủ mới</button>
+                    </div>
+                </label>
+                
+                <div id="khungTimKiemChu" style="display: none; margin-top: 6px; padding: 8px; background: #f1f5f9; border-radius: 6px; border: 1px solid #cbd5e1; position: relative;">
+                    <div style="display: flex; gap: 6px;">
+                        <input type="text" id="inputSearchOwner" placeholder="🔍 Gõ tên hoặc SĐT chủ nuôi..." autocomplete="off" oninput="timKiemGoiYChuNuoi(this.value)" style="flex: 1; padding: 5px 8px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                        <button type="button" onclick="dongKhungTimKiemChu()" style="background: #64748b; color: white; border: none; padding: 0 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">Đóng</button>
+                    </div>
+                    <div id="ownerSuggestionsDropdown" style="display: none; position: absolute; left: 8px; right: 8px; top: 42px; background: white; border: 1px solid #cbd5e1; border-radius: 4px; max-height: 140px; overflow-y: auto; z-index: 9999; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+                </div>
+
+                <div id="khungTaoChuMoi" style="display: none; margin-top: 6px; padding: 10px; background: #ecfdf5; border-radius: 6px; border: 1px solid #10b981;">
+                    <div style="font-size: 12px; font-weight: bold; color: #065f46; margin-bottom: 6px;">✨ Thêm nhanh chủ nuôi mới vào hệ thống</div>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <input type="text" id="nhapTenChuMoi" placeholder="Họ và tên chủ nuôi (*)" style="padding: 5px 8px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                        <input type="text" id="nhapSdtChuMoi" placeholder="Số điện thoại (*)" style="padding: 5px 8px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                        <div style="display: flex; justify-content: flex-end; gap: 6px;">
+                            <button type="button" onclick="dongKhungTaoChuMoi()" style="background: #64748b; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">Hủy</button>
+                            <button type="button" onclick="luuVaThemChuMoiNhanh()" style="background: #059669; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">Lưu & Chọn chủ này</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="selectedOwnersContainer" style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px; max-height: 120px; overflow-y: auto; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc;">
+                    <span style="color: #94a3b8; font-size: 12px; padding: 2px;" id="noOwnerText">Chưa có chủ nuôi nào...</span>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="dongModal()" style="padding: 6px 14px; border: 1px solid #cbd5e1; background: #fff; border-radius: 4px; cursor: pointer;">Hủy</button>
+                <button class="btn-primary" onclick="luuThuCung()" style="padding: 6px 14px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">Lưu dữ liệu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP THÊM NHANH CHỦ NGAY TẠI BẢNG -->
+    <div class="modal-overlay" id="quickOwnerModal" style="display: none;">
+        <div class="modal-container" style="width: 400px;">
+            <div class="modal-header">
+                <h3 id="quickModalTitle">Thêm chủ cho thú cưng</h3>
+                <button class="close-modal" onclick="dongQuickModal()">&times;</button>
+            </div>
+            <input type="hidden" id="quickPetId">
+            <div class="form-group-modal" style="position: relative;">
+                <label>Tìm kiếm chủ nuôi có sẵn:</label>
+                <input type="text" id="quickSearchInput" placeholder="🔍 Gõ tên hoặc SĐT..." autocomplete="off" oninput="quickSearchOwner(this.value)">
+                <div id="quickDropdown" style="display: none; position: absolute; left: 0; right: 0; top: 60px; background: white; border: 1px solid #cbd5e1; border-radius: 4px; max-height: 130px; overflow-y: auto; z-index: 9999; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+            </div>
+            <div style="text-align: center; margin: 10px 0; color: #64748b; font-size: 12px;">Hoặc tạo mới chủ nuôi</div>
+            <div class="form-group-modal">
+                <label>Tên chủ mới:</label>
+                <input type="text" id="quickNewName" placeholder="Họ tên...">
+            </div>
+            <div class="form-group-modal">
+                <label>Số điện thoại:</label>
+                <input type="text" id="quickNewSdt" placeholder="SĐT...">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="dongQuickModal()" style="padding: 6px 12px; border: 1px solid #cbd5e1; background: #fff; border-radius: 4px; cursor: pointer;">Hủy</button>
+                <button class="btn-primary" onclick="luuQuickOwnerNew()" style="padding: 6px 12px; background: #059669; color: white; border: none; border-radius: 4px; cursor: pointer;">Tạo & Gán chủ mới</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let danhSachThuCungGoc = [];
+        let mapKhachHang = {}; 
+        let danhSachLienKetGoc = [];
+        let selectedOwnerIds = []; 
+
+        // Cấu hình phân trang
+        let currentPage = 1;
+        const pageSize = 10; // Số lượng thú cưng trên 1 trang
+        let danhSachDangHienThi = [];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const maKH = urlParams.get('makhachhang');
+            if (maKH) {
+                moModalThem(); 
+                selectedOwnerIds = [parseInt(maKH)];
+                renderSelectedOwners();
+            }
+            fetchDuLieu();
+        });
+
+        async function fetchDuLieu() {
+            try {
+                const { data: khData } = await db.from('khachhang').select('id, hovaten, sodienthoai');
+                if (khData) {
+                    khData.forEach(kh => {
+                        mapKhachHang[kh.id] = kh;
+                    });
+                }
+
+                const { data: lkData, error: lkErr } = await db.from('thucung_khachhang').select('*');
+                if (lkErr) {
+                    danhSachLienKetGoc = [];
+                } else {
+                    danhSachLienKetGoc = lkData || [];
+                }
+
+                const { data, error } = await db
+                    .from('thucung')
+                    .select('*')
+                    .order('id', { ascending: true });
+
+                if (error) {
+                    alert('Lỗi tải dữ liệu: ' + error.message);
+                } else {
+                    danhSachThuCungGoc = data || [];
+                    danhSachDangHienThi = danhSachThuCungGoc;
+                    currentPage = 1;
+                    hienThiBangPhanTrang();
+                }
+            } catch (err) {
+                console.error("Lỗi kết nối:", err);
+            }
+        }
+
+        function hienThiBangPhanTrang() {
+            const tableBody = document.getElementById('data-table');
+            tableBody.innerHTML = '';
+            
+            if(danhSachDangHienThi.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#777;">Không có dữ liệu thú cưng</td></tr>`;
+                document.getElementById('paginationInfo').innerText = `Hiển thị 0 - 0 của 0 thú cưng`;
+                document.getElementById('paginationButtons').innerHTML = '';
+                return;
+            }
+
+            const totalItems = danhSachDangHienThi.length;
+            const totalPages = Math.ceil(totalItems / pageSize);
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, totalItems);
+            const pageData = danhSachDangHienThi.slice(startIndex, endIndex);
+
+            pageData.forEach(item => {
+                const maTC = formatMaThuCung(item.id);
+                
+                const cacChuNuoi = danhSachLienKetGoc.filter(lk => {
+                    const petId = lk.thucung_id !== undefined ? lk.thucung_id : lk.mathucung;
+                    return Number(petId) === Number(item.id);
+                });
+                
+                let htmlChuNuoi = '';
+                let chuNuoiSearchStr = '';
+                
+                if (cacChuNuoi.length > 0) {
+                    htmlChuNuoi = cacChuNuoi.map(lk => {
+                        const khId = lk.makhachhang !== undefined ? lk.makhachhang : lk.khachhang_id;
+                        const kh = mapKhachHang[khId] || {};
+                        const ten = kh.hovaten || kh.tenkhachhang || 'Chưa rõ';
+                        const sdt = kh.sodienthoai || kh.sdt || '';
+                        const maKHText = formatMaKhachHang(khId);
+                        chuNuoiSearchStr += ` ${maKHText} ${ten} ${sdt}`;
+                        return `<div style="margin-bottom: 3px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #e2e8f0; padding-bottom: 2px;">
+                            <div><span style="color: #2563eb; font-weight: bold;">${maKHText}</span> - <b>${ten}</b> <span style="font-size:11px; color:#64748b;">(${sdt})</span></div>
+                            <span onclick="xoaLienKetChu(${lk.id}, ${item.id})" style="cursor: pointer; color: #dc2626; font-weight: bold; margin-left: 6px;" title="Xóa chủ này">&times;</span>
+                        </div>`;
+                    }).join('');
+                } else {
+                    htmlChuNuoi = '<span style="color: #94a3b8; font-style: italic;">Chưa có chủ nuôi</span><br>';
+                }
+
+                htmlChuNuoi += `<button type="button" onclick="moQuickOwnerModal(${item.id}, '${item.tenthucung || ''}')" style="margin-top: 4px; background: #0284c7; color: white; border: none; padding: 2px 6px; border-radius: 3px; font-size: 10px; cursor: pointer; font-weight: 600;">+ Thêm chủ</button>`;
+
+                // Lấy thông tin chủ nuôi đầu tiên để phục vụ nút Spa
+                const chuNuoiDauTien = cacChuNuoi.length > 0 ? (mapKhachHang[cacChuNuoi[0].makhachhang !== undefined ? cacChuNuoi[0].makhachhang : cacChuNuoi[0].khachhang_id] || {}) : {};
+                const idChuNuoi = cacChuNuoi.length > 0 ? (cacChuNuoi[0].makhachhang !== undefined ? cacChuNuoi[0].makhachhang : cacChuNuoi[0].khachhang_id) : '';
+                const tenChuNuoi = chuNuoiDauTien.hovaten || chuNuoiDauTien.tenkhachhang || '';
+                const sdtChuNuoi = chuNuoiDauTien.sodienthoai || chuNuoiDauTien.sdt || '';
+
+                item._searchString = `${maTC} ${item.tenthucung || ''} ${item.loai || ''} ${item.giong || ''} ${item.maulong || ''} ${chuNuoiSearchStr}`.toLowerCase();
+
+                tableBody.innerHTML += `<tr>
+                    <td><strong>${maTC}</strong></td>
+                    <td>${item.tenthucung || ''}</td>
+                    <td>${item.loai || ''}</td>
+                    <td>${item.giong || ''}</td>
+                    <td>${item.maulong || ''}</td>
+                    <td>${item.tuoi !== null && item.tuoi !== undefined ? item.tuoi : ''}</td>
+                    <td>${item.cannang !== null && item.cannang !== undefined ? item.cannang + ' kg' : ''}</td>
+                    <td>${htmlChuNuoi}</td>
+                    <td>
+                        <button class="btn-primary" style="background-color: #7c3aed; padding: 4px 6px; font-size: 11px; border-radius: 3px; border: none; cursor: pointer;" onclick="moModalNhatKy(${item.id})">Nhật ký</button>
+                        <button style="background: #0284c7; color: white;" onclick="window.location.href='nhatkylamvaccine.html?mathucung=${item.id}'">Tiêm vắc-xin</button>
+                        <button class="btn-primary" style="background: #10b981; color: white;" onclick="window.location.href='khambenh.html?mathucung=${item.id}'">Khám bệnh</button>
+                        <button class="btn-primary" style="background: #6366f1; color: white;" onclick="window.location.href='nhatkynoitru.html?mathucung=${item.id}&open_modal=true'" title="Tạo phiếu lưu trú">Lưu trú</button>
+                        <button class="btn-spa" onclick="moNhatKySpa(${item.id}, '${encodeURIComponent(item.tenthucung || '')}', '${idChuNuoi}', '${encodeURIComponent(tenChuNuoi)}', '${sdtChuNuoi}')" style="background-color: #8b5cf6; color: white; border: none; padding: 4px 6px; border-radius: 3px; cursor: pointer; font-weight: 500;">✨ Spa</button>
+                        <button class="btn-edit" style="background: #d97706; color: white;" onclick="moModalSua(${item.id})">Sửa</button>
+                        <button class="btn-delete" style="background: #dc2626; color: white;" onclick="xoaThuCung(${item.id})">Xóa</button>
+                    </td>
+                </tr>`;
+            });
+
+            document.getElementById('paginationInfo').innerText = `Hiển thị ${startIndex + 1} - ${endIndex} của ${totalItems} thú cưng`;
+            renderPaginationButtons(totalPages);
+        }
+
+        function renderPaginationButtons(totalPages) {
+            const container = document.getElementById('paginationButtons');
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>« Trước</button>`;
+            
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    html += `<button onclick="changePage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    html += `<span style="padding: 0 4px;">...</span>`;
+                }
+            }
+
+            html += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Sau »</button>`;
+            container.innerHTML = html;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            hienThiBangPhanTrang();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function timKiemThuCung() {
+            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+            danhSachDangHienThi = danhSachThuCungGoc.filter(item => {
+                return (item._searchString || '').includes(tuKhoa);
+            });
+            currentPage = 1;
+            hienThiBangPhanTrang();
+        }
+
+        function moNhatKySpa(idThucung, tenThuCungEnc, idChuNuoi, tenChuNuoiEnc, sdtChuNuoi) {
+            const tenPet = decodeURIComponent(tenThuCungEnc || '');
+            const tenChu = decodeURIComponent(tenChuNuoiEnc || '');
+            window.location.href = `nhatkyspa.html?thucung_id=${idThucung}&thucung_ten=${encodeURIComponent(tenPet)}&makhachhang=${idChuNuoi}&tenkhachhang=${encodeURIComponent(tenChu)}&sodienthoai=${sdtChuNuoi}&open_modal=true`;
+        }
+
+        /* --- XỬ LÝ THÊM NHANH CHỦ TẠI BẢNG --- */
+        function moQuickOwnerModal(petId, petName) {
+            document.getElementById('quickPetId').value = petId;
+            document.getElementById('quickModalTitle').innerText = `Thêm chủ cho: ${petName}`;
+            document.getElementById('quickSearchInput').value = '';
+            document.getElementById('quickNewName').value = '';
+            document.getElementById('quickNewSdt').value = '';
+            document.getElementById('quickDropdown').style.display = 'none';
+            document.getElementById('quickOwnerModal').style.display = 'flex';
+        }
+
+        function dongQuickModal() {
+            document.getElementById('quickOwnerModal').style.display = 'none';
+        }
+
+        async function quickSearchOwner(tuKhoa) {
+            const dropdown = document.getElementById('quickDropdown');
+            if (!tuKhoa.trim()) {
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            const { data: khList } = await db.from('khachhang')
+                .select('id, hovaten, sodienthoai')
+                .or(`hovaten.ilike.%${tuKhoa}%,sodienthoai.ilike.%${tuKhoa}%`)
+                .limit(10);
+
+            if (!khList || khList.length === 0) {
+                dropdown.innerHTML = `<div style="padding: 8px; color: #64748b; font-size: 12px; text-align: center;">Không tìm thấy chủ nuôi</div>`;
+                dropdown.style.display = 'block';
+                return;
+            }
+
+            dropdown.innerHTML = khList.map(kh => {
+                return `<div onclick="chonVaGanChu(${kh.id}, ${document.getElementById('quickPetId').value})" style="padding: 7px 10px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div><b>${kh.hovaten || 'Không tên'}</b> - SĐT: ${kh.sodienthoai || '---'}</div>
+                    <span style="font-size: 11px; color: #2563eb; font-weight: bold;">+ Chọn gán</span>
+                </div>`;
+            }).join('');
+
+            dropdown.style.display = 'block';
+        }
+
+        async function chonVaGanChu(khId, petId) {
+            const tonTai = danhSachLienKetGoc.some(lk => {
+                const pId = lk.thucung_id !== undefined ? lk.thucung_id : lk.mathucung;
+                const cId = lk.makhachhang !== undefined ? lk.makhachhang : lk.khachhang_id;
+                return Number(pId) === Number(petId) && Number(cId) === Number(khId);
+            });
+
+            if (tonTai) {
+                alert('Chủ nuôi này đã có trong danh sách của thú cưng!');
+                return;
+            }
+
+            const { error } = await db.from('thucung_khachhang').insert([{
+                thucung_id: petId,
+                makhachhang: khId
+            }]);
+
+            if (error) {
+                alert('Lỗi gán chủ nuôi: ' + error.message);
+            } else {
+                alert('Thêm chủ nuôi thành công!');
+                dongQuickModal();
+                fetchDuLieu();
+            }
+        }
+
+        async function luuQuickOwnerNew() {
+            const petId = document.getElementById('quickPetId').value;
+            const hovaten = document.getElementById('quickNewName').value.trim();
+            const sodienthoai = document.getElementById('quickNewSdt').value.trim();
+
+            if (!hovaten || !sodienthoai) {
+                alert('Vui lòng nhập đầy đủ Tên và SĐT chủ nuôi!');
+                return;
+            }
+
+            const { data, error } = await db.from('khachhang').insert([{
+                hovaten: hovaten,
+                sodienthoai: sodienthoai
+            }]).select().single();
+
+            if (error) {
+                alert('Lỗi tạo khách hàng mới: ' + error.message);
+                return;
+            }
+
+            if (data && data.id) {
+                mapKhachHang[data.id] = data;
+                await chonVaGanChu(data.id, petId);
+            }
+        }
+
+        async function xoaLienKetChu(lkId, petId) {
+            if (confirm('Bạn có chắc chắn muốn xóa chủ nuôi này khỏi thú cưng?')) {
+                let query = db.from('thucung_khachhang').delete();
+                if (lkId) {
+                    query = query.eq('id', lkId);
+                } else {
+                    query = query.eq('thucung_id', petId);
+                }
+                const { error } = await query;
+                if (error) {
+                    alert('Lỗi khi xóa liên kết: ' + error.message);
+                } else {
+                    fetchDuLieu();
+                }
+            }
+        }
+
+        function hienThiKhungTaoChuMoi() {
+            dongKhungTimKiemChu();
+            document.getElementById('khungTaoChuMoi').style.display = 'block';
+            document.getElementById('nhapTenChuMoi').value = '';
+            document.getElementById('nhapSdtChuMoi').value = '';
+            document.getElementById('nhapTenChuMoi').focus();
+        }
+
+        function dongKhungTaoChuMoi() {
+            document.getElementById('khungTaoChuMoi').style.display = 'none';
+        }
+
+        function hienThiKhungTimKiemChu() {
+            dongKhungTaoChuMoi();
+            const khung = document.getElementById('khungTimKiemChu');
+            khung.style.display = 'block';
+            document.getElementById('inputSearchOwner').focus();
+        }
+
+        function dongKhungTimKiemChu() {
+            document.getElementById('khungTimKiemChu').style.display = 'none';
+            document.getElementById('inputSearchOwner').value = '';
+            document.getElementById('ownerSuggestionsDropdown').style.display = 'none';
+        }
+
+        async function luuVaThemChuMoiNhanh() {
+            const hovaten = document.getElementById('nhapTenChuMoi').value.trim();
+            const sodienthoai = document.getElementById('nhapSdtChuMoi').value.trim();
+
+            if (!hovaten || !sodienthoai) {
+                alert('Vui lòng nhập đầy đủ Tên và Số điện thoại chủ nuôi!');
+                return;
+            }
+
+            const { data, error } = await db.from('khachhang').insert([{
+                hovaten: hovaten,
+                sodienthoai: sodienthoai
+            }]).select().single();
+
+            if (error) {
+                alert('Lỗi tạo chủ nuôi mới: ' + error.message);
+                return;
+            }
+
+            if (data && data.id) {
+                mapKhachHang[data.id] = data;
+                if (!selectedOwnerIds.includes(data.id)) {
+                    selectedOwnerIds.push(data.id);
+                }
+                alert('Tạo và thêm chủ nuôi mới thành công!');
+                dongKhungTaoChuMoi();
+                renderSelectedOwners();
+            }
+        }
+
+        function renderSelectedOwners() {
+            const container = document.getElementById('selectedOwnersContainer');
+            if (!container) return;
+
+            if (selectedOwnerIds.length === 0) {
+                container.innerHTML = `<span style="color: #94a3b8; font-size: 12px; padding: 2px;" id="noOwnerText">Chưa có chủ nuôi nào...</span>`;
+                return;
+            }
+
+            container.innerHTML = selectedOwnerIds.map(id => {
+                const kh = mapKhachHang[id] || {};
+                const khName = kh.hovaten || kh.tenkhachhang || `KH #${id}`;
+                const khSdt = kh.sodienthoai || kh.sdt || '---';
+                const maKHText = formatMaKhachHang(id);
+
+                return `<div style="display: flex; justify-content: space-between; align-items: center; background: #e0f2fe; padding: 5px 8px; border-radius: 4px; font-size: 12px;">
+                    <div>
+                        <span style="color: #0369a1; font-weight: bold;">${maKHText}</span> - <b>${khName}</b> <span style="color: #64748b;">(SĐT: ${khSdt})</span>
+                    </div>
+                    <span onclick="removeOwnerSelection(${id})" style="cursor: pointer; font-weight: bold; color: #dc2626; padding: 0 4px;" title="Xóa chủ này">&times;</span>
+                </div>`;
+            }).join('');
+        }
+
+        function addOwnerSelection(id) {
+            const numericId = parseInt(id);
+            if (!selectedOwnerIds.includes(numericId)) {
+                selectedOwnerIds.push(numericId);
+            }
+            dongKhungTimKiemChu();
+            renderSelectedOwners();
+        }
+
+        function removeOwnerSelection(id) {
+            selectedOwnerIds = selectedOwnerIds.filter(item => Number(item) !== Number(id));
+            renderSelectedOwners();
+        }
+
+        async function timKiemGoiYChuNuoi(tuKhoa) {
+            const dropdown = document.getElementById('ownerSuggestionsDropdown');
+            if (!tuKhoa.trim()) {
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            const { data: khList } = await db.from('khachhang')
+                .select('id, hovaten, sodienthoai')
+                .or(`hovaten.ilike.%${tuKhoa}%,sodienthoai.ilike.%${tuKhoa}%`)
+                .limit(10);
+
+            if (!khList || khList.length === 0) {
+                dropdown.innerHTML = `<div style="padding: 8px; color: #64748b; font-size: 12px; text-align: center;">Không tìm thấy chủ nuôi phù hợp</div>`;
+                dropdown.style.display = 'block';
+                return;
+            }
+
+            dropdown.innerHTML = khList.map(kh => {
+                const isSelected = selectedOwnerIds.includes(kh.id);
+                return `<div onclick="addOwnerSelection(${kh.id})" style="padding: 7px 10px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 12px; display: flex; justify-content: space-between; align-items: center; background: ${isSelected ? '#f1f5f9' : '#fff'};">
+                    <div><b>${kh.hovaten || 'Không tên'}</b> - SĐT: ${kh.sodienthoai || '---'}</div>
+                    <span style="font-size: 11px; color: #2563eb; font-weight: bold;">${isSelected ? 'Đã thêm ✓' : '+ Thêm'}</span>
+                </div>`;
+            }).join('');
+
+            dropdown.style.display = 'block';
+        }
+
+        function moModalThem() {
+            document.getElementById('editingId').value = '';
+            document.getElementById('tenthucung').value = '';
+            document.getElementById('loai').value = '';
+            document.getElementById('giong').value = '';
+            document.getElementById('maulong').value = '';
+            document.getElementById('tuoi').value = '';
+            document.getElementById('cannang').value = '';
+            
+            dongKhungTimKiemChu();
+            dongKhungTaoChuMoi();
+            selectedOwnerIds = [];
+            renderSelectedOwners();
+            
+            document.getElementById('modalTitle').innerText = 'Thêm thú cưng mới';
+            document.getElementById('petModal').style.display = 'flex';
+        }
+
+        function moModalSua(id) {
+            const item = danhSachThuCungGoc.find(x => Number(x.id) === Number(id));
+            if (!item) return;
+
+            document.getElementById('editingId').value = item.id;
+            document.getElementById('tenthucung').value = item.tenthucung || '';
+            document.getElementById('loai').value = item.loai || '';
+            document.getElementById('giong').value = item.giong || '';
+            document.getElementById('maulong').value = item.maulong || '';
+            document.getElementById('tuoi').value = item.tuoi !== null ? item.tuoi : '';
+            document.getElementById('cannang').value = item.cannang !== null ? item.cannang : '';
+
+            dongKhungTimKiemChu();
+            dongKhungTaoChuMoi();
+
+            const cacChuNuoi = danhSachLienKetGoc.filter(lk => {
+                const petId = lk.thucung_id !== undefined ? lk.thucung_id : lk.mathucung;
+                return Number(petId) === Number(id);
+            });
+
+            selectedOwnerIds = cacChuNuoi.map(lk => {
+                const khId = lk.makhachhang !== undefined ? lk.makhachhang : lk.khachhang_id;
+                return Number(khId);
+            }).filter(num => !isNaN(num));
+
+            renderSelectedOwners();
+            
+            document.getElementById('modalTitle').innerText = 'Cập nhật thông tin thú cưng (Mã: ' + formatMaThuCung(id) + ')';
+            document.getElementById('petModal').style.display = 'flex';
+        }
+
+        function dongModal() {
+            document.getElementById('petModal').style.display = 'none';
+        }
+
+        async function luuThuCung() {
+            const id = document.getElementById('editingId').value;
+            const tenthucung = document.getElementById('tenthucung').value.trim();
+            const loai = document.getElementById('loai').value.trim();
+            const giong = document.getElementById('giong').value.trim();
+            const maulong = document.getElementById('maulong').value.trim();
+            const tuoiStr = document.getElementById('tuoi').value.trim();
+            const cannangStr = document.getElementById('cannang').value.trim();
+
+            if (!tenthucung) {
+                alert('Vui lòng nhập tên thú cưng!');
+                return;
+            }
+
+            // Lấy chủ nuôi đầu tiên trong danh sách đang chọn để gán vào cột makhachhang chính
+            const maKhachHangChinh = selectedOwnerIds.length > 0 ? parseInt(selectedOwnerIds[0]) : null;
+
+            const payload = {
+                tenthucung,
+                loai,
+                giong,
+                maulong,
+                tuoi: tuoiStr !== "" ? parseFloat(tuoiStr) : null,
+                cannang: cannangStr !== "" ? parseFloat(cannangStr) : null,
+                makhachhang: maKhachHangChinh // 👈 Bổ sung trường này để không bị lỗi Not-Null trong Database
+            };
+
+            let petId = id;
+            if (id === "") {
+                const { data, error } = await db.from('thucung').insert([payload]).select().single();
+                if (error) {
+                    alert('Lỗi thêm dữ liệu: ' + error.message);
+                    return;
+                }
+                petId = data.id;
+            } else {
+                const { error } = await db.from('thucung').update(payload).eq('id', id);
+                if (error) {
+                    alert('Lỗi cập nhật dữ liệu: ' + error.message);
+                    return;
+                }
+                await db.from('thucung_khachhang').delete().eq('thucung_id', id);
+            }
+
+            if (selectedOwnerIds.length > 0) {
+                const payloadLienKet = selectedOwnerIds.map(maKH => ({
+                    thucung_id: petId,
+                    makhachhang: maKH
+                }));
+                await db.from('thucung_khachhang').insert(payloadLienKet);
+            }
+
+            alert('Lưu thông tin thú cưng thành công!');
+            dongModal();
+            if(window.location.search.includes('makhachhang')){
+                window.history.pushState({}, document.title, window.location.pathname);
+            }
+            fetchDuLieu();
+        }
+
+        async function xoaThuCung(id) {
+            const maTC = formatMaThuCung(id);
+            if (confirm('Bạn có chắc chắn muốn xóa thú cưng mã ' + maTC + ' này không?')) {
+                await db.from('thucung_khachhang').delete().eq('thucung_id', id);
+                
+                const { error } = await db.from('thucung').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa: ' + error.message);
+                } else {
+                    alert('Xóa thành công!');
+                    fetchDuLieu();
+                }
+            }
+        }
+
+        async function moModalNhatKy(petId) {
+            document.getElementById('modalNhatKyThuCung').style.display = 'flex';
+            const container = document.getElementById('nkNoiDungTimeline');
+            container.innerHTML = 'Đang tải dữ liệu nhật ký...';
+
+            const { data: petData } = await db.from('thucung').select('*').eq('id', petId).single();
+            
+            const cacChuNuoi = danhSachLienKetGoc.filter(lk => {
+                const petIdCol = lk.thucung_id !== undefined ? lk.thucung_id : lk.mathucung;
+                return Number(petIdCol) === Number(petId);
+            });
+
+            let chuNuoiInfoHtml = 'Chưa có thông tin chủ nuôi';
+            if (cacChuNuoi.length > 0) {
+                chuNuoiInfoHtml = cacChuNuoi.map(lk => {
+                    const khId = lk.makhachhang !== undefined ? lk.makhachhang : lk.khachhang_id;
+                    const kh = mapKhachHang[khId] || {};
+                    return `<b>${kh.hovaten || kh.tenkhachhang || 'Không rõ'}</b> (SĐT: ${kh.sodienthoai || kh.sdt || '---'})`;
+                }).join(' | ');
+            }
+
+            if (petData) {
+                document.getElementById('nkPetInfo').innerHTML = `
+                    <div style="border: 1px solid #cbd5e1; padding: 10px; border-radius: 6px; background: #f8fafc; margin-bottom: 15px; text-align: left; font-size: 13px; line-height: 1.6;">
+                        <div style="margin-bottom: 4px;"><span><b>👤 Chủ nuôi:</b> ${chuNuoiInfoHtml}</span></div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span><b>🐾 Tên thú cưng:</b> <span style="color: #2563eb; font-weight: bold;">${petData.tenthucung}</span></span>
+                            <span><b>🧬 Giống:</b> ${petData.giong || '---'}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            let htmlSuKien = [];
+
+            const { data: kbData } = await db.from('khambenh').select('*').eq('mathucung', petId);
+            if (kbData) {
+                kbData.forEach(kb => {
+                    htmlSuKien.push({
+                        ngay: kb.ngaykham || kb.created_at,
+                        html: `
+                            <div style="border: 1px solid #cbd5e1; border-left: 4px solid #2563eb; padding: 12px; margin-bottom: 12px; border-radius: 6px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
+                                    <b style="color: #2563eb; font-size: 14px;">🏥 Khám bệnh (Mã: KB${String(kb.id).padStart(4, '0')})</b>
+                                    <span style="font-size: 12px; color: #64748b; font-weight: 600;">🕒 ${kb.ngaykham ? new Date(kb.ngaykham).toLocaleString('vi-VN') : '---'}</span>
+                                </div>
+                                <div style="font-size: 13px; line-height: 1.5; color: #334155;">
+                                    - <b>Triệu chứng:</b> ${kb.trieuchung || '---'}<br>
+                                    - <b>Chuẩn đoán:</b> ${kb.chuandoan || '---'}<br>
+                                    - <b>Bác sĩ khám:</b> ${kb.bacsikham || '---'}<br>
+                                    <div style="margin-top: 6px; text-align: right; color: #dc2626; font-weight: bold;">Chi phí: ${Number(kb.tongchiphi || kb.thanhtien || 0).toLocaleString('vi-VN')} đ</div>
+                                </div>
+                            </div>`
+                    });
+                });
+            }
+
+            const { data: vcData } = await db.from('nhatkylamvaccine').select('*').eq('mathucung', petId);
+            if (vcData) {
+                vcData.forEach(vc => {
+                    htmlSuKien.push({
+                        ngay: vc.ngaytiem || vc.created_at,
+                        html: `
+                            <div style="border: 1px solid #cbd5e1; border-left: 4px solid #10b981; padding: 12px; margin-bottom: 12px; border-radius: 6px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
+                                    <b style="color: #10b981; font-size: 14px;">💉 Tiêm Vaccine: ${vc.tenvaccine || 'Tổng hợp'} (${vc.mavaccine || ''})</b>
+                                    <span style="font-size: 12px; color: #64748b; font-weight: 600;">🕒 ${vc.ngaytiem ? new Date(vc.ngaytiem).toLocaleDateString('vi-VN') : '---'}</span>
+                                </div>
+                                <div style="font-size: 13px; line-height: 1.5; color: #334155;">
+                                    - <b>Trạng thái:</b> ${vc.trangthai || 'Đã tiêm'}<br>
+                                    - <b>Ngày nhắc lại:</b> ${vc.ngaynhaclai ? new Date(vc.ngaynhaclai).toLocaleDateString('vi-VN') : 'Không có'}<br>
+                                    - <b>Bác sĩ tiêm:</b> ${vc.bacsi || '---'}<br>
+                                    <div style="margin-top: 6px; text-align: right; color: #dc2626; font-weight: bold;">Mã khám: ${vc.makhambenh ? 'KB' + String(vc.makhambenh).padStart(4, '0') : 'Không có'}</div>
+                                </div>
+                            </div>`
+                    });
+                });
+            }
+
+            if (kbData && kbData.length > 0) {
+                let kbIds = kbData.map(k => k.id);
+                const { data: ntData } = await db.from('nhatkynoitru').select('*').in('makhambenh', kbIds);
+                if (ntData) {
+                    ntData.forEach(nt => {
+                        htmlSuKien.push({
+                            ngay: nt.ngayvao,
+                            html: `
+                                <div style="border: 1px solid #cbd5e1; border-left: 4px solid #d97706; padding: 12px; margin-bottom: 12px; border-radius: 6px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
+                                        <b style="color: #d97706; font-size: 14px;">🏠 Nội trú / Lưu trú (Mã: NKNT${String(nt.id).padStart(4, '0')})</b>
+                                        <span style="font-size: 12px; color: #64748b; font-weight: 600;">🕒 Vào: ${nt.ngayvao ? new Date(nt.ngayvao).toLocaleString('vi-VN') : '---'}</span>
+                                    </div>
+                                    <div style="font-size: 13px; line-height: 1.5; color: #334155;">
+                                        - <b>Trạng thái:</b> ${nt.trangthai || '---'}<br>
+                                        - <b>Bác sĩ phụ trách:</b> ${nt.bacsiphutrach || '---'}<br>
+                                        - <b>Ghi chú:</b> ${nt.ghichu || '---'}<br>
+                                        <div style="margin-top: 6px; text-align: right; color: #dc2626; font-weight: bold;">Chi phí: ${Number(nt.tongchiphi || 0).toLocaleString('vi-VN')} đ</div>
+                                    </div>
+                                </div>`
+                        });
+                    });
+                }
+            }
+
+            htmlSuKien.sort((a, b) => new Date(b.ngay) - new Date(a.ngay));
+
+            if (htmlSuKien.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:#777; padding: 20px;">Chưa có dữ liệu nhật ký nào cho thú cưng này.</p>`;
+            } else {
+                container.innerHTML = htmlSuKien.map(x => x.html).join('');
+            }
+        }
+
+        function dongModalNhatKy() {
+            document.getElementById('modalNhatKyThuCung').style.display = 'none';
+        }
+
+        function inNhatKyThuCung() {
+            window.print();
+        }
+    </script>
+
+    <!-- POPUP XEM VÀ IN NHẬT KÝ THÚ CƯNG -->
+    <div class="modal-overlay" id="modalNhatKyThuCung" style="display: none;">
+        <div class="modal-container" style="width: 700px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>Nhật ký Y tế & Tiêm Vaccine Thú Cưng</h3>
+                <button class="close-modal" onclick="dongModalNhatKy()">&times;</button>
+            </div>
+            
+            <div class="print-header"></div>
+            <div id="printAreaTimeline" style="padding: 15px; background: #fff; color: #000; font-family: Arial, sans-serif;">
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0 0 5px 0; font-size: 16px; text-transform: uppercase; color: #1e293b;">Hồ Sơ Nhật Ký Y Tế Thú Cưng</h3>
+                    <p id="nkPetInfo" style="margin: 0; font-size: 13px; font-weight: bold; color: #2563eb;"></p>
+                </div>
+
+                <div id="nkNoiDungTimeline" style="font-size: 13px; line-height: 1.5;">
+                    <!-- Dữ liệu timeline -->
+                </div>
+            </div>
+
+            <div class="modal-footer" style="margin-top: 15px;">
+                <button class="btn-secondary" onclick="dongModalNhatKy()">Đóng</button>
+                <button class="btn-primary" onclick="inNhatKyThuCung()" style="background-color: #2563eb;">In Nhật Ký</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

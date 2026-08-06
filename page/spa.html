@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Lý Dịch Vụ Spa - VetCare Pro</title>
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	<script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+	<script src="../js/smart-search.js"></script>
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+	<link rel="stylesheet" href="../css/smart-search.css">
+
+
+   
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+       <div id="topnav-container"></div>
+
+        <div class="content-body">
+            <div class="card">
+                <div class="card-header">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <span>✨</span> Danh Sách Dịch Vụ Spa
+                    </h3>
+                    <div class="card-header-actions">
+                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm tên dịch vụ Spa..." onkeyup="timKiemSpa()">
+                        <button class="btn-primary" onclick="moModalThem()" style="background-color: #0284c7; padding: 9px 16px;">+ Thêm Dịch Vụ</button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr style="background: #1e3a8a; color: #ffffff;">
+                                <th style="padding: 10px;">Mã DV</th>
+                                <th style="padding: 10px;">Tên Dịch Vụ (tendichvu)</th>
+                                <th style="padding: 10px;">Giá Tiền (gia)</th>
+                                <th style="padding: 10px;">Ghi Chú (ghichu)</th>
+                                <th style="padding: 10px; text-align: center;">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table">
+                            <!-- Dữ liệu được nạp tự động từ Supabase -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP FORM THÊM / SỬA DỊCH VỤ SPA -->
+    <div class="modal-overlay" id="spaModal">
+        <div class="modal-container" style="width: 500px; padding: 20px;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+                <h3 id="modalTitle" style="margin:0; font-size: 16px;">Thêm dịch vụ Spa mới</h3>
+                <button class="close-modal" onclick="dongModal()" style="background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingId">
+            
+            <div class="form-group-modal" style="margin-bottom: 12px;">
+                <label style="font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">Tên dịch vụ (tendichvu) (*):</label>
+                <input type="text" id="tendichvu" placeholder="VD: Tắm cắt lông tạo kiểu, Cạo vôi răng..." style="width: 100%; padding: 8px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
+            </div>
+
+            <div class="form-group-modal" style="margin-bottom: 12px;">
+                <label style="font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">Giá tiền (gia - VNĐ) (*):</label>
+                <input type="number" id="gia" placeholder="0" style="width: 100%; padding: 8px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
+            </div>
+
+            <div class="form-group-modal" style="margin-bottom: 12px;">
+                <label style="font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">Ghi chú (ghichu):</label>
+                <textarea id="ghichu" rows="3" placeholder="Mô tả chi tiết các bước thực hiện dịch vụ..." style="width: 100%; padding: 8px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;"></textarea>
+            </div>
+
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 15px;">
+                <button type="button" class="btn-secondary" onclick="dongModal()">Hủy</button>
+                <button type="button" class="btn-primary" onclick="luuSpa()" style="background-color: #0284c7;">Lưu dữ liệu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let danhSachSpaGoc = [];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await taiDanhSachSpa();
+        });
+
+        async function taiDanhSachSpa() {
+            const { data, error } = await db.from('spa').select('*').order('id', { ascending: false });
+            if (error) {
+                console.error('Lỗi tải danh sách spa:', error);
+                alert('Không thể tải dữ liệu từ bảng spa!');
+            } else {
+                danhSachSpaGoc = data || [];
+                hienThiBang(danhSachSpaGoc);
+            }
+        }
+
+        function hienThiBang(data) {
+            const tableBody = document.getElementById('data-table');
+            tableBody.innerHTML = '';
+            
+            if(data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777; padding: 20px;">Chưa có dịch vụ Spa nào trong hệ thống</td></tr>`;
+                return;
+            }
+
+            data.forEach((item) => {
+                const maDV = 'DV' + String(item.id).padStart(4, '0');
+                tableBody.innerHTML += `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 10px; font-weight: bold; color: #1e3a8a;">${maDV}</td>
+                        <td style="padding: 10px; font-weight: 500; color: #0f172a;">${item.tendichvu || ''}</td>
+                        <td style="padding: 10px; color: #dc2626; font-weight: bold;">${Number(item.gia || 0).toLocaleString('vi-VN')} đ</td>
+                        <td style="padding: 10px; color: #64748b; font-size: 12px;">${item.ghichu || '---'}</td>
+                        <td style="padding: 10px; text-align: center; white-space: nowrap;">
+                            <button class="btn-edit" onclick="moModalSua(${item.id})" style="background: #0284c7; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; margin-right: 4px;">Sửa</button>
+                            <button class="btn-delete" onclick="xoaSpa(${item.id})" style="background: #dc2626; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer;">Xóa</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function timKiemSpa() {
+            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+            const ketQuaLoc = danhSachSpaGoc.filter(item => {
+                const tenDV = (item.tendichvu || '').toLowerCase();
+                const ghiChu = (item.ghichu || '').toLowerCase();
+                const maDV = ('dv' + String(item.id)).toLowerCase();
+                return tenDV.includes(tuKhoa) || ghiChu.includes(tuKhoa) || maDV.includes(tuKhoa);
+            });
+            hienThiBang(ketQuaLoc);
+        }
+
+        function moModalThem() {
+            document.getElementById('editingId').value = '';
+            document.getElementById('tendichvu').value = '';
+            document.getElementById('gia').value = '';
+            document.getElementById('ghichu').value = '';
+            document.getElementById('modalTitle').innerText = 'Thêm dịch vụ Spa mới';
+            document.getElementById('spaModal').style.display = 'flex';
+        }
+
+        function moModalSua(id) {
+            const item = danhSachSpaGoc.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('editingId').value = item.id;
+            document.getElementById('tendichvu').value = item.tendichvu || '';
+            document.getElementById('gia').value = item.gia || '';
+            document.getElementById('ghichu').value = item.ghichu || '';
+            document.getElementById('modalTitle').innerText = 'Cập nhật dịch vụ Spa (ID: DV' + String(id).padStart(4, '0') + ')';
+            document.getElementById('spaModal').style.display = 'flex';
+        }
+
+        function dongModal() {
+            document.getElementById('spaModal').style.display = 'none';
+        }
+
+        async function luuSpa() {
+            const id = document.getElementById('editingId').value;
+            const tendichvu = document.getElementById('tendichvu').value.trim();
+            const gia = parseFloat(document.getElementById('gia').value) || 0;
+            const ghichu = document.getElementById('ghichu').value.trim();
+
+            if (!tendichvu || !gia) {
+                alert('Vui lòng nhập Tên dịch vụ và Giá tiền!');
+                return;
+            }
+
+            const payload = { tendichvu, gia, ghichu };
+
+            if (id === "") {
+                const { error } = await db.from('spa').insert([payload]);
+                if (error) {
+                    alert('Lỗi thêm dịch vụ: ' + error.message);
+                } else {
+                    alert('Thêm dịch vụ Spa thành công!');
+                    dongModal();
+                    taiDanhSachSpa();
+                }
+            } else {
+                const { error } = await db.from('spa').update(payload).eq('id', id);
+                if (error) {
+                    alert('Lỗi cập nhật dịch vụ: ' + error.message);
+                } else {
+                    alert('Cập nhật thành công!');
+                    dongModal();
+                    taiDanhSachSpa();
+                }
+            }
+        }
+
+        async function xoaSpa(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa dịch vụ Spa này không?')) {
+                const { error } = await db.from('spa').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa: ' + error.message);
+                } else {
+                    alert('Xóa dịch vụ thành công!');
+                    taiDanhSachSpa();
+                }
+            }
+        }
+    </script>
+</body>
+</html>

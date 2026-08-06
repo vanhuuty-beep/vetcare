@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Trị Hệ Thống - VetCare Pro</title>
+    <!-- Thư viện Supabase JS và CryptoJS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+    <script src="../js/smart-search.js"></script>
+    
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+    <link rel="stylesheet" href="../css/smart-search.css">
+
+    <style>
+        /* Giao diện Tabs chuyển đổi */
+        .tab-navigation {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        .tab-btn {
+            background: #f1f5f9;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #475569;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: #0284c7;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.2);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Thống kê nhỏ */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #ffffff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid #2563eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stat-card:nth-child(2) { border-left-color: #059669; }
+        .stat-card:nth-child(3) { border-left-color: #d97706; }
+        .stat-title { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: bold; margin-bottom: 5px; }
+        .stat-value { font-size: 20px; font-weight: bold; color: #1e293b; }
+
+        .search-box {
+            padding: 8px 12px;
+            width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 13px;
+            outline: none;
+        }
+        .search-box:focus { border-color: #2563eb; }
+
+        /* Modal tùy chỉnh */
+        .modal-container { width: 500px; padding: 20px 24px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .form-group-modal { margin-bottom: 12px; }
+        .form-group-modal label { font-size: 13px; margin-bottom: 4px; display: block; font-weight: 500; }
+        .form-group-modal input, .form-group-modal select { width: 100%; padding: 8px 10px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .modal-footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; }
+        
+        .btn-approve { background-color: #059669; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-approve:hover { background-color: #047857; }
+        .btn-reject { background-color: #dc2626; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 4px; }
+        .btn-reject:hover { background-color: #b91c1c; }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+        <div id="topnav-container"></div>
+
+        <div class="content-body">
+            <!-- THANH CHUYỂN TAB -->
+            <div class="tab-navigation">
+                <button class="tab-btn active" onclick="chuyenTab('tabChuPK', this)">🏥 Quản Lý Chủ Phòng Khám</button>
+                <button class="tab-btn" onclick="chuyenTab('tabThanhToan', this)">💳 Duyệt Giao Dịch & Bản Quyền</button>
+            </div>
+
+            <!-- TAB 1: QUẢN LÝ CHỦ PHÒNG KHÁM -->
+            <div id="tabChuPK" class="tab-content active">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 style="margin: 0;">Danh Sách Chủ Phòng Khám Hệ Thống</h3>
+                        <div class="card-header-actions" style="display: flex; gap: 10px; align-items: center;">
+                            <input type="text" id="searchPKInput" class="search-box" placeholder="Tìm tên PK, chủ PK, SĐT..." onkeyup="timKiemPK()">
+                            <button class="btn-primary" onclick="moModalThemPK()" style="background-color: #0284c7;">+ Thêm Phòng Khám</button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr style="background: #1e3a8a; color: white;">
+                                    <th>ID</th>
+                                    <th>Logo</th>
+                                    <th>Mã PK</th>
+                                    <th>Tên Phòng Khám</th>
+                                    <th>Chủ Phòng Khám</th>
+                                    <th>Số Điện Thoại</th>
+                                    <th>Hạn App</th>
+                                    <th>Trạng Thái</th>
+                                    <th style="text-align: center;">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-pk-body">
+                                <!-- Nạp tự động từ Supabase -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: QUẢN LÝ THANH TOÁN & GIA HẠN -->
+            <div id="tabThanhToan" class="tab-content">
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div>
+                            <div class="stat-title">Giao dịch chờ duyệt</div>
+                            <div class="stat-value" id="statChoDuyet" style="color: #d97706;">0</div>
+                        </div>
+                        <div style="font-size: 24px;">⏳</div>
+                    </div>
+                    <div class="stat-card">
+                        <div>
+                            <div class="stat-title">Tổng doanh thu bản quyền</div>
+                            <div class="stat-value" id="statDoanhThu" style="color: #059669;">0 đ</div>
+                        </div>
+                        <div style="font-size: 24px;">💰</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 style="margin: 0;">Lịch Sử Giao Dịch & Duyệt Gia Hạn</h3>
+                        <div class="card-header-actions">
+                            <input type="text" id="searchGDInput" class="search-box" placeholder="Tìm kiếm giao dịch..." onkeyup="timKiemGD()">
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr style="background: #1e3a8a; color: white;">
+                                    <th>Mã GD</th>
+                                    <th>Phòng Khám</th>
+                                    <th>Gói Dịch Vụ</th>
+                                    <th>Số Tiền</th>
+                                    <th>Thời Gian</th>
+                                    <th style="text-align: center;">Trạng Thái</th>
+                                    <th style="text-align: center;">Hành Động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-gd-body">
+                                <!-- Nạp tự động từ Supabase -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- POPUP THÊM / SỬA PHÒNG KHÁM -->
+    <div class="modal-overlay" id="pkModal" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalPKTitle" style="margin:0; font-size: 16px;">Thêm phòng khám mới</h3>
+                <button class="close-modal" onclick="dongModalPK()" style="background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingPKId">
+            
+            <div class="form-group-modal">
+                <label>Tên Phòng Khám (*):</label>
+                <input type="text" id="modalTenPK" placeholder="Nhập tên phòng khám...">
+            </div>
+
+            <div class="form-group-modal">
+                <label>Họ và Tên Chủ Phòng Khám (*):</label>
+                <input type="text" id="modalHoVaten" placeholder="Nhập tên chủ phòng khám...">
+            </div>
+
+            <div class="form-group-modal">
+                <label>Số Điện Thoại (Đăng nhập) (*):</label>
+                <input type="text" id="modalSdt" placeholder="Nhập số điện thoại...">
+            </div>
+
+            <div class="form-group-modal">
+                <label>Mật Khẩu (*):</label>
+                <input type="password" id="modalMatKhau" placeholder="Nhập mật khẩu...">
+            </div>
+
+            <div class="form-group-modal">
+                <label>Ngày Hết Hạn App:</label>
+                <input type="date" id="modalNgayHetHan">
+            </div>
+
+            <div class="form-group-modal">
+                <label>Trạng Thái:</label>
+                <select id="modalTrangThaiPK">
+                    <option value="Hoạt động">Hoạt động</option>
+                    <option value="Khóa">Khóa tài khoản</option>
+                </select>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="dongModalPK()">Hủy</button>
+                <button class="btn-primary" onclick="luuPhongKham()">Lưu dữ liệu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let danhSachPK = [];
+        let danhSachGD = [];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await taiDanhSachPK();
+            await taiDanhSachGD();
+        });
+
+        // Chuyển đổi giữa các tab
+        function chuyenTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            btnElement.classList.add('active');
+        }
+
+        // --- 1. QUẢN LÝ CHỦ PHÒNG KHÁM ---
+        async function taiDanhSachPK() {
+            const { data, error } = await db.from('chupk').select('*').order('id', { ascending: false });
+            if (!error) {
+                danhSachPK = data || [];
+                hienThiBangPK(danhSachPK);
+            }
+        }
+
+        function hienThiBangPK(data) {
+            const tbody = document.getElementById('table-pk-body');
+            tbody.innerHTML = '';
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#777; padding: 20px;">Chưa có phòng khám nào</td></tr>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const logoHtml = item.logo ? `<img src="${item.logo}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">` : '🏥';
+                const ngayHetHan = item.ngayhethan ? new Date(item.ngayhethan).toLocaleDateString('vi-VN') : '---';
+                const trangThaiBadge = item.trangthai === 'Khóa' ? `<span style="color: red;">Khóa</span>` : `<span style="color: green;">Hoạt động</span>`;
+
+                tbody.innerHTML += `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 10px;">#${item.id}</td>
+                        <td style="padding: 10px; text-align: center;">${logoHtml}</td>
+                        <td style="padding: 10px; font-weight: bold; color: #0284c7;">${item.maphongkham || ''}</td>
+                        <td style="padding: 10px; font-weight: bold;">${item.tenphongkham || ''}</td>
+                        <td style="padding: 10px;">${item.hovaten || ''}</td>
+                        <td style="padding: 10px;">${item.sodienthoai || ''}</td>
+                        <td style="padding: 10px; font-weight: 500;">${ngayHetHan}</td>
+                        <td style="padding: 10px;">${trangThaiBadge}</td>
+                        <td style="padding: 10px; text-align: center;">
+                            <button class="btn-edit" onclick="moModalSuaPK(${item.id})" style="background: #0284c7; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer;">Sửa</button>
+                            <button class="btn-delete" onclick="xoaPK(${item.id})" style="background: #dc2626; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; margin-left: 4px;">Xóa</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function moModalThemPK() {
+            document.getElementById('editingPKId').value = '';
+            document.getElementById('modalTenPK').value = '';
+            document.getElementById('modalHoVaten').value = '';
+            document.getElementById('modalSdt').value = '';
+            document.getElementById('modalMatKhau').value = '';
+            document.getElementById('modalNgayHetHan').value = '';
+            document.getElementById('modalPKTitle').innerText = 'Thêm phòng khám mới';
+            document.getElementById('pkModal').style.display = 'flex';
+        }
+
+        function moModalSuaPK(id) {
+            const item = danhSachPK.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('editingPKId').value = item.id;
+            document.getElementById('modalTenPK').value = item.tenphongkham || '';
+            document.getElementById('modalHoVaten').value = item.hovaten || '';
+            document.getElementById('modalSdt').value = item.sodienthoai || '';
+            document.getElementById('modalMatKhau').value = ''; // Để trống nếu không muốn đổi mật khẩu
+            document.getElementById('modalNgayHetHan').value = item.ngayhethan ? item.ngayhethan.split('T')[0] : '';
+            document.getElementById('modalTrangThaiPK').value = item.trangthai || 'Hoạt động';
+            document.getElementById('modalPKTitle').innerText = 'Cập nhật phòng khám (ID: #' + id + ')';
+            document.getElementById('pkModal').style.display = 'flex';
+        }
+
+        function dongModalPK() {
+            document.getElementById('pkModal').style.display = 'none';
+        }
+
+        async function luuPhongKham() {
+            const id = document.getElementById('editingPKId').value;
+            const tenphongkham = document.getElementById('modalTenPK').value.trim();
+            const hovaten = document.getElementById('modalHoVaten').value.trim();
+            const sodienthoai = document.getElementById('modalSdt').value.trim();
+            const matkhauRaw = document.getElementById('modalMatKhau').value.trim();
+            const ngayhethan = document.getElementById('modalNgayHetHan').value;
+            const trangthai = document.getElementById('modalTrangThaiPK').value;
+
+            if (!tenphongkham || !hovaten || !sodienthoai) {
+                alert('Vui lòng điền đầy đủ các thông tin bắt buộc!');
+                return;
+            }
+
+            if (id === "" && !matkhauRaw) {
+                alert('Vui lòng nhập mật khẩu cho tài khoản mới!');
+                return;
+            }
+
+            let payload = { tenphongkham, hovaten, sodienthoai, trangthai };
+            if (ngayhethan) payload.ngayhethan = new Date(ngayhethan).toISOString();
+            if (matkhauRaw) payload.matkhau = CryptoJS.MD5(matkhauRaw).toString();
+
+            if (id === "") {
+                payload.maphongkham = 'PK_' + Math.floor(100000 + Math.random() * 900000);
+                payload.vaitro = 'Chủ phòng khám';
+                payload.ngaytao = new Date().toISOString();
+                
+                const { error } = await db.from('chupk').insert([payload]);
+                if (error) alert('Lỗi thêm: ' + error.message);
+                else { alert('Thêm phòng khám thành công!'); dongModalPK(); taiDanhSachPK(); }
+            } else {
+                const { error } = await db.from('chupk').update(payload).eq('id', id);
+                if (error) alert('Lỗi cập nhật: ' + error.message);
+                else { alert('Cập nhật thành công!'); dongModalPK(); taiDanhSachPK(); }
+            }
+        }
+
+        async function xoaPK(id) {
+            if (confirm('Bạn có chắc muốn xóa phòng khám này không?')) {
+                const { error } = await db.from('chupk').delete().eq('id', id);
+                if (!error) { alert('Đã xóa!'); taiDanhSachPK(); }
+            }
+        }
+
+        // --- 2. QUẢN LÝ THANH TOÁN & DUYỆT GIA HẠN ---
+        async function taiDanhSachGD() {
+            const { data, error } = await db.from('lichsuthanhtoan').select('*').order('id', { ascending: false });
+            if (!error) {
+                danhSachGD = data || [];
+                tinhToanThongKeGD(danhSachGD);
+                hienThiBangGD(danhSachGD);
+            }
+        }
+
+        function tinhToanThongKeGD(data) {
+            let choDuyet = 0;
+            let doanhThu = 0;
+            data.forEach(item => {
+                if (item.trangthai === 'Chờ duyệt') choDuyet++;
+                if (item.trangthai === 'Thành công' || item.trangthai === 'Đã duyệt') doanhThu += parseFloat(item.sotien) || 0;
+            });
+            document.getElementById('statChoDuyet').innerText = choDuyet;
+            document.getElementById('statDoanhThu').innerText = doanhThu.toLocaleString('vi-VN') + ' đ';
+        }
+
+        function hienThiBangGD(data) {
+            const tbody = document.getElementById('table-gd-body');
+            tbody.innerHTML = '';
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#777; padding: 20px;">Chưa có giao dịch nào</td></tr>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const ngayGD = item.created_at ? new Date(item.created_at).toLocaleString('vi-VN') : '---';
+                let trangThaiBadge = `<span style="background: #fef3c7; color: #d97706; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">⏳ Chờ duyệt</span>`;
+                if (item.trangthai === 'Thành công' || item.trangthai === 'Đã duyệt') {
+                    trangThaiBadge = `<span style="background: #dcfce7; color: #15803d; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">✅ Thành công</span>`;
+                } else if (item.trangthai === 'Hủy') {
+                    trangThaiBadge = `<span style="background: #fee2e2; color: #dc2626; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">❌ Đã hủy</span>`;
+                }
+
+                let actionHtml = `<span style="color: #64748b; font-size: 12px;">Đã xử lý</span>`;
+                if (item.trangthai === 'Chờ duyệt') {
+                    actionHtml = `
+                        <button class="btn-approve" onclick="duyetGiaoDich(${item.id}, '${item.maphongkham}', '${item.goidichvu}')">✔ Duyệt</button>
+                        <button class="btn-reject" onclick="huyGiaoDich(${item.id})">✖ Hủy</button>
+                    `;
+                }
+
+                tbody.innerHTML += `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 10px; font-weight: bold; color: #1e3a8a;">${item.magiaodich || ('GD' + item.id)}</td>
+                        <td style="padding: 10px;"><b>${item.tenphongkham || '---'}</b><br><span style="font-size: 11px; color: #0284c7;">${item.maphongkham || ''}</span></td>
+                        <td style="padding: 10px; font-weight: 500;">${item.goidichvu || ''}</td>
+                        <td style="padding: 10px; font-weight: bold; color: #dc2626;">${Number(item.sotien || 0).toLocaleString('vi-VN')} đ</td>
+                        <td style="padding: 10px; font-size: 12px; color: #64748b;">${ngayGD}</td>
+                        <td style="padding: 10px; text-align: center;">${trangThaiBadge}</td>
+                        <td style="padding: 10px; text-align: center; white-space: nowrap;">${actionHtml}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function duyetGiaoDich(idGD, maPK, goiDV) {
+            if (!confirm(`Xác nhận duyệt giao dịch cho phòng khám [${maPK}]?`)) return;
+
+            try {
+                let { data: pkData } = await db.from('chupk').select('*').eq('maphongkham', maPK).maybeSingle();
+                if (!pkData) { alert('Không tìm thấy phòng khám!'); return; }
+
+                let soThang = 6;
+                const goiLower = (goiDV || '').toLowerCase();
+                if (goiLower.includes('1 năm') || goiLower.includes('12 tháng')) soThang = 12;
+                else if (goiLower.includes('2 năm') || goiLower.includes('24 tháng')) soThang = 24;
+
+                let hanCu = pkData.ngayhethan ? new Date(pkData.ngayhethan) : new Date();
+                let now = new Date();
+                let gocHan = hanCu > now ? hanCu : now;
+                gocHan.setMonth(gocHan.getMonth() + soThang);
+
+                await db.from('chupk').update({ ngayhethan: gocHan.toISOString(), trangthai: 'Hoạt động' }).eq('maphongkham', maPK);
+                await db.from('lichsuthanhtoan').update({ trangthai: 'Thành công' }).eq('id', idGD);
+
+                alert(`🎉 Duyệt thành công! Đã cộng thêm ${soThang} tháng cho phòng khám.`);
+                await taiDanhSachGD();
+                await taiDanhSachPK();
+            } catch (err) {
+                alert('Lỗi: ' + err.message);
+            }
+        }
+
+        async function huyGiaoDich(idGD) {
+            if (!confirm('Hủy giao dịch này?')) return;
+            await db.from('lichsuthanhtoan').update({ trangthai: 'Hủy' }).eq('id', idGD);
+            await taiDanhSachGD();
+        }
+
+        function timKiemPK() {
+            const kw = document.getElementById('searchPKInput').value.toLowerCase().trim();
+            const res = danhSachPK.filter(x => (x.tenphongkham||'').toLowerCase().includes(kw) || (x.hovaten||'').toLowerCase().includes(kw) || (x.sodienthoai||'').toLowerCase().includes(kw));
+            hienThiBangPK(res);
+        }
+
+        function timKiemGD() {
+            const kw = document.getElementById('searchGDInput').value.toLowerCase().trim();
+            const res = danhSachGD.filter(x => (x.tenphongkham||'').toLowerCase().includes(kw) || (x.maphongkham||'').toLowerCase().includes(kw));
+            hienThiBangGD(res);
+        }
+    </script>
+</body>
+</html>

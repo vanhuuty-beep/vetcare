@@ -1,0 +1,40 @@
+/* --- TÙY BIẾN THANH TRƯỢT SIÊU NHỎ VÀ TRONG SUỐT --- */
+/* Dành cho trình duyệt WebKit (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+    width: 5px;  /* Độ rộng thanh trượt dọc rất nhỏ */
+    height: 5px; /* Độ rộng thanh trượt ngang */
+}
+
+::-webkit-scrollbar-track {
+    background: transparent; /* Màu nền của thanh trượt (trong suốt) */
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15); /* Màu của cục trượt (mờ nhạt gần như không thấy) */
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3); /* Khi di chuột vào mới hiện rõ hơn một chút */
+}
+
+/* Dành cho Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+/* Kiểu cho tiêu đề phân nhóm */
+.menu-category {
+    font-size: 11px;
+    font-weight: bold;
+    color: #a0aec0;
+    padding: 12px 15px 4px 15px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    list-style: none;
+}
+
+/* Thụt lề nhẹ cho các mục con trong nhóm */
+.menu-item.sub-item {
+    padding-left: 25px;
+}
