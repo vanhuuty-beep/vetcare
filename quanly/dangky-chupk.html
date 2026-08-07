@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng ký Chủ Phòng Khám - VetCare Pro</title>
-    <!-- Thư viện Supabase JS và CryptoJS (Mã hóa mật khẩu) -->
+    <!-- Thư viện Supabase JS và CryptoJS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="../js/env.js"></script>
@@ -18,8 +18,17 @@
     <link rel="stylesheet" href="../css/style1.css">
     <link rel="stylesheet" href="../css/smart-search.css">
     <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #cbd5e1;
+            --bg-page: #f1f5f9;
+        }
+
         body {
-            background: #f8fafc;
+            background: var(--bg-page);
             margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
@@ -27,37 +36,44 @@
             align-items: center;
             min-height: 100vh;
             padding: 20px;
+            color: var(--text-main);
         }
+
         .register-card {
             background: #ffffff;
             width: 100%;
-            max-width: 480px;
-            padding: 32px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            max-width: 500px;
+            padding: 35px 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             border: 1px solid #e2e8f0;
             box-sizing: border-box;
-            max-height: 90vh;
+            max-height: 95vh;
             overflow-y: auto;
         }
+
         .register-header {
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 25px;
         }
+
         .register-header h2 {
             margin: 0 0 6px 0;
-            color: #1e3a8a;
-            font-size: 22px;
-            font-weight: 700;
+            color: var(--primary);
+            font-size: 24px;
+            font-weight: 800;
         }
+
         .register-header p {
             margin: 0;
-            color: #64748b;
+            color: var(--text-secondary);
             font-size: 13px;
         }
+
         .form-group {
             margin-bottom: 16px;
         }
+
         .form-group label {
             display: block;
             font-size: 13px;
@@ -65,25 +81,34 @@
             color: #334155;
             margin-bottom: 6px;
         }
+
         .form-control {
             width: 100%;
             padding: 11px 14px;
             font-size: 14px;
-            border: 1px solid #cbd5e1;
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             outline: none;
             box-sizing: border-box;
             background: #ffffff;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
+
         .form-control:focus {
-            border-color: #0284c7;
-            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
         }
+
+        input[type="file"].form-control {
+            padding: 8px 12px;
+            background: #f8fafc;
+            cursor: pointer;
+        }
+
         .btn-register {
             width: 100%;
             padding: 12px;
-            background: #0284c7;
+            background: var(--primary);
             color: white;
             border: none;
             border-radius: 8px;
@@ -91,21 +116,26 @@
             font-weight: 600;
             cursor: pointer;
             margin-top: 10px;
-            transition: background 0.2s;
+            transition: background 0.2s ease;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         }
+
         .btn-register:hover {
-            background: #0369a1;
+            background: var(--primary-dark);
         }
+
         .back-login {
             text-align: center;
-            margin-top: 18px;
+            margin-top: 20px;
             font-size: 13px;
         }
+
         .back-login a {
-            color: #0284c7;
+            color: var(--primary);
             text-decoration: none;
             font-weight: 600;
         }
+
         .back-login a:hover {
             text-decoration: underline;
         }
@@ -131,24 +161,24 @@
             </div>
 
             <div class="form-group">
-                <label>Số Điện Thoại (Dùng để đăng nhập) (*):</label>
+                <label>Số Điện Thoại (Đăng nhập) (*):</label>
                 <input type="text" id="sodienthoai" class="form-control" placeholder="Ví dụ: 0905123456" required>
             </div>
 
             <div class="form-group">
                 <label>Mật Khẩu (*):</label>
-                <input type="password" id="matkhau" class="form-control" placeholder="Nhập mật khẩu..." required>
+                <input type="password" id="matkhau" class="form-control" placeholder="Nhập mật khẩu bảo mật..." required>
             </div>
 
             <div class="form-group">
                 <label>Tải Lên Logo Phòng Khám (Chọn file ảnh):</label>
                 <input type="file" id="logoFile" class="form-control" accept="image/*">
-                <small style="color: #64748b; font-size: 11px;">Ảnh sẽ tự động upload lên Supabase Storage (Bucket: logo).</small>
+                <small style="color: var(--text-secondary); font-size: 11px; margin-top: 4px; display: block;">Ảnh sẽ tự động upload lên Supabase Storage (Bucket: logo).</small>
             </div>
 
             <div class="form-group">
-                <label>Địa Chỉ Phòng Khám:</label>
-                <input type="text" id="diachi" class="form-control" placeholder="Ví dụ: 123 Nguyễn Văn Linh, Đà Nẵng">
+                <label>Địa Chỉ Phòng Khám (*):</label>
+                <input type="text" id="diachi" class="form-control" placeholder="Ví dụ: 123 Nguyễn Văn Linh, Đà Nẵng" required>
             </div>
 
             <button type="submit" id="btnSubmit" class="btn-register">Đăng Ký Tài Khoản</button>
@@ -171,11 +201,16 @@
             const diachi = document.getElementById('diachi').value.trim();
             const btn = document.getElementById('btnSubmit');
 
+            // Kiểm tra bổ sung chống bỏ trống địa chỉ
+            if (!diachi) {
+                alert('Vui lòng nhập Địa chỉ phòng khám!');
+                return;
+            }
+
             btn.disabled = true;
             btn.textContent = 'Đang xử lý tạo tài khoản...';
 
             try {
-                // Kiểm tra số điện thoại đã tồn tại chưa[cite: 2]
                 let { data: checkExist } = await db.from('chupk')
                     .select('sodienthoai')
                     .eq('sodienthoai', sodienthoai)
@@ -190,7 +225,6 @@
 
                 let logoUrl = '';
 
-                // Xử lý upload file logo lên Supabase Storage (Bucket: logo)[cite: 2]
                 if (fileInput.files && fileInput.files[0]) {
                     const file = fileInput.files[0];
                     const fileExt = file.name.split('.').pop();
@@ -206,15 +240,12 @@
                     logoUrl = publicURLData.publicUrl;
                 }
 
-                // Tự sinh mã phòng khám độc lập[cite: 2]
                 const autoMaPK = 'PK_' + Math.floor(100000 + Math.random() * 900000);
 
-                // Cấp 30 ngày dùng thử (trải nghiệm sản phẩm) cho tài khoản mới đăng ký
                 const ngayHienTai = new Date();
                 const ngayHetHanMacDinh = new Date();
                 ngayHetHanMacDinh.setDate(ngayHienTai.getDate() + 30);
 
-                // Mã hóa mật khẩu an toàn bằng MD5[cite: 2]
                 const hashedPassword = CryptoJS.MD5(matkhauRaw).toString();
 
                 const payload = {
