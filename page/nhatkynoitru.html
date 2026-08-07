@@ -362,9 +362,7 @@
             const maKBParam = urlParams.get('makhambenh');
             const maTCParam = urlParams.get('mathucung');
 
-            if (maKBParam) {
-                document.getElementById('makhambenh').value = maKBParam;
-            }
+            // Tải dữ liệu hệ thống trước
             await fetchDuLieuBanDau();
 
             // Đăng ký Realtime tự động đồng bộ khi có thay đổi từ thiết bị khác
@@ -376,8 +374,25 @@
                   .subscribe();
             }
 
+            // NẾU ĐƯỢC GỌI TỪ NÚT "NHẬP VIỆN" Ở KHÁM BỆNH HOẶC "LƯU TRÚ" Ở THÚ CƯNG
             if (maKBParam || maTCParam) {
                 moModalThem();
+                
+                if (maKBParam) {
+                    document.getElementById('makhambenh').value = maKBParam;
+                    // Tự động dò tìm xem mã khám bệnh này thuộc thú cưng nào để gán luôn cho tiện
+                    if (mapKhamBenh[maKBParam]) {
+                        // Nếu map khám bệnh đã lưu sẵn thông tin thú cưng
+                        const petInfo = mapKhamBenh[maKBParam];
+                        // Tìm ID thú cưng tương ứng trong danh sách search
+                        const matchedPet = dsThuCungChoSearch.find(x => x.label.includes(petInfo.tenthucung));
+                        if (matchedPet) {
+                            document.getElementById('mathucung').value = matchedPet.value;
+                            document.getElementById('thucung_search').value = matchedPet.label;
+                        }
+                    }
+                }
+
                 if (maTCParam) {
                     document.getElementById('mathucung').value = maTCParam;
                     const tcItem = dsThuCungChoSearch.find(x => x.value == maTCParam);
@@ -387,6 +402,37 @@
                 }
             }
         });
+
+        function moModalThem() {
+            document.getElementById('editingId').value = '';
+            
+            // Giữ lại mã khám bệnh nếu được truyền từ trang Khám bệnh qua, nếu không thì để trống (vì mã khám không bắt buộc)
+            const urlParams = new URLSearchParams(window.location.search);
+            const maKBParam = urlParams.get('makhambenh');
+            if (!maKBParam) {
+                document.getElementById('makhambenh').value = '';
+            }
+
+            document.getElementById('mathucung').value = '';
+            document.getElementById('thucung_search').value = '';
+            document.getElementById('malong').value = '';
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('ngayvao').value = today;
+            document.getElementById('ngayra').value = '';
+            
+            document.getElementById('bacsiphutrach').value = '';
+            document.getElementById('trangthai').value = 'Đang nằm viện';
+            document.getElementById('chiphingay').value = '';
+            document.getElementById('tongchiphi').value = '';
+            document.getElementById('tamung').value = '0';
+            document.getElementById('thanhtien').value = '0';
+            document.getElementById('ghichu').value = '';
+            
+            tinhUocTinh();
+            document.getElementById('modalTitle').innerText = 'Lập hồ sơ nội trú mới';
+            document.getElementById('nhatKyNoiTruModal').style.display = 'flex';
+        }
 
         async function fetchDuLieuBanDau() {
             // 1. Tải Khách hàng
@@ -672,17 +718,49 @@
         async function capNhatTrangThaiPC(id, trangThaiMoi, maLong) {
             if (typeof db === 'undefined' || !db) return;
 
+            // Tìm record hiện tại trong danh sách để lấy thông tin ngày vào và chi phí
+            const itemCu = danhSachNhatKyGoc.find(x => x.id === id);
+            if (!itemCu) return;
+
+            let updateData = { trangthai: trangThaiMoi };
+
+            // NẾU CHUYỂN SANG TRẠNG THÁI "ĐÃ XUẤT VIỆN"
+            if (trangThaiMoi === 'Đã xuất viện') {
+                // Lấy ngày hiện tại định dạng YYYY-MM-DD
+                const todayStr = new Date().toISOString().split('T')[0];
+                updateData.ngayra = todayStr;
+
+                // Tự động tính toán lại số ngày lưu trú và tiền nếu có ngày vào và chi phí ngày
+                if (itemCu.ngayvao) {
+                    const ngayVaoObj = new Date(itemCu.ngayvao);
+                    const ngayRaObj = new Date(todayStr);
+                    const diffTime = ngayRaObj - ngayVaoObj;
+                    let diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1; // Công thức tính trọn vẹn ngày
+                    if (diffDays <= 0) diffDays = 1;
+
+                    const chiPhiNgay = parseFloat(itemCu.chiphingay) || 0;
+                    const tongChiPhiMoi = diffDays * chiPhiNgay;
+                    const tamUng = parseFloat(itemCu.tamung) || 0;
+
+                    updateData.tongchiphi = tongChiPhiMoi;
+                    updateData.thanhtien = tongChiPhiMoi - tamUng;
+                }
+            }
+
+            // Thực hiện update lên cơ sở dữ liệu Supabase
             const { error } = await db
                 .from('nhatkynoitru')
-                .update({ trangthai: trangThaiMoi })
+                .update(updateData)
                 .eq('id', id);
 
             if (error) {
                 alert('Lỗi cập nhật trạng thái: ' + error.message);
             } else {
+                // Nếu xuất viện thành công, giải phóng lồng thành 'Trống'
                 if (trangThaiMoi === 'Đã xuất viện' && maLong) {
                     await db.from('noitru').update({ trangthai: 'Trống' }).eq('id', maLong);
                 }
+                alert('Đã cập nhật xuất viện, tự động tính toán ngày ra và viện phí thành công!');
                 await fetchDuLieuBanDau();
             }
         }
@@ -731,13 +809,28 @@
 
             document.getElementById('editingId').value = item.id;
             document.getElementById('makhambenh').value = item.makhambenh || '';
-            document.getElementById('mathucung').value = item.mathucung || '';
 
-            if (item.mathucung && mapThuCung[item.mathucung]) {
-                const t = mapThuCung[item.mathucung];
+            // TÌM KIẾM VÀ GÁN ID THÚ CƯNG LINH HOẠT (ƯU TIÊN MATHUCUNG, NẾU KHÔNG CÓ THÌ LẤY TỪ MAKHAMBENH)
+            let maThuCungChinhXac = item.mathucung;
+            if (!maThuCungChinhXac && item.makhambenh && mapKhamBenh[item.makhambenh]) {
+                // Nếu bảng nhật ký chưa có mathucung nhưng có makhambenh, cố gắng tra ngược lại
+                // (hoặc bạn có thể map từ thông tin khám bệnh nếu có lưu ID pet bên đó)
+            }
+
+            document.getElementById('mathucung').value = maThuCungChinhXac || '';
+
+            // GÁN TÊN THÚ CƯNG VÀO Ô INPUT TÌM KIẾM ĐỂ HIỂN THỊ CHÍNH XÁC
+            if (maThuCungChinhXac && mapThuCung[maThuCungChinhXac]) {
+                const t = mapThuCung[maThuCungChinhXac];
                 document.getElementById('thucung_search').value = `${t.tenthucung} (Chủ: ${t.tenchu})`;
             } else {
-                document.getElementById('thucung_search').value = '';
+                // Thử tìm theo danh sách search nếu tìm thấy ID khớp
+                const foundItem = dsThuCungChoSearch.find(x => x.value == maThuCungChinhXac);
+                if (foundItem) {
+                    document.getElementById('thucung_search').value = foundItem.label;
+                } else {
+                    document.getElementById('thucung_search').value = '';
+                }
             }
             
             const selectLong = document.getElementById('malong');
