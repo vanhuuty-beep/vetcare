@@ -11,9 +11,7 @@
     <script src="../js/supabase.js"></script>
     <script src="../js/utils.js"></script>
     <script src="../js/menu.js"></script>
-	<script src="../js/smart-search.js"></script>
 
-    
     <!-- Thư viện quét mã vạch qua Camera (Html5Qrcode) -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
@@ -21,7 +19,6 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/mobile.css">
     <link rel="stylesheet" href="../css/style1.css">
-	<link rel="stylesheet" href="../css/smart-search.css">
 
     <style>
         :root {
@@ -38,7 +35,6 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* BỐ CỤC 2 CỘT: TRÁI LÀ SẢN PHẨM, PHẢI LÀ GIỎ HÀNG & BILL CHỜ */
         .pos-container {
             display: grid;
             grid-template-columns: 1.4fr 1fr;
@@ -65,14 +61,13 @@
             height: calc(100vh - 85px);
         }
 
-        /* CỘT 1: TÌM KIẾM & LƯỚI SẢN PHẨM */
         .product-section {
             padding: 12px;
         }
         .search-scan-group {
             display: flex;
             gap: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
         .pos-search-box {
             position: relative;
@@ -114,12 +109,41 @@
             white-space: nowrap;
         }
 
+        .category-tabs-container {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+            scrollbar-width: thin;
+        }
+        .category-tab-btn {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #475569;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .category-tab-btn:hover {
+            background: #e2e8f0;
+        }
+        .category-tab-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
         .product-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
             gap: 10px;
             overflow-y: auto;
-            max-height: calc(100vh - 155px);
+            max-height: calc(100vh - 195px);
             padding-right: 4px;
         }
 
@@ -142,7 +166,7 @@
         }
         .product-card-pos img {
             width: 100%;
-            height: 85px;
+            height: 80px;
             object-fit: cover;
             border-radius: 4px;
             background: #f1f5f9;
@@ -151,12 +175,12 @@
             font-size: 12px;
             font-weight: 500;
             color: #1e293b;
-            margin: 6px 0 4px 0;
+            margin: 4px 0;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            height: 30px;
+            height: 28px;
         }
         .product-card-pos .p-info {
             display: flex;
@@ -173,7 +197,6 @@
             color: #64748b;
         }
 
-        /* CỘT 2: GIỎ HÀNG, BILL CHỜ TÍCH HỢP & THANH TOÁN */
         .cart-section {
             padding: 12px;
             display: flex;
@@ -190,7 +213,6 @@
             align-items: center;
         }
 
-        /* KHU VỰC CHỌN BILL ĐANG CHỜ NGAY TRONG GIỎ */
         .held-bills-bar {
             background: #fffbeb;
             border: 1px solid #fde68a;
@@ -258,7 +280,6 @@
             box-sizing: border-box;
         }
 
-        /* Dropdown tìm kiếm khách hàng thông minh */
         #dropdownGoiYKhachHang {
             display: none;
             position: absolute;
@@ -379,7 +400,6 @@
         .btn-checkout { background-color: var(--success-color); }
         .btn-checkout:hover { background-color: #047857; }
 
-        /* MODAL */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -422,7 +442,6 @@
             box-sizing: border-box;
         }
 
-        /* IN HÓA ĐƠN NHIỆT ẨN */
         #printInvoiceArea {
             display: none;
         }
@@ -456,10 +475,8 @@
 </head>
 <body>
 
-    <!-- THANH MENU BÊN TRÁI -->
     <div id="menu-container"></div>
 
-    <!-- NỘI DUNG CHÍNH MÀN HÌNH POS -->
     <div class="main-content">
         <div class="top-navbar">
             <div style="display: flex; align-items: center; gap: 12px;">
@@ -470,18 +487,21 @@
         </div>
 
         <div class="pos-container">
-            <!-- CỘT 1: TÌM KIẾM & LƯỚI SẢN PHẨM -->
             <div class="pos-card product-section">
                 <div class="search-scan-group">
                     <div class="pos-search-box">
-                        <input type="text" id="searchInput" placeholder="Quét mã vạch hoặc gõ tên tìm nhanh..." onkeyup="timKiemSanPhamPOS()">
+                        <input type="text" id="searchInput" placeholder="Quét mã vạch hoặc gõ tên tìm nhanh..." autocomplete="off">
                     </div>
                     <button class="btn-scan-qr" onclick="moModalQuetMa()">📷 Quét Mã</button>
                 </div>
+
+                <div class="category-tabs-container" id="categoryTabs">
+                    <button class="category-tab-btn active" onclick="chonDanhMucTab('all', this)">Tất cả</button>
+                </div>
+
                 <div class="product-grid" id="productGrid"></div>
             </div>
 
-            <!-- CỘT 2: GIỎ HÀNG, HÓA ĐƠN CHỜ GỘP CHUNG & THANH TOÁN -->
             <div class="pos-card cart-section">
                 <div>
                     <div class="cart-header-title">
@@ -489,7 +509,6 @@
                         <button onclick="lamMoiGioHang()" style="background: none; border: none; color: var(--danger-color); cursor: pointer; font-size: 11px; font-weight: bold;">Xóa hết</button>
                     </div>
 
-                    <!-- THANH HÓA ĐƠN ĐANG CHỜ TÍCH HỢP NGAY TRONG GIỎ -->
                     <div class="held-bills-bar">
                         <span>📋 Hóa đơn chờ (<span id="soLuongBillCho">0</span>)</span>
                         <select id="selectBillCho" class="held-bills-dropdown" onchange="chonBillChoDropdown(this.value)">
@@ -497,14 +516,12 @@
                         </select>
                     </div>
 
-                    <!-- KHU VỰC TÌM KIẾM KHÁCH HÀNG & TÍCH ĐIỂM THÔNG MINH -->
                     <div class="customer-search-area">
                         <div class="customer-header-row">
                             <label>Khách Hàng & SĐT:</label>
                             <button class="btn-link-add" onclick="moModalThemKhachHang()">+Thêm khách hàng mới</button>
                         </div>
                         <div class="customer-inputs-grid">
-                            <!-- Thay thế thẻ select bằng ô input tìm kiếm theo tên hoặc SĐT -->
                             <div style="position: relative; width: 100%;">
                                 <input type="text" id="inputTimKhachHang" placeholder="🔍 Gõ tên hoặc SĐT khách..." onkeyup="goYTimKiemKhachHang(this.value)">
                                 <div id="dropdownGoiYKhachHang"></div>
@@ -570,7 +587,6 @@
         </div>
     </div>
 
-    <!-- POPUP QUÉT MÃ VẠCH CAMERA -->
     <div class="modal-overlay" id="scannerModal">
         <div class="scanner-modal-container">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -582,7 +598,6 @@
         </div>
     </div>
 
-    <!-- POPUP THÊM KHÁCH HÀNG MỚI -->
     <div class="modal-overlay" id="khachHangModal">
         <div class="modal-container-custom">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
@@ -608,12 +623,9 @@
         </div>
     </div>
 
-    <!-- KHUNG HÓA ĐƠN DÙNG ĐỂ IN NHIỆT -->
     <div id="printInvoiceArea">
         <div class="print-header"></div>
-
         <div style="text-align: center; font-weight: bold; font-size: 12px; margin-bottom: 6px; border-bottom: 1px dashed #000; padding-bottom: 4px;">HÓA ĐƠN BÁN HÀNG</div>
-        
         <div style="font-size: 10px; margin-bottom: 2px;">Ngày: <span id="printTime"></span></div>
         <div style="font-size: 10px; margin-bottom: 2px;">Khách: <span id="printCustomer"></span></div>
         <div style="font-size: 10px; margin-bottom: 6px; border-bottom: 1px dashed #000; padding-bottom: 4px;">SĐT: <span id="printPhone"></span></div>
@@ -626,9 +638,7 @@
                     <th style="text-align: right; padding-bottom: 2px; width: 40%;">T.Tiền</th>
                 </tr>
             </thead>
-            <tbody id="printItemsList">
-                <!-- Danh sách sản phẩm -->
-            </tbody>
+            <tbody id="printItemsList"></tbody>
         </table>
 
         <div style="border-top: 1px dashed #000; padding-top: 4px; font-size: 10px;">
@@ -652,64 +662,150 @@
         let danhSachBillCho = [];
         let khachHangDangChon = null;
         let html5QrCode = null;
+        let danhMucHienTai = 'all';
+
+        let lastScannedCode = '';
+        let lastScanTime = 0;
 
         window.addEventListener('DOMContentLoaded', async () => {
-            await taiDanhMucSanPhamPOS();
-            await taiDanhSachKhachHangPOS();
+            await Promise.all([
+                taiDanhMucSanPhamPOS(),
+                taiDanhSachKhachHangPOS()
+            ]);
+
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.focus();
+
+                searchInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const codeVal = this.value.trim();
+                        if (codeVal) {
+                            xuLyThemNhanhBangBarcode(codeVal);
+                            this.value = '';
+                            timKiemSanPhamPOS();
+                        }
+                    } else {
+                        setTimeout(() => timKiemSanPhamPOS(), 50);
+                    }
+                });
+            }
         });
 
+        function chuanHoaChuoi(str) {
+            if (!str) return '';
+            return str.toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+        }
+
+        function xuLyThemNhanhBangBarcode(codeVal) {
+            const currentTime = Date.now();
+            const keyword = codeVal.toLowerCase().trim();
+
+            if (keyword === lastScannedCode && (currentTime - lastScanTime < 600)) {
+                return;
+            }
+            lastScannedCode = keyword;
+            lastScanTime = currentTime;
+
+            const match = danhSachSanPhamGoc.find(x => 
+                (x.mabarcode || '').toLowerCase() === keyword ||
+                ('sp' + String(x.id)).toLowerCase() === keyword ||
+                String(x.id) === keyword
+            );
+
+            if (match) {
+                themVaoGioHang(match.id);
+            }
+        }
+
         async function taiDanhMucSanPhamPOS() {
-            const { data, error } = await db.from('danhmucsanpham').select('*').order('id', { ascending: false });
+            const { data, error } = await db.from('danhmucsanpham')
+                .select('*')
+                .order('id', { ascending: false });
+            
             if (!error && data) {
                 danhSachSanPhamGoc = data;
+                taoTabDanhMuc(data);
                 hienThiLuoiSanPham(data);
             }
         }
 
+        function taoTabDanhMuc(data) {
+            const container = document.getElementById('categoryTabs');
+            if (!container) return;
+            const danhMucSet = new Set();
+            
+            data.forEach(item => {
+                const dm = item.danhmucsanpham || item.danhmuc || item.category || item.tendanhmuc;
+                if (dm && String(dm).trim() !== '') danhMucSet.add(String(dm).trim());
+            });
+
+            let html = `<button class="category-tab-btn active" onclick="chonDanhMucTab('all', this)">Tất cả</button>`;
+            danhMucSet.forEach(dm => {
+                html += `<button class="category-tab-btn" onclick="chonDanhMucTab('${dm.replace(/'/g, "\\'")}', this)">${dm}</button>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function chonDanhMucTab(dm, btnElement) {
+            danhMucHienTai = dm;
+            document.querySelectorAll('.category-tab-btn').forEach(b => b.classList.remove('active'));
+            if (btnElement) btnElement.classList.add('active');
+            timKiemSanPhamPOS();
+        }
+
         function hienThiLuoiSanPham(data) {
             const grid = document.getElementById('productGrid');
-            grid.innerHTML = '';
-            if (data.length === 0) {
+            if (!data || data.length === 0) {
                 grid.innerHTML = `<div style="grid-column: span 2; text-align:center; color:#94a3b8; padding:20px; font-size:11px;">Không tìm thấy sản phẩm</div>`;
                 return;
             }
 
+            const fragment = document.createDocumentFragment();
             data.forEach(item => {
-                const img = item.hinhanh ? item.hinhanh : 'https://via.placeholder.com/100?text=PetCare';
-                const gia = Number(item.giaban || 0).toLocaleString('vi-VN') + ' đ';
-                const ton = item.soluongton || 0;
+                const img = item.hinhanh || item.image || 'https://via.placeholder.com/100?text=PetCare';
+                const gia = Number(item.giaban || item.price || 0).toLocaleString('vi-VN') + ' đ';
+                const ton = item.soluongton || item.tonkho || 0;
+                const tenSp = item.tensanpham || item.name || 'Sản phẩm';
 
-                grid.innerHTML += `
-                    <div class="product-card-pos" onclick="themVaoGioHang(${item.id})">
-                        <img src="${img}" onerror="this.src='https://via.placeholder.com/100?text=No+Img'">
-                        <div class="p-name" title="${item.tensanpham}">${item.tensanpham}</div>
-                        <div class="p-info">
-                            <span class="p-price">${gia}</span>
-                            <span class="p-stock">Tồn: ${ton}</span>
-                        </div>
+                const card = document.createElement('div');
+                card.className = 'product-card-pos';
+                card.onclick = () => themVaoGioHang(item.id);
+                card.innerHTML = `
+                    <img src="${img}" loading="lazy" onerror="this.src='https://via.placeholder.com/100?text=No+Img'">
+                    <div class="p-name" title="${tenSp}">${tenSp}</div>
+                    <div class="p-info">
+                        <span class="p-price">${gia}</span>
+                        <span class="p-stock">Tồn: ${ton}</span>
                     </div>
                 `;
+                fragment.appendChild(card);
             });
+
+            grid.innerHTML = '';
+            grid.appendChild(fragment);
         }
 
         function timKiemSanPhamPOS() {
-            const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+            const keywordRaw = document.getElementById('searchInput').value.trim();
+            const keyword = chuanHoaChuoi(keywordRaw);
+
             const filtered = danhSachSanPhamGoc.filter(item => {
-                const ten = (item.tensanpham || '').toLowerCase();
-                const barcode = (item.mabarcode || '').toLowerCase();
+                const ten = chuanHoaChuoi(item.tensanpham || item.name || '');
+                const barcode = chuanHoaChuoi(item.mabarcode || '');
                 const ma = ('sp' + String(item.id)).toLowerCase();
-                return ten.includes(keyword) || barcode.includes(keyword) || ma.includes(keyword);
+                const dm = String(item.danhmucsanpham || item.danhmuc || item.category || item.tendanhmuc || '').toLowerCase().trim();
+
+                const matchTab = (danhMucHienTai === 'all' || dm === danhMucHienTai.toLowerCase());
+                const matchKeyword = !keyword || ten.includes(keyword) || barcode.includes(keyword) || ma.includes(keyword);
+
+                return matchTab && matchKeyword;
             });
             hienThiLuoiSanPham(filtered);
-
-            if (keyword.length >= 6) {
-                const match = danhSachSanPhamGoc.find(x => (x.mabarcode || '').toLowerCase() === keyword);
-                if (match) {
-                    themVaoGioHang(match.id);
-                    document.getElementById('searchInput').value = '';
-                    taiDanhMucSanPhamPOS();
-                }
-            }
         }
 
         function moModalQuetMa() {
@@ -720,12 +816,7 @@
                 { fps: 10, qrbox: { width: 250, height: 150 } },
                 (decodedText) => {
                     dongModalQuetMa();
-                    const sp = danhSachSanPhamGoc.find(x => (x.mabarcode || '').toLowerCase() === decodedText.toLowerCase());
-                    if (sp) {
-                        themVaoGioHang(sp.id);
-                    } else {
-                        alert('Không tìm thấy sản phẩm có mã vạch: ' + decodedText);
-                    }
+                    xuLyThemNhanhBangBarcode(decodedText);
                 },
                 (errorMessage) => {}
             ).catch(err => {
@@ -752,21 +843,36 @@
             }
         }
 
-        // TÌM KIẾM KHÁCH HÀNG THÔNG MINH BẰNG Ô INPUT
-        function goYTimKiemKhachHang(tuKhoa) {
+        // --- HÀM TÌM KIẾM KHÁCH HÀNG TRỰC TIẾP TRÊN DATABASE SUPABASE (HỖ TRỢ TÊN KHÔNG DẤU & SĐT) ---
+        async function goYTimKiemKhachHang(tuKhoa) {
             const boxGoiY = document.getElementById('dropdownGoiYKhachHang');
-            const keyword = tuKhoa.toLowerCase().trim();
+            const keywordRaw = tuKhoa.trim();
+            const keyword = chuanHoaChuoi(keywordRaw);
 
             if (!keyword) {
                 boxGoiY.style.display = 'none';
                 return;
             }
 
-            const ketQua = danhSachKhachHangGoc.filter(kh => {
-                const ten = (kh.tenkhachhang || kh.hovaten || '').toLowerCase();
-                const sdt = (kh.sdt || kh.sodienthoai || '').toLowerCase();
-                return ten.includes(keyword) || sdt.includes(keyword);
-            });
+            // Gọi truy vấn trực tiếp bảng khachhang trong Supabase theo cột chuẩn 'hovaten' và 'sodienthoai'
+            const { data, error } = await db.from('khachhang')
+                .select('*')
+                .or(`hovaten.ilike.%${keywordRaw}%,sodienthoai.ilike.%${keywordRaw}%`)
+                .limit(10);
+
+            let ketQua = [];
+            if (!error && data) {
+                ketQua = data;
+            }
+
+            // Nếu không thấy qua ilike trực tiếp, lọc qua mảng dự phòng
+            if (ketQua.length === 0 && danhSachKhachHangGoc.length > 0) {
+                ketQua = danhSachKhachHangGoc.filter(kh => {
+                    const ten = chuanHoaChuoi(kh.hovaten || '');
+                    const sdt = chuanHoaChuoi(kh.sodienthoai || '');
+                    return ten.includes(keyword) || sdt.includes(keyword);
+                });
+            }
 
             if (ketQua.length === 0) {
                 boxGoiY.style.display = 'block';
@@ -777,8 +883,8 @@
             boxGoiY.style.display = 'block';
             boxGoiY.innerHTML = '';
             ketQua.forEach(kh => {
-                const ten = kh.tenkhachhang || kh.hovaten || 'Khách hàng';
-                const sdt = kh.sdt || kh.sodienthoai || 'Không có SĐT';
+                const ten = kh.hovaten || 'Khách hàng';
+                const sdt = kh.sodienthoai || 'Không có SĐT';
                 boxGoiY.innerHTML += `
                     <div class="customer-suggestion-item" onclick="chonKhachHangPOS(${kh.id})">
                         <b>${ten}</b> - <span style="color: #2563eb;">${sdt}</span>
@@ -787,12 +893,16 @@
             });
         }
 
-        function chonKhachHangPOS(id) {
-            const kh = danhSachKhachHangGoc.find(x => x.id == id);
+        async function chonKhachHangPOS(id) {
+            let kh = danhSachKhachHangGoc.find(x => x.id == id);
+            if (!kh) {
+                const { data } = await db.from('khachhang').select('*').eq('id', id).single();
+                if (data) kh = data;
+            }
             if (kh) {
                 khachHangDangChon = kh;
-                const ten = kh.tenkhachhang || kh.hovaten || '';
-                const sdt = kh.sdt || kh.sodienthoai || '';
+                const ten = kh.hovaten || '';
+                const sdt = kh.sodienthoai || '';
                 
                 document.getElementById('inputTimKhachHang').value = ten;
                 document.getElementById('posSdt').value = sdt;
@@ -802,7 +912,7 @@
                 document.getElementById('khachHangStatus').style.background = '#d1fae5';
                 document.getElementById('khachHangStatus').style.color = '#065f46';
                 
-                const diem = kh.tichdiem || kh.điểm || 0;
+                const diem = kh.tichdiem || kh.diem || 0;
                 document.getElementById('diemTichLuyHienTai').innerText = `Điểm tích lũy: ${diem} điểm`;
             }
         }
@@ -812,8 +922,6 @@
             document.getElementById('inputTimKhachHang').value = '';
             document.getElementById('posSdt').value = '';
             document.getElementById('khachHangStatus').innerText = 'Khách lẻ / Vãng lai';
-            document.getElementById('khachHangStatus').style.background = '#e0f2fe';
-            document.getElementById('khachHangStatus').style.color = '#0369a1';
             document.getElementById('diemTichLuyHienTai').innerText = 'Điểm tích lũy: 0 điểm';
         }
 
@@ -828,21 +936,20 @@
             document.getElementById('khachHangModal').style.display = 'none';
         }
 
+        // --- HÀM THÊM KHÁCH HÀNG MỚI ĐÃ SỬA CHUẨN CỘT `hovaten` VÀ `sodienthoai` (TRIỆT TIÊU LỖI 'sdt') ---
         async function luuKhachHangMoiVaoDB() {
-            const tenkhachhang = document.getElementById('nhapTenKhachMoi').value.trim();
-            const sdt = document.getElementById('nhapSdtKhachMoi').value.trim();
+            const hovaten = document.getElementById('nhapTenKhachMoi').value.trim();
+            const sodienthoai = document.getElementById('nhapSdtKhachMoi').value.trim();
             const diachi = document.getElementById('nhapDiaChiKhachMoi').value.trim();
 
-            if (!tenkhachhang || !sdt) {
+            if (!hovaten || !sodienthoai) {
                 alert('Vui lòng nhập đầy đủ Tên và Số điện thoại!');
                 return;
             }
 
             const { data, error } = await db.from('khachhang').insert([{
-                tenkhachhang: tenkhachhang,
-                hovaten: tenkhachhang,
-                sdt: sdt,
-                sodienthoai: sdt,
+                hovaten: hovaten,
+                sodienthoai: sodienthoai,
                 diachi: diachi,
                 tichdiem: 0
             }]).select();
@@ -863,14 +970,15 @@
             const sp = danhSachSanPhamGoc.find(x => x.id === id);
             if (!sp) return;
 
-            if ((sp.soluongton || 0) <= 0) {
+            const tonKho = sp.soluongton || sp.tonkho || 0;
+            if (tonKho <= 0) {
                 alert('Sản phẩm này đã hết hàng trong kho!');
                 return;
             }
 
             const existing = gioHang.find(x => x.id === id);
             if (existing) {
-                if (existing.soluong < sp.soluongton) {
+                if (existing.soluong < tonKho) {
                     existing.soluong++;
                 } else {
                     alert('Đã đạt giới hạn số lượng tồn kho!');
@@ -879,10 +987,10 @@
                 gioHang.push({
                     id: sp.id,
                     masanpham: 'SP' + String(sp.id).padStart(4, '0'),
-                    tensanpham: sp.tensanpham,
-                    dongia: parseFloat(sp.giaban) || 0,
+                    tensanpham: sp.tensanpham || sp.name,
+                    dongia: parseFloat(sp.giaban || sp.price) || 0,
                     soluong: 1,
-                    tonkho: sp.soluongton || 0
+                    tonkho: tonKho
                 });
             }
             hienThiGioHang();
@@ -973,15 +1081,14 @@
             return { tongGoc, tienChietKhau, tongThanhToan, diemThuong };
         }
 
-        // LƯU TẠM & QUẢN LÝ BILL CHỜ NGAY TRONG GIỎ
         function luuTamBill() {
             if (gioHang.length === 0) {
                 alert('Giỏ hàng trống!');
                 return;
             }
 
-            const tenKhach = khachHangDangChon ? (khachHangDangChon.tenkhachhang || khachHangDangChon.hovaten) : 'Khách lẻ vãng lai';
-            const sdtKhach = khachHangDangChon ? (khachHangDangChon.sdt || khachHangDangChon.sodienthoai) : '';
+            const tenKhach = khachHangDangChon ? khachHangDangChon.hovaten : 'Khách lẻ vãng lai';
+            const sdtKhach = khachHangDangChon ? khachHangDangChon.sodienthoai : '';
             const { tongThanhToan } = tinhToanTongTien();
 
             const billTam = {
@@ -1061,17 +1168,16 @@
                 return;
             }
 
-            const tenKhach = khachHangDangChon ? (khachHangDangChon.tenkhachhang || khachHangDangChon.hovaten) : 'Khách lẻ vãng lai';
-            const sdtKhach = khachHangDangChon ? (khachHangDangChon.sdt || khachHangDangChon.sodienthoai) : '';
+            const tenKhach = khachHangDangChon ? khachHangDangChon.hovaten : 'Khách lẻ vãng lai';
+            const sdtKhach = khachHangDangChon ? khachHangDangChon.sodienthoai : '';
             const { tongGoc, tienChietKhau, tongThanhToan, diemThuong } = tinhToanTongTien();
 
             if (!confirm(`Xác nhận chốt đơn thanh toán: ${tongThanhToan.toLocaleString('vi-VN')} đ?`)) {
                 return;
             }
 
-            // Tự động cộng dồn điểm vào cột tichdiem của bảng khachhang
             if (khachHangDangChon) {
-                let diemCu = parseInt(khachHangDangChon.tichdiem || khachHangDangChon.điểm) || 0;
+                let diemCu = parseInt(khachHangDangChon.tichdiem || 0);
                 let diemMoi = diemCu + diemThuong;
                 await db.from('khachhang').update({ tichdiem: diemMoi }).eq('id', khachHangDangChon.id);
             }
