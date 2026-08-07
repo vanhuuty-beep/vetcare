@@ -1,9 +1,19 @@
-// TÍNH NĂNG TỰ ĐỘNG HIỂN THỊ POPUP LỊCH HẸN HÔM NAY VÀ NGÀY MAI (CHỈ LẤY TRẠNG THÁI "CHỜ KHÁM")
+// =========================================================================
+// SCRIPT DÙNG CHUNG: HIỂN THỊ POPUP LỊCH HẸN HÔM NAY & NGÀY MAI THEO PHÒNG KHÁM
+// =========================================================================
+
+// 1. Lấy mã phòng khám hiện tại của thiết bị
+function layChiNhanhHienTai() {
+    return localStorage.getItem('current_maphongkham') || 'PK_617723'; 
+}
+
+// 2. Tự động chạy khi tải trang xong
 document.addEventListener('DOMContentLoaded', async () => {
     chenHtmlPopupLichHen();
     await kiemTraLichHenHomNayVaNgayMai();
 });
 
+// 3. Tự động chèn khung giao diện HTML của Popup vào trang
 function chenHtmlPopupLichHen() {
     if (document.getElementById('popupLichHenNgayMai')) return;
 
@@ -39,31 +49,33 @@ function chenHtmlPopupLichHen() {
     document.body.insertAdjacentHTML('beforeend', popupHtml);
 }
 
+// 4. Kiểm tra dữ liệu lịch hẹn từ Supabase theo đúng mã phòng khám
 async function kiemTraLichHenHomNayVaNgayMai() {
     if (typeof db === 'undefined' || !db) return;
 
-    // Lấy mốc thời gian bắt đầu từ 00:00:00 hôm nay
+    const maPhongKham = layChiNhanhHienTai();
+
     const homNay = new Date();
     const nam = homNay.getFullYear();
     const thang = String(homNay.getMonth() + 1).padStart(2, '0');
     const ngay = String(homNay.getDate()).padStart(2, '0');
     const mocDauHomNay = `${nam}-${thang}-${ngay}T00:00:00`;
 
-    // Lấy mốc thời gian kết thúc của ngày mai (23:59:59)
     const ngayMai = new Date();
-    ngayMai.setDate(ngayMai.getDate() + 2); // Cộng 2 để quét hết trọn vẹn ngày mai
+    ngayMai.setDate(ngayMai.getDate() + 2);
     const namMai = ngayMai.getFullYear();
     const thangMai = String(ngayMai.getMonth() + 1).padStart(2, '0');
     const ngayMaiStr = String(ngayMai.getDate()).padStart(2, '0');
     const mocCuoiNgayMai = `${namMai}-${thangMai}-${ngayMaiStr}T00:00:00`;
 
-    // Truy vấn lịch hẹn từ hôm nay đến hết ngày mai VÀ PHẢI CÓ TRẠNG THÁI LÀ "Chờ khám"
+    // Truy vấn Supabase: Lọc đúng maphongkham, trong khoảng thời gian và chỉ lấy trạng thái "Chờ khám"
     const { data, error } = await db
         .from('lichhen')
         .select('*')
+        .eq('maphongkham', maPhongKham) 
         .gte('ngayhen', mocDauHomNay)
         .lt('ngayhen', mocCuoiNgayMai)
-        .eq('trangthai', 'Chờ khám') // Bỏ qua các lịch đã hoàn thành hoặc đã hủy
+        .eq('trangthai', 'Chờ khám')
         .order('ngayhen', { ascending: true });
 
     if (error) {
@@ -95,11 +107,12 @@ async function kiemTraLichHenHomNayVaNgayMai() {
         const popupEl = document.getElementById('popupLichHenNgayMai');
         if (tblEl && popupEl) {
             tblEl.innerHTML = html;
-            popupEl.style.display = 'flex'; // Hiển thị popup
+            popupEl.style.display = 'flex'; // Bật popup thông báo
         }
     }
 }
 
+// 5. Đóng popup
 function dongPopupLichHen() {
     const popupEl = document.getElementById('popupLichHenNgayMai');
     if (popupEl) {
