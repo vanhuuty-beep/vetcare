@@ -55,18 +55,15 @@
         .product-img { width: 65px; height: 65px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1; background: #f1f5f9; flex-shrink: 0; }
         .product-info { flex: 1; min-width: 0; }
 
-        /* Nút phân trang truyền thống */
         .pagination-container { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 20px 0 10px 0; flex-wrap: wrap; }
         .page-btn { background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; padding: 6px 12px; font-size: 12px; border-radius: 6px; cursor: pointer; font-weight: 500; }
         .page-btn.active { background: #2563eb; color: #ffffff; border-color: #2563eb; }
         .page-btn:disabled { background: #f1f5f9; color: #94a3b8; cursor: not-allowed; }
 
-        /* Modal giỏ hàng & thanh toán */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; }
         .modal-content-custom { background: #fff; width: 90%; max-width: 380px; padding: 16px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; font-family: system-ui, -apple-system, sans-serif; }
         .form-control { width: 100%; padding: 8px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; box-sizing: border-box; margin-bottom: 8px; background: #fff; }
 
-        /* Thanh menu đáy phong cách Mobile App */
         .mobile-bottom-nav {
             position: fixed;
             bottom: 0;
@@ -101,7 +98,6 @@
 <body>
 
     <div class="mobile-shell">
-        <!-- THANH TIÊU ĐỀ PHÍA TRÊN -->
         <div class="top-bar">
             <span>🛍️ Cửa Hàng Thú Cưng</span>
             <button onclick="moModalGioHang()" class="cart-btn-top">
@@ -109,52 +105,31 @@
             </button>
         </div>
 
-        <!-- THANH TÌM KIẾM SẢN PHẨM -->
         <div class="search-container">
             <input type="text" id="searchInput" class="search-box" placeholder="🔍 Tìm thức ăn, phụ kiện, đồ chơi..." onkeyup="timKiemSanPham()">
         </div>
 
-        <!-- DANH SÁCH SẢN PHẨM -->
         <div style="font-weight: bold; font-size: 12px; color: #334155; margin-bottom: 8px;">
-            <span>📋 Sản phẩm nổi bật cho Thú Cưng:</span>
+            <span>📋 Sản phẩm tại phòng khám của bạn:</span>
         </div>
         <div id="danhSachSanPhamContainer">
             <div style="text-align: center; color: #64748b; padding: 25px; background: white; border-radius: 12px; font-size: 12px;">Đang tải danh mục sản phẩm...</div>
         </div>
 
-        <!-- KHUNG CHỨA NÚT PHÂN TRANG -->
         <div id="paginationContainer" class="pagination-container"></div>
     </div>
 
-    <!-- THANH MENU ĐÁY MOBILE -->
     <div class="mobile-bottom-nav">
-         <a href="trangchu.html">
-            <span>🏠</span>
-            Trang chủ
-        </a>
-        <a href="lichsu.html">
-            <span>📋</span>
-            Lịch sử khám
-        </a>
-        <a href="ketquachidinh-chunuoi.html" class="active">
-            <span>🔬</span>
-            Chỉ định
-        </a>
-        <a href="noitru-chunuoi.html">
-            <span>🏨</span>
-            Lịch trình
-        </a>
-		<a href="muahang.html">
-            <span>🛍️</span>
-            Cửa hàng
-        </a>
-        <a href="datlich.html">
-            <span>📅</span>
-            Đặt lịch hẹn
-        </a>
+        <a href="trangchu.html"><span>🏠</span>Trang chủ</a>
+        <a href="lichsu.html"><span>📋</span>Lịch sử khám</a>
+        <a href="ketquachidinh-chunuoi.html"><span>🔬</span>Chỉ định</a>
+        <a href="noitru-chunuoi.html"><span>🏨</span>Lịch trình</a>
+		<a href="muahang.html" class="active"><span>🛍️</span>Cửa hàng</a>
+        <a href="datlich.html"><span>📅</span>Đặt lịch hẹn</a>
+				<a href="timkiem.html"><span>🔍</span>Tìm kiếm</a>
+
     </div>
 
-    <!-- MODAL GIỎ HÀNG & ĐẶT HÀNG -->
     <div id="modalGioHang" class="modal-overlay">
         <div class="modal-content-custom">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
@@ -162,9 +137,7 @@
                 <button type="button" onclick="dongModalGioHang()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">&times;</button>
             </div>
             
-            <div id="cartItemsContainer" style="max-height: 180px; overflow-y: auto; margin-bottom: 10px; font-size: 12px;">
-                <!-- Sản phẩm trong giỏ -->
-            </div>
+            <div id="cartItemsContainer" style="max-height: 180px; overflow-y: auto; margin-bottom: 10px; font-size: 12px;"></div>
 
             <div style="border-top: 1px solid #e2e8f0; padding-top: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; font-weight: bold; font-size: 13px;">
                 <span>Tổng tiền thanh toán:</span>
@@ -193,14 +166,13 @@
         </div>
     </div>
 
-    <!-- SCRIPT XỬ LÝ MUA HÀNG VÀ PHÂN TRANG -->
     <script>
         let danhSachSanPhamToanCuc = [];
         let danhSachHienThiHienTai = [];
         let gioHang = [];
         let currentUserOwner = null;
+        let currentMaPK = null;
 
-        // Cấu hình phân trang (Hiển thị 5 sản phẩm mỗi trang)
         let trangThaiPhanTrang = {
             trangHienTai: 1,
             soDongMoiTrang: 4
@@ -222,7 +194,6 @@
                 document.getElementById('tenkhachhang').value = ten;
                 document.getElementById('sdt').value = sodt;
 
-                // Tự động truy vấn lấy địa chỉ từ bảng khachhang dựa vào sodienthoai
                 if (sodt && typeof db !== 'undefined' && db) {
                     const { data: khData } = await db.from('khachhang').select('diachi').eq('sodienthoai', sodt).single();
                     if (khData && khData.diachi) {
@@ -242,15 +213,57 @@
                 return;
             }
 
-            const { data, error } = await db.from('danhmucsanpham').select('*').order('id', { ascending: false });
-            const container = document.getElementById('danhSachSanPhamContainer');
-            
-            if (error) {
-                console.error('Lỗi tải sản phẩm:', error);
-                container.innerHTML = `<div style="text-align:center; color:red; font-size:12px; padding:20px;">Lỗi tải dữ liệu: ${error.message}</div>`;
-                return;
+            let maPK = null;
+
+            // 1. LẤY TRỰC TIẾP MAPHONGKHAM TỪ BẢNG KHACHHANG DỰA TRÊN SỐ ĐIỆN THOẠI HOẶC ID
+            if (currentUserOwner) {
+                maPK = currentUserOwner.maphongkham || currentUserOwner.mapk || currentUserOwner.coso_id;
+
+                if (!maPK) {
+                    let query = db.from('khachhang').select('maphongkham');
+                    if (currentUserOwner.id) {
+                        query = query.eq('id', currentUserOwner.id);
+                    } else if (currentUserOwner.sodienthoai) {
+                        query = query.eq('sodienthoai', currentUserOwner.sodienthoai);
+                    }
+                    const { data: khData } = await query.single();
+                    if (khData && khData.maphongkham) {
+                        maPK = khData.maphongkham;
+                    }
+                }
             }
 
+            // 2. Dự phòng: Nếu vẫn chưa có, lấy từ bảng thú cưng
+            if (!maPK && currentUserOwner && currentUserOwner.id) {
+                const { data: petData } = await db.from('thucung').select('maphongkham, mapk').eq('makhachhang', currentUserOwner.id);
+                if (petData && petData.length > 0) {
+                    maPK = petData[0].maphongkham || petData[0].mapk;
+                }
+            }
+
+            currentMaPK = maPK;
+            let data = [];
+
+            // 3. Truy vấn sản phẩm lọc theo mã phòng khám của khách
+            if (currentMaPK) {
+                let res1 = await db.from('danhmucsanpham').select('*').eq('maphongkham', currentMaPK).order('id', { ascending: false });
+                if (res1.data && res1.data.length > 0) {
+                    data = res1.data;
+                } else {
+                    let res2 = await db.from('danhmucsanpham').select('*').eq('mapk', currentMaPK).order('id', { ascending: false });
+                    if (res2.data) data = res2.data;
+                }
+            }
+
+            // 4. Nếu sản phẩm theo phòng khám ít hoặc trống, tự động nạp toàn bộ kho sản phẩm hệ thống để hiển thị đầy đủ
+            if (!data || data.length <= 1) {
+                let resAll = await db.from('danhmucsanpham').select('*').order('id', { ascending: false });
+                if (resAll.data && resAll.data.length > 0) {
+                    data = resAll.data;
+                }
+            }
+
+            const container = document.getElementById('danhSachSanPhamContainer');
             danhSachSanPhamToanCuc = data || [];
             danhSachHienThiHienTai = danhSachSanPhamToanCuc;
             trangThaiPhanTrang.trangHienTai = 1;
@@ -261,7 +274,7 @@
             const container = document.getElementById('danhSachSanPhamContainer');
             
             if (!danhSachHienThiHienTai || danhSachHienThiHienTai.length === 0) {
-                container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 25px; background: white; border-radius: 12px; font-size: 12px;">Không tìm thấy sản phẩm nào</div>`;
+                container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 25px; background: white; border-radius: 12px; font-size: 12px;">Không có sản phẩm nào tại cửa hàng</div>`;
                 document.getElementById('paginationContainer').innerHTML = '';
                 return;
             }
@@ -300,28 +313,20 @@
         function veNutPhanTrang(tongSoTrang) {
             const paginationContainer = document.getElementById('paginationContainer');
             paginationContainer.innerHTML = '';
-
             if (tongSoTrang <= 1) return;
 
             const { trangHienTai } = trangThaiPhanTrang;
-
-            paginationContainer.innerHTML += `
-                <button class="page-btn" ${trangHienTai === 1 ? 'disabled' : ''} onclick="chuyenTrang(${trangHienTai - 1})">◀ Trước</button>
-            `;
+            paginationContainer.innerHTML += `<button class="page-btn" ${trangHienTai === 1 ? 'disabled' : ''} onclick="chuyenTrang(${trangHienTai - 1})">◀ Trước</button>`;
 
             for (let i = 1; i <= tongSoTrang; i++) {
                 if (i === 1 || i === tongSoTrang || (i >= trangHienTai - 1 && i <= trangHienTai + 1)) {
-                    paginationContainer.innerHTML += `
-                        <button class="page-btn ${i === trangHienTai ? 'active' : ''}" onclick="chuyenTrang(${i})">${i}</button>
-                    `;
+                    paginationContainer.innerHTML += `<button class="page-btn ${i === trangHienTai ? 'active' : ''}" onclick="chuyenTrang(${i})">${i}</button>`;
                 } else if (i === trangHienTai - 2 || i === trangHienTai + 2) {
                     paginationContainer.innerHTML += `<span style="color: #64748b; font-size: 12px; padding: 0 2px;">...</span>`;
                 }
             }
 
-            paginationContainer.innerHTML += `
-                <button class="page-btn" ${trangHienTai === tongSoTrang ? 'disabled' : ''} onclick="chuyenTrang(${trangHienTai + 1})">Sau ▶</button>
-            `;
+            paginationContainer.innerHTML += `<button class="page-btn" ${trangHienTai === tongSoTrang ? 'disabled' : ''} onclick="chuyenTrang(${trangHienTai + 1})">Sau ▶</button>`;
         }
 
         function chuyenTrang(trangMoi) {
@@ -337,7 +342,6 @@
                 const nhomHang = (item.nhomsanpham || item.danhmuc || '').toLowerCase();
                 return tenSP.includes(tuKhoa) || nhomHang.includes(tuKhoa);
             });
-            
             trangThaiPhanTrang.trangHienTai = 1;
             hienThiDanhSach();
         }
@@ -358,7 +362,6 @@
                     soluong: 1
                 });
             }
-
             capNhatGiaoDienGioHang();
             alert(`Đã thêm "${sanPham.tensanpham}" vào giỏ hàng!`);
         }
@@ -372,7 +375,6 @@
         function moModalGioHang() {
             const container = document.getElementById('cartItemsContainer');
             container.innerHTML = '';
-
             if (gioHang.length === 0) {
                 container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 15px;">Giỏ hàng đang trống!</div>`;
                 document.getElementById('cartTotalMoney').innerText = '0đ';
@@ -384,7 +386,6 @@
             gioHang.forEach((item, index) => {
                 let thanhTien = item.dongia * item.soluong;
                 tongTien += thanhTien;
-
                 container.innerHTML += `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 6px;">
                         <div>
@@ -398,16 +399,13 @@
                     </div>
                 `;
             });
-
             document.getElementById('cartTotalMoney').innerText = tongTien.toLocaleString() + 'đ';
             document.getElementById('modalGioHang').style.display = 'flex';
         }
 
         function thayDoiSoLuong(index, delta) {
             gioHang[index].soluong += delta;
-            if (gioHang[index].soluong <= 0) {
-                gioHang.splice(index, 1);
-            }
+            if (gioHang[index].soluong <= 0) gioHang.splice(index, 1);
             capNhatGiaoDienGioHang();
             moModalGioHang();
         }
@@ -418,10 +416,7 @@
 
         async function datHangNgay(event) {
             event.preventDefault();
-            if (gioHang.length === 0) {
-                alert('Giỏ hàng của bạn đang trống!');
-                return;
-            }
+            if (gioHang.length === 0) { alert('Giỏ hàng trống!'); return; }
 
             const tenkhachhang = document.getElementById('tenkhachhang').value.trim();
             const sdt = document.getElementById('sdt').value.trim();
@@ -445,6 +440,7 @@
                     nguoiban: 'Chủ nuôi đặt online (' + sdt + ')',
                     trangthai: 'Chưa giao hàng'
                 };
+                if (currentMaPK) payload.maphongkham = currentMaPK;
 
                 const { error } = await db.from('donhang').insert([payload]);
                 if (error) loiXuatHien = true;

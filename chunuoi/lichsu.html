@@ -105,7 +105,7 @@
         </div>
 
         <div id="danhSachLichSu">
-            <div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 12px; font-size: 12px;">Đang tải dữ liệu y tế...</div>
+            <div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 12px; font-size: 12px;">Đang tải dữ liệu y tế toàn hệ thống...</div>
         </div>
     </div>
 
@@ -115,11 +115,11 @@
             <span>🏠</span>
             Trang chủ
         </a>
-        <a href="lichsu.html">
+        <a href="lichsu.html" class="active">
             <span>📋</span>
             Lịch sử khám
         </a>
-        <a href="ketquachidinh-chunuoi.html" class="active">
+        <a href="ketquachidinh-chunuoi.html">
             <span>🔬</span>
             Chỉ định
         </a>
@@ -135,6 +135,8 @@
             <span>📅</span>
             Đặt lịch hẹn
         </a>
+				<a href="timkiem.html"><span>🔍</span>Tìm kiếm</a>
+
     </div>
 
     <script>
@@ -156,7 +158,7 @@
             const container = document.getElementById('danhSachLichSu');
             container.innerHTML = '';
 
-            // 1. Tìm danh sách thú cưng của chủ nuôi dựa trên các tên cột khóa ngoại khách hàng phổ biến
+            // 1. Tìm toàn bộ thú cưng của chủ nuôi trên tất cả các phòng khám dựa theo mã khách hàng
             let listPets = null;
             for (let col of ['makhachhang', 'makh', 'khachhang_id', 'idkhachhang']) {
                 let { data } = await db.from('thucung').select('*').eq(col, ownerId);
@@ -173,21 +175,25 @@
 
             const petIds = listPets.map(p => p.id);
             const petMap = {};
+            const petClinicMap = {};
             listPets.forEach(p => {
-                petMap[p.id] = p.tenthucung || p.tenthecung || p.ten || 'Thú cưng';
+                petMap[p.id] = p.tenthecung || p.tenthucung || p.ten || 'Thú cưng';
+                petClinicMap[p.id] = p.maphongkham || 'Hệ thống chính';
             });
 
             let allRecords = [];
 
-            // 2. Lấy dữ liệu từ bảng KHÁM BỆNH: khambenh (dựa theo code nguồn quản lý khám bệnh)[cite: 1]
+            // 2. Lấy dữ liệu từ bảng KHÁM BỆNH: khambenh trên toàn hệ thống[cite: 1]
             try {
                 let { data } = await db.from('khambenh').select('*').in('mathucung', petIds);
                 if (data) {
                     data.forEach(item => {
+                        let pkName = item.maphongkham || petClinicMap[item.mathucung] || 'Phòng khám VetCare';
                         allRecords.push({
                             ngay: item.ngaykham || item.created_at || 'Gần đây',
                             tenPet: petMap[item.mathucung] || 'Thú cưng',
-                            tieuDe: '🩺 Khám bệnh (KB' + String(item.id).padStart(4, '0') + ')',
+                            tieuDe: `🩺 Khám bệnh (KB${String(item.id).padStart(4, '0')})`,
+                            phongKham: pkName,
                             noiDung: `Triệu chứng: <b>${item.trieuchung || '---'}</b><br>Chẩn đoán: <span style="color: #d97706;">${item.chandoan || '---'}</span><br>Phác đồ: ${item.dieutri || '---'}`,
                             badgeClass: 'badge-kham',
                             badgeText: 'Khám bệnh',
@@ -197,15 +203,17 @@
                 }
             } catch (e) { console.log('Lỗi bảng khambenh', e); }
 
-            // 3. Lấy dữ liệu từ bảng TIÊM VACCINE: nhatkylamvaccine (dựa theo code nguồn quản lý tiêm)[cite: 2]
+            // 3. Lấy dữ liệu từ bảng TIÊM VACCINE: nhatkylamvaccine trên toàn hệ thống[cite: 2]
             try {
                 let { data } = await db.from('nhatkylamvaccine').select('*').in('mathucung', petIds);
                 if (data) {
                     data.forEach(item => {
+                        let pkName = item.maphongkham || petClinicMap[item.mathucung] || 'Phòng khám VetCare';
                         allRecords.push({
                             ngay: item.ngaytiem || item.created_at || 'Gần đây',
                             tenPet: petMap[item.mathucung] || 'Thú cưng',
                             tieuDe: '💉 Tiêm Vaccine: ' + (item.tenvaccine || '---'),
+                            phongKham: pkName,
                             noiDung: `Mã VC: ${item.mavaccine || '---'}<br>Trạng thái: <b>${item.trangthai || 'Đã tiêm'}</b><br>Ngày nhắc lại: ${item.ngaynhaclai || 'Không có'}<br>Bác sĩ tiêm: ${item.bacsi || '---'}`,
                             badgeClass: 'badge-tiem',
                             badgeText: 'Tiêm chủng',
@@ -215,22 +223,23 @@
                 }
             } catch (e) { console.log('Lỗi bảng nhatkylamvaccine', e); }
 
-            // 4. Lấy dữ liệu từ bảng NỘI TRÚ: nhatkynoitru (dựa theo code nguồn nội trú map qua khambenh)[cite: 3]
+            // 4. Lấy dữ liệu từ bảng NỘI TRÚ: nhatkynoitru trên toàn hệ thống[cite: 3]
             try {
-                // Lấy danh sách id khám bệnh của các thú cưng này trước để lọc nội trú
-                let { data: kbCheck } = await db.from('khambenh').select('id').in('mathucung', petIds);
+                let { data: kbCheck } = await db.from('khambenh').select('id, mathucung, maphongkham').in('mathucung', petIds);
                 if (kbCheck && kbCheck.length > 0) {
+                    let kbMapPK = {};
+                    kbCheck.forEach(k => kbMapPK[k.id] = k.maphongkham);
                     let kbIds = kbCheck.map(k => k.id);
+                    
                     let { data: ntData } = await db.from('nhatkynoitru').select('*').in('makhambenh', kbIds);
                     if (ntData) {
                         ntData.forEach(item => {
-                            // Tìm lại tên pet thông qua mã khám bệnh của nội trú
-                            let petName = 'Thú cưng';
-                            // Ta có thể truy vấn ngược hoặc map đơn giản
+                            let pkName = item.maphongkham || kbMapPK[item.makhambenh] || 'Phòng khám VetCare';
                             allRecords.push({
                                 ngay: item.ngayvao || item.created_at || 'Gần đây',
-                                tenPet: 'Thú cưng', // Sẽ hiển thị chung hoặc cập nhật nếu khớp mã khám
+                                tenPet: 'Thú cưng',
                                 tieuDe: '🏥 Nội trú (NKNT' + String(item.id).padStart(4, '0') + ')',
+                                phongKham: pkName,
                                 noiDung: `Trạng thái: <b>${item.trangthai || 'Đang nằm viện'}</b><br>Bác sĩ: ${item.bacsiphutrach || '---'}<br>Tổng viện phí: ${Number(item.tongchiphi || 0).toLocaleString('vi-VN')} đ`,
                                 badgeClass: 'badge-noitru',
                                 badgeText: 'Nội trú',
@@ -242,7 +251,7 @@
             } catch (e) { console.log('Lỗi bảng nhatkynoitru', e); }
 
             if (allRecords.length === 0) {
-                container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 25px; background: white; border-radius: 12px; font-size: 12px;">Chưa có dữ liệu khám bệnh, tiêm vaccine hay nội trú nào.</div>`;
+                container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 25px; background: white; border-radius: 12px; font-size: 12px;">Chưa có dữ liệu khám bệnh, tiêm vaccine hay nội trú nào trong hệ thống.</div>`;
                 return;
             }
 
@@ -255,7 +264,8 @@
                             <span class="${rec.badgeClass}">${rec.badgeText}</span>
                         </div>
                         <div class="history-content">
-                            <div style="margin-bottom: 4px; color: #0284c7; font-size: 10px;">📅 Ngày: ${rec.ngay}</div>
+                            <div style="margin-bottom: 2px; color: #0284c7; font-size: 10px; font-weight: bold;">🏥 Phòng khám: ${rec.phongKham}</div>
+                            <div style="margin-bottom: 4px; color: #64748b; font-size: 10px;">📅 Ngày: ${rec.ngay}</div>
                             <div>${rec.noiDung}</div>
                         </div>
                     </div>

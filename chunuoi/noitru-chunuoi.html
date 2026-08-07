@@ -157,7 +157,7 @@
         </div>
 
         <div id="danhSachNoiTru">
-            <div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 12px; font-size: 12px;">Đang tải lịch trình nội trú...</div>
+            <div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 12px; font-size: 12px;">Đang tải lịch trình nội trú theo phòng khám...</div>
         </div>
     </div>
 
@@ -171,11 +171,11 @@
             <span>📋</span>
             Lịch sử khám
         </a>
-        <a href="ketquachidinh-chunuoi.html" class="active">
+        <a href="ketquachidinh-chunuoi.html">
             <span>🔬</span>
             Chỉ định
         </a>
-        <a href="noitru-chunuoi.html">
+        <a href="noitru-chunuoi.html" class="active">
             <span>🏨</span>
             Lịch trình
         </a>
@@ -187,6 +187,8 @@
             <span>📅</span>
             Đặt lịch hẹn
         </a>
+				<a href="timkiem.html"><span>🔍</span>Tìm kiếm</a>
+
     </div>
 
     <script>
@@ -209,7 +211,7 @@
             container.innerHTML = '';
 
             try {
-                // 1. Tìm danh sách thú cưng của chủ nuôi hiện tại
+                // 1. Tìm danh sách thú cưng của chủ nuôi trên tất cả các cơ sở
                 let listPets = null;
                 for (let col of ['makhachhang', 'makh', 'khachhang_id', 'idkhachhang']) {
                     let { data } = await db.from('thucung').select('*').eq(col, ownerId);
@@ -226,24 +228,28 @@
 
                 const petIds = listPets.map(p => p.id);
                 const petMap = {};
+                const petClinicMap = {};
                 listPets.forEach(p => {
-                    petMap[p.id] = p.tenthucung || p.tenthecung || p.ten || 'Thú cưng';
+                    petMap[p.id] = p.tenthecung || p.tenthucung || p.ten || 'Thú cưng';
+                    petClinicMap[p.id] = p.maphongkham || 'Chính hãng';
                 });
 
-                // 2. Lấy danh sách các ca khám bệnh tương ứng với thú cưng của chủ nuôi
-                let { data: kbData } = await db.from('khambenh').select('id, mathucung').in('mathucung', petIds);
+                // 2. Lấy danh sách các ca khám bệnh tương ứng với thú cưng để ánh xạ phòng khám
+                let { data: kbData } = await db.from('khambenh').select('id, mathucung, maphongkham').in('mathucung', petIds);
                 if (!kbData || kbData.length === 0) {
                     container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 25px; background: white; border-radius: 12px; font-size: 12px;">Hiện tại không có lịch trình nội trú nào cho thú cưng của bạn.</div>`;
                     return;
                 }
 
                 const kbMap = {};
+                const kbClinicMap = {};
                 kbData.forEach(kb => {
                     kbMap[kb.id] = petMap[kb.mathucung] || 'Thú cưng';
+                    kbClinicMap[kb.id] = kb.maphongkham || petClinicMap[kb.mathucung] || 'Phòng khám VetCare';
                 });
                 const kbIds = kbData.map(k => k.id);
 
-                // 3. Lấy dữ liệu trực tiếp từ bảng 'lichtrinh'
+                // 3. Lấy dữ liệu trực tiếp từ bảng 'lichtrinh' theo các mã khám bệnh
                 let { data: ltData, error } = await db.from('lichtrinh').select('*').in('makhambenh', kbIds).order('id', { ascending: false });
                 if (error) throw error;
 
@@ -255,6 +261,7 @@
                 container.innerHTML = '';
                 ltData.forEach(item => {
                     const tenPet = kbMap[item.makhambenh] || 'Thú cưng';
+                    const phongKhamHienThi = item.maphongkham || kbClinicMap[item.makhambenh] || 'Phòng khám VetCare';
                     const ngayCapNhapStr = item.ngaycapnhap ? new Date(item.ngaycapnhap).toLocaleString('vi-VN') : '---';
                     const ghiChu = item.ghichu || 'Chưa cập nhật chi tiết tiến trình điều trị.';
 
@@ -292,6 +299,7 @@
                                 <span class="badge-noitru">Đang điều trị</span>
                             </div>
                             <div class="timeline-content">
+                                <div style="margin-bottom: 2px; color: #0284c7; font-weight: bold; font-size: 11px;">🏥 Phòng khám: ${phongKhamHienThi}</div>
                                 <div style="margin-bottom: 3px; color: #059669; font-weight: bold;">👨‍⚕️ Bác sĩ: ${item.bacsiphutrach || 'Chưa rõ'}</div>
                                 <div style="margin-bottom: 4px; color: #64748b; font-size: 11px;">📅 Cập nhật: ${ngayCapNhapStr}</div>
                                 

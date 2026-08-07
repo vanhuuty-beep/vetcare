@@ -139,10 +139,18 @@
         </div>
 
         <div class="form-card">
+            <!-- CHỌN PHÒNG KHÁM ĐỂ ĐẶT LỊCH -->
+            <div class="form-group-block">
+                <label>Chọn phòng khám muốn đặt lịch (*):</label>
+                <select id="selectPhongKham" onchange="locThuCungTheoPhongKham()">
+                    <option value="">-- Chọn phòng khám --</option>
+                </select>
+            </div>
+
             <div class="form-group-block">
                 <label>Chọn thú cưng của bạn (*):</label>
                 <select id="selectThuCung">
-                    <option value="">-- Đang tải danh sách thú cưng --</option>
+                    <option value="">-- Vui lòng chọn phòng khám trước --</option>
                 </select>
             </div>
 
@@ -186,7 +194,7 @@
             <span>📋</span>
             Lịch sử khám
         </a>
-        <a href="ketquachidinh-chunuoi.html" class="active">
+        <a href="ketquachidinh-chunuoi.html">
             <span>🔬</span>
             Chỉ định
         </a>
@@ -198,14 +206,16 @@
             <span>🛍️</span>
             Cửa hàng
         </a>
-        <a href="datlich.html">
+        <a href="datlich.html" class="active">
             <span>📅</span>
             Đặt lịch hẹn
         </a>
+		<a href="timkiem.html"><span>🔍</span>Tìm kiếm</a>
     </div>
 
     <script>
         let ownerData = null;
+        let danhSachTatCaThuCung = [];
 
         window.addEventListener('DOMContentLoaded', async () => {
             const ownerStr = sessionStorage.getItem('currentPetOwner');
@@ -222,10 +232,11 @@
             tomorrow.setDate(tomorrow.getDate() + 1);
             document.getElementById('ngayHen').value = tomorrow.toISOString().split('T')[0];
 
-            await taiDanhSachThuCung(ownerData.id);
+            await taiDanhSachThuCungVaPhongKham(ownerData.id);
         });
 
-        async function taiDanhSachThuCung(ownerId) {
+        async function taiDanhSachThuCungVaPhongKham(ownerId) {
+            // 1. Tải danh sách thú cưng của khách hàng
             let listPets = null;
             for (let col of ['makhachhang', 'makh', 'khachhang_id', 'idkhachhang']) {
                 let { data } = await db.from('thucung').select('*').eq(col, ownerId);
@@ -235,27 +246,70 @@
                 }
             }
 
-            const selectEl = document.getElementById('selectThuCung');
-            selectEl.innerHTML = '';
+            danhSachTatCaThuCung = listPets || [];
 
-            if (!listPets || listPets.length === 0) {
-                selectEl.innerHTML = `<option value="">Không có thú cưng nào liên kết</option>`;
+            // 2. Lấy danh sách các phòng khám mà thú cưng này từng đến hoặc lấy tất cả phòng khám trong hệ thống
+            const pkSet = new Set();
+            danhSachTatCaThuCung.forEach(pet => {
+                if (pet.maphongkham) pkSet.add(pet.maphongkham);
+            });
+
+            const selectPK = document.getElementById('selectPhongKham');
+            selectPK.innerHTML = `<option value="">-- Chọn phòng khám bạn muốn đặt lịch --</option>`;
+
+            // Nếu thú cưng có gắn maphongkham, hiển thị các phòng khám đó
+            if (pkSet.size > 0) {
+                pkSet.forEach(pk => {
+                    selectPK.innerHTML += `<option value="${pk}">Phòng khám: ${pk}</option>`;
+                });
+            } else {
+                // Mặc định cho phép chọn phòng khám chung nếu chưa phân rã mã phòng khám trên thú cưng
+                selectPK.innerHTML += `<option value="PK_MACDINH">Phòng khám chính (VetCare)</option>`;
+            }
+
+            // Nếu chỉ có 1 phòng khám, tự động chọn luôn
+            if (selectPK.options.length === 2) {
+                selectPK.selectedIndex = 1;
+                locThuCungTheoPhongKham();
+            }
+        }
+
+        function locThuCungTheoPhongKham() {
+            const selectedPK = document.getElementById('selectPhongKham').value;
+            const selectThuCung = document.getElementById('selectThuCung');
+            selectThuCung.innerHTML = '';
+
+            if (!selectedPK) {
+                selectThuCung.innerHTML = `<option value="">-- Vui lòng chọn phòng khám trước --</option>`;
                 return;
             }
 
-            listPets.forEach(pet => {
+            // Lọc thú cưng theo phòng khám tương ứng hoặc hiển thị toàn bộ nếu chọn mặc định
+            const petsFiltered = danhSachTatCaThuCung.filter(pet => !pet.maphongkham || pet.maphongkham === selectedPK || selectedPK === 'PK_MACDINH');
+
+            if (petsFiltered.length === 0) {
+                selectThuCung.innerHTML = `<option value="">Không có thú cưng nào tại phòng khám này</option>`;
+                return;
+            }
+
+            petsFiltered.forEach(pet => {
                 const tenPet = pet.tenthecung || pet.tenthucung || pet.ten || 'Thú cưng';
-                selectEl.innerHTML += `<option value="${pet.id}">${tenPet} (${pet.loai || 'Thú cưng'})</option>`;
+                selectThuCung.innerHTML += `<option value="${pet.id}">${tenPet} (${pet.loai || 'Thú cưng'})</option>`;
             });
         }
 
         async function guiLichHen() {
+            const maphongkham = document.getElementById('selectPhongKham').value;
             const mathucung = document.getElementById('selectThuCung').value;
             const dichvu = document.getElementById('selectDichVu').value;
             const ngayhen = document.getElementById('ngayHen').value;
             const giohen = document.getElementById('gioHen').value;
             const ghichuInput = document.getElementById('ghiChu').value.trim();
 
+            if (!maphongkham) {
+                alert('Vui lòng chọn phòng khám cần đặt lịch!');
+                return;
+            }
             if (!mathucung) {
                 alert('Vui lòng chọn thú cưng cần đặt lịch!');
                 return;
@@ -274,7 +328,8 @@
                 ngayhen: ngayGioHen,
                 diachi: ownerData.diachi || '',
                 noidung: noiDungHen,
-                trangthai: 'Chờ khám'
+                trangthai: 'Chờ khám',
+                maphongkham: maphongkham === 'PK_MACDINH' ? null : maphongkham // 👈 Gắn đúng mã phòng khám để dữ liệu bay về đúng cơ sở
             };
 
             const { error } = await db.from('lichhen').insert([payload]);
