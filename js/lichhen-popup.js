@@ -1,10 +1,7 @@
-// TÍNH NĂNG TỰ ĐỘNG HIỂN THỊ POPUP LỊCH HẸN NGÀY MAI
+// TÍNH NĂNG TỰ ĐỘNG HIỂN THỊ POPUP LỊCH HẸN HÔM NAY VÀ NGÀY MAI (CHỈ LẤY TRẠNG THÁI "CHỜ KHÁM")
 document.addEventListener('DOMContentLoaded', async () => {
-    // Tự động chèn HTML của Popup vào cuối trang nếu chưa có
     chenHtmlPopupLichHen();
-    
-    // Gọi hàm kiểm tra lịch hẹn
-    await kiemTraLichHenNgayMai();
+    await kiemTraLichHenHomNayVaNgayMai();
 });
 
 function chenHtmlPopupLichHen() {
@@ -14,7 +11,7 @@ function chenHtmlPopupLichHen() {
     <div class="modal-overlay" id="popupLichHenNgayMai" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 2000;">
         <div class="modal-container" style="width: 550px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
-                <h3 style="margin: 0; font-size: 16px; color: #1e3a8a;">📅 Lịch Hẹn Ngày Mai (<span id="txtNgayMai">--/--/----</span>)</h3>
+                <h3 style="margin: 0; font-size: 16px; color: #1e3a8a;">📅 Lịch Hẹn Hôm Nay & Ngày Mai (Chờ Khám)</h3>
                 <button onclick="dongPopupLichHen()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">&times;</button>
             </div>
             
@@ -42,45 +39,49 @@ function chenHtmlPopupLichHen() {
     document.body.insertAdjacentHTML('beforeend', popupHtml);
 }
 
-async function kiemTraLichHenNgayMai() {
+async function kiemTraLichHenHomNayVaNgayMai() {
     if (typeof db === 'undefined' || !db) return;
 
+    // Lấy mốc thời gian bắt đầu từ 00:00:00 hôm nay
+    const homNay = new Date();
+    const nam = homNay.getFullYear();
+    const thang = String(homNay.getMonth() + 1).padStart(2, '0');
+    const ngay = String(homNay.getDate()).padStart(2, '0');
+    const mocDauHomNay = `${nam}-${thang}-${ngay}T00:00:00`;
+
+    // Lấy mốc thời gian kết thúc của ngày mai (23:59:59)
     const ngayMai = new Date();
-    ngayMai.setDate(ngayMai.getDate() + 1);
-    const nam = ngayMai.getFullYear();
-    const thang = String(ngayMai.getMonth() + 1).padStart(2, '0');
-    const ngay = String(ngayMai.getDate()).padStart(2, '0');
-    
-    const ngayMaiDauNgay = `${nam}-${thang}-${ngay}T00:00:00`;
-    const ngayMaiCuoiNgay = `${nam}-${thang}-${ngay}T23:59:59`;
+    ngayMai.setDate(ngayMai.getDate() + 2); // Cộng 2 để quét hết trọn vẹn ngày mai
+    const namMai = ngayMai.getFullYear();
+    const thangMai = String(ngayMai.getMonth() + 1).padStart(2, '0');
+    const ngayMaiStr = String(ngayMai.getDate()).padStart(2, '0');
+    const mocCuoiNgayMai = `${namMai}-${thangMai}-${ngayMaiStr}T00:00:00`;
 
-    const txtNgayMaiEl = document.getElementById('txtNgayMai');
-    if (txtNgayMaiEl) {
-        txtNgayMaiEl.innerText = `${ngay}/${thang}/${nam}`;
-    }
-
+    // Truy vấn lịch hẹn từ hôm nay đến hết ngày mai VÀ PHẢI CÓ TRẠNG THÁI LÀ "Chờ khám"
     const { data, error } = await db
         .from('lichhen')
         .select('*')
-        .gte('ngayhen', ngayMaiDauNgay)
-        .lte('ngayhen', ngayMaiCuoiNgay)
+        .gte('ngayhen', mocDauHomNay)
+        .lt('ngayhen', mocCuoiNgayMai)
+        .eq('trangthai', 'Chờ khám') // Bỏ qua các lịch đã hoàn thành hoặc đã hủy
         .order('ngayhen', { ascending: true });
 
     if (error) {
-        console.error('Lỗi tải lịch hẹn ngày mai:', error);
+        console.error('Lỗi tải lịch hẹn:', error);
         return;
     }
 
     if (data && data.length > 0) {
         let html = '';
         data.forEach(item => {
-            const gioHenFormatted = item.ngayhen ? new Date(item.ngayhen).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '---';
+            const ngayHenObj = new Date(item.ngayhen);
+            const ngayGioFormatted = ngayHenObj.toLocaleString('vi-VN');
             let rawSdt = String(item.sdt || '').trim();
             let displaySdt = rawSdt ? (rawSdt.startsWith('0') ? rawSdt : '0' + rawSdt) : 'Không có SĐT';
 
             html += `
                 <tr>
-                    <td style="padding: 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #2563eb;">${gioHenFormatted}</td>
+                    <td style="padding: 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #2563eb;">${ngayGioFormatted}</td>
                     <td style="padding: 8px; border: 1px solid #cbd5e1;">
                         <b>${item.tenchunuoi || '---'}</b><br>
                         <span style="font-size: 11px; color: #0284c7;">📞 ${displaySdt}</span>
@@ -94,7 +95,7 @@ async function kiemTraLichHenNgayMai() {
         const popupEl = document.getElementById('popupLichHenNgayMai');
         if (tblEl && popupEl) {
             tblEl.innerHTML = html;
-            popupEl.style.display = 'flex';
+            popupEl.style.display = 'flex'; // Hiển thị popup
         }
     }
 }
