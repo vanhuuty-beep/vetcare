@@ -237,8 +237,6 @@
                 danhSachKhachHangGoc = khData;
                 if (selectId) {
                     chonKhachHangMobile(selectId);
-                } else {
-                    resetKhachHangMobile();
                 }
             }
         }
@@ -254,8 +252,8 @@
             }
 
             const ketQua = danhSachKhachHangGoc.filter(kh => {
-                const ten = (kh.tenkhachhang || kh.hovaten || '').toLowerCase();
-                const sdt = (kh.sdt || kh.sodienthoai || '').toLowerCase();
+                const ten = (kh.hovaten || '').toLowerCase();
+                const sdt = (kh.sodienthoai || '').toLowerCase();
                 return ten.includes(keyword) || sdt.includes(keyword);
             });
 
@@ -268,8 +266,8 @@
             boxGoiY.style.display = 'block';
             boxGoiY.innerHTML = '';
             ketQua.forEach(kh => {
-                const ten = kh.tenkhachhang || kh.hovaten || 'Khách hàng';
-                const sdt = kh.sdt || kh.sodienthoai || 'Không có SĐT';
+                const ten = kh.hovaten || 'Khách hàng';
+                const sdt = kh.sodienthoai || 'Không có SĐT';
                 boxGoiY.innerHTML += `
                     <div onclick="chonKhachHangMobile(${kh.id})" style="padding: 6px 8px; font-size: 11px; border-bottom: 1px solid #f1f5f9; cursor: pointer;">
                         <b>${ten}</b> - <span style="color: #2563eb;">${sdt}</span>
@@ -282,8 +280,8 @@
             const kh = danhSachKhachHangGoc.find(x => x.id == id);
             if (kh) {
                 khachHangDangChon = kh;
-                const ten = kh.tenkhachhang || kh.hovaten || '';
-                const sdt = kh.sdt || kh.sodienthoai || '';
+                const ten = kh.hovaten || '';
+                const sdt = kh.sodienthoai || '';
                 
                 // Tách riêng: Ô trái là Tên, Ô phải là SĐT
                 document.getElementById('inputTimTenKhach').value = ten;
@@ -291,7 +289,7 @@
                 document.getElementById('dropdownGoiYTenKhach').style.display = 'none';
 
                 document.getElementById('khachHangStatus').innerText = 'Thành viên';
-                const diem = kh.tichdiem || kh.điểm || 0;
+                const diem = kh.tichdiem || 0;
                 document.getElementById('diemTichLuyHienTai').innerText = `Điểm: ${diem}`;
             }
         }
@@ -440,7 +438,6 @@
             let tongCuoiCung = tongTienGoc - giamGia;
             if (tongCuoiCung < 0) tongCuoiCung = 0;
 
-            // Quy tắc: 10.000 VNĐ = 1 điểm
             let diemTichLuy = Math.floor(tongCuoiCung / 10000);
 
             document.getElementById('tongThanhToan').textContent = tongCuoiCung.toLocaleString() + ' đ';
@@ -468,8 +465,9 @@
             btnSave.disabled = true;
             btnSave.textContent = 'Đang lưu...';
 
+            // Khớp đúng tên các cột trong CSDL Supabase: hovaten, sodienthoai, diachi, tichdiem
             const { data, error } = await db.from('khachhang').insert([
-                { tenkhachhang: hovaten, hovaten: hovaten, sdt: sodienthoai, sodienthoai: sodienthoai, diachi: diachi, tichdiem: 0 }
+                { hovaten: hovaten, sodienthoai: sodienthoai, diachi: diachi, tichdiem: 0 }
             ]).select();
 
             btnSave.disabled = false;
@@ -483,7 +481,13 @@
 
             alert('Thêm khách hàng thành công!');
             dongModalThemKhachHangPOS();
-            await loadLaiDanhSachKhachHang(data && data[0] ? data[0].id : null);
+
+            // Tải lại danh sách và chọn luôn khách hàng mới tạo vào POS
+            if (data && data[0]) {
+                await loadLaiDanhSachKhachHang(data[0].id);
+            } else {
+                await loadLaiDanhSachKhachHang();
+            }
         }
 
         function moCameraQuetMa() {
@@ -529,7 +533,7 @@
             }
 
             const makhachhang = khachHangDangChon ? khachHangDangChon.id : '';
-            const tenKhach = khachHangDangChon ? (khachHangDangChon.tenkhachhang || khachHangDangChon.hovaten) : 'Khách vãng lai';
+            const tenKhach = khachHangDangChon ? (khachHangDangChon.hovaten) : 'Khách vãng lai';
             const giamGia = Number(document.getElementById('inputGiamGia').value) || 0;
             const tongTien = document.getElementById('tongThanhToan').innerText;
 
@@ -603,17 +607,16 @@
             }
 
             const { tongCuoiCung, diemTichLuy } = tinhToanThanhToan();
-            const tenKhach = khachHangDangChon ? (khachHangDangChon.tenkhachhang || khachHangDangChon.hovaten) : 'Khách lẻ vãng lai';
-            const sdtKhach = khachHangDangChon ? (khachHangDangChon.sdt || khachHangDangChon.sodienthoai) : '';
+            const tenKhach = khachHangDangChon ? (khachHangDangChon.hovaten) : 'Khách lẻ vãng lai';
+            const sdtKhach = khachHangDangChon ? (khachHangDangChon.sodienthoai) : '';
 
             if (!confirm(`Xác nhận chốt đơn thanh toán: ${tongCuoiCung.toLocaleString('vi-VN')} đ?`)) {
                 return;
             }
 
             try {
-                // Tự động cộng dồn điểm vào cột tichdiem của bảng khachhang
                 if (khachHangDangChon) {
-                    let diemCu = parseInt(khachHangDangChon.tichdiem || khachHangDangChon.điểm) || 0;
+                    let diemCu = parseInt(khachHangDangChon.tichdiem) || 0;
                     let diemMoi = diemCu + diemTichLuy;
                     await db.from('khachhang').update({ tichdiem: diemMoi }).eq('id', khachHangDangChon.id);
                 }
