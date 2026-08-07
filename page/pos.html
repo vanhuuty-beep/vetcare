@@ -1163,54 +1163,59 @@
         }
 
         async function thanhToanDonHang() {
-            if (gioHang.length === 0) {
-                alert('Giỏ hàng trống!');
-                return;
-            }
+    // 1. Kiểm tra giỏ hàng
+    if (gioHang.length === 0) {
+        alert('Giỏ hàng trống!');
+        return;
+    }
 
-            const tenKhach = khachHangDangChon ? khachHangDangChon.hovaten : 'Khách lẻ vãng lai';
-            const sdtKhach = khachHangDangChon ? khachHangDangChon.sodienthoai : '';
-            const { tongGoc, tienChietKhau, tongThanhToan, diemThuong } = tinhToanTongTien();
+    // 2. Xác nhận chốt đơn
+    if (!confirm('Xác nhận chốt đơn và in hóa đơn?')) return;
 
-            if (!confirm(`Xác nhận chốt đơn thanh toán: ${tongThanhToan.toLocaleString('vi-VN')} đ?`)) {
-                return;
-            }
+    try {
+        const { tongGoc, tienChietKhau, tongThanhToan, diemThuong } = tinhToanTongTien();
+        const tenKhach = khachHangDangChon ? khachHangDangChon.hovaten : 'Khách lẻ vãng lai';
+        const sdtKhach = khachHangDangChon ? khachHangDangChon.sodienthoai : '';
 
-            if (khachHangDangChon) {
-                let diemCu = parseInt(khachHangDangChon.tichdiem || 0);
-                let diemMoi = diemCu + diemThuong;
-                await db.from('khachhang').update({ tichdiem: diemMoi }).eq('id', khachHangDangChon.id);
-            }
+        // 3. Lưu vào DB & Cập nhật tồn kho
+        for (let item of gioHang) {
+            // Lưu vào bảng donhang
+            await db.from('donhang').insert([{
+                masanpham: item.masanpham,
+                tensanpham: item.tensanpham,
+                soluongban: item.soluong,
+                dongia: item.dongia,
+                thanhtien: item.soluong * item.dongia,
+                tenkhachhang: tenKhach,
+                sdt: sdtKhach,
+                nguoiban: 'Thu ngân POS'
+            }]);
 
-            for (let item of gioHang) {
-                const donHangPayload = {
-                    masanpham: item.masanpham,
-                    tensanpham: item.tensanpham,
-                    soluongban: item.soluong,
-                    dongia: item.dongia,
-                    thanhtien: item.soluong * item.dongia,
-                    tenkhachhang: tenKhach,
-                    sdt: sdtKhach,
-                    nguoiban: 'Thu ngân POS'
-                };
-
-                await db.from('donhang').insert([donHangPayload]);
-
-                const spGoc = danhSachSanPhamGoc.find(x => x.id === item.id);
-                if (spGoc) {
-                    let tonMoi = (spGoc.soluongton || 0) - item.soluong;
-                    if (tonMoi < 0) tonMoi = 0;
-                    await db.from('danhmucsanpham').update({ soluongton: tonMoi }).eq('id', item.id);
-                }
-            }
-
-            inHoaDonNhiet(tenKhach, sdtKhach, tongGoc, tienChietKhau, tongThanhToan, diemThuong);
-
-            alert(`Chốt & tích điểm thành công!\nTích lũy cho khách: +${diemThuong} điểm.`);
-            lamMoiGioHang();
-            await taiDanhMucSanPhamPOS();
-            await taiDanhSachKhachHangPOS();
+            // Trừ tồn kho
+            let tonMoi = (item.tonkho || 0) - item.soluong;
+            await db.from('danhmucsanpham').update({ soluongton: tonMoi }).eq('id', item.id);
         }
+
+        // Cập nhật điểm cho khách (nếu có)
+        if (khachHangDangChon) {
+            let diemMoi = (parseInt(khachHangDangChon.tichdiem) || 0) + diemThuong;
+            await db.from('khachhang').update({ tichdiem: diemMoi }).eq('id', khachHangDangChon.id);
+        }
+
+        // 4. Gọi hàm in đã có sẵn trong code của bạn
+        inHoaDonNhiet(tenKhach, sdtKhach, tongGoc, tienChietKhau, tongThanhToan, diemThuong);
+
+        // 5. Làm mới lại sau khi in xong
+        alert('Chốt đơn thành công!');
+        lamMoiGioHang();
+        await taiDanhMucSanPhamPOS();
+        await taiDanhSachKhachHangPOS();
+
+    } catch (err) {
+        console.error(err);
+        alert('Có lỗi xảy ra: ' + err.message);
+    }
+}
     </script>
 </body>
 </html>
