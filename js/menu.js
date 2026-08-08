@@ -43,9 +43,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <li class="menu-item" id="menu-thanhtoan" onclick="window.location.href='thanhtoan.html'">
                 <span>💳</span> <span class="menu-text">Thanh toán & Gia hạn</span>
             </li>
-            <li class="menu-item" id="menu-quanlychung" onclick="window.location.href='quanlychung.html'" style="background: rgba(2, 132, 199, 0.15); border-left: 4px solid #0284c7;">
-                    <span>👑</span> <span class="menu-text" style="font-weight: bold; color: #0284c7;">Quản lý chung (Hệ thống)</span>
-                </li>
+            
         `;
 
         // CHỈ TÀI KHOẢN 'huuty' MỚI THẤY VÀ ĐƯỢC PHÉP TRUY CẬP MỤC QUẢN LÝ CHUNG NÀY
