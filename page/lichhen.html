@@ -147,7 +147,8 @@
             <div class="form-row">
                 <div class="form-group-modal">
                     <label>Ngày hẹn (ngayhen) (*):</label>
-                    <input type="datetime-local" id="ngayhen">
+                    <!-- Đã thay đổi từ datetime-local thành date để bỏ hẳn phần giờ -->
+                    <input type="date" id="ngayhen">
                 </div>
                 <div class="form-group-modal">
                     <label>Trạng thái (trangthai):</label>
@@ -212,7 +213,16 @@
             }
 
             data.forEach(item => {
-                const ngayHenFormatted = item.ngayhen ? new Date(item.ngayhen).toLocaleString('vi-VN') : '---';
+                // Xử lý hiển thị ngày dạng DD/MM/YYYY thuần túy (bỏ qua giờ)
+                let ngayHenFormatted = '---';
+                if (item.ngayhen) {
+                    const parts = item.ngayhen.split('T')[0].split('-');
+                    if (parts.length === 3) {
+                        ngayHenFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    } else {
+                        ngayHenFormatted = item.ngayhen;
+                    }
+                }
                 
                 // Xử lý huy hiệu trạng thái dạng bấm đổi trực tiếp trên bảng PC
                 const trangThaiHienTai = item.trangthai || 'Chờ khám';
@@ -236,7 +246,7 @@
 
                 tableBody.innerHTML += `<tr>
                     <td><strong>#${item.id}</strong></td>
-                    <td style="font-weight: 600; color: #1e3a8a;">${ngayHenFormatted}</td>
+                    <td style="font-weight: 600; color: #1e3a8a;">📅 ${ngayHenFormatted}</td>
                     <td>
                         <b>${item.tenchunuoi || '---'}</b><br>
                         <span style="font-size: 12px;">
@@ -247,8 +257,8 @@
                     <td style="font-size: 12px; max-width: 250px; word-break: break-word;">${item.noidung || '---'}</td>
                     <td style="text-align: center;">
                         <span onclick="capNhatTrangThaiLichHenPC(${item.id}, '${nextStatus}')" 
-                              style="padding: 4px 10px; border-radius: 12px; font-size: 11px; background: ${bgBadge}; color: ${badgeColor}; font-weight: bold; cursor: pointer; display: inline-block; white-space: nowrap;" 
-                              title="Bấm để đổi trạng thái">
+                            style="padding: 4px 10px; border-radius: 12px; font-size: 11px; background: ${bgBadge}; color: ${badgeColor}; font-weight: bold; cursor: pointer; display: inline-block; white-space: nowrap;" 
+                            title="Bấm để đổi trạng thái">
                             ${trangThaiHienTai} 🔄
                         </span>
                     </td>
@@ -297,9 +307,9 @@
             document.getElementById('noidung').value = '';
             document.getElementById('trangthai').value = 'Chờ khám';
             
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('ngayhen').value = now.toISOString().slice(0, 16);
+            // Lấy ngày hiện tại định dạng YYYY-MM-DD
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('ngayhen').value = today;
             
             document.getElementById('modalTitle').innerText = 'Tạo lịch hẹn mới';
             document.getElementById('lichHenModal').style.display = 'flex';
@@ -316,7 +326,8 @@
             document.getElementById('noidung').value = item.noidung || '';
             document.getElementById('trangthai').value = item.trangthai || 'Chờ khám';
             
-            document.getElementById('ngayhen').value = item.ngayhen ? new Date(new Date(item.ngayhen).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+            // Lấy đúng định dạng YYYY-MM-DD bỏ phần giờ
+            document.getElementById('ngayhen').value = item.ngayhen ? item.ngayhen.split('T')[0] : '';
 
             document.getElementById('modalTitle').innerText = 'Cập nhật lịch hẹn (ID: ' + id + ')';
             document.getElementById('lichHenModal').style.display = 'flex';
@@ -330,20 +341,20 @@
             const id = document.getElementById('editingId').value;
             const tenchunuoi = document.getElementById('tenchunuoi').value.trim();
             const sdt = document.getElementById('sdt').value.trim();
-            const ngayhen = document.getElementById('ngayhen').value;
+            const ngayhen = document.getElementById('ngayhen').value; // Chuỗi 'YYYY-MM-DD'
             const diachi = document.getElementById('diachi').value.trim();
             const noidung = document.getElementById('noidung').value.trim();
             const trangthai = document.getElementById('trangthai').value;
 
             if (!tenchunuoi || !ngayhen) {
-                alert('Vui lòng nhập Tên chủ nuôi và Thời gian Ngày hẹn!');
+                alert('Vui lòng nhập Tên chủ nuôi và Ngày hẹn!');
                 return;
             }
 
             const payload = {
                 tenchunuoi: tenchunuoi,
                 sdt: sdt,
-                ngayhen: ngayhen ? new Date(ngayhen).toISOString() : null,
+                ngayhen: ngayhen, // Lưu trực tiếp chuỗi ngày thuần túy lên cơ sở dữ liệu
                 diachi: diachi,
                 noidung: noidung,
                 trangthai: trangthai
