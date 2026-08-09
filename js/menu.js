@@ -10,18 +10,18 @@ document.addEventListener("DOMContentLoaded", function() {
     const vaitroRaw = currentUser ? (currentUser.vaitro || currentUser.role || '') : '';
     const vaitro = vaitroRaw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
     
-    // Xác định chính xác quyền hạn
-    const isAdminRole = vaitro === 'admin' || vaitro.includes('chủ phòng khám') || vaitro.includes('chu phong kham') || vaitro.includes('chupk');
-    const isBacSi = vaitro.includes('bac si') || vaitro === 'bacsi';
-    
-    // Chủ phòng khám thực sự (Admin hoặc Role chủ phòng khám) mới thấy menu hệ thống nhạy cảm
-    const isOwnerOrAdmin = isAdminRole; 
-
-    // Kiểm tra xem tài khoản hiện tại có phải là 'huuty' hay không để phân quyền trang Quản lý chung
+    // Xác định tài khoản siêu quản lý hệ thống (huuty hoặc số điện thoại 0935778727)
     const tentaiKhoanHienTai = currentUser ? String(currentUser.tentaikhoan || currentUser.username || currentUser.sodienthoai || '').toLowerCase().trim() : '';
-    const isHuuTy = (tentaiKhoanHienTai === 'huuty' || tentaiKhoanHienTai.includes('huuty'));
+    const sdtHienTai = currentUser ? String(currentUser.sodienthoai || currentUser.sdt || '').trim() : '';
+    const isHuuTy = (tentaiKhoanHienTai === 'huuty' || tentaiKhoanHienTai.includes('huuty') || sdtHienTai === '0935778727');
 
-    // Kiểm tra hạn sử dụng bản quyền
+    // Xác định quyền Chủ phòng khám (loại bỏ hoàn toàn vai trò Admin cũ, chỉ nhận chủ phòng khám)
+    const isTrueOwner = vaitro.includes('chủ phòng khám') || vaitro.includes('chu phong kham') || vaitro.includes('chupk');
+    
+    // Bác sĩ
+    const isBacSi = vaitro.includes('bac si') || vaitro === 'bacsi';
+
+    // --- LỚP PHONG TỎA & ĐIỀU HƯỚNG KHI HẾT HẠN ---
     let isExpired = false;
     const ngayHetHanStr = currentUser?.ngayhethan || sessionStorage.getItem('ngayhethan');
     if (ngayHetHanStr) {
@@ -31,34 +31,44 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     if (isExpired) {
-        hienThiPopupGiaHan();
+        if (isTrueOwner && !isHuuTy) {
+            alert('⚠️ Tài khoản phòng khám của bạn đã hết hạn bản quyền! Hệ thống sẽ chuyển hướng đến trang thanh toán.');
+            window.location.replace('thanhtoan.html');
+            return;
+        } else if (!isHuuTy) {
+            hienThiPopupGiaHanChoNhanVien();
+        }
     }
 
-    // Xây dựng danh mục HỆ THỐNG: Bác sĩ và nhân viên thường chỉ thấy Liên hệ, ẩn hoàn toàn Thông tin PK và Quản lý nhân viên
+    // Xây dựng danh mục HỆ THỐNG theo phân quyền
     let heThongMenuHtml = `<li class="menu-category">👨‍⚕️ HỆ THỐNG</li>`;
-    if (isOwnerOrAdmin) {
+
+    // 1. Quản lý hệ thống tối cao (0935778727 hoặc huuty) thấy tất cả
+    if (isHuuTy) {
         heThongMenuHtml += `
             <li class="menu-item" id="menu-thongtinpk" onclick="window.location.href='thongtinphongkham.html'"><span>🏥</span> <span class="menu-text">Thông tin phòng khám</span></li>
             <li class="menu-item" id="menu-quanlyuser" onclick="window.location.href='quanlyuser.html'"><span>🔐</span> <span class="menu-text">Quản lý nhân viên</span></li>
-            <li class="menu-item" id="menu-thanhtoan" onclick="window.location.href='thanhtoan.html'">
-                <span>💳</span> <span class="menu-text">Thanh toán & Gia hạn</span>
+            <li class="menu-item" id="menu-thanhtoan" onclick="window.location.href='thanhtoan.html'"><span>💳</span> <span class="menu-text">Thanh toán & Gia hạn</span></li>
+            <li class="menu-item" id="menu-quanlychung" onclick="window.location.href='quanlychung.html'" style="background: rgba(2, 132, 199, 0.15); border-left: 4px solid #0284c7;">
+                <span>👑</span> <span class="menu-text" style="font-weight: bold; color: #0284c7;">Quản lý chung (Hệ thống)</span>
             </li>
-            
-        `;
-
-        // CHỈ TÀI KHOẢN 'huuty' MỚI THẤY VÀ ĐƯỢC PHÉP TRUY CẬP MỤC QUẢN LÝ CHUNG NÀY
-        if (isHuuTy) {
-            heThongMenuHtml += `
-                <li class="menu-item" id="menu-quanlychung" onclick="window.location.href='quanlychung.html'" style="background: rgba(2, 132, 199, 0.15); border-left: 4px solid #0284c7;">
-                    <span>👑</span> <span class="menu-text" style="font-weight: bold; color: #0284c7;">Quản lý chung (Hệ thống)</span>
-                </li>
-            `;
-        }
-
-        heThongMenuHtml += `
+            <li class="menu-item" id="menu-lichsuthanhtoan" onclick="window.location.href='lichsuthanhtoan.html'" style="background: rgba(5, 150, 105, 0.1); border-left: 4px solid #059669; margin-top: 5px;">
+                <span>💳</span> <span class="menu-text" style="font-weight: bold; color: #059669;">Lịch sử thanh toán</span>
+            </li>
             <li class="menu-item" id="menu-lienhe" onclick="window.location.href='lienhe.html'"><span>📞</span> <span class="menu-text">Liên hệ</span></li>
         `;
-    } else {
+    } 
+    // 2. Chủ phòng khám thấy thông tin PK, quản lý nhân viên, thanh toán (ẨN hoàn toàn Quản lý chung)
+    else if (isTrueOwner) {
+        heThongMenuHtml += `
+            <li class="menu-item" id="menu-thongtinpk" onclick="window.location.href='thongtinphongkham.html'"><span>🏥</span> <span class="menu-text">Thông tin phòng khám</span></li>
+            <li class="menu-item" id="menu-quanlyuser" onclick="window.location.href='quanlyuser.html'"><span>🔐</span> <span class="menu-text">Quản lý nhân viên</span></li>
+            <li class="menu-item" id="menu-thanhtoan" onclick="window.location.href='thanhtoan.html'"><span>💳</span> <span class="menu-text">Thanh toán & Gia hạn</span></li>
+            <li class="menu-item" id="menu-lienhe" onclick="window.location.href='lienhe.html'"><span>📞</span> <span class="menu-text">Liên hệ</span></li>
+        `;
+    } 
+    // 3. Nhân viên và Bác sĩ: Chỉ thấy Liên hệ trong phần hệ thống
+    else {
         heThongMenuHtml += `
             <li class="menu-item" id="menu-lienhe" onclick="window.location.href='lienhe.html'"><span>📞</span> <span class="menu-text">Liên hệ</span></li>
         `;
@@ -68,21 +78,21 @@ document.addEventListener("DOMContentLoaded", function() {
     const options = { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' };
     const ngayHienTai = now.toLocaleDateString('vi-VN', options);
 
-    // 1. XÂY DỰNG CÁC NHÓM MENU THEO PHÂN QUYỀN TRÊN PC
+    // XÂY DỰNG CÁC NHÓM MENU CHUYÊN MÔN
     let dynamicMenuContent = '';
 
-    // Thống kê / Tổng quan (Ai cũng thấy)
+    // Thống kê (Ai cũng thấy)
     dynamicMenuContent += `<li class="menu-item" id="menu-thongke" onclick="window.location.href='thongke.html'"><span>📈</span> <span class="menu-text">Thống kê</span></li>`;
 
-    // Khách hàng, Thú cưng, Lịch hẹn
+    // Khách hàng, Thú cưng, Lịch hẹn (Ai cũng thấy để làm việc)
     dynamicMenuContent += `
         <li class="menu-item" id="menu-khachhang" onclick="window.location.href='khachhang.html'"><span>👤</span> <span class="menu-text">Khách hàng</span></li>
         <li class="menu-item" id="menu-thucung" onclick="window.location.href='thucung.html'"><span>🐶</span> <span class="menu-text">Thú cưng</span></li>
         <li class="menu-item" id="menu-lichhen" onclick="window.location.href='lichhen.html'"><span>📅</span> <span class="menu-text">Lịch hẹn</span></li>
     `;
 
-    // Nhóm Khám & Điều trị: Chỉ Chủ phòng khám/Admin và Bác sĩ thấy
-    if (isOwnerOrAdmin || isBacSi) {
+    // Khám & Điều trị: Chủ phòng khám, Bác sĩ và Quản lý hệ thống thấy (Nhân viên bị ẩn)
+    if (isTrueOwner || isBacSi || isHuuTy) {
         dynamicMenuContent += `
             <li class="menu-dropdown-toggle active-parent" onclick="toggleSubmenu(this)">
                 <div class="menu-label-wrap"><span class="group-icon">🩺</span> <span class="menu-text">Khám & Điều trị</span></div> <span class="arrow">▼</span>
@@ -95,7 +105,7 @@ document.addEventListener("DOMContentLoaded", function() {
         `;
     }
 
-    // Nhóm Kho & Vắc-xin
+    // Kho & Vắc-xin (Ai cũng thấy)
     dynamicMenuContent += `
         <li class="menu-dropdown-toggle" onclick="toggleSubmenu(this)">
             <div class="menu-label-wrap"><span class="group-icon">📦</span> <span class="menu-text">Kho & Vắc-xin</span></div> <span class="arrow">▼</span>
@@ -108,8 +118,8 @@ document.addEventListener("DOMContentLoaded", function() {
         </ul>
     `;
 
-    // Nhóm Quản lý Lưu trú: Dành cho Chủ phòng khám/Admin và Bác sĩ
-    if (isOwnerOrAdmin || isBacSi) {
+    // Quản lý Lưu trú: Chủ phòng khám, Bác sĩ và Quản lý hệ thống thấy (Nhân viên bị ẩn)
+    if (isTrueOwner || isBacSi || isHuuTy) {
         dynamicMenuContent += `
             <li class="menu-dropdown-toggle" onclick="toggleSubmenu(this)">
                 <div class="menu-label-wrap"><span class="group-icon">🏨</span> <span class="menu-text">Quản lý Lưu trú</span></div> <span class="arrow">▼</span>
@@ -121,8 +131,8 @@ document.addEventListener("DOMContentLoaded", function() {
         `;
     }
 
-    // Petshop & Bán hàng: Bác sĩ bị ẩn hoàn toàn
-    if (!isBacSi) {
+    // Petshop & Bán hàng: Bác sĩ bị ẩn hoàn toàn (Chủ phòng khám, Nhân viên và Quản lý hệ thống thấy)
+    if (!isBacSi || isHuuTy) {
         dynamicMenuContent += `
             <li class="menu-dropdown-toggle" onclick="toggleSubmenu(this)">
                 <div class="menu-label-wrap"><span class="group-icon">🛍️</span> <span class="menu-text">Petshop & Bán hàng</span></div> <span class="arrow">▼</span>
@@ -136,8 +146,8 @@ document.addEventListener("DOMContentLoaded", function() {
         `;
     }
 
-    // Quản lý Spa: Bác sĩ bị ẩn hoàn toàn
-    if (!isBacSi) {
+    // Quản lý Spa: Bác sĩ bị ẩn hoàn toàn (Chủ phòng khám, Nhân viên và Quản lý hệ thống thấy)
+    if (!isBacSi || isHuuTy) {
         dynamicMenuContent += `
             <li class="menu-dropdown-toggle" onclick="toggleSubmenu(this)">
                 <div class="menu-label-wrap"><span class="group-icon">✨</span> <span class="menu-text">Quản lý Spa</span></div> <span class="arrow">▼</span>
@@ -152,7 +162,7 @@ document.addEventListener("DOMContentLoaded", function() {
     dynamicMenuContent += heThongMenuHtml;
 
     const menuHTML = `
-    <div class="sidebar ${isExpired ? 'sidebar-frozen' : ''}" id="sidebar">
+    <div class="sidebar ${isExpired && !isHuuTy ? 'sidebar-frozen' : ''}" id="sidebar">
         <div class="sidebar-header" style="flex-direction: column; align-items: flex-start; gap: 4px;">
             <div style="display: flex; align-items: center;">
                 <span>🐾</span> <span class="menu-text">VetCare Pro</span>
@@ -162,7 +172,7 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
         </div>
         
-        <li class="menu-item sub-item menu-pos-highlight" id="menu-pos" onclick="${isExpired ? 'hienThiThongBaoHetHan()' : "window.location.href='pos.html'"}">
+        <li class="menu-item sub-item menu-pos-highlight" id="menu-pos" onclick="${isExpired && !isHuuTy ? 'hienThiThongBaoHetHan()' : "window.location.href='pos.html'"}">
             <span class="pos-icon">⚡</span> 
             <span class="menu-text" style="font-weight: bold;">BÁN HÀNG POS</span>
             <span class="pos-badge">HOT</span>
@@ -248,13 +258,17 @@ document.addEventListener("DOMContentLoaded", function() {
     if (container) {
         container.innerHTML = menuHTML;
         
-        if (isExpired) {
+        if (isExpired && !isHuuTy) {
             const sidebarEl = document.getElementById('sidebar');
             if (sidebarEl) {
                 sidebarEl.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    hienThiPopupGiaHan();
+                    if (isTrueOwner) {
+                        window.location.href = 'thanhtoan.html';
+                    } else {
+                        hienThiPopupGiaHanChoNhanVien();
+                    }
                 }, true);
             }
         } else {
@@ -371,7 +385,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
-// --- CÁC HÀM TIỆN ÍCH KHÁC ---
+// --- CÁC HÀM TIỆN ÍCH ---
 function toggleSidebar() {
     const body = document.body;
     body.classList.toggle('sidebar-collapsed');
@@ -458,22 +472,26 @@ async function luuThongTinCaNhan(event) {
     location.reload();
 }
 
-function hienThiPopupGiaHan() {
-    if (document.getElementById('modalGiaHan')) return;
+function hienThiPopupGiaHanChoNhanVien() {
+    if (document.getElementById('modalGiaHanNV')) return;
     const modal = document.createElement('div');
-    modal.id = 'modalGiaHan';
-    modal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 999999; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;`;
+    modal.id = 'modalGiaHanNV';
+    modal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); z-index: 999999; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;`;
     modal.innerHTML = `
-        <div style="background: #ffffff; padding: 30px; border-radius: 12px; width: 100%; max-width: 450px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
-            <div style="font-size: 48px; margin-bottom: 10px;">⚠️</div>
-            <h2 style="color: #dc2626; margin-top: 0; font-size: 22px;">Tài Khoản Đã Hết Hạn Bản Quyền</h2>
-            <p style="color: #475569; font-size: 14px; line-height: 1.5; margin-bottom: 20px;">Hệ thống quản lý phòng khám của bạn đã vượt quá thời hạn sử dụng. Vui lòng liên hệ quản trị viên hoặc thực hiện gia hạn!</p>
+        <div style="background: #ffffff; padding: 35px; border-radius: 12px; width: 100%; max-width: 450px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+            <div style="font-size: 48px; margin-bottom: 10px;">🔒</div>
+            <h2 style="color: #dc2626; margin-top: 0; font-size: 22px;">Phòng Khám Đã Hết Hạn Bản Quyền</h2>
+            <p style="color: #475569; font-size: 14px; line-height: 1.5; margin-bottom: 20px;">Tài khoản sử dụng của phòng khám đã hết hạn bản quyền phần mềm. Vui lòng liên hệ <b>Chủ phòng khám</b> để tiến hành gia hạn và tiếp tục sử dụng hệ thống.</p>
             <div style="display: flex; gap: 10px; justify-content: center;">
-                <button onclick="dangXuat()" style="background: #64748b; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">Đăng xuất</button>
+                <button onclick="dangXuat()" style="background: #dc2626; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">Đăng xuất</button>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
+}
+
+function hienThiThongBaoHetHan() {
+    alert('⚠️ Phòng khám đã hết hạn bản quyền sử dụng hệ thống!');
 }
 
 function xuLyCoDuLieuMoiPC(noiDungThongBao) {
