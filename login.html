@@ -208,6 +208,22 @@
 
                     if (matchedStaff) {
                         userData = matchedStaff;
+
+                        // 🔥 BỔ SUNG: Nếu là nhân viên, kiểm tra xem phòng khám chứa nhân viên này có bị hết hạn không
+                        if (userData.maphongkham) {
+                            let { data: pkInfo } = await db
+                                .from('chupk')
+                                .select('ngayhethan, trangthai')
+                                .eq('maphongkham', userData.maphongkham)
+                                .maybeSingle();
+
+                            if (pkInfo && pkInfo.ngayhethan) {
+                                if (new Date(pkInfo.ngayhethan) < new Date()) {
+                                    alert('⚠️ Phòng khám của tài khoản này đã hết hạn bản quyền sử dụng app! Vui lòng liên hệ chủ phòng khám để gia hạn.');
+                                    return; // Chặn đứng, không cho nhân viên đăng nhập
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -233,25 +249,33 @@
                         });
 
                         if (matchedOwner) {
-                            // Kiểm tra hạn sử dụng bản quyền của phòng khám
-                            if (matchedOwner.ngayhethan) {
-                                const ngayHetHan = new Date(matchedOwner.ngayhethan);
-                                if (ngayHetHan < new Date()) {
-                                    alert('⚠️ Tài khoản phòng khám của bạn đã hết hạn bản quyền sử dụng app!');
-                                    return;
-                                }
-                            }
-
+                            // Chuẩn bị dữ liệu thông tin phòng khám
                             userData = {
                                 id: matchedOwner.id,
                                 tentaikhoan: matchedOwner.hovaten || matchedOwner.tenphongkham,
                                 tenphongkham: matchedOwner.tenphongkham,
                                 diachi: matchedOwner.diachi,
                                 sodienthoai: matchedOwner.sodienthoai,
-                                maphongkham: matchedOwner.maphongkham, // Lấy chuẩn mã phòng khám
+                                maphongkham: matchedOwner.maphongkham,
                                 vaitro: 'Chủ phòng khám',
                                 trangthai: matchedOwner.trangthai || 'Hoạt động'
                             };
+
+                            // Kiểm tra hạn sử dụng bản quyền của phòng khám
+                            if (matchedOwner.ngayhethan) {
+                                const ngayHetHan = new Date(matchedOwner.ngayhethan);
+                                if (ngayHetHan < new Date()) {
+                                    alert('⚠️ Tài khoản phòng khám của bạn đã hết hạn bản quyền sử dụng app! Vui lòng thanh toán để tiếp tục.');
+                                    
+                                    // Lưu session tạm thời để trang thanh toán tự nhận diện mã phòng khám
+                                    sessionStorage.setItem('currentUser', JSON.stringify(userData));
+                                    sessionStorage.setItem('maphongkham', matchedOwner.maphongkham);
+
+                                    // Chuyển hướng sang trang thanh toán
+                                    window.location.replace('quanly/thanhtoan.html');
+                                    return;
+                                }
+                            }
                         }
                     }
                 }
