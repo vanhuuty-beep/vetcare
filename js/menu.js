@@ -52,9 +52,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <li class="menu-item" id="menu-quanlychung" onclick="window.location.href='quanlychung.html'" style="background: rgba(2, 132, 199, 0.15); border-left: 4px solid #0284c7;">
                 <span>👑</span> <span class="menu-text" style="font-weight: bold; color: #0284c7;">Quản lý chung (Hệ thống)</span>
             </li>
-            <li class="menu-item" id="menu-lichsuthanhtoan" onclick="window.location.href='lichsuthanhtoan.html'" style="background: rgba(5, 150, 105, 0.1); border-left: 4px solid #059669; margin-top: 5px;">
-                <span>💳</span> <span class="menu-text" style="font-weight: bold; color: #059669;">Lịch sử thanh toán</span>
-            </li>
+            
             <li class="menu-item" id="menu-lienhe" onclick="window.location.href='lienhe.html'"><span>📞</span> <span class="menu-text">Liên hệ</span></li>
         `;
     } 
