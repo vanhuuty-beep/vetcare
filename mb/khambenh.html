@@ -190,7 +190,7 @@
             outline: none;
             background: #fff;
         }
-        .input-group input:focus, .input-group select:focus {
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
             border-color: #008080;
         }
         
@@ -270,7 +270,7 @@
             padding: 12px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.02);
             display: flex;
-            flex-direction: column; /* Đổi sang chiều dọc để các nút nằm dưới */
+            flex-direction: column;
         }
         .kham-info {
             width: 100%;
@@ -318,8 +318,8 @@
         .btn-nhapvien { color: #ea580c; background: #ffedd5; }  /* Nhập viện / Lưu trú */
         .btn-vaccine { color: #16a34a; background: #dcfce7; }   /* Vaccine */
         .btn-donthuoc { color: #7c3aed; background: #f3e8ff; }  /* Đơn thuốc */
-        .btn-edit { color: #d97706; background: #fef3c7; }      /* Sửa */
-        .btn-delete { color: #dc2626; background: #fee2e2; }    /* Xóa */
+        .btn-edit { color: #d97706; background: #fef3c7; }       /* Sửa */
+        .btn-delete { color: #dc2626; background: #fee2e2; }     /* Xóa */
 
         /* Bottom Nav cố định dưới đáy chuẩn Mobile app */
         .bottom-nav {
@@ -432,7 +432,34 @@
                 <textarea id="dieutri" rows="2" placeholder="Nhập phác đồ điều trị..."></textarea>
             </div>
 
-            <div class="input-group">
+            <!-- PHẦN KÊ ĐƠN THUỐC ĐỒNG BỘ CHUẨN ĐẸP Y HỆT TRANG ĐƠN THUỐC -->
+            <div class="input-group" style="margin-top: 12px;">
+                <label>Danh sách thuốc sử dụng:</label>
+                <div style="width: 100%; overflow-x: auto; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px;">
+                    <div style="min-width: 520px;">
+                        <!-- Tiêu đề cột chuẩn form đơn thuốc -->
+                        <div style="display: flex; background: #f1f5f9; padding: 6px 8px; font-size: 11px; font-weight: 600; color: #475569; border-radius: 6px; align-items: center; text-align: center; margin-bottom: 6px;">
+                            <div style="flex: 2.2; text-align: left;">Tên thuốc</div>
+                            <div style="flex: 0.5;">SL</div>
+                            <div style="flex: 0.9;">Đơn giá</div>
+                            <div style="flex: 1.8; text-align: left; padding-left: 4px;">Hướng dẫn</div>
+                            <div style="width: 32px;">Xóa</div>
+                        </div>
+
+                        <!-- Các dòng thuốc -->
+                        <div id="danhSachThuocContainer" style="display: flex; flex-direction: column; gap: 6px;">
+                            <!-- Dữ liệu render tự động -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nút thêm thuốc chuẩn form đơn thuốc -->
+                <button type="button" onclick="themDongThuoc()" style="background: #0d9488; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 8px; display: inline-flex; align-items: center; gap: 4px;">
+                    <i class="fa-solid fa-plus"></i> Thêm thuốc
+                </button>
+            </div>
+
+            <div class="input-group" style="margin-top: 10px;">
                 <label>Chi phí dịch vụ (VNĐ)</label>
                 <input type="number" id="chiphi" placeholder="VD: 150000">
             </div>
@@ -485,8 +512,12 @@
     let mapKhachHang = {};
     let mapMaKhachHangThucung = {};
     let dsThuCungChoSearch = [];
+    let khoThuocGlobal = [];
+    let danhSachKeDon = [];
+    let mapGiaThuoc = {}; 
 
     window.addEventListener('DOMContentLoaded', async () => {
+        await taiKhoanThuocChoPhieuKham();
         await taiDuLieuDanhMuc();
         await fetchKhamBenh();
 
@@ -520,6 +551,21 @@
         }
     });
 
+    async function taiKhoanThuocChoPhieuKham() {
+        if (typeof db === 'undefined' || !db) return;
+        let { data, error } = await db.from('khothuoc').select('*');
+        if (data) {
+            khoThuocGlobal = data;
+            data.forEach(t => {
+                const tenT = t.tenthuoc || t.ten || '';
+                const giaT = t.giaban || t.gia || t.dongia || 0;
+                if (tenT) {
+                    mapGiaThuoc[tenT] = giaT;
+                }
+            });
+        }
+    }
+
     async function taiDuLieuDanhMuc() {
         if (typeof db === 'undefined' || !db) return;
 
@@ -549,6 +595,96 @@
             });
         }
     }
+
+    // --- HÀM THÊM DÒNG THUỐC ĐỒNG BỘ FORM ĐƠN THUỐC ---
+    function themDongThuoc(thuocCu = null) {
+        const container = document.getElementById('danhSachThuocContainer');
+        const index = danhSachKeDon.length;
+        
+        let optionsHtml = `<option value="">-- Chọn thuốc --</option>`;
+        khoThuocGlobal.forEach(t => {
+            const tenT = t.tenthuoc || t.ten || 'Thuốc không tên';
+            const slTon = t.soluong || t.sl || 0;
+            const selected = (thuocCu && thuocCu.tenthuoc === tenT) ? 'selected' : '';
+            optionsHtml += `<option value="${tenT}" ${selected}>${tenT} (Tồn: ${slTon})</option>`;
+        });
+
+        let defaultSl = thuocCu ? (thuocCu.soluong || 1) : 1;
+        let defaultGia = 0;
+        if (thuocCu && thuocCu.dongia !== undefined) {
+            defaultGia = thuocCu.dongia;
+        } else if (thuocCu && thuocCu.tenthuoc && mapGiaThuoc[thuocCu.tenthuoc]) {
+            defaultGia = mapGiaThuoc[thuocCu.tenthuoc];
+        }
+        let defaultCachDung = thuocCu ? (thuocCu.cachdung || '') : '';
+
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'row-thuoc-item';
+        itemDiv.style.cssText = "display: flex; gap: 4px; align-items: center; background: #fff; padding: 4px; border-radius: 4px; border: 1px solid #cbd5e1;";
+        
+        itemDiv.innerHTML = `
+            <select class="thuoc-chon" style="flex: 2.2; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px; background: #fff;" onchange="chonThuocKho(this, ${index})">
+                ${optionsHtml}
+            </select>
+            <input type="number" class="thuoc-soluong" value="${defaultSl}" style="flex: 0.5; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px; text-align: center;" onchange="capNhatGiaTriThuoc(this, ${index})">
+            <input type="number" class="thuoc-dongia" placeholder="Giá..." value="${defaultGia}" style="flex: 0.9; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px;" onchange="capNhatGiaTriThuoc(this, ${index})">
+            <input type="text" class="thuoc-cachdung" placeholder="Cách dùng." value="${defaultCachDung}" style="flex: 1.8; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px;" onchange="capNhatGiaTriThuoc(this, ${index})">
+            <button type="button" onclick="xoaDongThuoc(this, ${index})" style="background: #fee2e2; color: #dc2626; border: none; width: 32px; height: 30px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><i class="fa-solid fa-trash" style="font-size: 12px;"></i></button>
+        `;
+
+        container.appendChild(itemDiv);
+        
+        if (!thuocCu) {
+            danhSachKeDon.push({ tenthuoc: '', soluong: 1, dongia: 0, cachdung: '' });
+        } else {
+            danhSachKeDon.push({ tenthuoc: thuocCu.tenthuoc, soluong: defaultSl, dongia: defaultGia, cachdung: defaultCachDung });
+        }
+    }
+
+    function chonThuocKho(selectElement, index) {
+        const itemRow = selectElement.parentElement;
+        const tenthuoc = selectElement.value;
+        
+        if (mapGiaThuoc[tenthuoc] !== undefined) {
+            const giaInput = itemRow.querySelector('.thuoc-dongia');
+            if (giaInput) {
+                giaInput.value = mapGiaThuoc[tenthuoc];
+            }
+        }
+        capNhatGiaTriThuoc(selectElement, index);
+    }
+
+    function capNhatGiaTriThuoc(element, index) {
+        const itemRow = element.parentElement;
+        const tenthuoc = itemRow.querySelector('.thuoc-chon').value;
+        const soluong = itemRow.querySelector('.thuoc-soluong').value;
+        const dongia = itemRow.querySelector('.thuoc-dongia').value;
+        const cachdung = itemRow.querySelector('.thuoc-cachdung').value;
+
+        if (danhSachKeDon[index]) {
+            danhSachKeDon[index] = { 
+                tenthuoc, 
+                soluong: parseInt(soluong) || 1, 
+                dongia: parseFloat(dongia) || 0, 
+                cachdung 
+            };
+        }
+    }
+
+    function xoaDongThuoc(button, index) {
+        button.parentElement.remove();
+        danhSachKeDon.splice(index, 1);
+        renderLaiDanhSachThuoc();
+    }
+
+    function renderLaiDanhSachThuoc() {
+        const container = document.getElementById('danhSachThuocContainer');
+        const currentData = [...danhSachKeDon];
+        container.innerHTML = '';
+        danhSachKeDon = [];
+        currentData.forEach(t => themDongThuoc(t));
+    }
+    // ---------------------------------------------
 
     function xuLyTimKiemThuCung(tuKhoa) {
         const box = document.getElementById('suggestions-box');
@@ -628,43 +764,49 @@
 
             const trangThai = item.trangthai || 'Đang điều trị';
             
+            let donThuocSummary = '';
+            if (item.donthuoc) {
+                try {
+                    const arrThuoc = JSON.parse(item.donthuoc);
+                    if (Array.isArray(arrThuoc) && arrThuoc.length > 0) {
+                        const strThuoc = arrThuoc.map(t => `${t.tenthuoc} (SL: ${t.soluong})`).join(', ');
+                        donThuocSummary = `<p><i class="fa-solid fa-pills" style="color:#7c3aed;"></i> Thuốc: ${strThuoc}</p>`;
+                    }
+                } catch(e) {}
+            }
+            
             container.innerHTML += `
                 <div class="kham-card">
                     <div class="kham-info">
                         <h4>🐾 ${tenTC} <span style="font-size:11px; color:#008080;">(${maKB})</span></h4>
                         <p><i class="fa-solid fa-user"></i> Chủ: ${tenChu}</p>
                         <p><i class="fa-solid fa-stethoscope"></i> ${trieuChungText}</p>
+                        ${donThuocSummary}
                         <p>
                             <i class="fa-solid fa-calendar-days"></i> ${item.ngaykham || ''} | 
                             <b style="color:#0284c7; cursor:pointer;" onclick="doiTrangThai(${item.id}, '${trangThai}')" title="Bấm để đổi trạng thái">${trangThai} 🔄</b>
                         </p>
                     </div>
                     <div class="kham-actions">
-    <!-- Nút Chỉ định -->
-    <button class="btn-chidinh" onclick="window.location.href='phieuchidinh.html?makhambenh=${item.id}'" title="Chỉ định cận lâm sàng">
-        <i class="fa-solid fa-file-medical"></i>
-    </button>
-    <!-- Nút Nhập viện (Bắt buộc kèm makhambenh từ phiếu khám) -->
-    <button class="btn-nhapvien" onclick="window.location.href='nhatkynoitru.html?mathucung=${item.mathucung || ''}&makhachhang=${maKH}&makhambenh=${item.id}'" title="Nhập viện điều trị">
-        <i class="fa-solid fa-bed-pulse"></i>
-    </button>
-    <!-- Nút Vaccine -->
-    <button class="btn-vaccine" onclick="window.location.href='nhatkyvaccine.html?mathucung=${item.mathucung || ''}&makhachhang=${maKH}'" title="Tiêm vaccine">
-        <i class="fa-solid fa-syringe"></i>
-    </button>
-    <!-- Nút Đơn thuốc -->
-    <button class="btn-donthuoc" onclick="window.location.href='donthuoc.html?makhambenh=${item.id}'" title="Đơn thuốc">
-        <i class="fa-solid fa-pills"></i>
-    </button>
-    <!-- Nút Sửa -->
-    <button class="btn-edit" onclick="moModalSua(${item.id})" title="Sửa">
-        <i class="fa-solid fa-pen"></i>
-    </button>
-    <!-- Nút Xóa -->
-    <button class="btn-delete" onclick="xoaKhamBenh(${item.id})" title="Xóa">
-        <i class="fa-solid fa-trash"></i>
-    </button>
-</div>
+                        <button class="btn-chidinh" onclick="window.location.href='phieuchidinh.html?makhambenh=${item.id}'" title="Chỉ định cận lâm sàng">
+                            <i class="fa-solid fa-file-medical"></i>
+                        </button>
+                        <button class="btn-nhapvien" onclick="window.location.href='nhatkynoitru.html?mathucung=${item.mathucung || ''}&makhachhang=${maKH}&makhambenh=${item.id}'" title="Nhập viện điều trị">
+                            <i class="fa-solid fa-bed-pulse"></i>
+                        </button>
+                        <button class="btn-vaccine" onclick="window.location.href='nhatkyvaccine.html?mathucung=${item.mathucung || ''}&makhachhang=${maKH}'" title="Tiêm vaccine">
+                            <i class="fa-solid fa-syringe"></i>
+                        </button>
+                        <button class="btn-donthuoc" onclick="window.location.href='donthuoc.html?makhambenh=${item.id}'" title="Đơn thuốc">
+                            <i class="fa-solid fa-pills"></i>
+                        </button>
+                        <button class="btn-edit" onclick="moModalSua(${item.id})" title="Sửa">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button class="btn-delete" onclick="xoaKhamBenh(${item.id})" title="Xóa">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
             `;
         });
@@ -709,6 +851,9 @@
         document.getElementById('chiphi').value = '';
         document.getElementById('trangthai').value = 'Đang điều trị';
 
+        danhSachKeDon = [];
+        document.getElementById('danhSachThuocContainer').innerHTML = '';
+
         document.getElementById('modalTitle').innerText = 'Thêm phiếu khám bệnh mới';
         document.getElementById('khamModal').style.display = 'flex';
     }
@@ -735,6 +880,17 @@
         document.getElementById('dieutri').value = item.dieutri || '';
         document.getElementById('chiphi').value = item.chiphi || '';
         document.getElementById('trangthai').value = item.trangthai || 'Đang điều trị';
+
+        danhSachKeDon = [];
+        document.getElementById('danhSachThuocContainer').innerHTML = '';
+        if (item.donthuoc) {
+            try {
+                const arrThuoc = JSON.parse(item.donthuoc);
+                if (Array.isArray(arrThuoc)) {
+                    arrThuoc.forEach(t => themDongThuoc(t));
+                }
+            } catch(e) {}
+        }
 
         document.getElementById('modalTitle').innerText = 'Cập nhật phiếu khám #' + id;
         document.getElementById('khamModal').style.display = 'flex';
@@ -771,7 +927,8 @@
             dieutri: dieutri,
             chiphi: chiphiStr !== "" ? parseFloat(chiphiStr) : null,
             trangthai: trangthai,
-            hinhanh: hinhanhUrl
+            hinhanh: hinhanhUrl,
+            donthuoc: JSON.stringify(danhSachKeDon.filter(t => t.tenthuoc && t.tenthuoc.trim() !== ''))
         };
 
         if (id === "") {
