@@ -89,7 +89,7 @@
             box-shadow: 0 2px 6px rgba(0,128,128,0.3);
         }
 
-        /* Nội dung chính cuộn (Chừa chỗ cho menu đáy 65px + padding) */
+        /* Nội dung chính cuộn */
         .app-content {
             flex: 1;
             overflow-y: auto;
@@ -274,6 +274,26 @@
             border-radius: 10px;
             font-weight: bold;
             margin-left: 4px;
+        }
+
+        /* Vùng ẩn in hóa đơn nhiệt LAN */
+        #print-receipt-area { display: none; }
+        @media print {
+            body * { visibility: hidden !important; }
+            #print-receipt-area, #print-receipt-area * { visibility: visible !important; }
+            #print-receipt-area {
+                display: block !important;
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 80mm !important;
+                font-family: 'Courier New', Courier, monospace !important;
+                font-size: 12px !important;
+                color: #000 !important;
+                background: #fff !important;
+                padding: 4mm !important;
+                line-height: 1.4 !important;
+            }
         }
 
         /* Bottom Nav Cố Định Dưới Đáy */
@@ -463,6 +483,16 @@
         </div>
     </div>
 
+    <!-- KHUNG ẨN ĐỂ IN HÓA ĐƠN NHIỆT LAN (192.168.1.237) -->
+    <div id="print-receipt-area">
+        <div class="print-header"></div>
+        <div style="text-align: center; font-size: 11px; margin-bottom: 5px;">IP Máy in LAN: 192.168.1.237</div>
+        <div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>
+        <div id="print-content-body"></div>
+        <div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>
+        <div style="text-align: center; font-size: 11px;">Cảm ơn quý khách! Hẹn gặp lại.</div>
+    </div>
+
     <!-- BOTTOM NAV CỐ ĐỊNH DƯỚI ĐÁY -->
     <div class="bottom-nav">
         <a href="trangchu.html" class="nav-item">
@@ -489,7 +519,7 @@
 
 </div>
 
-<!-- SCRIPT XỬ LÝ POS -->
+<!-- SCRIPT XỬ LÝ POS & IN LAN -->
 <script>
     let danhSachSanPhamGoc = [];
     let danhSachKhachHangGoc = [];
@@ -731,7 +761,7 @@
 
         document.getElementById('tongThanhToan').textContent = tongCuoiCung.toLocaleString() + ' đ';
         document.getElementById('diemTichLuyHienThi').textContent = diemTichLuy + ' Điểm';
-        return { tongCuoiCung, diemTichLuy };
+        return { tongTienGoc, giamGia, tongCuoiCung, diemTichLuy };
     }
 
     function moModalThemKhachHangPOS() {
@@ -882,13 +912,58 @@
         }
     }
 
+    // --- HÀM TỰ ĐỘNG IN HÓA ĐƠN QUA MÁY IN ZYWELL (IP: 192.168.1.237) ---
+    function inHoaDonPOS(tenKhach, sdtKhach, tongTienGoc, giamGia, tongCuoiCung, diemTichLuy) {
+        const ngayGio = new Date().toLocaleString('vi-VN');
+        
+        let htmlBody = `
+            <div style="text-align: center; font-weight: bold; font-size: 13px; margin-bottom: 4px;">HÓA ĐƠN BÁN HÀNG LẺ</div>
+            <div style="font-size: 11px; margin-bottom: 2px;"><b>Thời gian:</b> ${ngayGio}</div>
+            <div style="font-size: 11px; margin-bottom: 2px;"><b>Khách hàng:</b> ${tenKhach}</div>
+            ${sdtKhach ? `<div style="font-size: 11px; margin-bottom: 2px;"><b>SĐT:</b> ${sdtKhach}</div>` : ''}
+            <div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>
+            <div style="font-size: 11px; font-weight: bold; margin-bottom: 4px;">CHI TIẾT SẢN PHẨM:</div>
+        `;
+
+        gioHang.forEach((item, index) => {
+            let thanhTien = Number(item.gia || 0) * Number(item.soLuong || 0);
+            htmlBody += `
+                <div style="font-size: 11px; margin-bottom: 3px;">
+                    <div><b>${index + 1}. ${item.ten}</b></div>
+                    <div style="display: flex; justify-content: space-between; padding-left: 10px;">
+                        <span>${item.soLuong} x ${Number(item.gia || 0).toLocaleString()}đ</span>
+                        <span><b>${Number(thanhTien).toLocaleString()}đ</b></span>
+                    </div>
+                </div>
+            `;
+        });
+
+        htmlBody += `
+            <div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px;"><span>Tiền hàng:</span> <span>${Number(tongTienGoc || 0).toLocaleString()}đ</span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px;"><span>Giảm giá:</span> <span>-${Number(giamGia || 0).toLocaleString()}đ</span></div>
+            <div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold;">
+                <span>TỔNG THANH TOÁN:</span>
+                <span>${Number(tongCuoiCung || 0).toLocaleString()} VNĐ</span>
+            </div>
+            <div style="font-size: 11px; margin-top: 4px; text-align: right; color: #059669;">Tích lũy đơn này: +${diemTichLuy} điểm</div>
+        `;
+
+        document.getElementById('print-content-body').innerHTML = htmlBody;
+
+        setTimeout(() => {
+            window.print();
+        }, 300);
+    }
+
     async function chotVaTichDiem() {
         if (gioHang.length === 0) {
             alert('Giỏ hàng đang trống!');
             return;
         }
 
-        const { tongCuoiCung, diemTichLuy } = tinhToanThanhToan();
+        const { tongTienGoc, giamGia, tongCuoiCung, diemTichLuy } = tinhToanThanhToan();
         const tenKhach = khachHangDangChon ? (khachHangDangChon.hovaten) : 'Khách lẻ vãng lai';
         const sdtKhach = khachHangDangChon ? (khachHangDangChon.sodienthoai) : '';
 
@@ -899,19 +974,19 @@
         try {
             if (khachHangDangChon) {
                 let diemCu = parseInt(khachHangDangChon.tichdiem) || 0;
-                let diemMoi = diemCu + diemTichLuy;
+                let diemMoi = diemCu + Number(diemTichLuy || 0);
                 await db.from('khachhang').update({ tichdiem: diemMoi }).eq('id', khachHangDangChon.id);
             }
 
             for (let item of gioHang) {
                 const donHangPayload = {
-                    masanpham: item.masanpham,
-                    tensanpham: item.ten,
-                    soluongban: Number(item.soLuong),
-                    dongia: Number(item.gia),
-                    thanhtien: Number(item.gia * item.soLuong),
-                    tenkhachhang: tenKhach,
-                    sdt: sdtKhach,
+                    masanpham: item.masanpham ? String(item.masanpham) : '',
+                    tensanpham: item.ten ? String(item.ten) : '',
+                    soluongban: Number(item.soLuong) || 0,
+                    dongia: Number(item.gia) || 0,
+                    thanhtien: Number(item.gia || 0) * Number(item.soLuong || 0),
+                    tenkhachhang: tenKhach ? String(tenKhach) : '',
+                    sdt: sdtKhach ? String(sdtKhach) : '',
                     nguoiban: 'Thu ngân POS Mobile'
                 };
 
@@ -923,12 +998,15 @@
 
                 const spGoc = danhSachSanPhamGoc.find(x => x.id === item.id);
                 if (spGoc) {
-                    let tonMoi = (Number(spGoc.soluongton) || 0) - Number(item.soLuong);
+                    let tonMoi = (Number(spGoc.soluongton) || 0) - Number(item.soLuong || 0);
                     if (tonMoi < 0) tonMoi = 0;
                     
                     await db.from('danhmucsanpham').update({ soluongton: tonMoi }).eq('id', item.id);
                 }
             }
+
+            // Mở cửa sổ in hóa đơn tự động qua máy in LAN
+            inHoaDonPOS(tenKhach, sdtKhach, tongTienGoc, giamGia, tongCuoiCung, diemTichLuy);
 
             alert(`Chốt đơn thành công!\n- Tổng tiền: ${tongCuoiCung.toLocaleString()}đ\n- Tích lũy: ${diemTichLuy} điểm`);
             
