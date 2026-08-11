@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Thông tin Phòng khám - VetCare Pro</title>
+    
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+    <script src="../js/smart-search.js"></script>
+
+    <!-- Gọi file CSS chung hệ thống -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+    <link rel="stylesheet" href="../css/smart-search.css">
+
+    <style>
+        .search-box {
+            padding: 8px 12px;
+            width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: #2563eb;
+        }
+        
+        .form-card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            max-width: 750px;
+            margin: 0 auto;
+            padding: 30px;
+            border: 1px solid #e2e8f0;
+        }
+        .form-card h2 {
+            margin-top: 0;
+            color: #1e3a8a;
+            font-size: 20px;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-group-modal {
+            margin-bottom: 18px;
+        }
+        .form-group-modal label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+        .form-group-modal input, .form-group-modal textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group-modal input:focus, .form-group-modal textarea:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .logo-preview-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        .logo-preview {
+            width: 90px;
+            height: 90px;
+            border-radius: 8px;
+            border: 2px dashed #cbd5e1;
+            object-fit: cover;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 12px;
+            text-align: center;
+        }
+        .form-actions {
+            margin-top: 30px;
+            text-align: right;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+        <div id="topnav-container"></div>
+
+        <div class="content-body">
+            <div class="form-card">
+                <h2>🏥 Cấu Hình Thông Tin Phòng Khám</h2>
+                
+                <form id="formThongTinPK" onsubmit="capNhatThongTinPhongKham(event)">
+                    
+                    <div class="form-group-modal">
+                        <label>Mã Phòng Khám:</label>
+                        <input type="text" id="maphongkham" readonly style="background-color: #f8fafc; color: #64748b; font-weight: bold; cursor: not-allowed;">
+                    </div>
+
+                    <div class="form-group-modal">
+                        <label>Tên Phòng Khám:</label>
+                        <input type="text" id="tenphongkham" placeholder="Nhập tên phòng khám thú y..." required>
+                    </div>
+
+                    <div class="form-group-modal">
+                        <label>Chủ Phòng Khám / Người Đại Diện:</label>
+                        <input type="text" id="chuphongkham" placeholder="Họ tên chủ phòng khám...">
+                    </div>
+
+                    <div class="form-group-modal">
+                        <label>Số Điện Thoại Liên Hệ:</label>
+                        <input type="text" id="sodienthoai" placeholder="Số điện thoại...">
+                    </div>
+
+                    <div class="form-group-modal">
+                        <label>Địa Chỉ Phòng Khám:</label>
+                        <textarea id="diachi" rows="2" placeholder="Địa chỉ cơ sở khám bệnh..."></textarea>
+                    </div>
+
+                    <div class="form-group-modal">
+                        <label>Logo Phòng Khám (Chọn ảnh từ máy):</label>
+                        <!-- Ô input file để chọn ảnh trực tiếp -->
+                        <input type="file" id="logoFile" accept="image/*" onchange="xuLyChonFileLogo(this)" style="padding: 7px; background: #f8fafc; cursor: pointer;">
+                        
+                        <!-- Input ẩn lưu trữ đường dẫn URL thực tế sau khi upload -->
+                        <input type="hidden" id="logoUrlHidden">
+
+                        <div class="logo-preview-container">
+                            <img id="imgPreview" class="logo-preview" src="" alt="Chưa có logo" onerror="this.style.display='flex'; this.src='';">
+                            <span style="font-size: 12px; color: #64748b;">Chọn hình ảnh logo từ máy tính, hệ thống sẽ tự động tải lên lưu trữ an toàn.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">💾 Lưu Thay Đổi</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT XỬ LÝ UPLOAD VÀ LƯU DỮ LIỆU -->
+    <script>
+        window.addEventListener('DOMContentLoaded', async () => {
+            const maphongkham = sessionStorage.getItem('maphongkham');
+            if (!maphongkham) {
+                alert('Không tìm thấy mã phòng khám trong phiên đăng nhập!');
+                return;
+            }
+
+            document.getElementById('maphongkham').value = maphongkham;
+
+            // Tải thông tin phòng khám hiện tại từ bảng chupk
+            let { data, error } = await db
+                .from('chupk')
+                .select('*')
+                .eq('maphongkham', maphongkham)
+                .single();
+
+            if (error) {
+                console.error('Lỗi tải thông tin phòng khám:', error);
+                return;
+            }
+
+            if (data) {
+                document.getElementById('tenphongkham').value = data.tenphongkham || data.ten || '';
+                document.getElementById('chuphongkham').value = data.chuphongkham || data.chupk || '';
+                document.getElementById('sodienthoai').value = data.sodienthoai || data.sdt || '';
+                document.getElementById('diachi').value = data.diachi || '';
+                
+                const logoUrl = data.logo || '';
+                document.getElementById('logoUrlHidden').value = logoUrl;
+                if (logoUrl) {
+                    document.getElementById('imgPreview').src = logoUrl;
+                }
+            }
+        });
+
+        // Hàm tự động upload ảnh lên Supabase Storage khi người dùng chọn file
+        async function xuLyChonFileLogo(input) {
+            if (!input.files || input.files.length === 0) return;
+            const file = input.files[0];
+            const maphongkham = sessionStorage.getItem('maphongkham');
+
+            const fileExt = file.name.split('.').pop();
+            const fileName = `logo_${maphongkham}_${Date.now()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            alert('⏳ Đang tải ảnh lên hệ thống, vui lòng chờ giây lát...');
+
+            // Tiến hành upload lên bucket có tên là 'logo' trên Supabase Storage
+            let { data, error } = await db.storage
+                .from('logo')
+                .upload(filePath, file, { upsert: true });
+
+            if (error) {
+                alert('❌ Lỗi tải ảnh lên: ' + error.message);
+                return;
+            }
+
+            // Lấy public URL của ảnh vừa upload
+            const { data: publicURLData } = db.storage
+                .from('logo')
+                .getPublicUrl(filePath);
+
+            const publicUrl = publicURLData.publicUrl;
+
+            // Gán vào input ẩn và hiển thị xem trước
+            document.getElementById('logoUrlHidden').value = publicUrl;
+            document.getElementById('imgPreview').src = publicUrl;
+            
+            alert('✅ Tải ảnh logo lên thành công!');
+        }
+
+        async function capNhatThongTinPhongKham(event) {
+            event.preventDefault();
+            const maphongkham = sessionStorage.getItem('maphongkham');
+
+            const payload = {
+                tenphongkham: document.getElementById('tenphongkham').value.trim(),
+                chuphongkham: document.getElementById('chuphongkham').value.trim(),
+                sodienthoai: document.getElementById('sodienthoai').value.trim(),
+                diachi: document.getElementById('diachi').value.trim(),
+                logo: document.getElementById('logoUrlHidden').value.trim()
+            };
+
+            let { error } = await db
+                .from('chupk')
+                .update(payload)
+                .eq('maphongkham', maphongkham);
+
+            if (error) {
+                alert('❌ Lỗi cập nhật: ' + error.message);
+            } else {
+                alert('✅ Đã cập nhật thông tin phòng khám thành công!');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
