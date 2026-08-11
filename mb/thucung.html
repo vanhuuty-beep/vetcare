@@ -240,16 +240,29 @@
             padding: 12px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.02);
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 12px;
+        }
+        .pet-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            flex-shrink: 0;
         }
         .pet-info {
             flex: 1;
+            min-width: 0;
         }
         .pet-info h4 {
             font-size: 14px;
             color: #1e293b;
             margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .pet-info p {
             font-size: 12px;
@@ -263,19 +276,20 @@
         /* Nhóm nút thao tác nằm gọn bên phải */
         .pet-actions {
             display: flex;
-            gap: 5px;
+            gap: 4px;
             flex-wrap: wrap;
-            max-width: 115px;
+            max-width: 110px;
             justify-content: flex-end;
+            flex-shrink: 0;
         }
         .pet-actions button {
             background: #f1f5f9;
             border: none;
-            width: 32px;
-            height: 32px;
+            width: 30px;
+            height: 30px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -284,11 +298,11 @@
         .pet-actions button:hover {
             filter: brightness(0.9);
         }
-        .btn-medical { color: #0284c7; background: #e0f2fe; }      /* Khám bệnh */
-        .btn-vaccine { color: #16a34a; background: #dcfce7; }      /* Tiêm vaccine */
-        .btn-boarding { color: #ea580c; background: #ffedd5; }     /* Lưu trú */
-        .btn-edit { color: #d97706; background: #fef3c7; }         /* Sửa */
-        .btn-delete { color: #dc2626; background: #fee2e2; }       /* Xóa */
+        .btn-medical { color: #0284c7; background: #e0f2fe; }   /* Khám bệnh */
+        .btn-vaccine { color: #16a34a; background: #dcfce7; }   /* Tiêm vaccine */
+        .btn-boarding { color: #ea580c; background: #ffedd5; }  /* Lưu trú */
+        .btn-edit { color: #d97706; background: #fef3c7; }       /* Sửa */
+        .btn-delete { color: #dc2626; background: #fee2e2; }     /* Xóa */
 
         /* Bottom Nav cố định dưới đáy */
         .bottom-nav {
@@ -368,6 +382,17 @@
             
             <input type="hidden" id="editingId">
             
+            <!-- Ô TẢI ẢNH THÚ CƯNG -->
+            <div class="input-group">
+                <label>Hình ảnh thú cưng</label>
+                <input type="file" id="pet_anhFile" accept="image/*" onchange="xuLyChonFileAnhThuCung(this)" style="padding: 5px; background: #f8fafc; font-size: 11px; cursor: pointer;">
+                <input type="hidden" id="pet_anhUrlHidden">
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 6px;">
+                    <img id="pet_imgPreview" src="" alt="Ảnh thú cưng" style="width: 50px; height: 50px; border-radius: 6px; border: 2px dashed #cbd5e1; object-fit: cover; background: #f8fafc; display: none;">
+                    <span style="font-size: 11px; color: #64748b;">Chọn ảnh từ điện thoại.</span>
+                </div>
+            </div>
+
             <div class="input-group">
                 <label>Tên thú cưng (*)</label>
                 <input type="text" id="tenthucung" placeholder="Nhập tên pet...">
@@ -453,7 +478,6 @@
               .subscribe();
         }
 
-        // Tự động mở modal thêm nếu có tham số từ trang khách hàng truyền sang
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('action') === 'mo_modal') {
             const maKH = urlParams.get('makhachhang');
@@ -468,7 +492,6 @@
     async function taiDuLieuKhachHangVaThuCung() {
         if (typeof db === 'undefined' || !db) return;
 
-        // 1. Tải danh mục khách hàng để map tên chủ nuôi
         const { data: khData } = await db.from('khachhang').select('*');
         const selectChuNuoi = document.getElementById('makhachhang');
         selectChuNuoi.innerHTML = `<option value="">-- Chọn chủ nuôi --</option>`;
@@ -480,7 +503,6 @@
             });
         }
 
-        // 2. Tải danh sách thú cưng
         const { data, error } = await db
             .from('thucung')
             .select('*')
@@ -511,32 +533,33 @@
             const cannang = item.cannang ? `${item.cannang} kg` : '---';
             const maKH = item.makhachhang || item.khachhang_id;
             const tenChu = (maKH && mapKhachHang[maKH]) ? mapKhachHang[maKH] : 'Chưa rõ chủ';
+            
+            // Xử lý hiển thị ảnh (nếu có lấy từ item.hinhanh, không có dùng icon mặc định)
+            const anhPet = item.hinhanh && item.hinhanh.trim() !== '' 
+                ? item.hinhanh 
+                : 'https://cdn-icons-png.flaticon.com/512/616/616408.png';
 
             container.innerHTML += `
                 <div class="pet-card">
+                    <img src="${anhPet}" class="pet-avatar" alt="Avatar" onerror="this.src='https://cdn-icons-png.flaticon.com/512/616/616408.png'">
                     <div class="pet-info">
                         <h4>${ten} <span style="font-size: 11px; font-weight: normal; color: #008080;">(${loai} - ${giong})</span></h4>
                         <p><i class="fa-solid fa-user" style="color: #008080;"></i> Chủ: <b>${tenChu}</b></p>
                         <p><i class="fa-solid fa-weight-scale" style="color: #e74c3c;"></i> Cân nặng: ${cannang} | Tuổi: ${item.tuoi !== null ? item.tuoi : '---'}</p>
                     </div>
                     <div class="pet-actions">
-                        <!-- Nút Khám bệnh -->
                         <button class="btn-medical" onclick="window.location.href='khambenh.html?mathucung=${item.id}&action=mokham'" title="Khám bệnh">
                             <i class="fa-solid fa-stethoscope"></i>
                         </button>
-                        <!-- Nút Tiêm vaccine -->
                         <button class="btn-vaccine" onclick="window.location.href='nhatkyvaccine.html?mathucung=${item.id}&makhachhang=${maKH || ''}'" title="Tiêm vaccine">
                             <i class="fa-solid fa-syringe"></i>
                         </button>
-                        <!-- Nút Lưu trú (makhambenh không bắt buộc) -->
-                        <button class="btn-boarding" onclick="window.location.href='nhatkynoitru.html?mathucung=${item.id}&makhachhang=${maKH || ''}'" title="Lưu trú nội trú">
+                        <button class="btn-boarding" onclick="window.location.href='nhatkynoitru.html?mathucung=${item.id}&makhachhang=${maKH || ''}'" title="Lưu trú">
                             <i class="fa-solid fa-hotel"></i>
                         </button>
-                        <!-- Nút Sửa -->
                         <button class="btn-edit" onclick="moModalSua(${item.id})" title="Sửa">
                             <i class="fa-solid fa-pen"></i>
                         </button>
-                        <!-- Nút Xóa -->
                         <button class="btn-delete" onclick="xoaThuCung(${item.id})" title="Xóa">
                             <i class="fa-solid fa-trash"></i>
                         </button>
@@ -544,6 +567,42 @@
                 </div>
             `;
         });
+    }
+
+    // Hàm tự động upload ảnh thú cưng lên Supabase Storage
+    async function xuLyChonFileAnhThuCung(input) {
+        if (!input.files || input.files.length === 0) return;
+        const file = input.files[0];
+        const maphongkham = sessionStorage.getItem('maphongkham') || 'chung';
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `pet_${maphongkham}_${Date.now()}.${fileExt}`;
+
+        alert('⏳ Đang tải ảnh thú cưng lên hệ thống...');
+
+        let { data, error } = await db.storage
+            .from('logo')
+            .upload(fileName, file, { upsert: true });
+
+        if (error) {
+            alert('❌ Lỗi tải ảnh: ' + error.message);
+            return;
+        }
+
+        const { data: publicURLData } = db.storage
+            .from('logo')
+            .getPublicUrl(fileName);
+
+        const publicUrl = publicURLData.publicUrl;
+
+        document.getElementById('pet_anhUrlHidden').value = publicUrl;
+        const preview = document.getElementById('pet_imgPreview');
+        if (preview) {
+            preview.src = publicUrl;
+            preview.style.display = 'block';
+        }
+        
+        alert('✅ Tải ảnh thú cưng thành công!');
     }
 
     function timKiemThuCung() {
@@ -566,6 +625,14 @@
         document.getElementById('tuoi').value = '';
         document.getElementById('cannang').value = '';
         document.getElementById('makhachhang').value = '';
+        document.getElementById('pet_anhUrlHidden').value = '';
+        document.getElementById('pet_anhFile').value = '';
+        const preview = document.getElementById('pet_imgPreview');
+        if (preview) {
+            preview.src = '';
+            preview.style.display = 'none';
+        }
+
         document.getElementById('modalTitle').innerText = 'Thêm thú cưng mới';
         document.getElementById('petModal').style.display = 'flex';
     }
@@ -582,6 +649,20 @@
         document.getElementById('tuoi').value = item.tuoi !== null ? item.tuoi : '';
         document.getElementById('cannang').value = item.cannang !== null ? item.cannang : '';
         document.getElementById('makhachhang').value = item.makhachhang || item.khachhang_id || '';
+        
+        const hinhanh = item.hinhanh || '';
+        document.getElementById('pet_anhUrlHidden').value = hinhanh;
+        document.getElementById('pet_anhFile').value = '';
+        const preview = document.getElementById('pet_imgPreview');
+        if (preview) {
+            if (hinhanh) {
+                preview.src = hinhanh;
+                preview.style.display = 'block';
+            } else {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
+        }
         
         document.getElementById('modalTitle').innerText = 'Cập nhật thông tin pet';
         document.getElementById('petModal').style.display = 'flex';
@@ -600,6 +681,7 @@
         const tuoi = document.getElementById('tuoi').value.trim();
         const cannang = document.getElementById('cannang').value.trim();
         const makhachhang = document.getElementById('makhachhang').value;
+        const hinhanh = document.getElementById('pet_anhUrlHidden').value.trim();
 
         if (!tenthucung) {
             alert('Vui lòng nhập tên thú cưng!');
@@ -613,7 +695,8 @@
             maulong: maulong,
             tuoi: tuoi !== "" ? parseInt(tuoi) : null,
             cannang: cannang !== "" ? parseFloat(cannang) : null,
-            makhachhang: makhachhang !== "" ? parseInt(makhachhang) : null
+            makhachhang: makhachhang !== "" ? parseInt(makhachhang) : null,
+            hinhanh: hinhanh
         };
 
         if (id === "") {
