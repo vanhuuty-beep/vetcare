@@ -3,11 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VetCare - Chăm sóc thú cưng</title>
-    <!-- Nhận diện Font và Icon -->
+    <title>VetCare - Chăm sóc thú cưng (Mobile)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Tích hợp thư viện Supabase JS để hỗ trợ lưu và sửa trực tiếp xuống CSDL -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+
     <style>
         * {
             box-sizing: border-box;
@@ -23,7 +29,6 @@
             align-items: center;
             min-height: 100vh;
         }
-        /* Khung hiển thị giả lập màn hình điện thoại mặc định */
         .mobile-container {
             width: 100%;
             max-width: 414px;
@@ -43,11 +48,10 @@
             }
         }
         
-        /* Header phần trên */
         .app-header {
             background: linear-gradient(135deg, #008080, #20b2aa);
             color: white;
-            padding: 20px 16px 30px 16px;
+            padding: 20px 16px 20px 16px;
             border-bottom-left-radius: 24px;
             border-bottom-right-radius: 24px;
         }
@@ -55,22 +59,16 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
         .user-greeting {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 500;
         }
         .header-icons {
             display: flex;
             align-items: center;
         }
-        .header-icons i {
-            font-size: 18px;
-            margin-left: 12px;
-            cursor: pointer;
-        }
-        /* Nút chuyển hướng Desktop */
         .btn-switch-desktop {
             background: rgba(255, 255, 255, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.4);
@@ -82,67 +80,39 @@
             display: flex;
             align-items: center;
             gap: 4px;
-            margin-left: 10px;
+            margin-left: 8px;
             text-decoration: none;
         }
         .btn-switch-desktop:hover {
             background: rgba(255, 255, 255, 0.3);
-            color: white;
         }
 
-        /* Thẻ thông tin ví & điểm */
         .wallet-card {
             background: white;
             color: #333;
-            border-radius: 16px;
-            padding: 16px;
+            border-radius: 14px;
+            padding: 12px 16px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
         .wallet-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #eee;
+            align-items: center;
         }
         .wallet-box {
             width: 48%;
         }
         .wallet-title {
-            font-size: 12px;
+            font-size: 11px;
             color: #777;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
         .wallet-value {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             color: #008080;
         }
-        
-        /* 4 nút tác vụ nhanh */
-        .quick-actions {
-            display: flex;
-            justify-content: space-between;
-            text-align: center;
-        }
-        .action-item {
-            font-size: 11px;
-            color: #555;
-            cursor: pointer;
-        }
-        .action-item i {
-            display: block;
-            font-size: 16px;
-            background: #e6f2f2;
-            color: #008080;
-            width: 36px;
-            height: 36px;
-            line-height: 36px;
-            border-radius: 50%;
-            margin: 0 auto 4px auto;
-        }
 
-        /* Nội dung chính cuộn được */
         .app-content {
             flex: 1;
             overflow-y: auto;
@@ -150,24 +120,23 @@
             padding-bottom: 80px;
         }
 
-        /* Lưới dịch vụ */
         .section-title {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             color: #222;
         }
         .service-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 16px;
         }
         .service-item {
             background: #f8f9fa;
             border-radius: 12px;
             text-align: center;
-            padding: 12px 4px;
+            padding: 10px 4px;
             text-decoration: none;
             color: #333;
             transition: 0.2s;
@@ -176,41 +145,39 @@
             background: #e6f2f2;
         }
         .service-item i {
-            font-size: 22px;
+            font-size: 20px;
             color: #008080;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
         .service-item span {
             display: block;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 500;
             line-height: 1.2;
         }
 
-        /* Banner khuyến mãi */
         .promo-banner {
             background: linear-gradient(135deg, #ff9966, #ff5e62);
             color: white;
             border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 20px;
+            padding: 12px 16px;
+            margin-bottom: 15px;
         }
         .promo-banner h3 {
-            font-size: 14px;
-            margin-bottom: 4px;
+            font-size: 13px;
+            margin-bottom: 2px;
         }
         .promo-banner p {
-            font-size: 12px;
+            font-size: 11px;
             opacity: 0.9;
         }
 
-        /* Thanh điều hướng dưới đáy (Bottom Nav) */
         .bottom-nav {
             position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 65px;
+            height: 60px;
             background: white;
             border-top: 1px solid #eee;
             display: flex;
@@ -227,7 +194,7 @@
             cursor: pointer;
         }
         .nav-item i {
-            font-size: 18px;
+            font-size: 16px;
             display: block;
             margin-bottom: 2px;
         }
@@ -244,79 +211,69 @@
     <!-- HEADER -->
     <div class="app-header">
         <div class="header-top">
-            <div class="user-greeting">Xin chào, <b id="hienThiTenUser">Chủ Thú Cưng!</b></div>
+            <div class="user-greeting">Xin chào, <b id="hienThiTenUser">Đang tải...</b></div>
             <div class="header-icons">
-                <i class="fa-solid fa-bell"></i>
-                <i class="fa-solid fa-cart-shopping"></i>
-                <!-- Nút chuyển hướng sang trang thongke.html -->
-                <a href="../page/thongke.html" class="btn-switch-desktop" title="Chuyển sang giao diện Desktop">
+                <a href="../page/thongke.html" class="btn-switch-desktop" title="Chuyển về giao diện PC">
                     <i class="fa-solid fa-desktop"></i> <span>Full PC</span>
                 </a>
             </div>
         </div>
 
-        <!-- Thẻ ví & điểm thưởng -->
+        <!-- Thẻ thông tin ví & điểm -->
         <div class="wallet-card">
             <div class="wallet-row">
                 <div class="wallet-box">
-                    <div class="wallet-title">Ví dịch vụ <i class="fa-solid fa-angle-right"></i></div>
-                    <div class="wallet-value">500.000đ</div>
+                    <div class="wallet-title">Trạng thái</div>
+                    <div class="wallet-value" id="hienThiVaiTro">Đang cập nhật</div>
                 </div>
                 <div class="wallet-box">
-                    <div class="wallet-title">Điểm thưởng <i class="fa-solid fa-angle-right"></i></div>
-                    <div class="wallet-value" style="color: #ff6b6b;">1,250 điểm</div>
+                    <div class="wallet-title">Phòng khám</div>
+                    <div class="wallet-value" style="color: #ff6b6b; font-size: 13px;" id="hienThiTenPK">VetCare</div>
                 </div>
-            </div>
-            
-            <!-- 4 Nút nhanh -->
-            <div class="quick-actions">
-                <div class="action-item"><i class="fa-solid fa-wallet"></i>Nạp tiền</div>
-                <div class="action-item"><i class="fa-solid fa-gift"></i>Ưu đãi</div>
-                <div class="action-item"><i class="fa-solid fa-clock-rotate-left"></i>Lịch sử</div>
-                <div class="action-item"><i class="fa-solid fa-bullhorn"></i>Nhắc lịch</div>
             </div>
         </div>
     </div>
 
-    <!-- NỘI DUNG CHÍNH -->
+    <!-- NỘI DUNG CHÍNH (PHÂN QUYỀN HIỂN THỊ) -->
     <div class="app-content">
         
-        <!-- KHU VỰC 1: DỊCH VỤ PHÒNG KHÁM (BÁC SĨ) -->
+        <!-- KHU VỰC 1: QUẢN LÝ CHUNG & HỆ THỐNG (Chỉ Chủ PK hoặc Admin Huuty thấy) -->
+        <div id="wrapperHeThong" style="display: none;">
+            <div class="section-title">Khu Vực Quản Lý Hệ Thống</div>
+            <div class="service-grid">
+                <a href="thongtinphongkham.html" class="service-item"><i class="fa-solid fa-hospital"></i><span>Thông tin PK</span></a>
+                <a href="quanlyuser.html" class="service-item"><i class="fa-solid fa-user-gear"></i><span>Nhân viên</span></a>
+                <a href="thanhtoan.html" class="service-item"><i class="fa-solid fa-credit-card"></i><span>Thanh toán</span></a>
+                <a href="thongke.html" class="service-item"><i class="fa-solid fa-chart-pie"></i><span>Thống kê</span></a>
+            </div>
+        </div>
+
+        <!-- KHU VỰC 2: DỊCH VỤ PHÒNG KHÁM & KHÁM BỆNH -->
         <div id="wrapperYTe">
             <div class="section-title">Dịch vụ phòng khám VetCare</div>
-            <div class="service-grid" id="menuYTe">
-                <a href="../mb/khachhang.html" class="service-item"><i class="fa-solid fa-users"></i><span>Khách hàng</span></a>
-                <a href="../mb/thucung.html" class="service-item"><i class="fa-solid fa-paw"></i><span>Thú cưng</span></a>
-                <a href="../mb/khambenh.html" class="service-item"><i class="fa-solid fa-stethoscope"></i><span>Khám bệnh</span></a>
-                <a href="../mb/phieuchidinh.html" class="service-item"><i class="fa-solid fa-file-medical"></i><span>Phiếu chỉ định</span></a>
-                <a href="../mb/lichhen.html" class="service-item"><i class="fa-solid fa-calendar-check"></i><span>Lịch hẹn</span></a>
-                <a href="../mb/nhatkyvaccine.html" class="service-item"><i class="fa-solid fa-syringe"></i><span>Tiêm phòng</span></a>
-                <a href="../mb/lichtrinh.html" class="service-item"><i class="fa-solid fa-timeline"></i><span>Lịch trình</span></a>
-                <a href="../mb/nhatkynoitru.html" class="service-item"><i class="fa-solid fa-hotel"></i><span>Lưu trú</span></a>
-                <a href="../mb/donthuoc.html" class="service-item"><i class="fa-solid fa-file-prescription"></i><span>Đơn thuốc</span></a>
-                <a href="../mb/khothuoc.html" class="service-item"><i class="fa-solid fa-pills"></i><span>Kho thuốc</span></a>
+            <div class="service-grid">
+                <a href="khachhang.html" class="service-item"><i class="fa-solid fa-users"></i><span>Khách hàng</span></a>
+                <a href="thucung.html" class="service-item"><i class="fa-solid fa-paw"></i><span>Thú cưng</span></a>
+                <a href="khambenh.html" class="service-item"><i class="fa-solid fa-stethoscope"></i><span>Khám bệnh</span></a>
+                <a href="phieuchidinh.html" class="service-item"><i class="fa-solid fa-file-medical"></i><span>Phiếu chỉ định</span></a>
+                <a href="lichhen.html" class="service-item"><i class="fa-solid fa-calendar-check"></i><span>Lịch hẹn</span></a>
+                <a href="khovaccine.html" class="service-item"><i class="fa-solid fa-syringe"></i><span>Tiêm phòng</span></a>
+                <a href="noitru.html" class="service-item"><i class="fa-solid fa-hotel"></i><span>Lưu trú</span></a>
+				<a href="lichtrinh.html" class="service-item"><i class="fa-solid fa-timeline"></i><span>Lịch trình</span></a>
+                <a href="donthuoc.html" class="service-item"><i class="fa-solid fa-file-prescription"></i><span>Đơn thuốc</span></a>
+                <a href="khothuoc.html" class="service-item"><i class="fa-solid fa-pills"></i><span>Kho thuốc</span></a>
             </div>
         </div>
 
-        <!-- KHU VỰC 2: PETSHOP & SPA (NHÂN VIÊN) -->
+        <!-- KHU VỰC 3: PETSHOP, POS & SPA (Bác sĩ bị ẩn phần bán hàng theo logic chuẩn) -->
         <div id="wrapperShopSpa">
-            <div class="section-title">Khu Vực dịch vụ Petshop và Spa</div>
-            <div class="service-grid" id="menuShopSpa">
-                <a href="../mb/danhmucsanpham.html" class="service-item"><i class="fa-solid fa-boxes-stacked"></i><span>Thêm sản phẩm</span></a>
-                <a href="../mb/nhatkykho.html" class="service-item"><i class="fa-solid fa-clipboard-check"></i><span>Nhật ký kho</span></a>
-                <a href="../mb/chitietbanhang.html" class="service-item"><i class="fa-solid fa-file-invoice-dollar"></i><span>Chi tiết bán hàng</span></a>
-                <a href="../mb/pos.html" class="service-item"><i class="fa-solid fa-cash-register"></i><span>Pos</span></a>
-                <a href="../mb/nhatkyspa.html" class="service-item"><i class="fa-solid fa-scissors"></i><span>Spa & Tỉa</span></a>
-            </div>
-        </div>
-
-        <!-- KHU VỰC 3: HỆ THỐNG & BÁO CÁO -->
-        <div id="wrapperHeThong">
-            <div class="section-title">Khu Vực hệ thống</div>
-            <div class="service-grid" id="menuHeThong">
-                <a href="../mb/thanhtoan.html" class="service-item"><i class="fa-solid fa-credit-card"></i><span>Thanh toán</span></a>
-                <a href="../mb/thongke.html" class="service-item"><i class="fa-solid fa-chart-pie"></i><span>Thống kê</span></a>
-                <a href="../mb/quanlyuser.html" class="service-item"><i class="fa-solid fa-user-gear"></i><span>Nhân viên</span></a>
+            <div class="section-title">Petshop, POS & Spa</div>
+            <div class="service-grid">
+                <a href="pos.html" class="service-item" style="background: #e0f2fe;"><i class="fa-solid fa-cash-register" style="color: #0284c7;"></i><span style="font-weight: bold; color: #0284c7;">BÁN HÀNG POS</span></a>
+                <a href="danhmucsanpham.html" class="service-item"><i class="fa-solid fa-boxes-stacked"></i><span>Thêm sản phẩm</span></a>
+                <a href="chitietbanhang.html" class="service-item"><i class="fa-solid fa-file-invoice-dollar"></i><span>Bán hàng</span></a>
+				<a href="nhatkykho.html" class="service-item"><i class="fa-solid fa-clipboard-check"></i><span>Nhật ký kho</span></a>
+                <a href="nhatkyspa.html" class="service-item"><i class="fa-solid fa-scissors"></i><span>Spa & Tỉa</span></a>
             </div>
         </div>
 
@@ -333,19 +290,19 @@
             <i class="fa-solid fa-house"></i>
             Trang chủ
         </a>
-        <a href="../mb/lichhen.html" class="nav-item">
+        <a href="lichhen.html" class="nav-item">
             <i class="fa-solid fa-calendar-days"></i>
             Lịch hẹn
         </a>
-        <a href="../mb/thucung.html" class="nav-item">
+        <a href="thucung.html" class="nav-item">
             <i class="fa-solid fa-paw"></i>
             Thú cưng
         </a>
-        <a href="../mb/thongke.html" class="nav-item">
+        <a href="thongke.html" class="nav-item">
             <i class="fa-solid fa-chart-line"></i>
             Báo cáo
         </a>
-        <a href="javascript:void(0);" onclick="moModalThongTinCaNhan()" class="nav-item">
+        <a href="javascript:void(0);" onclick="moModalSuaThongTinCaNhanMobile()" class="nav-item">
             <i class="fa-solid fa-user"></i>
             Tài khoản
         </a>
@@ -353,139 +310,143 @@
 
 </div>
 
-<!-- SCRIPT PHÂN QUYỀN VÀ QUẢN LÝ THÔNG TIN -->
+<!-- SCRIPT XỬ LÝ PHÂN QUYỀN VÀ SỬA THÔNG TIN CÁ NHÂN TƯƠNG TỰ BẢN PC -->
 <script>
-    window.addEventListener('DOMContentLoaded', () => {
-        const userStr = localStorage.getItem('currentUser');
-        
-        // Lấy các vùng menu theo đúng cấu trúc HTML ID
-        const wrapYTe = document.getElementById('wrapperYTe');
-        const wrapShopSpa = document.getElementById('wrapperShopSpa');
-        const wrapHeThong = document.getElementById('wrapperHeThong');
-
-        // Mặc định hiển thị đầy đủ các khối
-        if(wrapYTe) wrapYTe.style.display = 'block';
-        if(wrapShopSpa) wrapShopSpa.style.display = 'block';
-        if(wrapHeThong) wrapHeThong.style.display = 'block';
-
-        if (!userStr) return;
-
-        let user = {};
+    document.addEventListener("DOMContentLoaded", function() {
+        let currentUser = null;
         try {
-            user = JSON.parse(userStr);
-        } catch(e) { return; }
-
-        const sdt = String(user.sdt || user.sodienthoai || user.phone || '').trim();
-        const vaiTro = String(user.vaitro || user.chucvu || user.role || '').toLowerCase();
-        const tenHienThi = user.hoten || user.ten || 'Chủ Thú Cưng';
-
-        if (document.getElementById('hienThiTenUser')) {
-            document.getElementById('hienThiTenUser').innerText = tenHienThi;
+            currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+        } catch (e) {
+            currentUser = null;
         }
 
-        // --- LOGIC PHÂN QUYỀN GIỮ NGUYÊN CẤU TRÚC ---
-
-        // 1. Tài khoản Chupk / Số điện thoại '0935778727' hoặc Admin -> Hiển thị tất cả
-        if (sdt === '0935778727' || sdt.includes('chupk') || vaiTro.includes('admin') || vaiTro.includes('quanly')) {
-            return; 
-        }
-
-        // 2. Bác sĩ (lấy từ bảng user / quanlyuser): Chỉ hiển thị Y tế, ẩn Shop/Spa và Hệ thống
-        if (vaiTro.includes('bác sĩ') || vaiTro.includes('bacsi') || vaiTro.includes('doctor')) {
-            if(wrapShopSpa) wrapShopSpa.style.display = 'none';
-            if(wrapHeThong) wrapHeThong.style.display = 'none';
+        // Nếu chưa đăng nhập, đá về trang đăng nhập gốc
+        if (!currentUser) {
+            alert('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!');
+            window.location.replace('../index.html');
             return;
         }
 
-        // 3. Nhân viên / Spa / Lễ tân (lấy từ bảng user / quanlyuser): Chỉ hiển thị Shop/Spa, ẩn Y tế và Hệ thống
-        if (vaiTro.includes('nhân viên') || vaiTro.includes('nhanvien') || vaiTro.includes('staff') || vaiTro.includes('spa') || vaiTro.includes('letan')) {
-            if(wrapYTe) wrapYTe.style.display = 'none';
-            if(wrapHeThong) wrapHeThong.style.display = 'none';
-            return;
+        // Chuẩn hóa vai trò giống bản PC
+        const vaitroRaw = currentUser.vaitro || currentUser.role || '';
+        const vaitro = vaitroRaw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        
+        const tentaiKhoanHienTai = String(currentUser.tentaikhoan || currentUser.username || currentUser.sodienthoai || '').toLowerCase().trim();
+        const sdtHienTai = String(currentUser.sodienthoai || currentUser.sdt || '').trim();
+        const isHuuTy = (tentaiKhoanHienTai === 'huuty' || tentaiKhoanHienTai.includes('huuty') || sdtHienTai === '0935778727');
+
+        const isTrueOwner = vaitro.includes('chủ phòng khám') || vaitro.includes('chu phong kham') || vaitro.includes('chupk');
+        const isBacSi = vaitro.includes('bac si') || vaitro === 'bacsi';
+
+        // Hiển thị tên và thông tin lên Header Mobile
+        const tenHienThi = currentUser.tennhanvien || currentUser.hovaten || currentUser.tentaikhoan || 'Tài khoản';
+        document.getElementById('hienThiTenUser').innerText = tenHienThi;
+        document.getElementById('hienThiVaiTro').innerText = currentUser.vaitro || (isTrueOwner ? 'Chủ phòng khám' : 'Nhân viên');
+        document.getElementById('hienThiTenPK').innerText = currentUser.tenphongkham || 'VetCare Pro';
+
+        // --- ÁP DỤNG PHÂN QUYỀN HIỂN THỊ MENU MOBILE ---
+        const wrapperHeThong = document.getElementById('wrapperHeThong');
+        const wrapperYTe = document.getElementById('wrapperYTe');
+        const wrapperShopSpa = document.getElementById('wrapperShopSpa');
+
+        // 1. Nếu là Siêu quản lý (Huuty / 0935778727) hoặc Chủ phòng khám: Hiện đầy đủ khu vực hệ thống
+        if (isHuuTy || isTrueOwner) {
+            if (wrapperHeThong) wrapperHeThong.style.display = 'block';
+        } else {
+            if (wrapperHeThong) wrapperHeThong.style.display = 'none';
+        }
+
+        // 2. Nếu là Bác sĩ: Ẩn phần Petshop & Bán hàng, giữ lại Y tế
+        if (isBacSi && !isHuuTy) {
+            if (wrapperShopSpa) wrapperShopSpa.style.display = 'none';
         }
     });
 
-    // Hàm mở popup thông tin cá nhân
-    function moModalThongTinCaNhan() {
-        let userStr = localStorage.getItem('currentUser');
-        let currentUser = {};
-        if (userStr) {
-            try { currentUser = JSON.parse(userStr); } catch(e) {}
-        }
+    // --- HÀM SỬA THÔNG TIN CÁ NHÂN TRÊN MOBILE (ĐỒNG BỘ VỚI PC) ---
+    function moModalSuaThongTinCaNhanMobile() {
+        if (document.getElementById('modalSuaThongTinCaNhan')) return;
+        let currentUser = null;
+        try { currentUser = JSON.parse(sessionStorage.getItem('currentUser')); } catch (e) { currentUser = {}; }
 
-        document.getElementById('edit_hoten').value = currentUser.hoten || currentUser.ten || 'huuty23';
-        document.getElementById('edit_email').value = currentUser.email || 'admin@hms.com';
-        document.getElementById('edit_sdt').value = currentUser.sdt || currentUser.sodienthoai || currentUser.phone || '0935778727';
-        document.getElementById('edit_matkhau').value = '';
+        const tenHienTai = currentUser?.tennhanvien || currentUser?.hovaten || currentUser?.tentaikhoan || '';
+        const emailHienTai = currentUser?.email || '';
+        const sdtHienTai = currentUser?.sodienthoai || currentUser?.sdt || '';
 
-        document.getElementById('modalThongTinCaNhan').style.display = 'flex';
+        const modal = document.createElement('div');
+        modal.id = 'modalSuaThongTinCaNhan';
+        modal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 999999; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; padding: 15px;`;
+
+        modal.innerHTML = `
+            <div style="background: #ffffff; padding: 20px; border-radius: 12px; width: 100%; max-width: 380px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); position: relative;">
+                <button onclick="document.getElementById('modalSuaThongTinCaNhan').remove()" style="position: absolute; top: 10px; right: 12px; background: none; border: none; font-size: 22px; cursor: pointer; color: #64748b;">&times;</button>
+                <h3 style="color: #008080; margin-top: 0; margin-bottom: 14px; font-size: 16px; text-align: center;">👤 Chỉnh Sửa Thông Tin Cá Nhân</h3>
+                <form onsubmit="luuThongTinCaNhanMobile(event)">
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 3px;">Họ & Tên / Tên hiển thị:</label>
+                        <input type="text" id="self_tennhanvien" value="${tenHienTai}" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 3px;">Email:</label>
+                        <input type="email" id="self_email" value="${emailHienTai}" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 3px;">Số điện thoại:</label>
+                        <input type="text" id="self_sdt" value="${sdtHienTai}" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 3px;">Mật khẩu mới (Bỏ trống nếu không đổi):</label>
+                        <input type="password" id="self_matkhau" placeholder="Mật khẩu mới..." style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                        <button type="button" onclick="document.getElementById('modalSuaThongTinCaNhan').remove()" style="background: #94a3b8; color: white; border: none; padding: 7px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px;">Hủy</button>
+                        <button type="submit" style="background: #008080; color: white; border: none; padding: 7px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px;">💾 Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
     }
 
-    function dongModalThongTin() {
-        document.getElementById('modalThongTinCaNhan').style.display = 'none';
-    }
+    async function luuThongTinCaNhanMobile(event) {
+        event.preventDefault();
+        let currentUser = null;
+        try { currentUser = JSON.parse(sessionStorage.getItem('currentUser')); } catch (e) {}
 
-    async function luuThongTinCaNhan() {
-        const hotenMoi = document.getElementById('edit_hoten').value.trim();
-        const emailMoi = document.getElementById('edit_email').value.trim();
-        const sdt = document.getElementById('edit_sdt').value.trim();
-        const matKhauMoi = document.getElementById('edit_matkhau').value.trim();
-
-        if (!hotenMoi) {
-            alert('Họ tên không được để trống!');
+        if (!currentUser || !currentUser.id) {
+            alert('Không tìm thấy thông tin phiên đăng nhập!');
             return;
         }
 
-        let user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        user.hoten = hotenMoi;
-        user.email = emailMoi;
-        user.sdt = sdt;
-        if (matKhauMoi) {
-            user.matkhau = matKhauMoi;
-        }
-        localStorage.setItem('currentUser', JSON.stringify(user));
+        const tenMoi = document.getElementById('self_tennhanvien').value.trim();
+        const emailMoi = document.getElementById('self_email').value.trim();
+        const sdtMoi = document.getElementById('self_sdt').value.trim();
+        const matKhauMoi = document.getElementById('self_matkhau').value.trim();
 
-        const hienThiElem = document.getElementById('hienThiTenUser');
-        if (hienThiElem) {
-            hienThiElem.innerText = hotenMoi;
+        const updatePayload = { tennhanvien: tenMoi, email: emailMoi, sodienthoai: sdtMoi };
+        if (matKhauMoi) updatePayload.matkhau = matKhauMoi;
+
+        if (typeof db !== 'undefined' && db) {
+            // Xác định cập nhật bảng user hoặc chupk tùy theo đối tượng
+            const isOwner = (currentUser.vaitro === 'Chủ phòng khám');
+            const targetTable = isOwner ? 'chupk' : 'user';
+            
+            let { error } = await db.from(targetTable).update(updatePayload).eq('id', currentUser.id);
+            if (error) {
+                alert('Lỗi cập nhật CSDL: ' + error.message);
+                return;
+            }
         }
 
-        alert('Cập nhật thông tin cá nhân thành công!');
-        dongModalThongTin();
+        currentUser.tennhanvien = tenMoi;
+        currentUser.hovaten = tenMoi;
+        currentUser.email = emailMoi;
+        currentUser.sodienthoai = sdtMoi;
+        sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+        alert('✅ Cập nhật thông tin cá nhân thành công!');
+        location.reload();
     }
 </script>
-
-<!-- MODAL CHỈNH SỬA THÔNG TIN CÁ NHÂN -->
-<div class="modal-overlay" id="modalThongTinCaNhan" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 9999;">
-    <div class="modal-container" style="background: #fff; width: 90%; max-width: 380px; border-radius: 12px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
-            <h3 style="font-size: 15px; color: #008080;"><i class="fa-solid fa-user-pen"></i> Chỉnh Sửa Thông Tin Cá Nhân</h3>
-            <button onclick="dongModalThongTin()" style="background:none; border:none; font-size:18px; cursor:pointer;">&times;</button>
-        </div>
-        
-        <div style="margin-bottom: 10px;">
-            <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 4px;">Họ & Tên / Tên hiển thị:</label>
-            <input type="text" id="edit_hoten" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-        </div>
-        <div style="margin-bottom: 10px;">
-            <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 4px;">Email:</label>
-            <input type="email" id="edit_email" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-        </div>
-        <div style="margin-bottom: 10px;">
-            <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 4px;">Số điện thoại:</label>
-            <input type="text" id="edit_sdt" readonly style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; background: #f1f5f9; color: #64748b;">
-        </div>
-        <div style="margin-bottom: 14px;">
-            <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 4px;">Mật khẩu mới (Bỏ trống nếu không đổi):</label>
-            <input type="password" id="edit_matkhau" placeholder="•••••" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
-        </div>
-
-        <div style="display: flex; gap: 8px;">
-            <button onclick="dongModalThongTin()" style="background: #e2e8f0; color: #334155; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; flex: 1;">Hủy</button>
-            <button onclick="luuThongTinCaNhan()" style="background: #008080; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; flex: 1;">Lưu thay đổi</button>
-        </div>
-    </div>
-</div>
 
 </body>
 </html>
