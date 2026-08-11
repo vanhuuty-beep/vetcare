@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetCare - Chăm sóc thú cưng</title>
+    <!-- Nhận diện Font và Icon -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        /* Khung hiển thị giả lập màn hình điện thoại trên máy tính */
+        .mobile-container {
+            width: 100%;
+            max-width: 414px;
+            height: 100vh;
+            max-height: 896px;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        @media (min-width: 415px) {
+            .mobile-container {
+                border-radius: 40px;
+                border: 10px solid #222;
+            }
+        }
+        
+        /* Header phần trên */
+        .app-header {
+            background: linear-gradient(135deg, #008080, #20b2aa);
+            color: white;
+            padding: 20px 16px 30px 16px;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .user-greeting {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        .header-icons i {
+            font-size: 20px;
+            margin-left: 15px;
+            cursor: pointer;
+        }
+
+        /* Thẻ thông tin ví & điểm */
+        .wallet-card {
+            background: white;
+            color: #333;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .wallet-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .wallet-box {
+            width: 48%;
+        }
+        .wallet-title {
+            font-size: 12px;
+            color: #777;
+            margin-bottom: 4px;
+        }
+        .wallet-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: #008080;
+        }
+        
+        /* 4 nút tác vụ nhanh */
+        .quick-actions {
+            display: flex;
+            justify-content: space-between;
+            text-align: center;
+        }
+        .action-item {
+            font-size: 11px;
+            color: #555;
+            cursor: pointer;
+        }
+        .action-item i {
+            display: block;
+            font-size: 16px;
+            background: #e6f2f2;
+            color: #008080;
+            width: 36px;
+            height: 36px;
+            line-height: 36px;
+            border-radius: 50%;
+            margin: 0 auto 4px auto;
+        }
+
+        /* Nội dung chính cuộn được */
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+
+        /* Lưới dịch vụ (Grid 3x4 hoặc tùy chỉnh) */
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #222;
+        }
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .service-item {
+            background: #f8f9fa;
+            border-radius: 12px;
+            text-align: center;
+            padding: 12px 4px;
+            text-decoration: none;
+            color: #333;
+            transition: 0.2s;
+        }
+        .service-item:hover {
+            background: #e6f2f2;
+        }
+        .service-item i {
+            font-size: 22px;
+            color: #008080;
+            margin-bottom: 6px;
+        }
+        .service-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+
+        /* Banner khuyến mãi */
+        .promo-banner {
+            background: linear-gradient(135deg, #ff9966, #ff5e62);
+            color: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .promo-banner h3 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .promo-banner p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        /* Thanh điều hướng dưới đáy (Bottom Nav) */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 65px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+        }
+        .nav-item {
+            text-align: center;
+            text-decoration: none;
+            color: #888;
+            font-size: 10px;
+            flex: 1;
+        }
+        .nav-item i {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .nav-item.active {
+            color: #008080;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="mobile-container">
+    
+    <!-- HEADER -->
+    <div class="app-header">
+        <div class="header-top">
+            <div class="user-greeting">Xin chào, <b>Chủ Thú Cưng!</b></div>
+            <div class="header-icons">
+                <i class="fa-solid fa-bell"></i>
+                <i class="fa-solid fa-cart-shopping"></i>
+            </div>
+        </div>
+
+        <!-- Thẻ ví & điểm thưởng -->
+        <div class="wallet-card">
+            <div class="wallet-row">
+                <div class="wallet-box">
+                    <div class="wallet-title">Ví dịch vụ <i class="fa-solid fa-angle-right"></i></div>
+                    <div class="wallet-value">500.000đ</div>
+                </div>
+                <div class="wallet-box">
+                    <div class="wallet-title">Điểm thưởng <i class="fa-solid fa-angle-right"></i></div>
+                    <div class="wallet-value" style="color: #ff6b6b;">1,250 điểm</div>
+                </div>
+            </div>
+            
+            <!-- 4 Nút nhanh -->
+            <div class="quick-actions">
+                <div class="action-item"><i class="fa-solid fa-wallet"></i>Nạp tiền</div>
+                <div class="action-item"><i class="fa-solid fa-gift"></i>Ưu đãi</div>
+                <div class="action-item"><i class="fa-solid fa-clock-rotate-left"></i>Lịch sử</div>
+                <div class="action-item"><i class="fa-solid fa-bullhorn"></i>Nhắc lịch</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NỘI DUNG CHÍNH (QUẢN LÝ DỊCH VỤ THÚ CƯNG) -->
+    <div class="app-content">
+        <div class="section-title">Dịch vụ phòng khám VetCare</div>
+        
+        <div class="service-grid">
+            <!-- Liên kết tới các file có sẵn của bạn trong XAMPP -->
+			<a href="khachhang.html" class="service-item">
+                <i class="fa-solid fa-users"></i>
+                <span>Khách hàng</span>
+            </a>
+			 <a href="thucung.html" class="service-item">
+                <i class="fa-solid fa-paw"></i>
+                <span>Thú cưng</span>
+            </a>
+            <a href="khambenh.html" class="service-item">
+                <i class="fa-solid fa-stethoscope"></i>
+                <span>Khám bệnh</span>
+            </a>
+			<a href="phieuchidinh.html" class="service-item">
+                <i class="fa-solid fa-file-medical"></i>
+                <span>Phiếu chỉ định</span>
+            </a> 
+            <a href="lichhen.html" class="service-item">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>Lịch hẹn</span>
+            </a>
+            <a href="nhatkyvaccine.html" class="service-item">
+                <i class="fa-solid fa-syringe"></i>
+                <span>Tiêm phòng</span>
+            </a>
+            <a href="lichtrinh.html" class="service-item">
+                <i class="fa-solid fa-timeline"></i>
+                <span>Lịch trình</span>
+            </a>
+            
+            <a href="nhatkynoitru.html" class="service-item">
+                <i class="fa-solid fa-hotel"></i>
+                <span>Lưu trú</span>
+            </a>
+			<a href="donthuoc.html" class="service-item">
+                <i class="fa-solid fa-file-prescription"></i>
+                <span>Đơn thuốc</span>
+            </a>
+            <a href="khothuoc.html" class="service-item">
+                <i class="fa-solid fa-pills"></i>
+                <span>Kho thuốc</span>
+            </a> 
+			
+        </div>
+		 <div class="section-title">Khu Vực dịch vụ Petshop và Spa</div>
+        
+        <div class="service-grid">
+            <!-- Liên kết tới các file có sẵn của bạn trong XAMPP -->
+            <a href="danhmucsanpham.html" class="service-item">
+    <i class="fa-solid fa-boxes-stacked"></i>
+    <span>Thêm sản phẩm</span>
+</a>
+<a href="nhatkykho.html" class="service-item">
+    <i class="fa-solid fa-clipboard-check"></i>
+    <span>Nhật ký kho</span>
+</a>
+<a href="chitietbanhang.html" class="service-item">
+    <i class="fa-solid fa-file-invoice-dollar"></i>
+    <span>Chi tiết bán hàng</span>
+</a>
+<a href="pos.html" class="service-item">
+    <i class="fa-solid fa-cash-register"></i>
+    <span>Pos</span>
+</a>
+<a href="nhatkyspa.html" class="service-item">
+    <i class="fa-solid fa-scissors"></i>
+    <span>Spa & Tỉa</span>
+</a>
+           
+        </div>
+		<div class="section-title">Khu Vực hệ thống</div>
+        
+        <div class="service-grid">
+            <!-- Liên kết tới các file có sẵn của bạn trong XAMPP -->
+            <a href="thanhtoan.html" class="service-item">
+                <i class="fa-solid fa-credit-card"></i>
+                <span>Thanh toán</span>
+            </a>
+            <a href="thongke.html" class="service-item">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Thống kê</span>
+            </a>
+            <a href="quanlyuser.html" class="service-item">
+                <i class="fa-solid fa-user-gear"></i>
+                <span>Nhân viên</span>
+            </a>
+           
+        </div>
+
+        <!-- Banner Khuyến Mãi -->
+        <div class="promo-banner">
+            <h3>Ưu đãi tiêm phòng tháng này!</h3>
+            <p>Giảm ngay 20% gói tiêm vaccine tổng hợp cho chó mèo đăng ký qua app.</p>
+        </div>
+    </div>
+
+    <!-- THANH ĐIỀU HƯỚNG DƯỚI CÙNG (BOTTOM NAV) -->
+    <div class="bottom-nav">
+        <a href="trangchu.php" class="nav-item active">
+            <i class="fa-solid fa-house"></i>
+            Trang chủ
+        </a>
+        <a href="lichhen.html" class="nav-item">
+            <i class="fa-solid fa-calendar-days"></i>
+            Lịch hẹn
+        </a>
+        <a href="thucung.html" class="nav-item">
+            <i class="fa-solid fa-paw"></i>
+            Thú cưng
+        </a>
+        <a href="thongke.html" class="nav-item">
+            <i class="fa-solid fa-chart-line"></i>
+            Báo cáo
+        </a>
+        <a href="quanlyuser.html" class="nav-item">
+            <i class="fa-solid fa-user"></i>
+            Tài khoản
+        </a>
+    </div>
+
+</div>
+
+</body>
+</html>

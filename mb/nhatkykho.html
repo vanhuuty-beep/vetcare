@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhật Ký Kho - VetCare Mobile</title>
+    
+    <!-- Thư viện Supabase JS và các cấu hình chung -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+
+    <!-- Font & Icon -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        /* Khung giả lập màn hình mobile */
+        .mobile-container {
+            width: 100%;
+            max-width: 414px;
+            height: 100vh;
+            max-height: 896px;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        @media (min-width: 415px) {
+            .mobile-container {
+                border-radius: 40px;
+                border: 10px solid #222;
+            }
+        }
+        
+        /* App Header */
+        .app-header {
+            background: linear-gradient(135deg, #008080, #20b2aa);
+            color: white;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .app-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .app-header a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+        }
+
+        /* Nội dung cuộn */
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 90px;
+        }
+
+        /* Thanh tìm kiếm */
+        .search-box-container {
+            margin-bottom: 14px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            background: #f8fafc;
+        }
+        .search-input:focus {
+            border-color: #008080;
+            background: #fff;
+        }
+
+        /* Nút mở form thêm */
+        .btn-open-form {
+            background: #008080;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-open-form:hover {
+            background: #006666;
+        }
+
+        /* Modal Form Thêm/Sửa dạng popup đè */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            padding: 12px;
+        }
+        .modal-container {
+            background: #fff;
+            width: 100%;
+            max-width: 380px;
+            max-height: 90vh;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            overflow-y: auto;
+            position: relative;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+        .modal-header h3 {
+            font-size: 15px;
+            color: #008080;
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #777;
+        }
+        .form-group-modal {
+            margin-bottom: 10px;
+        }
+        .form-group-modal label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: #555;
+        }
+        .form-group-modal input, .form-group-modal select, .form-group-modal textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            background: #fff;
+            box-sizing: border-box;
+        }
+        .form-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .form-row .form-group-modal {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .modal-footer {
+            margin-top: 14px;
+            display: flex;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: #008080;
+            color: white;
+            border: none;
+            flex: 1;
+            padding: 9px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #334155;
+            border: none;
+            padding: 9px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* Danh sách Card hiển thị tối ưu mobile */
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #222;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nhatky-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .nhatky-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .nhatky-info h4 {
+            font-size: 14px;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+        .nhatky-info p {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .nhatky-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .nhatky-actions button {
+            background: #f1f5f9;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-edit { color: #d97706; }
+        .btn-delete { color: #dc2626; }
+
+        /* Bottom Nav cố định dưới đáy chuẩn Mobile app */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 65px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+        }
+        .nav-item {
+            text-align: center;
+            text-decoration: none;
+            color: #888;
+            font-size: 10px;
+            flex: 1;
+        }
+        .nav-item i {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .nav-item.active {
+            color: #008080;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="mobile-container">
+    
+    <!-- HEADER -->
+    <div class="app-header">
+        <a href="trangchu.html"><i class="fa-solid fa-arrow-left"></i></a>
+        <h2>Nhật Ký Kho</h2>
+        <div style="width: 18px;"></div>
+    </div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="app-content">
+        
+        <!-- Ô TÌM KIẾM -->
+        <div class="search-box-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Tìm tên sản phẩm, hình thức, ghi chú..." onkeyup="timKiemNhatKyKho()">
+        </div>
+
+        <!-- NÚT MỞ FORM THÊM -->
+        <button class="btn-open-form" onclick="moModalThem()">
+            <i class="fa-solid fa-clipboard-check"></i> Thêm giao dịch kho
+        </button>
+
+        <!-- DANH SÁCH HIỂN THỊ -->
+        <div class="section-title">
+            <span>Lịch sử giao dịch</span>
+            <span id="totalCount" style="font-size: 12px; color: #64748b; font-weight: normal;">(0)</span>
+        </div>
+        
+        <div class="nhatky-list" id="data-table">
+            <!-- Dữ liệu được nạp tự động từ Supabase -->
+        </div>
+
+    </div>
+
+    <!-- POPUP FORM THÊM / SỬA NHẬT KÝ KHO -->
+    <div class="modal-overlay" id="nhatKyKhoModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thêm giao dịch kho</h3>
+                <button class="close-modal" onclick="dongModal()">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingId">
+            
+            <div class="form-group-modal">
+                <label>Tên sản phẩm (*):</label>
+                <input type="text" id="tensanpham" list="listSanPham" placeholder="Nhập hoặc chọn tên sản phẩm...">
+                <datalist id="listSanPham">
+                    <!-- Danh sách sản phẩm tự động nạp từ Supabase -->
+                </datalist>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Hình thức (*):</label>
+                    <select id="hinhthuc">
+                        <option value="Nhập kho">Nhập kho</option>
+                        <option value="Xuất kho">Xuất kho</option>
+                    </select>
+                </div>
+                <div class="form-group-modal">
+                    <label>Số lượng (*):</label>
+                    <input type="number" id="soluong" placeholder="0" value="1">
+                </div>
+            </div>
+
+            <div class="form-group-modal">
+                <label>Ghi chú:</label>
+                <textarea id="ghichu" rows="2" placeholder="Lý do nhập/xuất kho..."></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="dongModal()">Hủy</button>
+                <button type="button" class="btn-primary" onclick="luuNhatKyKho()">Lưu giao dịch</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav">
+        <a href="trangchu.html" class="nav-item">
+            <i class="fa-solid fa-house"></i>
+            Trang chủ
+        </a>
+        <a href="lichhen.html" class="nav-item">
+            <i class="fa-solid fa-calendar-days"></i>
+            Lịch hẹn
+        </a>
+        <a href="thucung.html" class="nav-item active">
+            <i class="fa-solid fa-paw"></i>
+            Thú cưng
+        </a>
+        <a href="thongke.html" class="nav-item">
+            <i class="fa-solid fa-chart-line"></i>
+            Báo cáo
+        </a>
+        <a href="khachhang.html" class="nav-item">
+            <i class="fa-solid fa-users"></i>
+            Khách hàng
+        </a>
+    </div>
+
+</div>
+
+<script>
+    let danhSachNhatKyGoc = [];
+    let danhSachSanPhamDanhMuc = [];
+
+    window.addEventListener('DOMContentLoaded', async () => {
+        await taiDanhSachNhatKyKho();
+        await taiDanhMucSanPhamChoKho();
+    });
+
+    async function taiDanhMucSanPhamChoKho() {
+        const { data, error } = await db.from('danhmucsanpham').select('id, tensanpham, soluongton');
+        if (!error && data) {
+            danhSachSanPhamDanhMuc = data;
+            const datalist = document.getElementById('listSanPham');
+            datalist.innerHTML = '';
+            data.forEach(item => {
+                if (item.tensanpham) {
+                    const option = document.createElement('option');
+                    option.value = item.tensanpham;
+                    datalist.appendChild(option);
+                }
+            });
+        }
+    }
+
+    async function taiDanhSachNhatKyKho() {
+        const { data, error } = await db.from('nhatkykho').select('*').order('id', { ascending: false });
+        if (error) {
+            console.error('Lỗi tải nhật ký kho:', error);
+            alert('Không thể tải dữ liệu nhật ký kho từ Supabase!');
+        } else {
+            danhSachNhatKyGoc = data || [];
+            hienThiBang(danhSachNhatKyGoc);
+        }
+    }
+
+    function hienThiBang(data) {
+        const container = document.getElementById('data-table');
+        document.getElementById('totalCount').innerText = '(' + data.length + ')';
+        container.innerHTML = '';
+        
+        if(data.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#64748b; font-size:13px; padding:20px;">Chưa có bản ghi nhật ký kho nào</p>';
+            return;
+        }
+
+        data.forEach((item) => {
+            const isNhap = (item.hinhthuc || '').toLowerCase().includes('nhập');
+            const badgeColor = isNhap ? '#059669' : '#dc2626';
+            const badgeBg = isNhap ? '#d1fae5' : '#fee2e2';
+
+            container.innerHTML += `
+                <div class="nhatky-card">
+                    <div class="nhatky-info">
+                        <h4>📦 ${item.tensanpham || ''} <span style="font-size:11px; color:#008080;">(#${item.id})</span></h4>
+                        <p>
+                            <span style="background: ${badgeBg}; color: ${badgeColor}; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">
+                                ${item.hinhthuc || ''}
+                            </span> 
+                            | Số lượng: <b style="color: #1e293b; font-size: 13px;">${item.soluong || 0}</b>
+                        </p>
+                        <p><i class="fa-solid fa-note-sticky"></i> Ghi chú: ${item.ghichu || '---'}</p>
+                    </div>
+                    <div class="nhatky-actions">
+                        <button class="btn-edit" onclick="moModalSua(${item.id})" title="Sửa"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn-delete" onclick="xoaNhatKyKho(${item.id})" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function timKiemNhatKyKho() {
+        const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+        const ketQuaLoc = danhSachNhatKyGoc.filter(item => {
+            const tenSP = (item.tensanpham || '').toLowerCase();
+            const hinhThuc = (item.hinhthuc || '').toLowerCase();
+            const ghiChu = (item.ghichu || '').toLowerCase();
+            return tenSP.includes(tuKhoa) || hinhThuc.includes(tuKhoa) || ghiChu.includes(tuKhoa);
+        });
+        hienThiBang(ketQuaLoc);
+    }
+
+    function moModalThem() {
+        document.getElementById('editingId').value = '';
+        document.getElementById('tensanpham').value = '';
+        document.getElementById('hinhthuc').value = 'Nhập kho';
+        document.getElementById('soluong').value = '1';
+        document.getElementById('ghichu').value = '';
+        
+        document.getElementById('modalTitle').innerText = 'Thêm giao dịch kho mới';
+        document.getElementById('nhatKyKhoModal').style.display = 'flex';
+    }
+
+    function moModalSua(id) {
+        const item = danhSachNhatKyGoc.find(x => x.id === id);
+        if (!item) return;
+
+        document.getElementById('editingId').value = item.id;
+        document.getElementById('tensanpham').value = item.tensanpham || '';
+        document.getElementById('hinhthuc').value = item.hinhthuc || 'Nhập kho';
+        document.getElementById('soluong').value = item.soluong || 1;
+        document.getElementById('ghichu').value = item.ghichu || '';
+
+        document.getElementById('modalTitle').innerText = 'Cập nhật giao dịch (ID: #' + id + ')';
+        document.getElementById('nhatKyKhoModal').style.display = 'flex';
+    }
+
+    function dongModal() {
+        document.getElementById('nhatKyKhoModal').style.display = 'none';
+    }
+
+    async function capNhatTonKhoSanPham(tenSanPham, soLuongThayDoi, hinhThuc) {
+        const sanPham = danhSachSanPhamDanhMuc.find(x => x.tensanpham.toLowerCase() === tenSanPham.toLowerCase());
+        if (!sanPham) return;
+
+        let tonKhoHienTai = parseInt(sanPham.soluongton) || 0;
+        let tonKhoMoi = tonKhoHienTai;
+
+        if (hinhThuc.toLowerCase().includes('nhập')) {
+            tonKhoMoi += soLuongThayDoi;
+        } else {
+            tonKhoMoi -= soLuongThayDoi;
+        }
+
+        await db.from('danhmucsanpham').update({ soluongton: tonKhoMoi }).eq('id', sanPham.id);
+        sanPham.soluongton = tonKhoMoi;
+    }
+
+    async function luuNhatKyKho() {
+        const id = document.getElementById('editingId').value;
+        const tensanpham = document.getElementById('tensanpham').value.trim();
+        const hinhthuc = document.getElementById('hinhthuc').value;
+        const soluong = parseInt(document.getElementById('soluong').value) || 0;
+        const ghichu = document.getElementById('ghichu').value.trim();
+
+        if (!tensanpham || !soluong) {
+            alert('Vui lòng nhập Tên sản phẩm và Số lượng!');
+            return;
+        }
+
+        const payload = {
+            tensanpham,
+            hinhthuc,
+            soluong,
+            ghichu
+        };
+
+        if (id === "") {
+            const { error } = await db.from('nhatkykho').insert([payload]);
+            if (error) {
+                alert('Lỗi thêm nhật ký kho: ' + error.message);
+            } else {
+                await capNhatTonKhoSanPham(tensanpham, soluong, hinhthuc);
+                alert('Thêm giao dịch kho và cập nhật tồn kho thành công!');
+                dongModal();
+                await taiDanhMucSanPhamChoKho();
+                taiDanhSachNhatKyKho();
+            }
+        } else {
+            const giaoDichCu = danhSachNhatKyGoc.find(x => x.id == id);
+            if (giaoDichCu) {
+                let hinhThucHoanTac = giaoDichCu.hinhthuc.toLowerCase().includes('nhập') ? 'Xuất kho' : 'Nhập kho';
+                await capNhatTonKhoSanPham(giaoDichCu.tensanpham, parseInt(giaoDichCu.soluong), hinhThucHoanTac);
+            }
+
+            const { error } = await db.from('nhatkykho').update(payload).eq('id', id);
+            if (error) {
+                alert('Lỗi cập nhật nhật ký kho: ' + error.message);
+            } else {
+                await capNhatTonKhoSanPham(tensanpham, soluong, hinhthuc);
+                alert('Cập nhật giao dịch và tồn kho thành công!');
+                dongModal();
+                await taiDanhMucSanPhamChoKho();
+                taiDanhSachNhatKyKho();
+            }
+        }
+    }
+
+    async function xoaNhatKyKho(id) {
+        if (confirm('Bạn có chắc chắn muốn xóa bản ghi nhật ký kho này không?')) {
+            const giaoDichCu = danhSachNhatKyGoc.find(x => x.id == id);
+            
+            const { error } = await db.from('nhatkykho').delete().eq('id', id);
+            if (error) {
+                alert('Lỗi khi xóa: ' + error.message);
+            } else {
+                if (giaoDichCu) {
+                    let hinhThucHoanTac = giaoDichCu.hinhthuc.toLowerCase().includes('nhập') ? 'Xuất kho' : 'Nhập kho';
+                    await capNhatTonKhoSanPham(giaoDichCu.tensanpham, parseInt(giaoDichCu.soluong), hinhThucHoanTac);
+                }
+
+                alert('Xóa và hoàn tác tồn kho thành công!');
+                await taiDanhMucSanPhamChoKho();
+                taiDanhSachNhatKyKho();
+            }
+        }
+    }
+</script>
+
+</body>
+</html>

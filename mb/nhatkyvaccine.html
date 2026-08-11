@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhật ký Tiêm Vắc-xin - VetCare Mobile</title>
+    
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+
+    <!-- Font & Icon -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        /* Khung giả lập màn hình mobile */
+        .mobile-container {
+            width: 100%;
+            max-width: 414px;
+            height: 100vh;
+            max-height: 896px;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        @media (min-width: 415px) {
+            .mobile-container {
+                border-radius: 40px;
+                border: 10px solid #222;
+            }
+        }
+        
+        /* App Header */
+        .app-header {
+            background: linear-gradient(135deg, #008080, #20b2aa);
+            color: white;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .app-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .app-header a, .app-header button {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Nội dung cuộn */
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 90px;
+        }
+
+        /* Thanh tìm kiếm */
+        .search-box-container {
+            margin-bottom: 14px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            background: #f8fafc;
+        }
+        .search-input:focus {
+            border-color: #008080;
+            background: #fff;
+        }
+
+        /* Nút mở form thêm */
+        .btn-open-form {
+            background: #008080;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-open-form:hover {
+            background: #006666;
+        }
+
+        /* Modal Form Thêm/Sửa dạng popup đè */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            padding: 12px;
+        }
+        .modal-container {
+            background: #fff;
+            width: 100%;
+            max-width: 380px;
+            max-height: 90vh;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            overflow-y: auto;
+            animation: fadeIn 0.2s ease-in-out;
+            position: relative;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+        .modal-header h3 {
+            font-size: 15px;
+            color: #008080;
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #777;
+        }
+        .form-group-modal {
+            margin-bottom: 10px;
+        }
+        .form-group-modal label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: #555;
+        }
+        .form-group-modal input, .form-group-modal select, .form-group-modal textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            background: #fff;
+            box-sizing: border-box;
+        }
+        .form-group-modal input:focus, .form-group-modal select:focus {
+            border-color: #008080;
+        }
+        .form-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .form-row .form-group-modal {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .modal-footer {
+            margin-top: 14px;
+            display: flex;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: #008080;
+            color: white;
+            border: none;
+            flex: 1;
+            padding: 9px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #334155;
+            border: none;
+            padding: 9px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* Danh sách Card hiển thị tối ưu mobile */
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #222;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nhatky-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .nhatky-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .nhatky-info h4 {
+            font-size: 14px;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+        .nhatky-info p {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .nhatky-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .nhatky-actions button {
+            background: #f1f5f9;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-edit { color: #d97706; }
+        .btn-delete { color: #dc2626; }
+
+        /* Bottom Nav cố định dưới đáy chuẩn Mobile app */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 65px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+        }
+        .nav-item {
+            text-align: center;
+            text-decoration: none;
+            color: #888;
+            font-size: 10px;
+            flex: 1;
+        }
+        .nav-item i {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .nav-item.active {
+            color: #008080;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="mobile-container">
+    
+    <!-- HEADER -->
+    <div class="app-header">
+        <a href="trangchu.html"><i class="fa-solid fa-arrow-left"></i></a>
+        <h2>Nhật ký Tiêm Vắc-xin</h2>
+        <div style="width: 18px;"></div>
+    </div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="app-content">
+        
+        <!-- Ô TÌM KIẾM -->
+        <div class="search-box-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Tìm tên vắc-xin, bác sĩ, thú cưng..." onkeyup="timKiemNhatKy()">
+        </div>
+
+        <!-- NÚT MỞ FORM THÊM -->
+        <button class="btn-open-form" onclick="moModalThem()">
+            <i class="fa-solid fa-syringe"></i> Thêm mũi tiêm mới
+        </button>
+
+        <!-- DANH SÁCH HIỂN THỊ -->
+        <div class="section-title">
+            <span>Nhật ký tiêm phòng</span>
+            <span id="totalCount" style="font-size: 12px; color: #64748b; font-weight: normal;">(0)</span>
+        </div>
+        
+        <div class="nhatky-list" id="data-table">
+            <!-- Dữ liệu được nạp tự động -->
+        </div>
+
+    </div>
+
+    <!-- POPUP FORM THÊM / SỬA NHẬT KÝ TIÊM -->
+    <div class="modal-overlay" id="nhatKyModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thêm mũi tiêm vắc-xin mới</h3>
+                <button class="close-modal" onclick="dongModal()">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingId">
+            
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Mã khám bệnh:</label>
+                    <input type="text" id="makhambenh" placeholder="Nhập mã khám...">
+                </div>
+                <div class="form-group-modal">
+                    <label>Mã thú cưng (*):</label>
+                    <input type="text" id="mathucung" placeholder="Nhập ID thú cưng...">
+                </div>
+            </div>
+
+            <div class="form-group-modal">
+                <label>Chọn vắc-xin từ kho (*):</label>
+                <select id="selectVaccine" onchange="chonVaccineKho(this)">
+                    <option value="">-- Chọn vắc-xin trong kho --</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Ngày tiêm:</label>
+                    <input type="date" id="ngaytiem">
+                </div>
+                <div class="form-group-modal">
+                    <label>Ngày nhắc lại:</label>
+                    <input type="date" id="ngaynhaclai">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Bác sĩ phụ trách:</label>
+                    <input type="text" id="bacsi" placeholder="Tên bác sĩ...">
+                </div>
+                <div class="form-group-modal">
+                    <label>Trạng thái:</label>
+                    <select id="trangthai">
+                        <option value="Đã tiêm">Đã tiêm</option>
+                        <option value="Chờ nhắc lịch">Chờ nhắc lịch</option>
+                        <option value="Đã hủy">Đã hủy</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="dongModal()">Hủy</button>
+                <button class="btn-primary" onclick="luuNhatKy()">Lưu & Cập nhật kho</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav">
+        <a href="trangchu.html" class="nav-item">
+            <i class="fa-solid fa-house"></i>
+            Trang chủ
+        </a>
+        <a href="lichhen.html" class="nav-item">
+            <i class="fa-solid fa-calendar-days"></i>
+            Lịch hẹn
+        </a>
+        <a href="thucung.html" class="nav-item active">
+            <i class="fa-solid fa-paw"></i>
+            Thú cưng
+        </a>
+        <a href="thongke.html" class="nav-item">
+            <i class="fa-solid fa-chart-line"></i>
+            Báo cáo
+        </a>
+        <a href="khachhang.html" class="nav-item">
+            <i class="fa-solid fa-users"></i>
+            Khách hàng
+        </a>
+    </div>
+
+</div>
+
+<script>
+    let danhSachNhatKyGoc = [];
+    let danhSachKhoVaccineGoc = [];
+    let mapThuCung = {};
+    let mapKhachHang = {};
+
+    window.addEventListener('DOMContentLoaded', async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const maTCParam = urlParams.get('mathucung');
+        const maKBParam = urlParams.get('makhambenh');
+        if (maTCParam) document.getElementById('mathucung').value = maTCParam;
+        if (maKBParam) document.getElementById('makhambenh').value = maKBParam;
+
+        await fetchDuLieuBanDau();
+
+        if (maTCParam || maKBParam) {
+            moModalThem();
+        }
+    });
+
+    async function fetchDuLieuBanDau() {
+        // 1. Tải khách hàng
+        const { data: khData } = await db.from('khachhang').select('*');
+        if (khData) {
+            khData.forEach(kh => { mapKhachHang[kh.id] = kh.hovaten; });
+        }
+
+        // 2. Tải thú cưng
+        const { data: tcData } = await db.from('thucung').select('*');
+        if (tcData) {
+            tcData.forEach(tc => {
+                let maKH = tc.makhachhang || tc.makh || tc.khachhang_id;
+                mapThuCung[tc.id] = {
+                    tenthucung: tc.tenthucung,
+                    tenchu: mapKhachHang[maKH] || 'Không rõ chủ'
+                };
+            });
+        }
+
+        // 3. Tải kho vắc-xin (khovaccine) để đổ vào select box có hiển thị giá và tồn kho
+        const { data: khoData } = await db.from('khovaccine').select('*');
+        if (khoData) {
+            danhSachKhoVaccineGoc = khoData;
+            const selectEl = document.getElementById('selectVaccine');
+            selectEl.innerHTML = `<option value="">-- Chọn vắc-xin trong kho --</option>`;
+            khoData.forEach(v => {
+                const tonKho = (parseInt(v.soluongnhap) || 0) - (parseInt(v.datiem) || 0);
+                const giaV = v.giaban !== undefined ? v.giaban : (v.gia !== undefined ? v.gia : 0);
+                selectEl.innerHTML += `<option value="${v.id}" data-mavc="VX${String(v.id).padStart(4, '0')}" data-ten="${v.tenvaccine}">${v.tenvaccine} - Giá: ${Number(giaV).toLocaleString('vi-VN')}đ (Tồn: ${tonKho})</option>`;
+            });
+        }
+
+        // 4. Tải danh sách nhật ký tiêm vắc-xin
+        const { data, error } = await db.from('nhatkylamvaccine').select('*').order('id', { ascending: false });
+        if (error) {
+            console.error('Lỗi tải nhật ký tiêm vắc-xin:', error);
+        } else {
+            danhSachNhatKyGoc = data || [];
+            hienThiBang(danhSachNhatKyGoc);
+        }
+    }
+
+    function chonVaccineKho(selectEl) {
+        // Xử lý tự động nếu cần lấy thông tin thêm
+    }
+
+    function hienThiBang(data) {
+        const container = document.getElementById('data-table');
+        document.getElementById('totalCount').innerText = `(${data.length})`;
+        container.innerHTML = '';
+        
+        if(data.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#64748b; font-size:13px; padding:20px;">Chưa có lịch sử tiêm vắc-xin nào</p>';
+            return;
+        }
+
+        data.forEach(item => {
+            const maNKFormatted = 'NK' + String(item.id).padStart(4, '0');
+            const maKBText = item.makhambenh ? 'KB' + String(item.makhambenh).padStart(4, '0') : 'Không có';
+            const infoPet = mapThuCung[item.mathucung] || { tenthucung: 'Thú cưng #' + item.mathucung, tenchu: 'Không rõ' };
+            const ngayTiemFormatted = item.ngaytiem ? new Date(item.ngaytiem).toLocaleDateString('vi-VN') : '';
+            const ngayNhacLaiFormatted = item.ngaynhaclai ? new Date(item.ngaynhaclai).toLocaleDateString('vi-VN') : 'Không có';
+
+            container.innerHTML += `
+                <div class="nhatky-card">
+                    <div class="nhatky-info">
+                        <h4>🐾 ${infoPet.tenthucung} <span style="font-size:11px; color:#008080;">(${maNKFormatted})</span></h4>
+                        <p><i class="fa-solid fa-user"></i> Chủ: ${infoPet.tenchu} | KB: ${maKBText}</p>
+                        <p><i class="fa-solid fa-syringe" style="color:#0284c7;"></i> <b>${item.tenvaccine || ''}</b> (${item.mavaccine || ''})</p>
+                        <p><i class="fa-solid fa-calendar-days"></i> Tiêm: ${ngayTiemFormatted} | Nhắc: <b style="color:#d97706;">${ngayNhacLaiFormatted}</b></p>
+                        <p><i class="fa-solid fa-user-doctor"></i> BS: ${item.bacsi || '---'} | <span style="color:#059669; font-weight:bold;">${item.trangthai || ''}</span></p>
+                    </div>
+                    <div class="nhatky-actions">
+                        <button class="btn-edit" onclick="moModalSua(${item.id})" title="Sửa"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn-delete" onclick="xoaNhatKy(${item.id})" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function timKiemNhatKy() {
+        const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+        const ketQuaLoc = danhSachNhatKyGoc.filter(item => {
+            const tenVC = (item.tenvaccine || '').toLowerCase();
+            const maVC = (item.mavaccine || '').toLowerCase();
+            const bacSi = (item.bacsi || '').toLowerCase();
+            const maNK = ('nk' + String(item.id)).toLowerCase();
+            return tenVC.includes(tuKhoa) || maVC.includes(tuKhoa) || bacSi.includes(tuKhoa) || maNK.includes(tuKhoa);
+        });
+        hienThiBang(ketQuaLoc);
+    }
+
+    function moModalThem() {
+        document.getElementById('editingId').value = '';
+        if (!window.location.search.includes('makhambenh')) {
+            document.getElementById('makhambenh').value = '';
+        }
+        if (!window.location.search.includes('mathucung')) {
+            document.getElementById('mathucung').value = '';
+        }
+        document.getElementById('ngaytiem').value = new Date().toISOString().split('T')[0];
+        document.getElementById('selectVaccine').value = '';
+        document.getElementById('ngaynhaclai').value = '';
+        document.getElementById('bacsi').value = '';
+        document.getElementById('trangthai').value = 'Đã tiêm';
+        
+        document.getElementById('modalTitle').innerText = 'Thêm mũi tiêm vắc-xin mới';
+        document.getElementById('nhatKyModal').style.display = 'flex';
+    }
+
+    function moModalSua(id) {
+        const item = danhSachNhatKyGoc.find(x => x.id === id);
+        if (!item) return;
+
+        document.getElementById('editingId').value = item.id;
+        document.getElementById('makhambenh').value = item.makhambenh || '';
+        document.getElementById('mathucung').value = item.mathucung || '';
+        document.getElementById('ngaytiem').value = item.ngaytiem || '';
+        document.getElementById('ngaynhaclai').value = item.ngaynhaclai || '';
+        document.getElementById('bacsi').value = item.bacsi || '';
+        document.getElementById('trangthai').value = item.trangthai || 'Đã tiêm';
+        
+        const selectEl = document.getElementById('selectVaccine');
+        for (let option of selectEl.options) {
+            if (option.text.includes(item.tenvaccine)) {
+                selectEl.value = option.value;
+                break;
+            }
+        }
+
+        document.getElementById('modalTitle').innerText = 'Cập nhật nhật ký tiêm (ID: ' + id + ')';
+        document.getElementById('nhatKyModal').style.display = 'flex';
+    }
+
+    function dongModal() {
+        document.getElementById('nhatKyModal').style.display = 'none';
+    }
+
+    async function luuNhatKy() {
+        const id = document.getElementById('editingId').value;
+        let rawMaKB = document.getElementById('makhambenh').value.trim().replace(/[^0-9]/g, '');
+        let rawMaTC = document.getElementById('mathucung').value.trim().replace(/[^0-9]/g, '');
+        
+        const makhambenh = rawMaKB ? parseInt(rawMaKB) : null;
+        const mathucung = rawMaTC ? parseInt(rawMaTC) : null;
+        const ngaytiem = document.getElementById('ngaytiem').value;
+        const selectVaccine = document.getElementById('selectVaccine');
+        const vaccineId = selectVaccine.value;
+        const ngaynhaclai = document.getElementById('ngaynhaclai').value;
+        const bacsi = document.getElementById('bacsi').value.trim();
+        const trangthai = document.getElementById('trangthai').value;
+
+        if (!mathucung || !vaccineId) {
+            alert('Vui lòng nhập Mã thú cưng và chọn Vắc-xin!');
+            return;
+        }
+
+        const selectedOption = selectVaccine.options[selectVaccine.selectedIndex];
+        const mavaccine = selectedOption.getAttribute('data-mavc');
+        const tenvaccine = selectedOption.getAttribute('data-ten');
+
+        // 1. Hoàn lại số lượng 'datiem' trong kho nếu sửa mũi tiêm cũ
+        if (id !== "") {
+            const itemCu = danhSachNhatKyGoc.find(x => x.id == id);
+            if (itemCu) {
+                const khoCu = danhSachKhoVaccineGoc.find(v => v.tenvaccine === itemCu.tenvaccine);
+                if (khoCu) {
+                    const daTiemMoi = Math.max(0, (parseInt(khoCu.datiem) || 0) - 1);
+                    await db.from('khovaccine').update({ datiem: daTiemMoi }).eq('id', khoCu.id);
+                }
+            }
+        }
+
+        // 2. Tăng số lượng 'datiem' trong kho vắc-xin mới
+        const khoMoi = danhSachKhoVaccineGoc.find(v => v.id == vaccineId);
+        if (khoMoi) {
+            const daTiemMoi = (parseInt(khoMoi.datiem) || 0) + 1;
+            await db.from('khovaccine').update({ datiem: daTiemMoi }).eq('id', khoMoi.id);
+        }
+
+        const payload = {
+            makhambenh: makhambenh,
+            mathucung: mathucung,
+            mavaccine: mavaccine,
+            tenvaccine: tenvaccine,
+            ngaytiem: ngaytiem || null,
+            ngaynhaclai: ngaynhaclai || null,
+            bacsi: bacsi,
+            trangthai: trangthai
+        };
+
+        if (id === "") {
+            const { error } = await db.from('nhatkylamvaccine').insert([payload]);
+            if (error) {
+                alert('Lỗi lưu nhật ký: ' + error.message);
+            } else {
+                alert('Lưu nhật ký và trừ kho vắc-xin thành công!');
+                dongModal();
+                fetchDuLieuBanDau();
+            }
+        } else {
+            const { error } = await db.from('nhatkylamvaccine').update(payload).eq('id', id);
+            if (error) {
+                alert('Lỗi cập nhật nhật ký: ' + error.message);
+            } else {
+                alert('Cập nhật thành công!');
+                dongModal();
+                fetchDuLieuBanDau();
+            }
+        }
+    }
+
+    async function xoaNhatKy(id) {
+        if (confirm('Bạn có chắc chắn muốn xóa mũi tiêm này không?')) {
+            const itemCu = danhSachNhatKyGoc.find(x => x.id == id);
+            if (itemCu) {
+                const khoCu = danhSachKhoVaccineGoc.find(v => v.tenvaccine === itemCu.tenvaccine);
+                if (khoCu) {
+                    const daTiemMoi = Math.max(0, (parseInt(khoCu.datiem) || 0) - 1);
+                    await db.from('khovaccine').update({ datiem: daTiemMoi }).eq('id', khoCu.id);
+                }
+            }
+
+            const { error } = await db.from('nhatkylamvaccine').delete().eq('id', id);
+            if (error) {
+                alert('Lỗi khi xóa: ' + error.message);
+            } else {
+                alert('Xóa thành công và đã hoàn lại số lượng kho vắc-xin!');
+                fetchDuLieuBanDau();
+            }
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Trình Điều Trị - VetCare Mobile</title>
+    
+    <!-- Thư viện Supabase và cấu hình chung -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+
+    <!-- Font & Icon -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        /* Khung giả lập màn hình mobile chuẩn phong cách app */
+        .mobile-container {
+            width: 100%;
+            max-width: 414px;
+            height: 100vh;
+            max-height: 896px;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        @media (min-width: 415px) {
+            .mobile-container {
+                border-radius: 40px;
+                border: 10px solid #222;
+            }
+        }
+        
+        /* App Header */
+        .app-header {
+            background: linear-gradient(135deg, #008080, #20b2aa);
+            color: white;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .app-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .app-header a, .app-header button {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Nội dung cuộn bên trong */
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 90px;
+        }
+
+        /* Thanh tìm kiếm & Nút thêm */
+        .search-box-container {
+            margin-bottom: 12px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            background: #f8fafc;
+        }
+        .search-input:focus {
+            border-color: #008080;
+            background: #fff;
+        }
+        .btn-open-form {
+            background: #008080;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-open-form:hover {
+            background: #006666;
+        }
+
+        /* Thẻ Card Hiển Thị Tiến Trình */
+        .lichtrinh-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        .lichtrinh-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        .pet-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .record-id {
+            font-size: 11px;
+            color: #008080;
+            font-weight: 600;
+        }
+        .meta-info {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 2px;
+        }
+        
+        /* Bố cục nội dung và hình ảnh minh họa */
+        .progress-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            background: #f8fafc;
+            border-left: 3px solid #008080;
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 6px;
+        }
+        .progress-text {
+            flex: 1;
+            font-size: 12px;
+            color: #334155;
+            white-space: pre-line;
+            line-height: 1.4;
+        }
+        .progress-gallery {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            max-width: 130px;
+        }
+        .progress-thumb {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+        }
+        .progress-video-thumb {
+            width: 60px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            background: #000;
+        }
+
+        /* Thao tác Card (Sửa / Xóa) */
+        .card-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+            margin-top: 8px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 6px;
+        }
+        .card-actions button {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-sua { background: #fef3c7; color: #d97706; }
+        .btn-xoa { background: #fee2e2; color: #dc2626; }
+
+        /* Modal Form Thêm / Sửa */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            padding: 12px;
+        }
+        .modal-container {
+            background: #fff;
+            width: 100%;
+            max-width: 380px;
+            max-height: 90vh;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            overflow-y: auto;
+            position: relative;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+        .modal-header h3 {
+            font-size: 15px;
+            color: #008080;
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #777;
+        }
+        .form-group-modal {
+            margin-bottom: 10px;
+        }
+        .form-group-modal label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: #555;
+        }
+        .form-group-modal input, .form-group-modal select, .form-group-modal textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            background: #fff;
+            box-sizing: border-box;
+        }
+        .form-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .form-row .form-group-modal {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .preview-img-container {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+        .preview-thumb, .preview-video-thumb {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+        }
+
+        /* Phân trang tinh gọn */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            margin: 15px 0 5px 0;
+        }
+        .page-btn {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+            padding: 5px 10px;
+            font-size: 11px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .page-btn.active {
+            background: #008080;
+            color: #ffffff;
+            border-color: #008080;
+        }
+        .page-btn:disabled {
+            background: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        /* Bottom Nav Cố Định Dưới Đáy Chuẩn App */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 65px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+        }
+        .nav-item {
+            text-align: center;
+            text-decoration: none;
+            color: #888;
+            font-size: 10px;
+            flex: 1;
+        }
+        .nav-item i {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .nav-item.active {
+            color: #008080;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="mobile-container">
+    
+    <!-- APP HEADER -->
+    <div class="app-header">
+        <a href="trangchu.html"><i class="fa-solid fa-arrow-left"></i></a>
+        <h2>📖 Lịch Trình Điều Trị</h2>
+        <a href="noitru.html" title="Quản lý Nội trú"><i class="fa-solid fa-hospital"></i></a>
+    </div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="app-content">
+        
+        <!-- Ô TÌM KIẾM & NÚT THÊM -->
+        <div class="search-box-container">
+            <input type="text" id="searchMobile" class="search-input" placeholder="🔍 Tìm tên thú cưng, chủ nuôi, SĐT..." onkeyup="timKiemLichTrinh()">
+        </div>
+
+        <button class="btn-open-form" onclick="moModalThem()">
+            <i class="fa-solid fa-circle-plus"></i> Thêm tiến trình mới
+        </button>
+
+        <!-- DANH SÁCH HIỂN THỊ -->
+        <div id="mobile-list">
+            <div style="text-align: center; color: #666; padding: 20px; font-size: 13px;">Đang tải lịch trình điều trị...</div>
+        </div>
+
+        <!-- PHÂN TRANG -->
+        <div id="paginationContainer" class="pagination-container"></div>
+
+    </div>
+
+    <!-- MODAL THÊM / SỬA TIẾN TRÌNH -->
+    <div id="modalLichTrinh" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thêm tiến trình lịch trình</h3>
+                <button type="button" class="close-modal" onclick="dongModal()">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingId">
+            <input type="hidden" id="hinhanhOld">
+            
+            <form id="formLichTrinh" onsubmit="luuLichTrinhMobile(event)">
+                <div class="form-group-modal">
+                    <label>Chọn thú cưng / Ca khám (*):</label>
+                    <select id="makhambenh" class="form-control" required style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px;">
+                        <option value="">-- Chọn thú cưng nội trú --</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group-modal">
+                        <label>Thời gian cập nhật:</label>
+                        <input type="datetime-local" id="ngaycapnhap" class="form-control">
+                    </div>
+                    <div class="form-group-modal">
+                        <label>Bác sĩ theo dõi:</label>
+                        <input type="text" id="bacsiphutrach" class="form-control" placeholder="Tên bác sĩ...">
+                    </div>
+                </div>
+
+                <div class="form-group-modal">
+                    <label>Diễn biến sức khỏe / Lịch trình:</label>
+                    <textarea id="ghichu" rows="3" class="form-control" placeholder="Nhập tình trạng, ăn uống, truyền dịch..."></textarea>
+                </div>
+
+                <div class="form-group-modal">
+                    <label>Chọn hoặc chụp ảnh / video:</label>
+                    <input type="file" id="hinhAnhFile" accept="image/*,video/*" multiple capture="environment" style="font-size: 12px;" onchange="previewSelectedFiles(this)">
+                    <div id="previewImages" class="preview-img-container"></div>
+                </div>
+
+                <div class="modal-footer" style="display: flex; gap: 8px; margin-top: 14px;">
+                    <button type="button" class="btn-secondary" onclick="dongModal()" style="padding: 9px 14px; background:#e2e8f0; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer;">Hủy</button>
+                    <button type="submit" id="btnSave" class="btn-primary" style="padding: 9px; background:#008080; color:#fff; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; flex:1;">💾 Lưu tiến trình</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV CỐ ĐỊNH -->
+    <div class="bottom-nav">
+        <a href="trangchu.html" class="nav-item">
+            <i class="fa-solid fa-house"></i>
+            Trang chủ
+        </a>
+        <a href="lichhen.html" class="nav-item">
+            <i class="fa-solid fa-calendar-days"></i>
+            Lịch hẹn
+        </a>
+        <a href="thucung.html" class="nav-item">
+            <i class="fa-solid fa-paw"></i>
+            Thú cưng
+        </a>
+        <a href="thongke.html" class="nav-item">
+            <i class="fa-solid fa-chart-line"></i>
+            Báo cáo
+        </a>
+        <a href="khachhang.html" class="nav-item">
+            <i class="fa-solid fa-users"></i>
+            Khách hàng
+        </a>
+    </div>
+
+</div>
+
+<script>
+    let danhSachLichTrinhGoc = [];
+    let danhSachHienThiHienTai = [];
+    let thongTinKhamBenh = {};
+    
+    let trangThaiPhanTrang = {
+        trangHienTai: 1,
+        soDongMoiTrang: 5
+    };
+
+    function previewSelectedFiles(input) {
+        const previewContainer = document.getElementById('previewImages');
+        previewContainer.innerHTML = '';
+        if (input.files) {
+            Array.from(input.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (file.type.startsWith('video/')) {
+                        previewContainer.innerHTML += `<video src="${e.target.result}" class="preview-video-thumb" controls muted></video>`;
+                    } else {
+                        previewContainer.innerHTML += `<img src="${e.target.result}" class="preview-thumb">`;
+                    }
+                }
+                reader.readAsDataURL(file);
+            });
+        }
+    }
+</script>
+
+<script>
+    window.addEventListener('DOMContentLoaded', async () => {
+        await taiDuLieuBanDau();
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const maKBParam = urlParams.get('makhambenh');
+        if (maKBParam) {
+            document.getElementById('makhambenh').value = maKBParam;
+            moModalThem();
+            document.getElementById('makhambenh').value = maKBParam;
+        }
+    });
+
+    async function taiDuLieuBanDau() {
+        const container = document.getElementById('mobile-list');
+
+        const { data: khData } = await db.from('khachhang').select('*');
+        let mapKhachHang = {};
+        if (khData) {
+            khData.forEach(kh => {
+                const tenKH = kh.hovaten || kh.tenkhachhang || kh.name || 'Khách lẻ';
+                const sdtKH = kh.sodienthoai || kh.sdt || kh.phone || kh.dien_thoai || 'Chưa có SĐT';
+                mapKhachHang[kh.id] = { hovaten: tenKH, sdt: sdtKH };
+            });
+        }
+
+        const { data: tcData } = await db.from('thucung').select('*');
+        let mapThuCung = {};
+        if (tcData) {
+            tcData.forEach(tc => {
+                const tenPet = tc.tenthucung || tc.name || tc.pet_name || 'Chưa đặt tên';
+                const maKH = tc.makhachhang || tc.machunuoi || tc.khachhang_id || tc.makh;
+                mapThuCung[tc.id] = {
+                    tenthucung: tenPet,
+                    khachhang: mapKhachHang[maKH] || { hovaten: 'Khách lẻ', sdt: '---' }
+                };
+            });
+        }
+
+        const { data: kbData } = await db.from('khambenh').select('*');
+        const selectKB = document.getElementById('makhambenh');
+        selectKB.innerHTML = `<option value="">-- Chọn thú cưng / ca khám --</option>`;
+
+        if (kbData) {
+            kbData.forEach(kb => {
+                const maPet = kb.mathucung || kb.pet_id || kb.mapet;
+                const petInfo = mapThuCung[maPet] || { tenthucung: 'Thú cưng #' + maPet, khachhang: { hovaten: '---', sdt: '---' } };
+                thongTinKhamBenh[kb.id] = {
+                    tenPet: petInfo.tenthucung,
+                    tenChu: petInfo.khachhang.hovaten,
+                    sdtChu: petInfo.khachhang.sdt
+                };
+                selectKB.innerHTML += `<option value="${kb.id}">Ca #${kb.id} - ${petInfo.tenthucung} (Chủ: ${petInfo.khachhang.hovaten})</option>`;
+            });
+        }
+
+        const { data, error } = await db.from('lichtrinh').select('*').order('id', { ascending: false });
+        
+        if (error) {
+            console.error('Lỗi tải lịch trình:', error);
+            container.innerHTML = `<div style="text-align:center; color:red; padding:20px;">Lỗi tải dữ liệu lịch trình</div>`;
+            return;
+        }
+
+        danhSachLichTrinhGoc = data || [];
+        danhSachHienThiHienTai = danhSachLichTrinhGoc;
+        trangThaiPhanTrang.trangHienTai = 1;
+        hienThiDanhSachMobile();
+    }
+
+    function hienThiDanhSachMobile() {
+        const container = document.getElementById('mobile-list');
+        container.innerHTML = '';
+
+        if (!danhSachHienThiHienTai || danhSachHienThiHienTai.length === 0) {
+            container.innerHTML = `<div style="text-align:center; color:#64748b; padding:20px; font-size:13px;">Chưa có tiến trình lịch trình nào được tạo</div>`;
+            document.getElementById('paginationContainer').innerHTML = '';
+            return;
+        }
+
+        const { trangHienTai, soDongMoiTrang } = trangThaiPhanTrang;
+        const tongSoTrang = Math.ceil(danhSachHienThiHienTai.length / soDongMoiTrang);
+        
+        const viTriBatDau = (trangHienTai - 1) * soDongMoiTrang;
+        const viTriKetThuc = viTriBatDau + soDongMoiTrang;
+        const duLieuTrangNay = danhSachHienThiHienTai.slice(viTriBatDau, viTriKetThuc);
+
+        duLieuTrangNay.forEach(item => {
+            const info = thongTinKhamBenh[item.makhambenh] || { tenPet: 'Ca khám #' + (item.makhambenh || '---'), tenChu: '---', sdtChu: '---' };
+            const ngayCapNhapStr = item.ngaycapnhap ? new Date(item.ngaycapnhap).toLocaleString('vi-VN') : '---';
+            const ghiChu = item.ghichu || 'Chưa cập nhật chi tiết.';
+
+            let imgGalleryHtml = '';
+            if (item.hinhanh) {
+                let listImg = [];
+                try {
+                    listImg = JSON.parse(item.hinhanh);
+                    if (!Array.isArray(listImg)) listImg = [item.hinhanh];
+                } catch (e) {
+                    listImg = [item.hinhanh];
+                }
+
+                if (listImg.length > 0) {
+                    imgGalleryHtml = `<div class="progress-gallery">`;
+                    listImg.forEach(url => {
+                        if (url && url.trim() !== '') {
+                            const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i);
+                            if (isVideo) {
+                                imgGalleryHtml += `<a href="${url}" target="_blank"><video src="${url}" class="progress-video-thumb" muted></video></a>`;
+                            } else {
+                                imgGalleryHtml += `<a href="${url}" target="_blank"><img src="${url}" class="progress-thumb"></a>`;
+                            }
+                        }
+                    });
+                    imgGalleryHtml += `</div>`;
+                }
+            }
+
+            container.innerHTML += `
+                <div class="lichtrinh-card">
+                    <div class="lichtrinh-header">
+                        <span class="pet-name">🐾 ${info.tenPet}</span>
+                        <span class="record-id">LT${String(item.id).padStart(4, '0')}</span>
+                    </div>
+                    <div class="meta-info" style="color: #059669; font-weight: 600;">
+                        <i class="fa-solid fa-user"></i> Chủ nuôi: ${info.tenChu} - SĐT: ${info.sdtChu}
+                    </div>
+                    <div class="meta-info">
+                        <i class="fa-solid fa-user-doctor"></i> BS: ${item.bacsiphutrach || 'Chưa rõ'} | <i class="fa-solid fa-clock"></i> ${ngayCapNhapStr}
+                    </div>
+                    
+                    <div class="progress-row">
+                        <div class="progress-text">
+                            <strong>📋 Tiến trình:</strong><br>${ghiChu}
+                        </div>
+                        ${imgGalleryHtml}
+                    </div>
+
+                    <div class="card-actions">
+                        <button class="btn-sua" onclick="moModalSua(${item.id})"><i class="fa-solid fa-pen"></i> Sửa</button>
+                        <button class="btn-xoa" onclick="xoaLichTrinh(${item.id})"><i class="fa-solid fa-trash"></i> Xóa</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        veNutPhanTrang(tongSoTrang);
+    }
+
+    function veNutPhanTrang(tongSoTrang) {
+        const paginationContainer = document.getElementById('paginationContainer');
+        paginationContainer.innerHTML = '';
+
+        if (tongSoTrang <= 1) return;
+
+        const { trangHienTai } = trangThaiPhanTrang;
+
+        paginationContainer.innerHTML += `
+            <button class="page-btn" ${trangHienTai === 1 ? 'disabled' : ''} onclick="chuyenTrang(${trangHienTai - 1})">◀</button>
+        `;
+
+        for (let i = 1; i <= tongSoTrang; i++) {
+            if (i === 1 || i === tongSoTrang || (i >= trangHienTai - 1 && i <= trangHienTai + 1)) {
+                paginationContainer.innerHTML += `
+                    <button class="page-btn ${i === trangHienTai ? 'active' : ''}" onclick="chuyenTrang(${i})">${i}</button>
+                `;
+            } else if (i === trangHienTai - 2 || i === trangHienTai + 2) {
+                paginationContainer.innerHTML += `<span style="color: #64748b; font-size: 11px;">...</span>`;
+            }
+        }
+
+        paginationContainer.innerHTML += `
+            <button class="page-btn" ${trangHienTai === tongSoTrang ? 'disabled' : ''} onclick="chuyenTrang(${trangHienTai + 1})">▶</button>
+        `;
+    }
+
+    function chuyenTrang(trangMoi) {
+        trangThaiPhanTrang.trangHienTai = trangMoi;
+        hienThiDanhSachMobile();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function timKiemLichTrinh() {
+        const tuKhoa = document.getElementById('searchMobile').value.toLowerCase().trim();
+        danhSachHienThiHienTai = danhSachLichTrinhGoc.filter(item => {
+            const bacSi = (item.bacsiphutrach || '').toLowerCase();
+            const ghiChu = (item.ghichu || '').toLowerCase();
+            const info = thongTinKhamBenh[item.makhambenh] || { tenPet: '', tenChu: '', sdtChu: '' };
+            
+            return bacSi.includes(tuKhoa) || ghiChu.includes(tuKhoa) || info.tenPet.toLowerCase().includes(tuKhoa) || info.tenChu.toLowerCase().includes(tuKhoa) || info.sdtChu.toLowerCase().includes(tuKhoa);
+        });
+        
+        trangThaiPhanTrang.trangHienTai = 1;
+        hienThiDanhSachMobile();
+    }
+
+    function moModalThem() {
+        document.getElementById('editingId').value = '';
+        document.getElementById('makhambenh').value = '';
+        document.getElementById('bacsiphutrach').value = '';
+        document.getElementById('ghichu').value = '';
+        document.getElementById('hinhAnhFile').value = '';
+        document.getElementById('hinhanhOld').value = '';
+        document.getElementById('previewImages').innerHTML = '';
+        
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('ngaycapnhap').value = now.toISOString().slice(0, 16);
+
+        document.getElementById('modalTitle').innerText = 'Thêm tiến trình mới';
+        document.getElementById('modalLichTrinh').style.display = 'flex';
+    }
+
+    function moModalSua(id) {
+        const item = danhSachLichTrinhGoc.find(x => x.id === id);
+        if (!item) return;
+
+        document.getElementById('editingId').value = item.id;
+        document.getElementById('makhambenh').value = item.makhambenh || '';
+        document.getElementById('bacsiphutrach').value = item.bacsiphutrach || '';
+        document.getElementById('ghichu').value = item.ghichu || '';
+        document.getElementById('ngaycapnhap').value = item.ngaycapnhap ? new Date(new Date(item.ngaycapnhap).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+        
+        document.getElementById('hinhAnhFile').value = '';
+        document.getElementById('hinhanhOld').value = item.hinhanh || '';
+        
+        const previewContainer = document.getElementById('previewImages');
+        previewContainer.innerHTML = '';
+        if (item.hinhanh) {
+            try {
+                let listImg = JSON.parse(item.hinhanh);
+                if (!Array.isArray(listImg)) listImg = [item.hinhanh];
+                listImg.forEach(url => {
+                    if (url) {
+                        if (url.match(/\.(mp4|webm|ogg|mov)$/i)) {
+                            previewContainer.innerHTML += `<video src="${url}" class="preview-video-thumb" controls muted></video>`;
+                        } else {
+                            previewContainer.innerHTML += `<img src="${url}" class="preview-thumb">`;
+                        }
+                    }
+                });
+            } catch(e) {}
+        }
+
+        document.getElementById('modalTitle').innerText = 'Cập nhật tiến trình (ID: ' + id + ')';
+        document.getElementById('modalLichTrinh').style.display = 'flex';
+    }
+
+    function dongModal() {
+        document.getElementById('modalLichTrinh').style.display = 'none';
+    }
+
+    async function luuLichTrinhMobile(event) {
+        event.preventDefault();
+        const id = document.getElementById('editingId').value;
+        const makhambenh = parseInt(document.getElementById('makhambenh').value);
+        const bacsiphutrach = document.getElementById('bacsiphutrach').value.trim();
+        const ghichu = document.getElementById('ghichu').value.trim();
+        const ngaycapnhap = document.getElementById('ngaycapnhap').value;
+
+        const btn = document.getElementById('btnSave');
+        btn.disabled = true;
+        btn.textContent = 'Đang lưu...';
+
+        let imageUrls = [];
+        let oldHinhanh = document.getElementById('hinhanhOld').value;
+        if (oldHinhanh) {
+            try {
+                let parsed = JSON.parse(oldHinhanh);
+                if (Array.isArray(parsed)) imageUrls = parsed;
+                else imageUrls = [oldHinhanh];
+            } catch(e) {
+                imageUrls = [oldHinhanh];
+            }
+        }
+
+        const fileInput = document.getElementById('hinhAnhFile');
+        if (fileInput.files && fileInput.files.length > 0) {
+            for (let i = 0; i < fileInput.files.length; i++) {
+                const file = fileInput.files[i];
+                const fileName = `lichtrinh_${Date.now()}_${i}_${file.name}`;
+                const { error: uploadError } = await db.storage.from('images').upload(fileName, file);
+
+                if (!uploadError) {
+                    const { data: publicUrlData } = db.storage.from('images').getPublicUrl(fileName);
+                    if (publicUrlData && publicUrlData.publicUrl) {
+                        imageUrls.push(publicUrlData.publicUrl);
+                    }
+                }
+            }
+        }
+
+        const payload = {
+            makhambenh,
+            bacsiphutrach,
+            ghichu,
+            ngaycapnhap: ngaycapnhap ? new Date(ngaycapnhap).toISOString() : null,
+            hinhanh: imageUrls.length > 0 ? JSON.stringify(imageUrls) : null
+        };
+
+        let error;
+        if (id === "") {
+            const res = await db.from('lichtrinh').insert([payload]);
+            error = res.error;
+        } else {
+            const res = await db.from('lichtrinh').update(payload).eq('id', id);
+            error = res.error;
+        }
+
+        btn.disabled = false;
+        btn.textContent = '💾 Lưu tiến trình';
+
+        if (error) {
+            console.error('Lỗi lưu lịch trình:', error);
+            alert('Lỗi khi lưu: ' + error.message);
+            return;
+        }
+
+        alert('Đã lưu tiến trình thành công!');
+        dongModal();
+        await taiDuLieuBanDau();
+    }
+
+    async function xoaLichTrinh(id) {
+        if (confirm('Bạn có chắc chắn muốn xóa tiến trình này không?')) {
+            const { error } = await db.from('lichtrinh').delete().eq('id', id);
+            if (error) {
+                alert('Lỗi khi xóa: ' + error.message);
+            } else {
+                alert('Đã xóa thành công!');
+                await taiDuLieuBanDau();
+            }
+        }
+    }
+</script>
+
+</body>
+</html>

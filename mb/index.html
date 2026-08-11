@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetCare Pro - Phần Mềm Quản Lý Phòng Khám Thú Y & Cổng Chủ Nuôi</title>
+    <meta name="description" content="Nền tảng số hóa toàn diện quản lý phòng khám thú y và cổng thông tin dành riêng cho chủ nuôi tra cứu lịch sử khám bệnh, lịch hẹn thú cưng.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0b1329;
+            --accent: #0284c7;
+            --text-main: #334155;
+            --bg-light: #f8fafc;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { color: var(--text-main); background: #fff; line-height: 1.6; }
+
+        /* HEADER */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
+        .logo { font-size: 20px; font-weight: bold; color: var(--accent); display: flex; align-items: center; gap: 8px; text-decoration: none; white-space: nowrap; }
+        nav { display: flex; gap: 20px; }
+        nav a { text-decoration: none; color: var(--primary); font-weight: 600; font-size: 14px; }
+        nav a:hover { color: var(--accent); }
+
+        /* CỤM NÚT ĐĂNG NHẬP / ĐĂNG KÝ */
+        .auth-actions { display: flex; align-items: center; gap: 10px; }
+        .btn-dangnhap { background: var(--accent); color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px; transition: background 0.2s; white-space: nowrap; }
+        .btn-dangnhap:hover { background: #0369a1; }
+        .btn-dangky { background: #ffffff; color: var(--accent); border: 1px solid var(--accent); padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px; transition: 0.2s; white-space: nowrap; }
+        .btn-dangky:hover { background: #f0f9ff; }
+
+        /* HERO SECTION */
+        .hero { background: var(--primary); color: white; padding: 70px 5%; display: flex; align-items: center; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
+        .hero-text { flex: 1; min-width: 300px; max-width: 600px; }
+        .hero-badge { background: rgba(2,132,199,0.2); color: #38bdf8; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 20px; display: inline-block; }
+        .hero-text h1 { font-size: 38px; line-height: 1.25; margin-bottom: 20px; font-weight: 800; }
+        .hero-text p { color: #94a3b8; font-size: 16px; margin-bottom: 30px; }
+        .hero-image { flex: 1; min-width: 300px; text-align: center; }
+        .hero-image .screen-mockup { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 50px 20px; color: #38bdf8; font-size: 18px; font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+        /* HỆ SINH THÁI */
+        .ecosystem { padding: 80px 5%; background: var(--bg-light); text-align: center; }
+        .section-title { font-size: 32px; font-weight: 800; color: var(--primary); margin-bottom: 40px; }
+        .eco-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; text-align: left; }
+        .eco-card { background: white; padding: 35px 30px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .eco-card h3 { font-size: 20px; margin-bottom: 12px; color: var(--primary); }
+        .eco-card p { font-size: 14px; color: #64748b; }
+
+        /* KHỐI CỔNG CHỦ NUÔI */
+        .pet-owner-section { padding: 80px 5%; background: #ffffff; display: flex; align-items: center; justify-content: space-between; gap: 50px; flex-wrap: wrap; border-top: 1px solid #e2e8f0; }
+        .owner-text { flex: 1; min-width: 300px; }
+        .owner-text h2 { font-size: 30px; font-weight: 800; color: var(--primary); margin-bottom: 20px; }
+        .owner-text p { color: #64748b; font-size: 15px; margin-bottom: 25px; }
+        .owner-features { display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px; }
+        .owner-feature-item { display: flex; align-items: center; gap: 10px; font-weight: 600; color: #1e293b; font-size: 14px; }
+        .owner-feature-item i { color: #059669; font-size: 18px; }
+        
+        .owner-box-card { flex: 1; min-width: 300px; background: #f0fdf4; border: 2px dashed #10b981; border-radius: 12px; padding: 40px 30px; text-align: center; }
+        .btn-chunuoi { background: #059669; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 15px; display: inline-block; transition: background 0.2s; }
+        .btn-chunuoi:hover { background: #047857; }
+
+        /* TÍNH NĂNG CHI TIẾT (4 CỘT) */
+        .features-detail { padding: 80px 5%; background: var(--bg-light); text-align: center; }
+        .features-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px; text-align: left; margin-top: 40px; }
+        .feature-column { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 25px 20px; }
+        .feature-column h3 { font-size: 17px; color: var(--primary); margin-bottom: 20px; font-weight: 700; border-bottom: 2px solid #cbd5e1; padding-bottom: 10px; text-transform: uppercase; }
+        .feature-item { background: var(--bg-light); padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; font-size: 13px; font-weight: 600; color: #475569; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px; }
+        .feature-item i { color: var(--accent); }
+
+        /* FOOTER */
+        footer { background: var(--primary); color: #94a3b8; padding: 40px 5%; text-align: center; font-size: 13px; }
+
+        /* --- RESPONSIVE CHO MOBILE (ĐÃ FIX LỖI VỠ MENU) --- */
+        @media screen and (max-width: 768px) {
+            header {
+                padding: 12px 15px;
+            }
+            /* Ẩn thanh menu điều hướng ngang trên màn hình nhỏ để tránh tràn viền */
+            nav {
+                display: none; 
+            }
+            .logo {
+                font-size: 17px;
+            }
+            .auth-actions {
+                gap: 6px;
+            }
+            .btn-dangky, .btn-dangnhap {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+            .hero-text h1 {
+                font-size: 28px;
+            }
+            .section-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <a href="#" class="logo"><i class="fa-solid fa-notes-medical"></i> VetCare Pro</a>
+        <nav>
+            <a href="#">Giải pháp</a>
+            <a href="#">Tính năng</a>
+            <a href="#chunuoi-section">Cổng Chủ Nuôi</a>
+            <a href="#">Bảng giá</a>
+        </nav>
+        <div class="auth-actions">
+            <a href="dangky.html" class="btn-dangky">Chủ nuôi</a>
+            <a href="dangky.html" class="btn-dangky">Đăng ký</a>
+            <a href="login.html" class="btn-dangnhap">Đăng nhập</a>
+        </div>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-text">
+            <span class="hero-badge">Dành cho phòng khám, bệnh viện và chuỗi thú y</span>
+            <h1>Phần mềm quản lý phòng khám thú y toàn diện</h1>
+            <p>Nền tảng số hóa toàn diện giúp tối ưu hóa quy trình lâm sàng, tự động hóa hồ sơ bệnh án và nâng cao chất lượng chăm sóc chuyên nghiệp.</p>
+            <a href="login.html" class="btn-dangnhap" style="padding: 12px 28px; font-size: 16px; display: inline-block;">Trải nghiệm ngay</a>
+        </div>
+        <div class="hero-image">
+            <div class="screen-mockup">
+                <i class="fa-solid fa-chart-line" style="font-size: 40px; margin-bottom: 15px; display: block;"></i>
+                Dashboard Quản Trị & Doanh Thu Thời Gian Thực
+            </div>
+        </div>
+    </section>
+
+    <!-- HỆ SINH THÁI -->
+    <section class="ecosystem">
+        <h2 class="section-title">Hệ sinh thái vận hành thông minh</h2>
+        <div class="eco-grid">
+            <div class="eco-card">
+                <h3>Lâm sàng xuất sắc</h3>
+                <p>Số hóa toàn bộ hồ sơ y tế, hình ảnh DICOM và kết quả xét nghiệm vào một nơi duy nhất.</p>
+            </div>
+            <div class="eco-card" style="background: var(--accent); color: white;">
+                <h3 style="color: white;">Quản lý thông minh</h3>
+                <p style="color: white;">Tự động hóa lịch hẹn, tối ưu hóa quy trình tiếp nhận và theo dõi lịch sử khám bệnh chính xác.</p>
+            </div>
+            <div class="eco-card">
+                <h3>Quản trị tối ưu</h3>
+                <p>Kiểm soát kho dược, doanh thu thực tế và hiệu suất nhân sự trên thời gian thực.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- KHỐI DÀNH CHO CỔNG CHỦ NUÔI -->
+    <section id="chunuoi-section" class="pet-owner-section">
+        <div class="owner-text">
+            <span class="hero-badge" style="background: rgba(5,150,105,0.1); color: #059669;">Dành riêng cho khách hàng</span>
+            <h2>📱 Cổng Tra Cứu Thông Tin Dành Cho Chủ Nuôi Thú Cưng</h2>
+            <p>Giúp khách hàng của phòng khám dễ dàng theo dõi sức khỏe thú cưng mọi lúc mọi nơi ngay trên điện thoại di động.</p>
+            
+            <div class="owner-features">
+                <div class="owner-feature-item">
+                    <i class="fa-solid fa-circle-check"></i> Tra cứu lịch sử khám bệnh & phác đồ điều trị của thú cưng
+                </div>
+                <div class="owner-feature-item">
+                    <i class="fa-solid fa-circle-check"></i> Theo dõi lịch tiêm phòng vaccine và sổ sức khỏe điện tử
+                </div>
+                <div class="owner-feature-item">
+                    <i class="fa-solid fa-circle-check"></i> Đặt lịch hẹn khám bệnh trực tuyến nhanh chóng với phòng khám
+                </div>
+            </div>
+
+            <a href="chunuoi/login.html" class="btn-chunuoi">📱 Truy Cập Cổng Chủ Nuôi Ngay</a>
+        </div>
+        <div class="owner-box-card">
+            <i class="fa-solid fa-mobile-screen-button" style="font-size: 50px; color: #059669; margin-bottom: 15px; display: block;"></i>
+            <h3 style="color: #065f46; font-size: 20px; margin-bottom: 10px;">Trải Nghiệm Dễ Dàng</h3>
+            <p style="color: #047857; font-size: 14px; margin-bottom: 20px;">Đăng nhập đơn giản bằng số điện thoại để xem toàn bộ thông tin thú cưng của bạn tại phòng khám.</p>
+            <a href="chunuoi/login.html" style="color: #059669; font-weight: bold; text-decoration: underline; font-size: 14px;">Bấm vào đây để vào cổng chủ nuôi &rarr;</a>
+        </div>
+    </section>
+
+    <!-- TÍNH NĂNG CHI TIẾT (4 CỘT) -->
+    <section class="features-detail">
+        <h2 class="section-title">Tìm hiểu thêm về các tính năng của VetCare Pro</h2>
+        
+        <div class="features-detail-grid">
+            <div class="feature-column">
+                <h3>Thu hút & Giữ chân khách hàng</h3>
+                <div class="feature-item"><i class="fa-solid fa-calendar-days"></i> Đặt lịch & nhắc hẹn</div>
+                <div class="feature-item"><i class="fa-solid fa-bell"></i> Nhắc tái khám / tái chủng</div>
+                <div class="feature-item"><i class="fa-solid fa-address-book"></i> Hồ sơ khách hàng</div>
+                <div class="feature-item"><i class="fa-solid fa-comments"></i> Lưu lịch sử tương tác</div>
+                <div class="feature-item"><i class="fa-solid fa-users"></i> CRM khách hàng</div>
+            </div>
+
+            <div class="feature-column">
+                <h3>Tăng doanh thu</h3>
+                <div class="feature-item"><i class="fa-solid fa-cash-register"></i> Bán hàng / POS</div>
+                <div class="feature-item"><i class="fa-solid fa-shop"></i> Dịch vụ & petshop liên thông</div>
+                <div class="feature-item"><i class="fa-solid fa-box-archive"></i> Gói combo trả trước</div>
+                <div class="feature-item"><i class="fa-solid fa-file-invoice-dollar"></i> Công nợ khách hàng</div>
+                <div class="feature-item"><i class="fa-solid fa-file-invoice"></i> Hóa đơn điện tử</div>
+            </div>
+
+            <div class="feature-column">
+                <h3>Nâng cao hiệu quả hoạt động</h3>
+                <div class="feature-item"><i class="fa-solid fa-paw"></i> Hồ sơ thú cưng</div>
+                <div class="feature-item"><i class="fa-solid fa-file-medical"></i> Bệnh án điện tử</div>
+                <div class="feature-item"><i class="fa-solid fa-microscope"></i> Lưu xét nghiệm / X-quang</div>
+                <div class="feature-item"><i class="fa-solid fa-robot"></i> AI soạn & tóm tắt bệnh án</div>
+                <div class="feature-item"><i class="fa-solid fa-stethoscope"></i> AI hỗ trợ chẩn đoán</div>
+            </div>
+
+            <div class="feature-column">
+                <h3>Đưa ra quyết định tốt hơn</h3>
+                <div class="feature-item"><i class="fa-solid fa-chart-pie"></i> Báo cáo doanh thu</div>
+                <div class="feature-item"><i class="fa-solid fa-chart-line"></i> Dashboard điều hành</div>
+                <div class="feature-item"><i class="fa-solid fa-user-tie"></i> KPI nhân viên</div>
+                <div class="feature-item"><i class="fa-solid fa-percent"></i> Tự động tính hoa hồng</div>
+                <div class="feature-item"><i class="fa-solid fa-network-wired"></i> Quản lý đa chi nhánh</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>&copy; 2026 VetCare Pro. Giải pháp công nghệ chuyển đổi số ngành thú y.</p>
+    </footer>
+
+</body>
+</html>

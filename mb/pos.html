@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bán Hàng POS - VetCare Mobile Modern</title>
+    
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Kết nối các file cấu hình -->
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    
+    <!-- Thư viện quét mã vạch qua camera -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+    <!-- Font & Icon -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: #f1f5f9; color: #1e293b; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        
+        /* Khung Mobile App chuẩn hiện đại */
+        .mobile-container {
+            width: 100%;
+            max-width: 414px;
+            height: 100vh;
+            max-height: 896px;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        @media (min-width: 415px) {
+            .mobile-container {
+                border-radius: 40px;
+                border: 10px solid #1e293b;
+            }
+        }
+
+        /* Top Header Hiện Đại */
+        .app-header {
+            background: linear-gradient(135deg, #008080, #20b2aa);
+            color: white;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .app-header h2 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .app-header a { color: white; text-decoration: none; font-size: 18px; }
+        .header-actions { display: flex; gap: 8px; align-items: center; }
+        .btn-icon-top { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; text-decoration: none; }
+
+        /* Tabs Chuyển Nhanh (Sản phẩm vs Giỏ hàng) */
+        .pos-tabs {
+            display: flex;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 6px 12px;
+            gap: 8px;
+        }
+        .pos-tab-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            background: #e2e8f0;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .pos-tab-btn.active {
+            background: #008080;
+            color: white;
+            box-shadow: 0 2px 6px rgba(0,128,128,0.3);
+        }
+
+        /* Nội dung chính cuộn (Chừa chỗ cho menu đáy 65px + padding) */
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            padding-bottom: 85px;
+            background: #f8fafc;
+        }
+
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        /* Thanh tìm kiếm & Quét Barcode */
+        .search-scan-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .search-input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+        .search-input-wrapper i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 13px;
+            outline: none;
+            background: #ffffff;
+        }
+        .search-input:focus { border-color: #008080; box-shadow: 0 0 0 3px rgba(0,128,128,0.1); }
+        
+        .btn-scan {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 0 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 5px rgba(2,132,199,0.2);
+        }
+
+        /* Lưới sản phẩm hiện đại dạng card thông minh */
+        .product-grid-modern {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .product-card-modern {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+        .product-card-modern:active { transform: scale(0.97); background: #f0fdf4; border-color: #059669; }
+        .product-img-box {
+            width: 100%;
+            height: 90px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f1f5f9;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        .product-img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .stock-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            backdrop-filter: blur(4px);
+        }
+        .product-title { font-size: 12px; font-weight: 600; color: #1e293b; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 32px; }
+        .product-price-row { display: flex; justify-content: space-between; align-items: center; }
+        .product-price { font-size: 13px; font-weight: 700; color: #059669; }
+        .btn-add-quick { background: #e0f2fe; color: #0284c7; border: none; width: 26px; height: 26px; border-radius: 6px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+        /* Phần Khách Hàng Thông Minh */
+        .customer-section {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+        .customer-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .customer-title { font-size: 12px; font-weight: 700; color: #334155; display: flex; align-items: center; gap: 6px; }
+        .btn-add-kh { background: none; border: none; color: #008080; font-size: 11px; font-weight: 700; cursor: pointer; }
+        
+        .customer-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .input-group-custom label { font-size: 10px; color: #64748b; font-weight: 600; display: block; margin-bottom: 2px; }
+        .input-group-custom input { width: 100%; padding: 7px 10px; font-size: 11px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; background: #f8fafc; }
+        .input-group-custom input:focus { border-color: #008080; background: #fff; }
+
+        /* Giỏ hàng Tab */
+        .cart-container-modern { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+        .cart-item-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+        .cart-item-info { flex: 2; padding-right: 6px; }
+        .cart-item-name { font-size: 12px; font-weight: 600; color: #1e293b; margin-bottom: 2px; }
+        .cart-item-price { font-size: 11px; color: #059669; font-weight: 600; }
+        
+        .cart-qty-control { display: flex; align-items: center; gap: 6px; background: #f1f5f9; padding: 3px 6px; border-radius: 8px; }
+        .cart-qty-control button { background: white; border: 1px solid #cbd5e1; width: 22px; height: 22px; border-radius: 6px; font-weight: bold; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #334155; }
+        .cart-qty-control span { font-size: 12px; font-weight: 700; min-width: 16px; text-align: center; }
+
+        /* Khối Thanh Toán */
+        .checkout-summary-box {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .summary-row { display: flex; justify-content: space-between; font-size: 11px; color: #64748b; margin-bottom: 6px; align-items: center; }
+        .summary-row.total { font-size: 14px; font-weight: 700; color: #1e293b; border-top: 1px dashed #e2e8f0; padding-top: 8px; margin-top: 6px; }
+        .summary-row.total span:last-child { color: #059669; font-size: 16px; }
+        
+        .checkout-buttons { display: flex; gap: 8px; margin-top: 10px; }
+        .btn-save-temp { background: #64748b; color: white; border: none; flex: 1; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-checkout { background: #059669; color: white; border: none; flex: 1.5; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 10px rgba(5,150,105,0.3); }
+
+        /* Modal Camera & Thêm KH */
+        .modal-overlay-modern {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(3px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            padding: 16px;
+        }
+        .modal-box-modern {
+            background: white;
+            width: 100%;
+            max-width: 360px;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        /* Badge thông báo giỏ hàng */
+        .cart-badge {
+            background: #ef4444;
+            color: white;
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 10px;
+            font-weight: bold;
+            margin-left: 4px;
+        }
+
+        /* Bottom Nav Cố Định Dưới Đáy */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 65px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+        }
+        .nav-item {
+            text-align: center;
+            text-decoration: none;
+            color: #888;
+            font-size: 10px;
+            flex: 1;
+        }
+        .nav-item i {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .nav-item.active {
+            color: #008080;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="mobile-container">
+    
+    <!-- TOP HEADER -->
+    <div class="app-header">
+        <a href="trangchu.html"><i class="fa-solid fa-arrow-left"></i></a>
+        <h2><i class="fa-solid fa-cash-register"></i> Bán Hàng POS</h2>
+        <div class="header-actions">
+            <a href="thongke.html" class="btn-icon-top" title="Báo cáo"><i class="fa-solid fa-desktop"></i></a>
+        </div>
+    </div>
+
+    <!-- TABS CHUYỂN ĐỔI GIAO DIỆN -->
+    <div class="pos-tabs">
+        <button class="pos-tab-btn active" onclick="chuyenTab('productsPane', this)"><i class="fa-solid fa-box-open"></i> Sản Phẩm</button>
+        <button class="pos-tab-btn" onclick="chuyenTab('cartPane', this)"><i class="fa-solid fa-cart-shopping"></i> Giỏ Hàng <span id="cartItemCountBadge" class="cart-badge">0</span></button>
+    </div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="app-content">
+        
+        <!-- TAB 1: DANH SÁCH SẢN PHẨM & CHỌN HÀNG -->
+        <div id="productsPane" class="tab-pane active">
+            
+            <!-- Tìm kiếm và quét mã -->
+            <div class="search-scan-box">
+                <div class="search-input-wrapper">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="searchPOS" class="search-input" placeholder="Tìm tên hoặc mã barcode..." onkeyup="timKiemSanPham()">
+                </div>
+                <button type="button" class="btn-scan" onclick="moCameraQuetMa()"><i class="fa-solid fa-barcode"></i> Quét</button>
+            </div>
+
+            <!-- Khách hàng nhanh -->
+            <div class="customer-section">
+                <div class="customer-header-row">
+                    <span class="customer-title"><i class="fa-solid fa-user-check" style="color: #008080;"></i> Khách hàng mua</span>
+                    <button type="button" class="btn-add-kh" onclick="moModalThemKhachHangPOS()"><i class="fa-solid fa-user-plus"></i> Thêm mới</button>
+                </div>
+                <div class="customer-inputs">
+                    <div class="input-group-custom" style="position: relative;">
+                        <label>Tên khách hàng:</label>
+                        <input type="text" id="inputTimTenKhach" placeholder="🔍 Gõ tên hoặc SĐT..." onkeyup="goYTimKiemTenKhach(this.value)">
+                        <div id="dropdownGoiYTenKhach" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; max-height: 150px; overflow-y: auto; background: white; border: 1px solid #cbd5e1; border-radius: 0 0 8px 8px; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
+                    </div>
+                    <div class="input-group-custom">
+                        <label>Số điện thoại:</label>
+                        <input type="text" id="posSdt" placeholder="SĐT tự điền..." readonly style="background: #f1f5f9; color: #64748b;">
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 10px; color: #64748b; margin-top: 6px;">
+                    <span id="khachHangStatus" style="font-weight: 600; color: #0284c7;">Khách vãng lai</span>
+                    <span id="diemTichLuyHienTai" style="color: #059669; font-weight: bold;">Điểm tích lũy: 0</span>
+                </div>
+            </div>
+
+            <!-- Lưới sản phẩm hiện đại -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 12px; font-weight: 700; color: #334155;">📦 Danh mục sản phẩm</span>
+                <span id="productCountLabel" style="font-size: 11px; color: #64748b;">(0 sản phẩm)</span>
+            </div>
+            
+            <div id="product-grid" class="product-grid-modern">
+                <div style="grid-column: span 2; text-align: center; color: #666; font-size: 11px; padding: 20px;">Đang tải dữ liệu sản phẩm...</div>
+            </div>
+
+        </div>
+
+        <!-- TAB 2: GIỎ HÀNG & THANH TOÁN -->
+        <div id="cartPane" class="tab-pane">
+            
+            <!-- Quản lý bill chờ / tạm -->
+            <div style="background: #ffffff; padding: 8px 12px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 11px; font-weight: 600; color: #334155;"><i class="fa-solid fa-clock-rotate-left" style="color: #0284c7;"></i> Bill tạm chờ: <b id="soLuongBillTam" style="color: #0284c7;">0</b></span>
+                <select id="selectBillTam" style="font-size: 11px; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; background: #f8fafc;" onchange="taiBillTam(this.value)">
+                    <option value="">-- Chọn bill lưu --</option>
+                </select>
+            </div>
+
+            <!-- Danh sách sản phẩm trong giỏ -->
+            <div style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px;">🛒 Chi tiết giỏ hàng:</div>
+            <div id="gioHangContainer" class="cart-container-modern">
+                <div style="text-align: center; color: #94a3b8; padding: 30px; background: white; border-radius: 10px; border: 1px dashed #cbd5e1; font-size: 12px;">Giỏ hàng của bạn đang trống</div>
+            </div>
+
+            <!-- Khối tổng kết thanh toán -->
+            <div class="checkout-summary-box">
+                <div class="summary-row">
+                    <span>Tiền hàng gốc:</span>
+                    <span id="tongTienHang" style="font-weight: 600;">0 đ</span>
+                </div>
+                <div class="summary-row">
+                    <span>Giảm giá / Voucher:</span>
+                    <input type="number" id="inputGiamGia" value="0" placeholder="0" style="width: 100px; padding: 4px 8px; font-size: 11px; text-align: right; border: 1px solid #cbd5e1; border-radius: 6px;" oninput="tinhToanThanhToan()">
+                </div>
+                <div class="summary-row" style="color: #059669;">
+                    <span>Điểm tích lũy nhận:</span>
+                    <span id="diemTichLuyHienThi" style="font-weight: bold;">0 Điểm</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Tổng Thanh Toán:</span>
+                    <span id="tongThanhToan">0 đ</span>
+                </div>
+
+                <div class="checkout-buttons">
+                    <button type="button" class="btn-save-temp" onclick="luuTamBill()"><i class="fa-solid fa-floppy-disk"></i> Lưu tạm</button>
+                    <button type="button" class="btn-checkout" onclick="chotVaTichDiem()"><i class="fa-solid fa-circle-check"></i> Chốt đơn</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MODAL QUÉT MÃ BARCODE -->
+    <div id="modalQuetMa" class="modal-overlay-modern">
+        <div class="modal-box-modern" style="text-align: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h4 style="font-size: 14px; font-weight: 700; color: #1e293b;"><i class="fa-solid fa-barcode"></i> Quét mã vạch sản phẩm</h4>
+                <button type="button" onclick="dongCamera()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="reader" style="width: 100%; border-radius: 8px; overflow: hidden; background: #000;"></div>
+            <p style="font-size: 11px; color: #64748b; margin-top: 10px;">Đưa mã vạch của sản phẩm vào khung hình camera.</p>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM KHÁCH HÀNG NHANH -->
+    <div id="modalThemKH" class="modal-overlay-modern">
+        <div class="modal-box-modern">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                <h4 style="font-size: 14px; font-weight: 700; color: #008080;"><i class="fa-solid fa-user-plus"></i> Thêm Khách Hàng Nhanh</h4>
+                <button type="button" onclick="dongModalThemKhachHangPOS()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="formThemKHPos" onsubmit="luuKhachHangNhanhPOS(event)">
+                <div style="margin-bottom: 10px;">
+                    <label style="font-size: 11px; font-weight: 600; color: #475569; display: block; margin-bottom: 3px;">Họ và tên (*):</label>
+                    <input type="text" id="posHovaten" placeholder="Nhập tên khách hàng..." required style="width: 100%; padding: 8px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none;">
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="font-size: 11px; font-weight: 600; color: #475569; display: block; margin-bottom: 3px;">Số điện thoại (*):</label>
+                    <input type="tel" id="posSodienthoai" placeholder="Nhập số điện thoại..." required style="width: 100%; padding: 8px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none;">
+                </div>
+                <div style="margin-bottom: 14px;">
+                    <label style="font-size: 11px; font-weight: 600; color: #475569; display: block; margin-bottom: 3px;">Địa chỉ:</label>
+                    <input type="text" id="posDiachi" placeholder="Nhập địa chỉ giao hàng..." style="width: 100%; padding: 8px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none;">
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" onclick="dongModalThemKhachHangPOS()" style="flex: 1; padding: 8px; font-size: 12px; background: #e2e8f0; color: #334155; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Hủy</button>
+                    <button type="submit" id="btnSavePOS" style="flex: 1.5; padding: 8px; font-size: 12px; background: #008080; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Lưu & Chọn</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV CỐ ĐỊNH DƯỚI ĐÁY -->
+    <div class="bottom-nav">
+        <a href="trangchu.html" class="nav-item">
+            <i class="fa-solid fa-house"></i>
+            Trang chủ
+        </a>
+        <a href="lichhen.html" class="nav-item">
+            <i class="fa-solid fa-calendar-days"></i>
+            Lịch hẹn
+        </a>
+        <a href="thucung.html" class="nav-item">
+            <i class="fa-solid fa-paw"></i>
+            Thú cưng
+        </a>
+        <a href="thongke.html" class="nav-item">
+            <i class="fa-solid fa-chart-line"></i>
+            Báo cáo
+        </a>
+        <a href="khachhang.html" class="nav-item">
+            <i class="fa-solid fa-users"></i>
+            Khách hàng
+        </a>
+    </div>
+
+</div>
+
+<!-- SCRIPT XỬ LÝ POS -->
+<script>
+    let danhSachSanPhamGoc = [];
+    let danhSachKhachHangGoc = [];
+    let khachHangDangChon = null;
+    let gioHang = [];
+    let html5QrCode = null;
+
+    function chuyenTab(paneId, btnElement) {
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.pos-tab-btn').forEach(b => b.classList.remove('active'));
+        
+        document.getElementById(paneId).classList.add('active');
+        btnElement.classList.add('active');
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+        await loadDuLieuPOS();
+        capNhatDanhSachBillTamSelect();
+    });
+
+    async function loadDuLieuPOS() {
+        await loadLaiDanhSachKhachHang();
+
+        if (typeof db === 'undefined' || !db) {
+            console.error('Biến kết nối Supabase `db` chưa được khởi tạo!');
+            document.getElementById('product-grid').innerHTML = `<div style="grid-column: span 2; text-align:center; color:red; font-size:11px;">Lỗi: Chưa kết nối được Supabase</div>`;
+            return;
+        }
+
+        const { data: spData, error } = await db.from('danhmucsanpham').select('*');
+        if (error) {
+            console.error('Lỗi tải sản phẩm:', error);
+            document.getElementById('product-grid').innerHTML = `<div style="grid-column: span 2; text-align:center; color:red; font-size:11px;">Lỗi tải sản phẩm</div>`;
+            return;
+        }
+
+        danhSachSanPhamGoc = spData || [];
+        hienThiLuoiSanPham(danhSachSanPhamGoc);
+    }
+
+    async function loadLaiDanhSachKhachHang(selectId = null) {
+        const { data: khData, error } = await db.from('khachhang').select('*');
+        if (!error && khData) {
+            danhSachKhachHangGoc = khData;
+            if (selectId) {
+                chonKhachHangMobile(selectId);
+            }
+        }
+    }
+
+    function goYTimKiemTenKhach(tuKhoa) {
+        const boxGoiY = document.getElementById('dropdownGoiYTenKhach');
+        const keyword = tuKhoa.toLowerCase().trim();
+
+        if (!keyword) {
+            boxGoiY.style.display = 'none';
+            return;
+        }
+
+        const ketQua = danhSachKhachHangGoc.filter(kh => {
+            const ten = (kh.hovaten || '').toLowerCase();
+            const sdt = (kh.sodienthoai || '').toLowerCase();
+            return ten.includes(keyword) || sdt.includes(keyword);
+        });
+
+        if (ketQua.length === 0) {
+            boxGoiY.style.display = 'block';
+            boxGoiY.innerHTML = `<div style="padding: 8px; font-size: 11px; color: #64748b; text-align: center;">Không tìm thấy khách hàng</div>`;
+            return;
+        }
+
+        boxGoiY.style.display = 'block';
+        boxGoiY.innerHTML = '';
+        ketQua.forEach(kh => {
+            boxGoiY.innerHTML += `
+                <div onclick="chonKhachHangMobile(${kh.id})" style="padding: 8px 10px; font-size: 11px; border-bottom: 1px solid #f1f5f9; cursor: pointer;">
+                    <b>${kh.hovaten || 'Khách'}</b> - <span style="color: #008080;">${kh.sodienthoai || '---'}</span>
+                </div>
+            `;
+        });
+    }
+
+    function chonKhachHangMobile(id) {
+        const kh = danhSachKhachHangGoc.find(x => x.id == id);
+        if (kh) {
+            khachHangDangChon = kh;
+            document.getElementById('inputTimTenKhach').value = kh.hovaten || '';
+            document.getElementById('posSdt').value = kh.sodienthoai || '';
+            document.getElementById('dropdownGoiYTenKhach').style.display = 'none';
+
+            document.getElementById('khachHangStatus').innerText = 'Thành viên thân thiết';
+            document.getElementById('diemTichLuyHienTai').innerText = `Điểm tích lũy: ${kh.tichdiem || 0}`;
+        }
+    }
+
+    function hienThiLuoiSanPham(data) {
+        const grid = document.getElementById('product-grid');
+        document.getElementById('productCountLabel').innerText = `(${data.length} sản phẩm)`;
+        grid.innerHTML = '';
+
+        if (data.length === 0) {
+            grid.innerHTML = `<div style="grid-column: span 2; text-align:center; color:#777; font-size:11px; padding: 20px;">Không tìm thấy sản phẩm phù hợp</div>`;
+            return;
+        }
+
+        data.forEach(sp => {
+            const tenSP = sp.tensanpham || 'Sản phẩm';
+            const giaSP = Number(sp.giaban || 0);
+            const tonKho = sp.soluongton || 0;
+            const anhSP = sp.hinhanh || sp.anh || sp.image || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=200&q=80';
+
+            grid.innerHTML += `
+                <div class="product-card-modern" onclick="themVaoGioHang(${sp.id})">
+                    <div class="product-img-box">
+                        <img src="${anhSP}" alt="img">
+                        <span class="stock-badge">Tồn: ${tonKho}</span>
+                    </div>
+                    <div class="product-title">${tenSP}</div>
+                    <div class="product-price-row">
+                        <span class="product-price">${giaSP.toLocaleString()}đ</span>
+                        <button type="button" class="btn-add-quick">+</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function timKiemSanPham() {
+        const tuKhoa = document.getElementById('searchPOS').value.toLowerCase().trim();
+        const ketQuaLoc = danhSachSanPhamGoc.filter(sp => {
+            const ten = (sp.tensanpham || '').toLowerCase();
+            const barcode = (sp.mabarcode || '').toLowerCase();
+            return ten.includes(tuKhoa) || barcode.includes(tuKhoa);
+        });
+        hienThiLuoiSanPham(ketQuaLoc);
+    }
+
+    function themVaoGioHang(id) {
+        const sp = danhSachSanPhamGoc.find(x => x.id === id);
+        if (!sp) return;
+
+        if ((sp.soluongton || 0) <= 0) {
+            alert('Sản phẩm này đã hết hàng trong kho!');
+            return;
+        }
+
+        const existingItem = gioHang.find(item => item.id === id);
+        if (existingItem) {
+            if (existingItem.soLuong < sp.soluongton) {
+                existingItem.soLuong += 1;
+            } else {
+                alert('Đã đạt giới hạn số lượng tồn kho!');
+            }
+        } else {
+            gioHang.push({
+                id: sp.id,
+                masanpham: 'SP' + String(sp.id).padStart(4, '0'),
+                ten: sp.tensanpham,
+                gia: Number(sp.giaban || 0),
+                soLuong: 1,
+                tonkho: sp.soluongton || 0
+            });
+        }
+        hienThiGioHang();
+    }
+
+    function thayDoiSoLuong(id, delta) {
+        const item = gioHang.find(i => i.id === id);
+        if (item) {
+            item.soLuong += delta;
+            if (item.soLuong <= 0) {
+                gioHang = gioHang.filter(i => i.id !== id);
+            } else if (item.soLuong > item.tonkho) {
+                alert('Vượt quá số lượng tồn kho!');
+                item.soLuong = item.tonkho;
+            }
+        }
+        hienThiGioHang();
+    }
+
+    function xoaKhoiGioHang(id) {
+        gioHang = gioHang.filter(i => i.id !== id);
+        hienThiGioHang();
+    }
+
+    function hienThiGioHang() {
+        const container = document.getElementById('gioHangContainer');
+        const badgeCount = document.getElementById('cartItemCountBadge');
+        
+        let totalQty = gioHang.reduce((sum, item) => sum + item.soLuong, 0);
+        badgeCount.innerText = totalQty;
+
+        container.innerHTML = '';
+
+        if (gioHang.length === 0) {
+            container.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 30px; background: white; border-radius: 10px; border: 1px dashed #cbd5e1; font-size: 12px;">Giỏ hàng của bạn đang trống</div>`;
+            document.getElementById('tongTienHang').textContent = '0 đ';
+            document.getElementById('tongThanhToan').textContent = '0 đ';
+            document.getElementById('diemTichLuyHienThi').textContent = '0 Điểm';
+            return;
+        }
+
+        let tongTien = 0;
+        gioHang.forEach(item => {
+            const thanhTien = item.gia * item.soLuong;
+            tongTien += thanhTien;
+
+            container.innerHTML += `
+                <div class="cart-item-card">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${item.ten}</div>
+                        <div class="cart-item-price">${item.gia.toLocaleString()}đ</div>
+                    </div>
+                    <div class="cart-qty-control">
+                        <button type="button" onclick="thayDoiSoLuong(${item.id}, -1)">-</button>
+                        <span>${item.soLuong}</span>
+                        <button type="button" onclick="thayDoiSoLuong(${item.id}, 1)">+</button>
+                    </div>
+                    <div style="text-align: right; min-width: 75px; padding-left: 8px;">
+                        <div style="font-weight: 700; font-size: 12px; color: #008080;">${thanhTien.toLocaleString()}đ</div>
+                        <button type="button" onclick="xoaKhoiGioHang(${item.id})" style="background: none; border: none; color: #ef4444; font-size: 10px; cursor: pointer; font-weight: bold; margin-top: 2px;">Xóa</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        document.getElementById('tongTienHang').textContent = tongTien.toLocaleString() + ' đ';
+        tinhToanThanhToan();
+    }
+
+    function tinhToanThanhToan() {
+        let tongTienGoc = gioHang.reduce((sum, item) => sum + (item.gia * item.soLuong), 0);
+        let giamGia = Number(document.getElementById('inputGiamGia').value) || 0;
+        
+        let tongCuoiCung = tongTienGoc - giamGia;
+        if (tongCuoiCung < 0) tongCuoiCung = 0;
+
+        let diemTichLuy = Math.floor(tongCuoiCung / 10000);
+
+        document.getElementById('tongThanhToan').textContent = tongCuoiCung.toLocaleString() + ' đ';
+        document.getElementById('diemTichLuyHienThi').textContent = diemTichLuy + ' Điểm';
+        return { tongCuoiCung, diemTichLuy };
+    }
+
+    function moModalThemKhachHangPOS() {
+        document.getElementById('modalThemKH').style.display = 'flex';
+        document.getElementById('formThemKHPos').reset();
+    }
+
+    function dongModalThemKhachHangPOS() {
+        document.getElementById('modalThemKH').style.display = 'none';
+    }
+
+    async function luuKhachHangNhanhPOS(event) {
+        event.preventDefault();
+        const hovaten = document.getElementById('posHovaten').value.trim();
+        const sodienthoai = document.getElementById('posSodienthoai').value.trim();
+        const diachi = document.getElementById('posDiachi').value.trim();
+        const btnSave = document.getElementById('btnSavePOS');
+
+        btnSave.disabled = true;
+        btnSave.textContent = 'Đang lưu...';
+
+        const { data, error } = await db.from('khachhang').insert([
+            { hovaten: hovaten, sodienthoai: sodienthoai, diachi: diachi, tichdiem: 0 }
+        ]).select();
+
+        btnSave.disabled = false;
+        btnSave.textContent = 'Lưu & Chọn';
+
+        if (error) {
+            alert('Lỗi thêm khách hàng: ' + error.message);
+            return;
+        }
+
+        alert('Thêm khách hàng thành công!');
+        dongModalThemKhachHangPOS();
+
+        if (data && data[0]) {
+            await loadLaiDanhSachKhachHang(data[0].id);
+        } else {
+            await loadLaiDanhSachKhachHang();
+        }
+    }
+
+    function moCameraQuetMa() {
+        document.getElementById('modalQuetMa').style.display = 'flex';
+        if (!html5QrCode) {
+            html5QrCode = new Html5Qrcode("reader");
+        }
+        html5QrCode.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 150 } },
+            (decodedText) => {
+                dongCamera();
+                const sp = danhSachSanPhamGoc.find(x => (x.mabarcode || '').toLowerCase() === decodedText.toLowerCase());
+                if (sp) {
+                    themVaoGioHang(sp.id);
+                    chuyenTab('cartPane', document.querySelectorAll('.pos-tab-btn')[1]);
+                } else {
+                    alert('Không tìm thấy sản phẩm mã: ' + decodedText);
+                }
+            },
+            (errorMessage) => {}
+        ).catch(err => {
+            alert("Không thể truy cập camera thiết bị!");
+            dongCamera();
+        });
+    }
+
+    function dongCamera() {
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                document.getElementById('modalQuetMa').style.display = 'none';
+            }).catch(() => {
+                document.getElementById('modalQuetMa').style.display = 'none';
+            });
+        } else {
+            document.getElementById('modalQuetMa').style.display = 'none';
+        }
+    }
+
+    function luuTamBill() {
+        if (gioHang.length === 0) {
+            alert('Giỏ hàng đang trống!');
+            return;
+        }
+
+        const makhachhang = khachHangDangChon ? khachHangDangChon.id : '';
+        const tenKhach = khachHangDangChon ? (khachHangDangChon.hovaten) : 'Khách vãng lai';
+        const giamGia = Number(document.getElementById('inputGiamGia').value) || 0;
+        const tongTien = document.getElementById('tongThanhToan').innerText;
+
+        const billTamMoi = {
+            id: 'BILL_' + Date.now(),
+            thoiGian: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+            makhachhang: makhachhang,
+            tenKhach: tenKhach,
+            giamGia: giamGia,
+            gioHang: [...gioHang],
+            tongTienText: tongTien
+        };
+
+        let danhSachBillTam = JSON.parse(localStorage.getItem('danhSachBillTamMobile') || '[]');
+        danhSachBillTam.push(billTamMoi);
+        localStorage.setItem('danhSachBillTamMobile', JSON.stringify(danhSachBillTam));
+
+        alert('💾 Đã lưu tạm bill thành công!');
+        gioHang = [];
+        document.getElementById('inputGiamGia').value = 0;
+        hienThiGioHang();
+        capNhatDanhSachBillTamSelect();
+    }
+
+    function capNhatDanhSachBillTamSelect() {
+        const select = document.getElementById('selectBillTam');
+        const danhSachBillTam = JSON.parse(localStorage.getItem('danhSachBillTamMobile') || '[]');
+        
+        document.getElementById('soLuongBillTam').innerText = danhSachBillTam.length;
+        select.innerHTML = '<option value="">-- Chọn bill lưu --</option>';
+
+        danhSachBillTam.forEach((bill, index) => {
+            select.innerHTML += `<option value="${bill.id}">Bill #${index + 1} (${bill.tenKhach}) - ${bill.tongTienText}</option>`;
+        });
+    }
+
+    function taiBillTam(billId) {
+        if (!billId) return;
+
+        let danhSachBillTam = JSON.parse(localStorage.getItem('danhSachBillTamMobile') || '[]');
+        const bill = danhSachBillTam.find(b => b.id === billId);
+
+        if (bill) {
+            if (gioHang.length > 0 && !confirm('Giỏ hàng hiện có sản phẩm. Bạn có muốn ghi đè?')) {
+                return;
+            }
+
+            gioHang = [...bill.gioHang];
+            if (bill.makhachhang) {
+                chonKhachHangMobile(bill.makhachhang);
+            }
+            document.getElementById('inputGiamGia').value = bill.giamGia || 0;
+            
+            hienThiGioHang();
+            chuyenTab('cartPane', document.querySelectorAll('.pos-tab-btn')[1]);
+
+            danhSachBillTam = danhSachBillTam.filter(b => b.id !== billId);
+            localStorage.setItem('danhSachBillTamMobile', JSON.stringify(danhSachBillTam));
+            capNhatDanhSachBillTamSelect();
+        }
+    }
+
+    async function chotVaTichDiem() {
+        if (gioHang.length === 0) {
+            alert('Giỏ hàng đang trống!');
+            return;
+        }
+
+        const { tongCuoiCung, diemTichLuy } = tinhToanThanhToan();
+        const tenKhach = khachHangDangChon ? (khachHangDangChon.hovaten) : 'Khách lẻ vãng lai';
+        const sdtKhach = khachHangDangChon ? (khachHangDangChon.sodienthoai) : '';
+
+        if (!confirm(`Xác nhận chốt đơn thanh toán: ${tongCuoiCung.toLocaleString('vi-VN')} đ?`)) {
+            return;
+        }
+
+        try {
+            if (khachHangDangChon) {
+                let diemCu = parseInt(khachHangDangChon.tichdiem) || 0;
+                let diemMoi = diemCu + diemTichLuy;
+                await db.from('khachhang').update({ tichdiem: diemMoi }).eq('id', khachHangDangChon.id);
+            }
+
+            for (let item of gioHang) {
+                const donHangPayload = {
+                    masanpham: item.masanpham,
+                    tensanpham: item.ten,
+                    soluongban: Number(item.soLuong),
+                    dongia: Number(item.gia),
+                    thanhtien: Number(item.gia * item.soLuong),
+                    tenkhachhang: tenKhach,
+                    sdt: sdtKhach,
+                    nguoiban: 'Thu ngân POS Mobile'
+                };
+
+                const { error: insertError } = await db.from('donhang').insert([donHangPayload]);
+                if (insertError) {
+                    alert('Lỗi ghi đơn hàng: ' + insertError.message);
+                    return;
+                }
+
+                const spGoc = danhSachSanPhamGoc.find(x => x.id === item.id);
+                if (spGoc) {
+                    let tonMoi = (Number(spGoc.soluongton) || 0) - Number(item.soLuong);
+                    if (tonMoi < 0) tonMoi = 0;
+                    
+                    await db.from('danhmucsanpham').update({ soluongton: tonMoi }).eq('id', item.id);
+                }
+            }
+
+            alert(`Chốt đơn thành công!\n- Tổng tiền: ${tongCuoiCung.toLocaleString()}đ\n- Tích lũy: ${diemTichLuy} điểm`);
+            
+            gioHang = [];
+            document.getElementById('inputGiamGia').value = 0;
+            hienThiGioHang();
+            chuyenTab('productsPane', document.querySelectorAll('.pos-tab-btn')[0]);
+            await loadDuLieuPOS();
+
+        } catch (err) {
+            console.error('Lỗi chốt đơn:', err);
+            alert('Có lỗi xảy ra khi chốt đơn hàng.');
+        }
+    }
+</script>
+
+</body>
+</html>
