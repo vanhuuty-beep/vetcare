@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Thanh Toán & Gia Hạn Bản Quyền - VetCare Pro</title>
+    
     <!-- Thư viện Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/env.js"></script>
@@ -13,6 +14,8 @@
     <script src="../js/smart-search.js"></script>
     
     <!-- CSS Hệ Thống -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/mobile.css">
     <link rel="stylesheet" href="../css/style1.css">
@@ -178,51 +181,49 @@
             </div>
 
             <div class="packages-grid">
-                <!-- GÓI 6 THÁNG -->
+                <!-- GÓI 1 THÁNG -->
                 <div class="pkg-card">
                     <div>
-                        <div class="pkg-title">Gói 6 Tháng</div>
-                        <div class="pkg-price">1.200.000 đ <span>/ 6 tháng</span></div>
+                        <div class="pkg-title">Gói 1 Tháng</div>
+                        <div class="pkg-price">150.000 đ <span>/ tháng</span></div>
                         <ul class="pkg-features">
                             <li>✅ Đầy đủ tính năng quản lý</li>
                             <li>✅ Không giới hạn lưu trữ dữ liệu</li>
                             <li>✅ Hỗ trợ kỹ thuật 24/7</li>
-                            <li>✅ Cập nhật tính năng mới miễn phí</li>
                         </ul>
                     </div>
-                    <button class="btn-select-pkg" onclick="moModalThanhToan('Gói 6 Tháng', 1200000)">Thanh Toán Ngay</button>
+                    <button class="btn-select-pkg" style="background: #64748b;" onclick="moModalThanhToan('Gói 1 Tháng', 150000)">Thanh Toán Ngay</button>
                 </div>
 
-                <!-- GÓI 1 NĂM (KHUYÊN DÙNG) -->
+                <!-- GÓI 6 THÁNG (TẶNG 1 THÁNG) -->
                 <div class="pkg-card recommended">
-                    <div class="pkg-badge">🔥 ĐƯỢC CHỌN NHIỀU NHẤT</div>
+                    <div class="pkg-badge">🔥 TẶNG THÊM 1 THÁNG</div>
                     <div>
-                        <div class="pkg-title" style="color: #0284c7;">Gói 1 Năm (12 Tháng)</div>
-                        <div class="pkg-price">2.000.000 đ <span>/ năm</span></div>
+                        <div class="pkg-title" style="color: #0284c7;">Gói 6 Tháng</div>
+                        <div class="pkg-price">1.000.000 đ <span>/ 7 tháng</span></div>
                         <ul class="pkg-features">
-                            <li>✅ <b>Tiết kiệm ngay 400.000 đ</b></li>
+                            <li>✅ <b>Mua 6 tháng tặng ngay 1 tháng</b></li>
                             <li>✅ Đầy đủ tính năng quản lý</li>
                             <li>✅ Không giới hạn dung lượng</li>
                             <li>✅ Hỗ trợ ưu tiên qua Zalo/SĐT</li>
-                            <li>✅ Tự động khôi phục & Sao lưu</li>
                         </ul>
                     </div>
-                    <button class="btn-select-pkg" style="background: #0284c7;" onclick="moModalThanhToan('Gói 1 Năm', 2000000)">Thanh Toán Ngay</button>
+                    <button class="btn-select-pkg" style="background: #0284c7;" onclick="moModalThanhToan('Gói 6 Tháng Tặng 1', 1000000)">Thanh Toán Ngay</button>
                 </div>
 
                 <!-- GÓI 2 NĂM -->
                 <div class="pkg-card">
                     <div>
                         <div class="pkg-title">Gói 2 Năm (24 Tháng)</div>
-                        <div class="pkg-price">3.500.000 đ <span>/ 2 năm</span></div>
+                        <div class="pkg-price">2.000.000 đ <span>/ 2 năm</span></div>
                         <ul class="pkg-features">
-                            <li>✅ <b>Tiết kiệm lên tới 1.300.000 đ</b></li>
+                            <li>✅ <b>Tiết kiệm chi phí tối đa</b></li>
                             <li>✅ Cam kết giữ giá cố định lâu dài</li>
                             <li>✅ Đầy đủ tính năng cao cấp</li>
                             <li>✅ Hỗ trợ đào tạo nhân viên miễn phí</li>
                         </ul>
                     </div>
-                    <button class="btn-select-pkg" onclick="moModalThanhToan('Gói 2 Năm', 3500000)">Thanh Toán Ngay</button>
+                    <button class="btn-select-pkg" onclick="moModalThanhToan('Gói 2 Năm', 2000000)">Thanh Toán Ngay</button>
                 </div>
             </div>
 
@@ -288,12 +289,11 @@
     </div>
 
     <script>
-        // --- CẤU HÌNH TÀI KHOẢN NGÂN HÀNG TECHCOMBANK CỦA BẠN ---
         const CAU_HINH_NH = {
-            BANK_ID: "970407",             // Mã BIN VietQR của Techcombank
+            BANK_ID: "970407",
             TEN_NGAN_HANG: "Techcombank",
-            STK: "3757231999",             // Số tài khoản của bạn
-            TEN_CHU_TK: "VAN HUU TY"       // Tên chủ tài khoản
+            STK: "3757231999",
+            TEN_CHU_TK: "VAN HUU TY"
         };
 
         let currentChuPK = null;
@@ -306,7 +306,6 @@
             await taiLichSuThanhToan();
         });
 
-        // 1. Tải thông tin phòng khám hiện tại
         async function taiThongTinPhongKham() {
             let user = null;
             try {
@@ -318,7 +317,6 @@
                 return;
             }
 
-            // Truy vấn thông tin mới nhất từ bảng chupk
             const { data, error } = await db.from('chupk').select('*').eq('maphongkham', user.maphongkham).maybeSingle();
             if (error || !data) {
                 console.error('Lỗi lấy thông tin phòng khám:', error);
@@ -327,7 +325,6 @@
 
             currentChuPK = data;
 
-            // Hiển thị thông tin lên Banner
             document.getElementById('bannerTenPK').innerText = '🏥 ' + (data.tenphongkham || 'Phòng Khám Thú Y');
             document.getElementById('bannerMaPK').innerText = data.maphongkham || '---';
             document.getElementById('bannerChuPK').innerText = data.hovaten || '---';
@@ -349,8 +346,7 @@
             }
         }
 
-        // 2. Mở Modal Thanh toán & Tạo VietQR Động
-        async function moModalThanhToan(tenGoi, soTien) {
+        function moModalThanhToan(tenGoi, soTien) {
             if (!currentChuPK) {
                 alert('Vui lòng chờ nạp thông tin tài khoản!');
                 return;
@@ -359,15 +355,12 @@
             selectedGoi = tenGoi;
             selectedAmount = soTien;
 
-            // Tạo mã nội dung chuyển khoản độc nhất: GH_MAPHONGKHAM (VD: GH PK_617723)
             const maPKClean = currentChuPK.maphongkham.replace(/[^a-zA-Z0-9]/g, "");
             const noiDungCK = `GH ${maPKClean}`;
             currentMaGD = 'GD' + Date.now().toString().slice(-6);
 
-            // Tạo link VietQR động chuẩn Techcombank
             const qrUrl = `https://img.vietqr.io/image/${CAU_HINH_NH.BANK_ID}-${CAU_HINH_NH.STK}-compact2.png?amount=${soTien}&addInfo=${encodeURIComponent(noiDungCK)}&accountName=${encodeURIComponent(CAU_HINH_NH.TEN_CHU_TK)}`;
 
-            // Đổ thông tin ra giao diện Modal
             document.getElementById('qrImage').src = qrUrl;
             document.getElementById('lblNganHang').innerText = CAU_HINH_NH.TEN_NGAN_HANG;
             document.getElementById('lblSTK').innerText = CAU_HINH_NH.STK;
@@ -382,7 +375,6 @@
             document.getElementById('qrModal').style.display = 'none';
         }
 
-        // 3. Xử lý khi nhấn nút "Tôi Đã Chuyển Khoản"
         async function xacNhanDaChuyenKhoan() {
             if (!currentChuPK) return;
 
@@ -401,13 +393,12 @@
             if (error) {
                 alert('Lỗi tạo lịch sử giao dịch: ' + error.message);
             } else {
-                alert('✅ Yêu cầu gia hạn đã được gửi đi! Hệ thống/Admin sẽ kiểm tra số dư và tự động cộng hạn dùng cho bạn.');
+                alert('✅ Yêu cầu gia hạn đã được gửi đi! Hệ thống sẽ kiểm tra và cộng hạn dùng cho bạn.');
                 dongModalQR();
                 taiLichSuThanhToan();
             }
         }
 
-        // 4. Tải lịch sử giao dịch
         async function taiLichSuThanhToan() {
             let user = null;
             try { user = JSON.parse(sessionStorage.getItem('currentUser')); } catch (e) {}
@@ -450,7 +441,6 @@
             });
         }
 
-        // Hàm sao chép văn bản tiện lợi
         function saoChepText(elementId) {
             const text = document.getElementById(elementId).innerText;
             navigator.clipboard.writeText(text).then(() => {
