@@ -6,6 +6,15 @@ document.addEventListener("DOMContentLoaded", function() {
         currentUser = null;
     }
 
+    // Đảm bảo trang web đã nhúng Font Awesome (nếu chưa có trong thẻ <head> của trang html chính)
+    if (!document.getElementById('font-awesome-cdn')) {
+        const faLink = document.createElement('link');
+        faLink.id = 'font-awesome-cdn';
+        faLink.rel = 'stylesheet';
+        faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+        document.head.appendChild(faLink);
+    }
+
     // Chuẩn hóa chuỗi vai trò
     const vaitroRaw = currentUser ? (currentUser.vaitro || currentUser.role || '') : '';
     const vaitro = vaitroRaw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -15,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const sdtHienTai = currentUser ? String(currentUser.sodienthoai || currentUser.sdt || '').trim() : '';
     const isHuuTy = (tentaiKhoanHienTai === 'huuty' || tentaiKhoanHienTai.includes('huuty') || sdtHienTai === '0935778727');
 
-    // Xác định quyền Chủ phòng khám (loại bỏ hoàn toàn vai trò Admin cũ, chỉ nhận chủ phòng khám)
+    // Xác định quyền Chủ phòng khám
     const isTrueOwner = vaitro.includes('chủ phòng khám') || vaitro.includes('chu phong kham') || vaitro.includes('chupk');
     
     // Bác sĩ
@@ -41,34 +50,31 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // Xây dựng danh mục HỆ THỐNG theo phân quyền
-    let heThongMenuHtml = `<li class="menu-category">👨‍⚕️ HỆ THỐNG</li>`;
+    let heThongMenuHtml = `<li class="menu-category"><i class="fa-solid fa-shield-halved"></i> HỆ THỐNG</li>`;
 
-    // 1. Quản lý hệ thống tối cao (0935778727 hoặc huuty) thấy tất cả
     if (isHuuTy) {
         heThongMenuHtml += `
-            <li class="menu-item" id="menu-thongtinpk" onclick="window.location.href='thongtinphongkham.html'"><span>🏥</span> <span class="menu-text">Thông tin phòng khám</span></li>
-            <li class="menu-item" id="menu-quanlyuser" onclick="window.location.href='quanlyuser.html'"><span>🔐</span> <span class="menu-text">Quản lý nhân viên</span></li>
-            <li class="menu-item" id="menu-thanhtoan" onclick="window.location.href='thanhtoan.html'"><span>💳</span> <span class="menu-text">Thanh toán & Gia hạn</span></li>
-            <li class="menu-item" id="menu-quanlychung" onclick="window.location.href='quanlychung.html'" style="background: rgba(2, 132, 199, 0.15); border-left: 4px solid #0284c7;">
-                <span>👑</span> <span class="menu-text" style="font-weight: bold; color: #0284c7;">Quản lý chung (Hệ thống)</span>
+            <li class="menu-item" id="menu-thongtinpk" onclick="window.location.href='thongtinphongkham.html'"><span><i class="fa-solid fa-hospital"></i></span> <span class="menu-text">Thông tin phòng khám</span></li>
+            <li class="menu-item" id="menu-quanlyuser" onclick="window.location.href='quanlyuser.html'"><span><i class="fa-solid fa-user-shield"></i></span> <span class="menu-text">Quản lý nhân viên</span></li>
+            <li class="menu-item" id="menu-thanhtoan" onclick="window.location.href='thanhtoan.html'"><span><i class="fa-solid fa-credit-card"></i></span> <span class="menu-text">Thanh toán & Gia hạn</span></li>
+            <li class="menu-item" id="menu-quanlychung" onclick="window.location.href='quanlychung.html'">
+                <span><i class="fa-solid fa-crown"></i></span> <span class="menu-text" style="font-weight: bold;">Quản lý chung (Hệ thống)</span>
             </li>
-            
-            <li class="menu-item" id="menu-lienhe" onclick="window.location.href='lienhe.html'"><span>📞</span> <span class="menu-text">Liên hệ</span></li>
+            <li class="menu-item" id="menu-lichsuthanhtoan" onclick="window.location.href='lichsuthanhtoan.html'">
+                <span><i class="fa-solid fa-receipt"></i></span> <span class="menu-text" style="font-weight: bold;">Lịch sử thanh toán</span>
+            </li>
+            <li class="menu-item" id="menu-lienhe" onclick="window.location.href='lienhe.html'"><span><i class="fa-solid fa-headset"></i></span> <span class="menu-text">Liên hệ</span></li>
         `;
-    } 
-    // 2. Chủ phòng khám thấy thông tin PK, quản lý nhân viên, thanh toán (ẨN hoàn toàn Quản lý chung)
-    else if (isTrueOwner) {
+    } else if (isTrueOwner) {
         heThongMenuHtml += `
-            <li class="menu-item" id="menu-thongtinpk" onclick="window.location.href='thongtinphongkham.html'"><span>🏥</span> <span class="menu-text">Thông tin phòng khám</span></li>
-            <li class="menu-item" id="menu-quanlyuser" onclick="window.location.href='quanlyuser.html'"><span>🔐</span> <span class="menu-text">Quản lý nhân viên</span></li>
-            <li class="menu-item" id="menu-thanhtoan" onclick="window.location.href='thanhtoan.html'"><span>💳</span> <span class="menu-text">Thanh toán & Gia hạn</span></li>
-            <li class="menu-item" id="menu-lienhe" onclick="window.location.href='lienhe.html'"><span>📞</span> <span class="menu-text">Liên hệ</span></li>
+            <li class="menu-item" id="menu-thongtinpk" onclick="window.location.href='thongtinphongkham.html'"><span><i class="fa-solid fa-hospital"></i></span> <span class="menu-text">Thông tin phòng khám</span></li>
+            <li class="menu-item" id="menu-quanlyuser" onclick="window.location.href='quanlyuser.html'"><span><i class="fa-solid fa-user-shield"></i></span> <span class="menu-text">Quản lý nhân viên</span></li>
+            <li class="menu-item" id="menu-thanhtoan" onclick="window.location.href='thanhtoan.html'"><span><i class="fa-solid fa-credit-card"></i></span> <span class="menu-text">Thanh toán & Gia hạn</span></li>
+            <li class="menu-item" id="menu-lienhe" onclick="window.location.href='lienhe.html'"><span><i class="fa-solid fa-headset"></i></span> <span class="menu-text">Liên hệ</span></li>
         `;
-    } 
-    // 3. Nhân viên và Bác sĩ: Chỉ thấy Liên hệ trong phần hệ thống
-    else {
+    } else {
         heThongMenuHtml += `
-            <li class="menu-item" id="menu-lienhe" onclick="window.location.href='lienhe.html'"><span>📞</span> <span class="menu-text">Liên hệ</span></li>
+            <li class="menu-item" id="menu-lienhe" onclick="window.location.href='lienhe.html'"><span><i class="fa-solid fa-headset"></i></span> <span class="menu-text">Liên hệ</span></li>
         `;
     }
 
@@ -76,102 +82,113 @@ document.addEventListener("DOMContentLoaded", function() {
     const options = { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' };
     const ngayHienTai = now.toLocaleDateString('vi-VN', options);
 
-    // XÂY DỰNG CÁC NHÓM MENU CHUYÊN MÔN
+    // XÂY DỰNG CÁC NHÓM MENU CHUYÊN MÔN VỚI FONT AWESOME ICONS
     let dynamicMenuContent = '';
 
-    // Thống kê (Ai cũng thấy)
-    dynamicMenuContent += `<li class="menu-item" id="menu-thongke" onclick="window.location.href='thongke.html'"><span>📈</span> <span class="menu-text">Thống kê</span></li>`;
+    dynamicMenuContent += `<li class="menu-item" id="menu-thongke" onclick="window.location.href='thongke.html'"><span><i class="fa-solid fa-chart-pie"></i></span> <span class="menu-text">Thống kê</span></li>`;
 
-    // Khách hàng, Thú cưng, Lịch hẹn (Ai cũng thấy để làm việc)
     dynamicMenuContent += `
-        <li class="menu-item" id="menu-khachhang" onclick="window.location.href='khachhang.html'"><span>👤</span> <span class="menu-text">Khách hàng</span></li>
-        <li class="menu-item" id="menu-thucung" onclick="window.location.href='thucung.html'"><span>🐶</span> <span class="menu-text">Thú cưng</span></li>
-        <li class="menu-item" id="menu-lichhen" onclick="window.location.href='lichhen.html'"><span>📅</span> <span class="menu-text">Lịch hẹn</span></li>
+        <li class="menu-item" id="menu-khachhang" onclick="window.location.href='khachhang.html'"><span><i class="fa-solid fa-users"></i></span> <span class="menu-text">Khách hàng</span></li>
+        <li class="menu-item" id="menu-thucung" onclick="window.location.href='thucung.html'"><span><i class="fa-solid fa-paw"></i></span> <span class="menu-text">Thú cưng</span></li>
+        <li class="menu-item" id="menu-lichhen" onclick="window.location.href='lichhen.html'"><span><i class="fa-solid fa-calendar-days"></i></span> <span class="menu-text">Lịch hẹn</span></li>
     `;
 
-    // Khám & Điều trị: Chủ phòng khám, Bác sĩ và Quản lý hệ thống thấy (Nhân viên bị ẩn)
     if (isTrueOwner || isBacSi || isHuuTy) {
         dynamicMenuContent += `
             <li class="menu-dropdown-toggle active-parent" onclick="toggleSubmenu(this)">
-                <div class="menu-label-wrap"><span class="group-icon">🩺</span> <span class="menu-text">Khám & Điều trị</span></div> <span class="arrow">▼</span>
+                <div class="menu-label-wrap"><span class="group-icon"><i class="fa-solid fa-stethoscope"></i></span> <span class="menu-text">Khám & Điều trị</span></div> <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
             </li>
             <ul class="submenu-container open">
-                <li class="menu-item" id="menu-khambenh" onclick="window.location.href='khambenh.html'"><span>🏥</span> <span class="menu-text">Khám bệnh</span></li>
-                <li class="menu-item" id="menu-phieuchidinh" onclick="window.location.href='phieuchidinh.html'"><span>📋</span> <span class="menu-text">Phiếu chỉ định</span></li>
-                <li class="menu-item" id="menu-donthuoc" onclick="window.location.href='donthuoc.html'"><span>📜</span> <span class="menu-text">Đơn thuốc</span></li>
+                <li class="menu-item" id="menu-khambenh" onclick="window.location.href='khambenh.html'"><span><i class="fa-solid fa-user-doctor"></i></span> <span class="menu-text">Khám bệnh</span></li>
+                <li class="menu-item" id="menu-phieuchidinh" onclick="window.location.href='phieuchidinh.html'"><span><i class="fa-solid fa-file-medical"></i></span> <span class="menu-text">Chỉ định</span></li>
+                <li class="menu-item" id="menu-donthuoc" onclick="window.location.href='donthuoc.html'"><span><i class="fa-solid fa-prescription"></i></span> <span class="menu-text">Đơn thuốc</span></li>
             </ul>
         `;
     }
 
-    // Kho & Vắc-xin (Ai cũng thấy)
     dynamicMenuContent += `
         <li class="menu-dropdown-toggle" onclick="toggleSubmenu(this)">
-            <div class="menu-label-wrap"><span class="group-icon">📦</span> <span class="menu-text">Kho & Vắc-xin</span></div> <span class="arrow">▼</span>
+            <div class="menu-label-wrap"><span class="group-icon"><i class="fa-solid fa-boxes-stacked"></i></span> <span class="menu-text">Kho & Vắc-xin</span></div> <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
         </li>
         <ul class="submenu-container">
-            <li class="menu-item" id="menu-khothuoc" onclick="window.location.href='khothuoc.html'"><span>💊</span> <span class="menu-text">Kho thuốc</span></li>
-            <li class="menu-item" id="menu-khovaccine" onclick="window.location.href='khovaccine.html'"><span>💉</span> <span class="menu-text">Kho vắc-xin</span></li>
-            <li class="menu-item" id="menu-nhatkylamvaccine" onclick="window.location.href='nhatkylamvaccine.html'"><span>⏰</span> <span class="menu-text">Nhật ký tiêm</span></li>
-            <li class="menu-item" id="menu-dichvu" onclick="window.location.href='dichvu.html'"><span>📜</span> <span class="menu-text">Giá dịch vụ</span></li>
+            <li class="menu-item" id="menu-khothuoc" onclick="window.location.href='khothuoc.html'"><span><i class="fa-solid fa-pills"></i></span> <span class="menu-text">Kho thuốc</span></li>
+            <li class="menu-item" id="menu-khovaccine" onclick="window.location.href='khovaccine.html'"><span><i class="fa-solid fa-syringe"></i></span> <span class="menu-text">Kho vắc-xin</span></li>
+            <li class="menu-item" id="menu-nhatkylamvaccine" onclick="window.location.href='nhatkylamvaccine.html'"><span><i class="fa-solid fa-clock-rotate-left"></i></span> <span class="menu-text">Nhật ký tiêm</span></li>
+            <li class="menu-item" id="menu-dichvu" onclick="window.location.href='dichvu.html'"><span><i class="fa-solid fa-tags"></i></span> <span class="menu-text">Giá dịch vụ</span></li>
         </ul>
     `;
 
-    // Quản lý Lưu trú: Chủ phòng khám, Bác sĩ và Quản lý hệ thống thấy (Nhân viên bị ẩn)
     if (isTrueOwner || isBacSi || isHuuTy) {
         dynamicMenuContent += `
             <li class="menu-dropdown-toggle" onclick="toggleSubmenu(this)">
-                <div class="menu-label-wrap"><span class="group-icon">🏨</span> <span class="menu-text">Quản lý Lưu trú</span></div> <span class="arrow">▼</span>
+                <div class="menu-label-wrap"><span class="group-icon"><i class="fa-solid fa-hotel"></i></span> <span class="menu-text">Quản lý Lưu trú</span></div> <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
             </li>
             <ul class="submenu-container">
-                <li class="menu-item" id="menu-noitru" onclick="window.location.href='noitru.html'"><span>🏨</span> <span class="menu-text">Nội trú</span></li>
-                <li class="menu-item" id="menu-nhatkynoitru" onclick="window.location.href='nhatkynoitru.html'"><span>📖</span> <span class="menu-text">Nhật ký Nội trú</span></li>
+                <li class="menu-item" id="menu-noitru" onclick="window.location.href='noitru.html'"><span><i class="fa-solid fa-bed"></i></span> <span class="menu-text">Nội trú</span></li>
+                <li class="menu-item" id="menu-nhatkynoitru" onclick="window.location.href='nhatkynoitru.html'"><span><i class="fa-solid fa-book-medical"></i></span> <span class="menu-text">Nhật ký nội trú</span></li>
             </ul>
         `;
     }
 
-    // Petshop & Bán hàng: Bác sĩ bị ẩn hoàn toàn (Chủ phòng khám, Nhân viên và Quản lý hệ thống thấy)
     if (!isBacSi || isHuuTy) {
         dynamicMenuContent += `
             <li class="menu-dropdown-toggle" onclick="toggleSubmenu(this)">
-                <div class="menu-label-wrap"><span class="group-icon">🛍️</span> <span class="menu-text">Petshop & Bán hàng</span></div> <span class="arrow">▼</span>
+                <div class="menu-label-wrap"><span class="group-icon"><i class="fa-solid fa-store"></i></span> <span class="menu-text">Petshop & Bán hàng</span></div> <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
             </li>
             <ul class="submenu-container">
-                <li class="menu-item" id="menu-danhmucsanpham" onclick="window.location.href='danhmucsanpham.html'"><span>📦</span> <span class="menu-text">Thêm sản phẩm</span></li>
-                <li class="menu-item" id="menu-nhatkykho" onclick="window.location.href='nhatkykho.html'"><span>📋</span> <span class="menu-text">Nhật ký kho</span></li>
-                <li class="menu-item" id="menu-donhang" onclick="window.location.href='donhang.html'"><span>📊</span> <span class="menu-text">Chi tiết bán hàng</span></li>
-                <li class="menu-item" id="menu-intem" onclick="window.location.href='intem.html'"><span>📥</span> <span class="menu-text">In tem mã vạch</span></li>
+                <li class="menu-item" id="menu-danhmucsanpham" onclick="window.location.href='danhmucsanpham.html'"><span><i class="fa-solid fa-box-open"></i></span> <span class="menu-text">Sản phẩm</span></li>
+                <li class="menu-item" id="menu-nhatkykho" onclick="window.location.href='nhatkykho.html'"><span><i class="fa-solid fa-clipboard-list"></i></span> <span class="menu-text">Nhật ký kho</span></li>
+                <li class="menu-item" id="menu-donhang" onclick="window.location.href='donhang.html'"><span><i class="fa-solid fa-cart-shopping"></i></span> <span class="menu-text">Bán hàng</span></li>
+                <li class="menu-item" id="menu-intem" onclick="window.location.href='intem.html'"><span><i class="fa-solid fa-print"></i></span> <span class="menu-text">In tem</span></li>
             </ul>
         `;
     }
 
-    // Quản lý Spa: Bác sĩ bị ẩn hoàn toàn (Chủ phòng khám, Nhân viên và Quản lý hệ thống thấy)
     if (!isBacSi || isHuuTy) {
         dynamicMenuContent += `
             <li class="menu-dropdown-toggle" onclick="toggleSubmenu(this)">
-                <div class="menu-label-wrap"><span class="group-icon">✨</span> <span class="menu-text">Quản lý Spa</span></div> <span class="arrow">▼</span>
+                <div class="menu-label-wrap"><span class="group-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span> <span class="menu-text">Quản lý Spa</span></div> <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
             </li>
             <ul class="submenu-container">
-                <li class="menu-item" id="menu-spa" onclick="window.location.href='spa.html'"><span>✨</span> <span class="menu-text">Bảng giá Spa</span></li>
-                <li class="menu-item" id="menu-nhatkyspa" onclick="window.location.href='nhatkyspa.html'"><span>✂️</span> <span class="menu-text">Nhật ký Spa</span></li>
+                <li class="menu-item" id="menu-spa" onclick="window.location.href='spa.html'"><span><i class="fa-solid fa-bath"></i></span> <span class="menu-text">Bảng giá Spa</span></li>
+                <li class="menu-item" id="menu-nhatkyspa" onclick="window.location.href='nhatkyspa.html'"><span><i class="fa-solid fa-scissors"></i></span> <span class="menu-text">Nhật ký Spa</span></li>
             </ul>
         `;
     }
 
     dynamicMenuContent += heThongMenuHtml;
 
+    // Lấy giao diện màu đã lưu trong localStorage (mặc định xanh Navy)
+    const savedTheme = localStorage.getItem('sidebarThemeStyle') || 'linear-gradient(180deg, #1e3a8a 0%, #1e293b 100%)';
+    const savedThemeClass = localStorage.getItem('sidebarThemeClass') || '';
+
     const menuHTML = `
-    <div class="sidebar ${isExpired && !isHuuTy ? 'sidebar-frozen' : ''}" id="sidebar">
+    <div class="sidebar ${isExpired && !isHuuTy ? 'sidebar-frozen' : ''} ${savedThemeClass}" id="sidebar" style="background: ${savedTheme};">
         <div class="sidebar-header" style="flex-direction: column; align-items: flex-start; gap: 4px;">
-            <div style="display: flex; align-items: center;">
-                <span>🐾</span> <span class="menu-text">VetCare Pro</span>
+            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <div style="display: flex; align-items: center;">
+                    <span style="font-size: 20px; margin-right: 8px;"><i class="fa-solid fa-paw" style="color: #60a5fa;"></i></span> <span class="menu-text">VetCare Pro</span>
+                </div>
+                <!-- BẢNG CHỌN MÀU GIAO DIỆN (CÓ MÀU ĐỎ, XÁM NHẸ & TRẮNG MỜ) -->
+                <div class="theme-picker-wrapper" title="Đổi màu giao diện menu" style="position: relative; cursor: pointer;">
+                    <span style="font-size: 14px; padding: 5px 8px; background: rgba(255,255,255,0.2); border-radius: 6px;"><i class="fa-solid fa-palette"></i></span>
+                    <div class="theme-dropdown-palette">
+                        <div onclick="changeSidebarTheme('linear-gradient(180deg, #1e3a8a 0%, #1e293b 100%)', '')" style="background: linear-gradient(180deg, #1e3a8a, #1e293b);" title="Xanh Navy"></div>
+                        <div onclick="changeSidebarTheme('linear-gradient(180deg, #0f172a 0%, #334155 100%)', '')" style="background: linear-gradient(180deg, #0f172a, #334155);" title="Đen Xám Khói"></div>
+                        <div onclick="changeSidebarTheme('linear-gradient(180deg, #065f46 0%, #064e3b 100%)', '')" style="background: linear-gradient(180deg, #065f46, #064e3b);" title="Xanh Ngọc Sẫm"></div>
+                        <div onclick="changeSidebarTheme('linear-gradient(180deg, #dc2626 0%, #991b1b 100%)', '')" style="background: linear-gradient(180deg, #dc2626, #991b1b);" title="Đỏ nổi bật"></div>
+                        <div onclick="changeSidebarTheme('#64748b', 'theme-xam-nhe')" style="background: #64748b;" title="Xám nhẹ"></div>
+                        <div onclick="changeSidebarTheme('rgba(255, 255, 255, 0.18)', 'theme-trang-mo')" style="background: rgba(255, 255, 255, 0.4); border: 1px solid #cbd5e1;" title="Trắng mờ (Kính mờ)"></div>
+                    </div>
+                </div>
             </div>
-            <div id="sidebar-date" style="font-size: 11px; font-weight: normal; color: rgba(255, 255, 255, 0.85); padding-left: 32px;">
+            <div id="sidebar-date" style="font-size: 11px; font-weight: normal; color: rgba(255, 255, 255, 0.85); padding-left: 28px;">
                 📅 ${ngayHienTai}
             </div>
         </div>
         
         <li class="menu-item sub-item menu-pos-highlight" id="menu-pos" onclick="${isExpired && !isHuuTy ? 'hienThiThongBaoHetHan()' : "window.location.href='pos.html'"}">
-            <span class="pos-icon">⚡</span> 
+            <span class="pos-icon"><i class="fa-solid fa-bolt"></i></span> 
             <span class="menu-text" style="font-weight: bold;">BÁN HÀNG POS</span>
             <span class="pos-badge">HOT</span>
         </li>
@@ -182,54 +199,204 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     <style>
-        .sidebar { width: 275px !important; min-width: 275px !important; transition: width 0.3s ease; }
-        .sidebar .menu-text, .sidebar .menu-category, .sidebar li { font-size: 14px !important; font-weight: 700 !important; }
-        .sidebar .menu-category { font-size: 12px !important; font-weight: 800 !important; }
-        .sidebar ul li { display: flex !important; align-items: center !important; white-space: nowrap !important; }
-        .sidebar ul li span.menu-text { display: inline-block !important; visibility: visible !important; opacity: 1 !important; }
-        .sidebar .menu-list > li > span:first-child, .sidebar .menu-pos-highlight .pos-icon, .submenu-container .menu-item span:first-child { display: inline-block; width: 24px; text-align: center; font-size: 16px !important; margin-right: 8px; flex-shrink: 0; }
-        .menu-dropdown-toggle { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; cursor: pointer; color: #ffffff; font-weight: 800 !important; font-size: 13px !important; background: none !important; border: none !important; margin: 4px 8px; border-radius: 6px; transition: background 0.2s ease; user-select: none; }
-        .menu-dropdown-toggle .menu-label-wrap { display: flex; align-items: center; white-space: nowrap; overflow: hidden; gap: 8px; }
-        .menu-dropdown-toggle .group-icon { display: inline-block; width: 24px; text-align: center; font-size: 16px !important; flex-shrink: 0; }
-        .menu-dropdown-toggle:hover { background: rgba(255, 255, 255, 0.1) !important; color: #ffffff; }
-        .menu-dropdown-toggle .arrow { font-size: 10px; transition: transform 0.3s ease; flex-shrink: 0; margin-left: 6px; }
-        .submenu-container { display: none; list-style: none; padding-left: 10px; margin: 0; }
+        /* === GIAO DIỆN MENU HIỆN ĐẠI & TÙY CHỌN MÀU === */
+        .sidebar {
+            width: 275px !important;
+            min-width: 275px !important;
+            color: #f8fafc !important;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.08);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            transition: width 0.3s ease, background 0.3s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+
+        /* Hiệu ứng màu Trắng mờ dạng kính (Glassmorphism) */
+        .sidebar.theme-trang-mo {
+            background: rgba(255, 255, 255, 0.18) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-right: 1px solid rgba(255, 255, 255, 0.3);
+            color: #1e293b !important;
+        }
+        .sidebar.theme-trang-mo .menu-item,
+        .sidebar.theme-trang-mo .menu-dropdown-toggle,
+        .sidebar.theme-trang-mo .menu-category,
+        .sidebar.theme-trang-mo .sidebar-header .menu-text,
+        .sidebar.theme-trang-mo #sidebar-date {
+            color: #0f172a !important;
+        }
+        .sidebar.theme-trang-mo .menu-item:hover,
+        .sidebar.theme-trang-mo .menu-dropdown-toggle:hover {
+            background: rgba(255, 255, 255, 0.3) !important;
+        }
+
+        /* Bảng chọn màu popup */
+        .theme-picker-wrapper:hover .theme-dropdown-palette {
+            display: flex;
+        }
+        .theme-dropdown-palette {
+            display: none;
+            position: absolute;
+            top: 30px;
+            right: 0;
+            background: #ffffff;
+            padding: 6px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            gap: 6px;
+            z-index: 1001;
+        }
+        .theme-dropdown-palette div {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 0 2px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+        .theme-dropdown-palette div:hover {
+            transform: scale(1.2);
+        }
+
+        .sidebar::-webkit-scrollbar { width: 5px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+
+        .sidebar-header {
+            padding: 18px 16px 12px 16px !important;
+            font-size: 20px !important;
+            font-weight: bold !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .sidebar-header .menu-text { font-size: 24px !important; letter-spacing: 0.5px; color: #ffffff; }
+
+        .sidebar .menu-category {
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            color: #94a3b8;
+            padding: 14px 16px 6px 16px;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+
+        .sidebar ul.menu-list { list-style: none; padding: 8px 10px; margin: 0; }
+
+        .sidebar .menu-item {
+            display: flex !important;
+            align-items: center !important;
+            white-space: nowrap !important;
+            padding: 10px 14px;
+            color: #cbd5e1 !important;
+            text-decoration: none;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            border-radius: 8px;
+            margin: 3px 0;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .sidebar .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.08) !important;
+            color: #ffffff !important;
+            transform: translateX(3px);
+        }
+
+        .sidebar .menu-item.active {
+            background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%) !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+        }
+
+        .sidebar .menu-item span.menu-text { display: inline-block !important; visibility: visible !important; opacity: 1 !important; }
+
+        .sidebar .menu-list > li > span:first-child, 
+        .submenu-container .menu-item span:first-child {
+            display: inline-block;
+            width: 24px;
+            text-align: center;
+            font-size: 14px !important;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .menu-dropdown-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            cursor: pointer;
+            color: #cbd5e1;
+            font-weight: 700 !important;
+            font-size: 13.5px !important;
+            background: none !important;
+            border: none !important;
+            margin: 3px 0;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            user-select: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .menu-dropdown-toggle:hover { background: rgba(255, 255, 255, 0.08) !important; color: #ffffff; }
+        .menu-dropdown-toggle .menu-label-wrap { display: flex; align-items: center; white-space: nowrap; overflow: hidden; gap: 10px; }
+        .menu-dropdown-toggle .group-icon { display: inline-block; width: 24px; text-align: center; font-size: 14px !important; flex-shrink: 0; }
+        .menu-dropdown-toggle .arrow { font-size: 10px; transition: transform 0.3s ease; flex-shrink: 0; margin-left: 6px; color: #94a3b8; }
+        .menu-dropdown-toggle.active-parent .arrow { transform: rotate(180deg); color: #ffffff; }
+
+        .submenu-container {
+            display: none;
+            list-style: none;
+            padding-left: 14px;
+            margin: 2px 0 6px 0;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
         .submenu-container.open { display: block; }
-        .menu-dropdown-toggle.active-parent .arrow { transform: rotate(180deg); }
-        .menu-pos-highlight { background: linear-gradient(135deg, #2563eb, #1d4ed8) !important; color: #ffffff !important; border-radius: 6px; margin: 4px 8px; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); cursor: pointer; transition: all 0.2s ease; }
+        .submenu-container .menu-item { padding: 8px 12px 8px 10px; font-size: 13px !important; margin: 2px 4px; }
+
+        .menu-pos-highlight {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+            color: #ffffff !important;
+            border-radius: 8px;
+            margin: 12px 10px !important;
+            padding: 11px 14px !important;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
         .menu-pos-highlight:hover { background: linear-gradient(135deg, #1d4ed8, #1e40af) !important; transform: translateY(-1px); }
-        .menu-pos-highlight .pos-badge { background-color: #dc2626; color: white; font-size: 9px; padding: 2px 5px; border-radius: 4px; font-weight: bold; margin-left: auto; }
-        .sidebar-header { font-size: 20px !important; font-weight: bold !important; padding: 15px 15px 10px 15px !important; }
-        .sidebar-header span:first-child { font-size: 22px !important; margin-right: 8px; }
-        .sidebar-header .menu-text { font-size: 26px !important; letter-spacing: 0.5px; }
+        .menu-pos-highlight .pos-icon { font-size: 15px; margin-right: 10px; }
+        .menu-pos-highlight .pos-badge { background-color: #dc2626; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: auto; }
+
         .sidebar-frozen { pointer-events: none; opacity: 0.65; filter: grayscale(30%); }
 
         .main-content {
             margin-left: 275px;
             transition: margin-left 0.3s ease;
+            min-height: 100vh;
+            background: #f1f5f9;
         }
 
-        body.sidebar-collapsed .sidebar {
-            width: 70px !important;
-            min-width: 70px !important;
-            overflow: hidden;
-        }
-
-        body.sidebar-collapsed .main-content {
-            margin-left: 70px !important;
-        }
-
+        body.sidebar-collapsed .sidebar { width: 70px !important; min-width: 70px !important; overflow: hidden; }
+        body.sidebar-collapsed .main-content { margin-left: 70px !important; }
         body.sidebar-collapsed .sidebar .menu-text,
         body.sidebar-collapsed .sidebar .menu-category,
         body.sidebar-collapsed .sidebar .arrow,
         body.sidebar-collapsed .sidebar .pos-badge,
-        body.sidebar-collapsed .sidebar #sidebar-date {
-            display: none !important;
-        }
-
-        body.sidebar-collapsed .submenu-container.open {
-            display: none !important;
-        }
+        body.sidebar-collapsed .sidebar #sidebar-date,
+        body.sidebar-collapsed .sidebar .theme-picker-wrapper { display: none !important; }
+        body.sidebar-collapsed .submenu-container.open { display: none !important; }
 
         #notification-center-pc { position: fixed; top: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; max-width: 350px; width: 100%; pointer-events: none; }
         .notify-toast-pc { background: #ffffff; border-left: 5px solid #059669; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); padding: 12px 15px; border-radius: 6px; pointer-events: auto; display: flex; align-items: flex-start; justify-content: space-between; animation: slideInRight 0.3s ease-out forwards; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -295,13 +462,13 @@ document.addEventListener("DOMContentLoaded", function() {
         topnavContainer.innerHTML = `
             <div class="top-navbar" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 25px; background: #ffffff; border-bottom: 1px solid #e2e8f0; height: 55px; box-sizing: border-box; position: relative;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: none; border: none; font-size: 18px;">☰</button>
+                    <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: none; border: none; font-size: 18px;"><i class="fa-solid fa-bars"></i></button>
                     <h2 style="margin: 0; font-size: 14px; font-weight: bold; color: #1e3a8a;">HỆ THỐNG QUẢN LÝ PHÒNG KHÁM THÚ Y</h2>
                 </div>
                 
                 <div style="display: flex; align-items: center; gap: 14px; margin-right: 10px;">
                     <div id="headerBellBtnPC" style="position: relative; display: flex; align-items: center; cursor: pointer; padding: 5px;" title="Bấm để xem lịch sử thông báo">
-                        <span style="font-size: 22px; color: #fbbf24; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">🔔</span>
+                        <span style="font-size: 20px; color: #fbbf24; text-shadow: 0 1px 2px rgba(0,0,0,0.3);"><i class="fa-solid fa-bell"></i></span>
                         <span id="navNotificationBadge" style="position: absolute; top: 0; right: 0; background: #dc2626; color: white; font-size: 10px; padding: 1px 5px; border-radius: 50%; display: none; font-weight: bold;">0</span>
                     </div>
 
@@ -311,15 +478,15 @@ document.addEventListener("DOMContentLoaded", function() {
                     </div>
 
                     <div onclick="moModalSuaThongTinCaNhan()" style="display: flex; align-items: center; gap: 6px; background: #f1f5f9; padding: 5px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; font-weight: 600; color: #1e293b; cursor: pointer; white-space: nowrap;" title="Bấm để chỉnh sửa thông tin cá nhân">
-                        <span>👤</span> <span style="max-width: 110px; overflow: hidden; text-overflow: ellipsis;">${tenHienThi}</span>
+                        <span><i class="fa-solid fa-user"></i></span> <span style="max-width: 110px; overflow: hidden; text-overflow: ellipsis;">${tenHienThi}</span>
                     </div>
                     
                     <a href="../mb/trangchu.html" style="background-color: #0284c7; color: white; text-decoration: none; padding: 7px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 4px;">
-                        📱 Giao diện Mobile
+                        <i class="fa-solid fa-mobile-screen-button"></i> Giao diện Mobile
                     </a>
 
                     <button onclick="dangXuat()" style="background-color: #dc2626; color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        🚪 Đăng Xuất
+                        <i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất
                     </button>
                 </div>
             </div>
@@ -383,7 +550,20 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
-// --- CÁC HÀM TIỆN ÍCH ---
+// --- CÁC HÀM TIỆN ÍCH & ĐỔI MÀU GIAO DIỆN ---
+function changeSidebarTheme(colorValue, className) {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+        sidebar.className = sidebar.className.replace(/theme-\S+/g, '').trim();
+        sidebar.style.background = colorValue;
+        if (className) {
+            sidebar.classList.add(className);
+        }
+        localStorage.setItem('sidebarThemeStyle', colorValue);
+        localStorage.setItem('sidebarThemeClass', className || '');
+    }
+}
+
 function toggleSidebar() {
     const body = document.body;
     body.classList.toggle('sidebar-collapsed');
