@@ -3,50 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <title>Thanh Toán & Gia Hạn Bản Quyền - VetCare Pro</title>
+    
     <!-- Thư viện Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/env.js"></script>
     <script src="../js/config.js"></script>
     <script src="../js/supabase.js"></script>
     <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
     <script src="../js/smart-search.js"></script>
     
     <!-- CSS Hệ Thống -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/mobile.css">
     <link rel="stylesheet" href="../css/style1.css">
     <link rel="stylesheet" href="../css/smart-search.css">
 
     <style>
-        body {
-            background-color: #f1f5f9;
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .payment-wrapper {
-            max-width: 1100px;
-            margin: 30px auto;
-            padding: 0 20px;
-            box-sizing: border-box;
-        }
-
-        .top-bar-action {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #ffffff;
-            padding: 12px 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            margin-bottom: 25px;
-        }
-
         .subscription-banner {
             background: linear-gradient(135deg, #1e3a8a, #0284c7);
             color: #ffffff;
             border-radius: 12px;
-            padding: 25px 30px;
+            padding: 20px 25px;
             margin-bottom: 25px;
             display: flex;
             justify-content: space-between;
@@ -55,8 +35,8 @@
             flex-wrap: wrap;
             gap: 15px;
         }
-        .subscription-info h2 { margin: 0 0 6px 0; font-size: 22px; font-weight: bold; }
-        .subscription-info p { margin: 0; opacity: 0.9; font-size: 14px; }
+        .subscription-info h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: bold; }
+        .subscription-info p { margin: 0; opacity: 0.9; font-size: 13px; }
         
         .status-badge-active {
             background: #22c55e; color: #fff; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;
@@ -174,120 +154,115 @@
 </head>
 <body>
 
-    <div class="payment-wrapper">
-        <!-- THANH ĐIỀU HƯỚNG TRÊN CÙNG -->
-        <div class="top-bar-action">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 22px;">🏥</span>
-                <h2 style="margin: 0; font-size: 16px; color: #1e3a8a;">CỔNG THANH TOÁN & GIA HẠN BẢN QUYỀN - VETCARE PRO</h2>
-            </div>
-            <div>
-                <button onclick="dangXuat()" style="background-color: #dc2626; color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;">
-                    🚪 Đăng Xuất
-                </button>
-            </div>
-        </div>
+    <!-- THANH MENU -->
+    <div id="menu-container"></div>
 
-        <!-- BANNER THÔNG TIN HẠN SỬ DỤNG -->
-        <div class="subscription-banner">
-            <div class="subscription-info">
-                <h2 id="bannerTenPK">🏥 Phòng Khám Thú Y</h2>
-                <p>Mã phòng khám: <b id="bannerMaPK" style="color: #fef08a;">PK_......</b> | Chủ sở hữu: <span id="bannerChuPK">...</span></p>
-                <p style="margin-top: 6px;">Ngày hết hạn hiện tại: <b id="bannerNgayHetHan" style="font-size: 14px; color: #ffffff;">--/--/----</b></p>
-            </div>
-            <div id="bannerStatusBadge">
-                <div class="status-badge-active">⏳ Đang tải...</div>
-            </div>
-        </div>
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+        <div id="topnav-container"></div>
 
-        <!-- DANH SÁCH GÓI DỊCH VỤ GIA HẠN -->
-        <div style="margin-bottom: 15px;">
-            <h3 style="margin: 0 0 6px 0; color: #1e3a8a; font-size: 18px;">💎 Chọn Gói Gia Hạn Bản Quyền App</h3>
-            <p style="margin: 0; font-size: 13px; color: #64748b;">Sau khi chuyển khoản thành công, hệ thống sẽ tự động cập nhật hoặc liên hệ duyệt gia hạn cho bạn.</p>
-        </div>
-
-        <div class="packages-grid">
-            <!-- GÓI 6 THÁNG -->
-            <div class="pkg-card">
-                <div>
-                    <div class="pkg-title">Gói 6 Tháng</div>
-                    <div class="pkg-price">1.200.000 đ <span>/ 6 tháng</span></div>
-                    <ul class="pkg-features">
-                        <li>✅ Đầy đủ tính năng quản lý</li>
-                        <li>✅ Không giới hạn lưu trữ dữ liệu</li>
-                        <li>✅ Hỗ trợ kỹ thuật 24/7</li>
-                        <li>✅ Cập nhật tính năng mới miễn phí</li>
-                    </ul>
+        <div class="content-body">
+            <!-- BANNER THÔNG TIN HẠN SỬ DỤNG -->
+            <div class="subscription-banner">
+                <div class="subscription-info">
+                    <h2 id="bannerTenPK">🏥 Phòng Khám Thú Y</h2>
+                    <p>Mã phòng khám: <b id="bannerMaPK" style="color: #fef08a;">PK_......</b> | Chủ sở hữu: <span id="bannerChuPK">...</span></p>
+                    <p style="margin-top: 6px;">Ngày hết hạn hiện tại: <b id="bannerNgayHetHan" style="font-size: 14px; color: #ffffff;">--/--/----</b></p>
                 </div>
-                <button class="btn-select-pkg" onclick="moModalThanhToan('Gói 6 Tháng', 1200000)">Thanh Toán Ngay</button>
-            </div>
-
-            <!-- GÓI 1 NĂM -->
-            <div class="pkg-card recommended">
-                <div class="pkg-badge">🔥 ĐƯỢC CHỌN NHIỀU NHẤT</div>
-                <div>
-                    <div class="pkg-title" style="color: #0284c7;">Gói 1 Năm (12 Tháng)</div>
-                    <div class="pkg-price">2.000.000 đ <span>/ năm</span></div>
-                    <ul class="pkg-features">
-                        <li>✅ <b>Tiết kiệm ngay 400.000 đ</b></li>
-                        <li>✅ Đầy đủ tính năng quản lý</li>
-                        <li>✅ Không giới hạn dung lượng</li>
-                        <li>✅ Hỗ trợ ưu tiên qua Zalo/SĐT</li>
-                        <li>✅ Tự động khôi phục & Sao lưu</li>
-                    </ul>
+                <div id="bannerStatusBadge">
+                    <div class="status-badge-active">⏳ Đang tải...</div>
                 </div>
-                <button class="btn-select-pkg" style="background: #0284c7;" onclick="moModalThanhToan('Gói 1 Năm', 2000000)">Thanh Toán Ngay</button>
             </div>
 
-            <!-- GÓI 2 NĂM -->
-            <div class="pkg-card">
-                <div>
-                    <div class="pkg-title">Gói 2 Năm (24 Tháng)</div>
-                    <div class="pkg-price">3.500.000 đ <span>/ 2 năm</span></div>
-                    <ul class="pkg-features">
-                        <li>✅ <b>Tiết kiệm lên tới 1.300.000 đ</b></li>
-                        <li>✅ Cam kết giữ giá cố định lâu dài</li>
-                        <li>✅ Đầy đủ tính năng cao cấp</li>
-                        <li>✅ Hỗ trợ đào tạo nhân viên miễn phí</li>
-                    </ul>
+            <!-- DANH SÁCH GÓI DỊCH VỤ GIA HẠN -->
+            <div style="margin-bottom: 15px;">
+                <h3 style="margin: 0 0 6px 0; color: #1e3a8a; font-size: 18px;">💎 Chọn Gói Gia Hạn Bản Quyền App</h3>
+                <p style="margin: 0; font-size: 13px; color: #64748b;">Sau khi chuyển khoản thành công, bản quyền sử dụng ứng dụng sẽ tự động cộng nối tiếp thời hạn.</p>
+            </div>
+
+            <div class="packages-grid">
+                <!-- GÓI 1 THÁNG -->
+                <div class="pkg-card">
+                    <div>
+                        <div class="pkg-title">Gói 1 Tháng</div>
+                        <div class="pkg-price">150.000 đ <span>/ tháng</span></div>
+                        <ul class="pkg-features">
+                            <li>✅ Đầy đủ tính năng quản lý</li>
+                            <li>✅ Không giới hạn lưu trữ dữ liệu</li>
+                            <li>✅ Hỗ trợ kỹ thuật 24/7</li>
+                        </ul>
+                    </div>
+                    <button class="btn-select-pkg" style="background: #64748b;" onclick="moModalThanhToan('Gói 1 Tháng', 150000)">Thanh Toán Ngay</button>
                 </div>
-                <button class="btn-select-pkg" onclick="moModalThanhToan('Gói 2 Năm', 3500000)">Thanh Toán Ngay</button>
-            </div>
-        </div>
 
-        <!-- BẢNG LỊCH SỬ THANH TOÁN -->
-        <div class="card" style="background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin: 0; font-size: 16px; color: #1e3a8a;">📜 Lịch Sử Giao Dịch Thanh Toán</h3>
-                <button class="btn-primary" style="background: #64748b; padding: 6px 12px; font-size: 12px; border: none; color: white; border-radius: 6px; cursor: pointer;" onclick="taiLichSuThanhToan()">🔄 Làm mới</button>
+                <!-- GÓI 6 THÁNG (TẶNG 1 THÁNG) -->
+                <div class="pkg-card recommended">
+                    <div class="pkg-badge">🔥 TẶNG THÊM 1 THÁNG</div>
+                    <div>
+                        <div class="pkg-title" style="color: #0284c7;">Gói 6 Tháng</div>
+                        <div class="pkg-price">1.000.000 đ <span>/ 7 tháng</span></div>
+                        <ul class="pkg-features">
+                            <li>✅ <b>Mua 6 tháng tặng ngay 1 tháng</b></li>
+                            <li>✅ Đầy đủ tính năng quản lý</li>
+                            <li>✅ Không giới hạn dung lượng</li>
+                            <li>✅ Hỗ trợ ưu tiên qua Zalo/SĐT</li>
+                        </ul>
+                    </div>
+                    <!-- ĐÃ CẬP NHẬT CHUẨN 1.000.000 Đ -->
+                    <button class="btn-select-pkg" style="background: #0284c7;" onclick="moModalThanhToan('Gói 6 Tháng', 1000000)">Thanh Toán Ngay</button>
+                </div>
+
+                <!-- GÓI 2 NĂM -->
+                <div class="pkg-card">
+                    <div>
+                        <div class="pkg-title">Gói 2 Năm (24 Tháng)</div>
+                        <div class="pkg-price">2.000.000 đ <span>/ 2 năm</span></div>
+                        <ul class="pkg-features">
+                            <li>✅ <b>Tiết kiệm chi phí tối đa</b></li>
+                            <li>✅ Cam kết giữ giá cố định lâu dài</li>
+                            <li>✅ Đầy đủ tính năng cao cấp</li>
+                            <li>✅ Hỗ trợ đào tạo nhân viên miễn phí</li>
+                        </ul>
+                    </div>
+                    <!-- ĐÃ CẬP NHẬT CHUẨN 2.000.000 Đ -->
+                    <button class="btn-select-pkg" onclick="moModalThanhToan('Gói 2 Năm', 2000000)">Thanh Toán Ngay</button>
+                </div>
             </div>
-            
-            <div class="table-responsive">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr style="background: #1e3a8a; color: white; text-align: left;">
-                            <th style="padding: 10px;">Mã GD</th>
-                            <th style="padding: 10px;">Gói Dịch Vụ</th>
-                            <th style="padding: 10px;">Số Tiền</th>
-                            <th style="padding: 10px;">Phương Thức</th>
-                            <th style="padding: 10px;">Thời Gian</th>
-                            <th style="padding: 10px; text-align: center;">Trạng Thái</th>
-                        </tr>
-                    </thead>
-                    <tbody id="data-table-history">
-                        <!-- Dữ liệu nạp từ Supabase -->
-                    </tbody>
-                </table>
+
+            <!-- BẢNG LỊCH SỬ THANH TOÁN -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 style="margin: 0; font-size: 16px;">📜 Lịch Sử Giao Dịch Thanh Toán</h3>
+                    <button class="btn-primary" style="background: #64748b; padding: 6px 12px; font-size: 12px;" onclick="taiLichSuThanhToan()">🔄 Làm mới</button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr style="background: #1e3a8a; color: white;">
+                                <th>Mã GD</th>
+                                <th>Gói Dịch Vụ</th>
+                                <th>Số Tiền</th>
+                                <th>Phương Thức</th>
+                                <th>Thời Gian</th>
+                                <th style="text-align: center;">Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table-history">
+                            <!-- Dữ liệu nạp từ Supabase -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- POPUP MÃ QR THANH TOÁN -->
-    <div class="modal-overlay" id="qrModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 99999; align-items: center; justify-content: center;">
-        <div class="modal-container qr-modal-container" style="background: #fff; border-radius: 10px;">
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+    <!-- POPUP MA QR THANH TOAN -->
+    <div class="modal-overlay" id="qrModal" style="display: none;">
+        <div class="modal-container qr-modal-container">
+            <div class="modal-header">
                 <h3 style="margin: 0; font-size: 16px; color: #1e3a8a;">📲 Quét Mã QR Thanh Toán VietQR</h3>
-                <button class="close-modal" onclick="dongModalQR()" style="background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+                <button class="close-modal" onclick="dongModalQR()">&times;</button>
             </div>
 
             <p style="font-size: 13px; color: #475569; margin-top: 10px;">Mở App ngân hàng quét mã QR dưới đây. Số tiền và nội dung chuyển khoản đã được tạo tự động.</p>
@@ -308,19 +283,19 @@
                 ⚠️ <b>Lưu ý quan trọng:</b> Giữ nguyên <b>Nội dung CK</b> để hệ thống nhận diện và kích hoạt tự động.
             </div>
 
-            <div class="modal-footer" style="display: flex; justify-content: center; gap: 10px;">
-                <button class="btn-secondary" onclick="dongModalQR()" style="padding: 8px 16px; border: 1px solid #cbd5e1; background: #f1f5f9; border-radius: 6px; cursor: pointer;">Đóng lại</button>
-                <button class="btn-primary" onclick="xacNhanDaChuyenKhoan()" style="background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">✅ Tôi Đã Chuyển Khoản</button>
+            <div class="modal-footer" style="justify-content: center; gap: 10px;">
+                <button class="btn-secondary" onclick="dongModalQR()">Đóng lại</button>
+                <button class="btn-primary" onclick="xacNhanDaChuyenKhoan()" style="background: #059669;">✅ Tôi Đã Chuyển Khoản</button>
             </div>
         </div>
     </div>
 
     <script>
         const CAU_HINH_NH = {
-            BANK_ID: "970407",             // Mã BIN Techcombank
+            BANK_ID: "970407",
             TEN_NGAN_HANG: "Techcombank",
-            STK: "3757231999",             
-            TEN_CHU_TK: "VAN HUU TY"       
+            STK: "3757231999",
+            TEN_CHU_TK: "VAN HUU TY"
         };
 
         let currentChuPK = null;
@@ -340,8 +315,7 @@
             } catch (e) {}
 
             if (!user || !user.maphongkham) {
-                alert('Phiên làm việc đã hết hạn hoặc không tìm thấy thông tin phòng khám!');
-                window.location.replace('../index.html');
+                alert('Không tìm thấy thông tin phòng khám!');
                 return;
             }
 
@@ -366,7 +340,7 @@
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
                 const badgeDiv = document.getElementById('bannerStatusBadge');
-                if (diffDays >= 0) {
+                if (diffDays > 0) {
                     badgeDiv.innerHTML = `<div class="status-badge-active">🟢 Còn ${diffDays} ngày sử dụng</div>`;
                 } else {
                     badgeDiv.innerHTML = `<div class="status-badge-expired">🔴 Đã hết hạn (${Math.abs(diffDays)} ngày)</div>`;
@@ -374,7 +348,7 @@
             }
         }
 
-        async function moModalThanhToan(tenGoi, soTien) {
+        function moModalThanhToan(tenGoi, soTien) {
             if (!currentChuPK) {
                 alert('Vui lòng chờ nạp thông tin tài khoản!');
                 return;
@@ -421,7 +395,7 @@
             if (error) {
                 alert('Lỗi tạo lịch sử giao dịch: ' + error.message);
             } else {
-                alert('✅ Yêu cầu gia hạn đã được gửi đi! Hệ thống sẽ kiểm tra và cộng hạn sử dụng cho bạn.');
+                alert('✅ Yêu cầu gia hạn đã được gửi đi! Hệ thống sẽ kiểm tra và cộng hạn dùng cho bạn.');
                 dongModalQR();
                 taiLichSuThanhToan();
             }
@@ -474,13 +448,6 @@
             navigator.clipboard.writeText(text).then(() => {
                 alert('📋 Đã sao chép: ' + text);
             });
-        }
-
-        function dangXuat() {
-            if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống không?')) {
-                sessionStorage.clear();
-                window.location.replace('../index.html');
-            }
         }
     </script>
 </body>
