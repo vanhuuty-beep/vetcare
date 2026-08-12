@@ -60,9 +60,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <li class="menu-item" id="menu-quanlychung" onclick="window.location.href='quanlychung.html'">
                 <span><i class="fa-solid fa-crown"></i></span> <span class="menu-text" style="font-weight: bold;">Quản lý chung (Hệ thống)</span>
             </li>
-            <li class="menu-item" id="menu-lichsuthanhtoan" onclick="window.location.href='lichsuthanhtoan.html'">
-                <span><i class="fa-solid fa-receipt"></i></span> <span class="menu-text" style="font-weight: bold;">Lịch sử thanh toán</span>
-            </li>
+            
             <li class="menu-item" id="menu-lienhe" onclick="window.location.href='lienhe.html'"><span><i class="fa-solid fa-headset"></i></span> <span class="menu-text">Liên hệ</span></li>
         `;
     } else if (isTrueOwner) {
