@@ -27,10 +27,8 @@
             min-height: 100vh;
         }
 
-        /* Ẩn hoàn toàn menu PC thừa */
         #menu-container, #topnav-container { display: none !important; }
 
-        /* Khung App Mobile chuẩn hiện đại */
         .mobile-container {
             width: 100%;
             max-width: 414px;
@@ -50,7 +48,6 @@
             }
         }
 
-        /* Top Header */
         .app-header {
             background: linear-gradient(135deg, #008080, #20b2aa);
             color: white;
@@ -62,16 +59,14 @@
         .app-header h2 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
         .app-header a { color: white; text-decoration: none; font-size: 16px; }
 
-        /* Nội dung cuộn */
         .app-content {
             flex: 1;
             overflow-y: auto;
             padding: 12px;
-            padding-bottom: 80px; /* Chừa chỗ cho bottom nav */
+            padding-bottom: 80px;
             background: #f8fafc;
         }
 
-        /* Banner Thông Tin Gói Hiện Tại */
         .subscription-banner-mobile {
             background: linear-gradient(135deg, #1e3a8a, #0284c7);
             color: #ffffff;
@@ -90,7 +85,6 @@
             background: #ef4444; color: #fff; padding: 3px 10px; border-radius: 10px; font-weight: bold; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; margin-top: 6px;
         }
 
-        /* Gói Dịch Vụ Grid Dọc Mobile */
         .packages-list-mobile {
             display: flex;
             flex-direction: column;
@@ -142,14 +136,12 @@
             text-align: center;
         }
 
-        /* Lịch Sử Giao Dịch Card */
         .history-section-title { font-size: 13px; font-weight: 700; color: #1e3a8a; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         
         .history-card-item {
             background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 8px; font-size: 11px; display: flex; justify-content: space-between; align-items: center;
         }
 
-        /* Modal QR Code (Slide-up) */
         .modal-overlay-mobile {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.6); backdrop-filter: blur(3px);
@@ -185,7 +177,6 @@
 
         .modal-footer-m { padding: 12px 16px; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; background: #f8fafc; }
 
-        /* Bottom Nav Cố Định Dưới Đáy */
         .bottom-nav {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 65px;
             background: white; border-top: 1px solid #eee; display: flex; justify-content: space-around; align-items: center; z-index: 100;
@@ -199,17 +190,14 @@
 
 <div class="mobile-container">
     
-    <!-- TOP HEADER -->
     <div class="app-header">
         <a href="trangchu.html"><i class="fa-solid fa-arrow-left"></i></a>
         <h2><i class="fa-solid fa-shield-halved"></i> Thanh Toán & Bản Quyền</h2>
         <div style="width: 16px;"></div>
     </div>
 
-    <!-- NỘI DUNG CHÍNH -->
     <div class="app-content">
         
-        <!-- BANNER THÔNG TIN HẠN SỬ DỤNG -->
         <div class="subscription-banner-mobile">
             <h3 id="bannerTenPK">🏥 Phòng Khám Thú Y</h3>
             <p>Mã PK: <b id="bannerMaPK" style="color: #fef08a;">PK_......</b> | Chủ: <span id="bannerChuPK">...</span></p>
@@ -219,55 +207,52 @@
             </div>
         </div>
 
-        <!-- TIÊU ĐỀ GÓI GIA HẠN -->
         <div style="margin-bottom: 8px;">
             <h3 style="font-size: 13px; font-weight: 700; color: #1e3a8a;"><i class="fa-solid fa-gem"></i> Chọn Gói Gia Hạn Bản Quyền</h3>
             <p style="font-size: 10px; color: #64748b;">Chuyển khoản thành công, hệ thống tự động cộng nối tiếp thời hạn.</p>
         </div>
 
-        <!-- DANH SÁCH GÓI DỊCH VỤ -->
         <div class="packages-list-mobile">
             
-            <!-- GÓI 6 THÁNG -->
+            <!-- GÓI THÁNG -->
             <div class="pkg-card-mobile">
-                <div class="pkg-title-m">Gói 6 Tháng</div>
-                <div class="pkg-price-m">1.200.000 đ <span>/ 6 tháng</span></div>
+                <div class="pkg-title-m">Gói Tháng</div>
+                <div class="pkg-price-m">150.000 đ <span>/ tháng</span></div>
                 <ul class="pkg-features-m">
                     <li><i class="fa-solid fa-check" style="color: #059669;"></i> Đầy đủ tính năng quản lý</li>
                     <li><i class="fa-solid fa-check" style="color: #059669;"></i> Không giới hạn lưu trữ dữ liệu</li>
                     <li><i class="fa-solid fa-check" style="color: #059669;"></i> Hỗ trợ kỹ thuật 24/7</li>
                 </ul>
-                <button class="btn-select-pkg-m" onclick="moModalThanhToan('Gói 6 Tháng', 1200000)">Thanh Toán Ngay</button>
+                <button class="btn-select-pkg-m" style="background: #64748b;" onclick="moModalThanhToan('Gói Tháng', 150000)">Thanh Toán Ngay</button>
             </div>
 
-            <!-- GÓI 1 NĂM (KHUYÊN DÙNG) -->
+            <!-- GÓI 6 THÁNG (TẶNG 1 THÁNG) -->
             <div class="pkg-card-mobile recommended">
-                <div class="pkg-badge-m">🔥 Phổ biến nhất</div>
-                <div class="pkg-title-m" style="color: #0284c7;">Gói 1 Năm (12 Tháng)</div>
-                <div class="pkg-price-m">2.000.000 đ <span>/ năm</span></div>
+                <div class="pkg-badge-m">🎁 TẶNG THÊM 1 THÁNG</div>
+                <div class="pkg-title-m" style="color: #0284c7;">Gói 6 Tháng</div>
+                <div class="pkg-price-m">1.000.000 đ <span>/ 7 tháng</span></div>
                 <ul class="pkg-features-m">
-                    <li><i class="fa-solid fa-check" style="color: #059669;"></i> <b>Tiết kiệm ngay 400.000 đ</b></li>
+                    <li><i class="fa-solid fa-check" style="color: #059669;"></i> <b>Mua 6 tháng tặng ngay 1 tháng</b></li>
                     <li><i class="fa-solid fa-check" style="color: #059669;"></i> Đầy đủ tính năng cao cấp</li>
                     <li><i class="fa-solid fa-check" style="color: #059669;"></i> Hỗ trợ ưu tiên qua Zalo/SĐT</li>
                 </ul>
-                <button class="btn-select-pkg-m" style="background: #0284c7;" onclick="moModalThanhToan('Gói 1 Năm', 2000000)">Thanh Toán Ngay</button>
+                <button class="btn-select-pkg-m" style="background: #0284c7;" onclick="moModalThanhToan('Gói 6 Tháng Tặng 1', 1000000)">Thanh Toán Ngay</button>
             </div>
 
             <!-- GÓI 2 NĂM -->
             <div class="pkg-card-mobile">
-                <div class="pkg-title-m">Gói 2 Năm (24 Tháng)</div>
-                <div class="pkg-price-m">3.500.000 đ <span>/ 2 năm</span></div>
+                <div class="pkg-title-m">Gói 2 Năm</div>
+                <div class="pkg-price-m">2.000.000 đ <span>/ 2 năm</span></div>
                 <ul class="pkg-features-m">
-                    <li><i class="fa-solid fa-check" style="color: #059669;"></i> <b>Tiết kiệm lên tới 1.300.000 đ</b></li>
+                    <li><i class="fa-solid fa-check" style="color: #059669;"></i> <b>Tiết kiệm chi phí tối ưu</b></li>
                     <li><i class="fa-solid fa-check" style="color: #059669;"></i> Cam kết giữ giá cố định</li>
                     <li><i class="fa-solid fa-check" style="color: #059669;"></i> Hỗ trợ đào tạo miễn phí</li>
                 </ul>
-                <button class="btn-select-pkg-m" onclick="moModalThanhToan('Gói 2 Năm', 3500000)">Thanh Toán Ngay</button>
+                <button class="btn-select-pkg-m" onclick="moModalThanhToan('Gói 2 Năm', 2000000)">Thanh Toán Ngay</button>
             </div>
 
         </div>
 
-        <!-- LỊCH SỬ GIAO DỊCH -->
         <div style="margin-top: 14px;">
             <div class="history-section-title">
                 <span>📜 Lịch Sử Giao Dịch</span>
@@ -280,7 +265,6 @@
 
     </div>
 
-    <!-- MODAL QR CODE THANH TOÁN -->
     <div class="modal-overlay-mobile" id="qrModal">
         <div class="modal-box-mobile">
             <div class="modal-header-m">
@@ -309,13 +293,12 @@
             </div>
 
             <div class="modal-footer-m">
-                <button class="btn-m-cancel" onclick="dongModalQR()">Đóng lại</button>
-                <button class="btn-m-save" onclick="xacNhanDaChuyenKhoan()" style="background: #059669;">✅ Tôi Đã Chuyển Khoản</button>
+                <button class="btn-m-cancel" onclick="dongModalQR()" style="flex: 1; padding: 8px; background: #e2e8f0; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Đóng lại</button>
+                <button class="btn-m-save" onclick="xacNhanDaChuyenKhoan()" style="flex: 1; padding: 8px; background: #059669; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">✅ Đã Chuyển Khoản</button>
             </div>
         </div>
     </div>
 
-    <!-- BOTTOM NAV CỐ ĐỊNH DƯỚI ĐÁY -->
     <div class="bottom-nav">
         <a href="trangchu.html" class="nav-item">
             <i class="fa-solid fa-house"></i>
@@ -343,10 +326,10 @@
 
 <script>
     const CAU_HINH_NH = {
-        BANK_ID: "970407",             // Mã BIN VietQR Techcombank
+        BANK_ID: "970407",
         TEN_NGAN_HANG: "Techcombank",
-        STK: "3757231999",             
-        TEN_CHU_TK: "VAN HUU TY"       
+        STK: "3757231999",
+        TEN_CHU_TK: "VAN HUU TY"
     };
 
     let currentChuPK = null;
