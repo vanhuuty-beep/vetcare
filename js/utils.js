@@ -19,22 +19,28 @@ function layMaPhongKhamHienTai() {
     return 'PK'; // Giá trị mặc định nếu không tìm thấy
 }
 
-// 1. Mã Khám Bệnh (Ví dụ ra: PK617617-KB0001)
+// 1. Mã Khám Bệnh (Định dạng: KB + Mã PK + 4 số ngẫu nhiên)
+// Ví dụ: KB6176174829
 function formatMaKham(id) {
     const maPK = layMaPhongKhamHienTai();
-    return `${maPK}-KB${String(id).padStart(4, '0')}`;
+    const random4Digits = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    return `KB${maPK}${random4Digits}`;
 }
 
-// 2. Mã Thú Cưng (Ví dụ ra: PK617617-TC0001)
+// 2. Mã Thú Cưng (Định dạng: TC + Mã PK + 4 số ngẫu nhiên)
+// Ví dụ: TC6176171234
 function formatMaThuCung(id) {
     const maPK = layMaPhongKhamHienTai();
-    return `${maPK}-TC${String(id).padStart(4, '0')}`;
+    const random4Digits = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    return `TC${maPK}${random4Digits}`;
 }
 
-// 3. Mã Khách Hàng (Ví dụ ra: PK617617-KH0001)
+// 3. Mã Khách Hàng (Định dạng: KH + Mã PK + 4 số ngẫu nhiên)
+// Ví dụ: KH6176175678
 function formatMaKhachHang(id) {
     const maPK = layMaPhongKhamHienTai();
-    return `${maPK}-KH${String(id).padStart(4, '0')}`;
+    const random4Digits = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    return `KH${maPK}${random4Digits}`;
 }
 
 function formatTien(value) {
