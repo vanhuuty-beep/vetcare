@@ -119,3 +119,33 @@ if (window.innerWidth <= 768 && !window.location.href.includes('mobile-menu.html
         }
     });
 })();
+// Tích hợp hệ thống Chat Online Crisp
+window.$crisp = [];
+window.CRISP_WEBSITE_ID = "ac702dfb-845a-4289-b891-a83f4c413eb5";
+
+(function() {
+    var d = document;
+    var s = d.createElement("script");
+    s.src = "https://client.crisp.chat/l.js";
+    s.async = 1;
+    d.getElementsByTagName("head")[0].appendChild(s);
+})();
+
+// Nâng cao: Tự động điền thông tin chủ nuôi vào khung chat (nếu đã đăng nhập)
+// Giúp đội Dev biết ai đang nhắn tin mà không cần hỏi tên
+window.addEventListener('load', function() {
+    const ownerStr = sessionStorage.getItem('currentPetOwner');
+    if (ownerStr) {
+        try {
+            const owner = JSON.parse(ownerStr);
+            // Gửi thông tin định danh cho Crisp
+            $crisp.push(["set", "user:nickname", [owner.hovaten || owner.tenkhachhang]]);
+            $crisp.push(["set", "user:email", [owner.email || ""]]);
+            $crisp.push(["set", "user:phone", [owner.sodienthoai || owner.sdt]]);
+        } catch(e) {
+            console.log("Chưa thể đẩy thông tin user vào Crisp");
+        }
+    }
+});
+
+
