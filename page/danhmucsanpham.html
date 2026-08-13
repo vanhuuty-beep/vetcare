@@ -501,19 +501,33 @@
             return '86' + randomPart;
         }
 
-        function timKiemSanPham() {
+       let timeoutTimKiem = null;
+
+    function timKiemSanPham() {
+        // Hủy bỏ lệnh tìm kiếm trước đó nếu người dùng đang quét/gõ liên tục để tránh nghẽn
+        clearTimeout(timeoutTimKiem);
+        
+        // Tạo độ trễ ngắn (150ms) để chờ nhập xong hẳn mới lọc bảng, giúp máy quét mã vạch bắn chữ cực nhanh mà không bị khựng
+        timeoutTimKiem = setTimeout(() => {
             const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
-            danhSachDangLoc = danhSachSanPhamGoc.filter(item => {
+            if (!tuKhoa) {
+                danhSachDangLoc = danhSachSanPhamGoc;
+            } else {
                 let pkClean = layMaPhongKhamClean();
-                const maSP = ('sp' + pkClean + String(item.id)).toLowerCase();
-                const tenSP = (item.tensanpham || '').toLowerCase();
-                const barcode = (item.mabarcode || '').toLowerCase();
-                const nhom = (item.nhomsanpham || '').toLowerCase();
-                return tenSP.includes(tuKhoa) || barcode.includes(tuKhoa) || maSP.includes(tuKhoa) || nhom.includes(tuKhoa);
-            });
+                danhSachDangLoc = danhSachSanPhamGoc.filter(item => {
+                    const maSP = ('sp' + pkClean + String(item.id)).toLowerCase();
+                    const tenSP = (item.tensanpham || '').toLowerCase();
+                    const barcode = (item.mabarcode || '').toLowerCase();
+                    const nhom = (item.nhomsanpham || '').toLowerCase();
+                    
+                    // Ưu tiên kiểm tra khớp chính xác barcode hoặc mã SP trước để tăng tốc độ phản hồi
+                    return barcode.includes(tuKhoa) || maSP.includes(tuKhoa) || tenSP.includes(tuKhoa) || nhom.includes(tuKhoa);
+                });
+            }
             trangThaiPhanTrang.trangHienTai = 1;
             hienThiBangVaPhanTrang();
-        }
+        }, 150);
+    }
 
         function moModalThem() {
             document.getElementById('editingId').value = '';
