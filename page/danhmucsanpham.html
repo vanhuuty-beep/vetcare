@@ -11,6 +11,7 @@
     <script src="../js/utils.js"></script>
     <script src="../js/menu.js"></script>
 	<script src="../js/smart-search.js"></script>
+
     <!-- Gọi file CSS chung -->
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/mobile.css">
@@ -130,6 +131,36 @@
             border-radius: 4px;
             border: 1px solid #cbd5e1;
         }
+
+        /* Phân trang */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            margin: 20px 0 10px 0;
+            flex-wrap: wrap;
+        }
+        .page-btn {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .page-btn.active {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #2563eb;
+        }
+        .page-btn:disabled {
+            background: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -142,7 +173,7 @@
        <div id="topnav-container"></div>
 
         <div class="content-body">
-            <!-- 4 KHỐI THỐNG KÊ PHÍA TRÊN (CÓ BỔ SUNG LỢI NHUẬN) -->
+            <!-- 4 KHỐI THỐNG KÊ PHÍA TRÊN -->
             <div class="stats-container">
                 <div class="stat-card">
                     <div>
@@ -208,6 +239,9 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Khu vực phân trang -->
+                <div id="paginationContainer" class="pagination-container"></div>
             </div>
         </div>
     </div>
@@ -224,7 +258,7 @@
             
             <div class="form-row">
                 <div class="form-group-modal" style="flex: 2;">
-                    <label>Tên sản phẩm (tensanpham) (*):</label>
+                    <label>Tên sản phẩm (*):</label>
                     <input type="text" id="tensanpham" placeholder="Nhập tên sản phẩm, thức ăn, phụ kiện...">
                 </div>
                 <div class="form-group-modal" style="flex: 1;">
@@ -235,17 +269,18 @@
 
             <div class="form-row">
                 <div class="form-group-modal">
-                    <label>Nhóm hàng (nhomsanpham):</label>
-                    <select id="nhomsanpham">
-                        <option value="">-- Chọn nhóm hàng --</option>
-                        <option value="Thức ăn">Thức ăn</option>
-                        <option value="Thức ăn hạt">Thức ăn hạt</option>
-                        <option value="Thức ăn ướt">Thức ăn ướt</option>
-                        <option value="Phụ kiện - Đồ chơi">Phụ kiện - Đồ chơi</option>
-                        <option value="Sữa tắm - Vệ sinh">Sữa tắm - Vệ sinh</option>
-                        <option value="Thực phẩm chức năng">Thực phẩm chức năng</option>
-                        <option value="Khác">Khác</option>
-                    </select>
+                    <label>Nhóm hàng (Chọn sẵn hoặc gõ trực tiếp tên nhóm mới):</label>
+                    <!-- Sử dụng input + datalist để người dùng có thể tùy ý thêm nhóm hàng mới -->
+                    <input type="text" id="nhomsanpham" list="danhSachNhomGoiY" placeholder="Chọn hoặc tự gõ nhóm hàng mới...">
+                    <datalist id="danhSachNhomGoiY">
+                        <option value="Thức ăn">
+                        <option value="Thức ăn hạt">
+                        <option value="Thức ăn ướt">
+                        <option value="Phụ kiện - Đồ chơi">
+                        <option value="Sữa tắm - Vệ sinh">
+                        <option value="Thực phẩm chức năng">
+                        <option value="Khác">
+                    </datalist>
                 </div>
                 <div class="form-group-modal">
                     <label>Đơn vị tính (donvi):</label>
@@ -296,10 +331,23 @@
 
     <script>
         let danhSachSanPhamGoc = [];
+        let danhSachDangLoc = [];
+
+        // Cấu hình phân trang
+        let trangThaiPhanTrang = {
+            trangHienTai: 1,
+            soDongMoiTrang: 10
+        };
 
         window.addEventListener('DOMContentLoaded', async () => {
             await taiDanhSachSanPham();
         });
+
+        // Lấy mã phòng khám chuẩn dạng bỏ dấu gạch dưới (Ví dụ: PK617723)
+        function layMaPhongKhamClean() {
+            let mpk = sessionStorage.getItem('maphongkham') || 'PK';
+            return mpk.replace('_', '');
+        }
 
         async function taiDanhSachSanPham() {
             const { data, error } = await db.from('danhmucsanpham').select('*').order('id', { ascending: false });
@@ -308,9 +356,27 @@
                 alert('Không thể tải dữ liệu sản phẩm từ Supabase!');
             } else {
                 danhSachSanPhamGoc = data || [];
+                danhSachDangLoc = danhSachSanPhamGoc;
                 tinhToanThongKe(danhSachSanPhamGoc);
-                hienThiBang(danhSachSanPhamGoc);
+                capNhatDatalistNhomHang(danhSachSanPhamGoc);
+                trangThaiPhanTrang.trangHienTai = 1;
+                hienThiBangVaPhanTrang();
             }
+        }
+
+        // Tự động bổ sung các nhóm hàng mới xuất hiện vào datalist gợi ý
+        function capNhatDatalistNhomHang(data) {
+            const datalist = document.getElementById('danhSachNhomGoiY');
+            let nhomSet = new Set(["Thức ăn", "Thức ăn hạt", "Thức ăn ướt", "Phụ kiện - Đồ chơi", "Sữa tắm - Vệ sinh", "Thực phẩm chức năng", "Khác"]);
+            
+            data.forEach(item => {
+                if (item.nhomsanpham) nhomSet.add(item.nhomsanpham.trim());
+            });
+
+            datalist.innerHTML = '';
+            nhomSet.forEach(nhom => {
+                datalist.innerHTML += `<option value="${nhom}">`;
+            });
         }
 
         function tinhToanThongKe(data) {
@@ -326,8 +392,6 @@
                 
                 tongTon += ton;
                 giaTriKho += (ton * giaNhap);
-                
-                // Tính lợi nhuận dự kiến = (Giá bán - Giá nhập) * Tồn kho
                 loiNhuanDuKien += (giaBan - giaNhap) * ton;
             });
 
@@ -337,17 +401,27 @@
             document.getElementById('statLoiNhuan').innerText = loiNhuanDuKien.toLocaleString('vi-VN') + ' đ';
         }
 
-        function hienThiBang(data) {
+        function hienThiBangVaPhanTrang() {
             const tableBody = document.getElementById('data-table');
             tableBody.innerHTML = '';
             
-            if(data.length === 0) {
+            if(danhSachDangLoc.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:#777; padding: 20px;">Chưa có sản phẩm nào trong hệ thống</td></tr>`;
+                document.getElementById('paginationContainer').innerHTML = '';
                 return;
             }
 
-            data.forEach((item) => {
-                const maSP = 'SP' + String(item.id).padStart(4, '0');
+            // Xử lý cắt dữ liệu phân trang
+            const { trangHienTai, soDongMoiTrang } = trangThaiPhanTrang;
+            const tongSoTrang = Math.ceil(danhSachDangLoc.length / soDongMoiTrang);
+            const viTriBatDau = (trangHienTai - 1) * soDongMoiTrang;
+            const viTriKetThuc = viTriBatDau + soDongMoiTrang;
+            const duLieuTrangNay = danhSachDangLoc.slice(viTriBatDau, viTriKetThuc);
+
+            duLieuTrangNay.forEach((item) => {
+                // TẠO MÃ SP KẾT HỢP GIỮA SP, MÃ PHÒNG KHÁM VÀ ID/SỐ NGẪU NHIÊN
+                let pkClean = layMaPhongKhamClean();
+                const maSP = item.masanpham || ('SP' + pkClean + String(item.id).padStart(3, '0'));
                 
                 const imgTag = item.hinhanh 
                     ? `<img src="${item.hinhanh}" class="product-img" onerror="this.src='https://via.placeholder.com/40?text=No+Img'">`
@@ -375,6 +449,9 @@
                 </tr>`;
             });
 
+            // Vẽ giao diện thanh phân trang
+            veNutPhanTrang(tongSoTrang);
+
             setTimeout(() => {
                 document.querySelectorAll('.barcode-elem').forEach(svg => {
                     const code = svg.getAttribute('data-code');
@@ -394,6 +471,31 @@
             }, 50);
         }
 
+        function veNutPhanTrang(tongSoTrang) {
+            const container = document.getElementById('paginationContainer');
+            container.innerHTML = '';
+            if (tongSoTrang <= 1) return;
+
+            const { trangHienTai } = trangThaiPhanTrang;
+            container.innerHTML += `<button class="page-btn" ${trangHienTai === 1 ? 'disabled' : ''} onclick="chuyenTrang(${trangHienTai - 1})">◀ Trước</button>`;
+
+            for (let i = 1; i <= tongSoTrang; i++) {
+                if (i === 1 || i === tongSoTrang || (i >= trangHienTai - 1 && i <= trangHienTai + 1)) {
+                    container.innerHTML += `<button class="page-btn ${i === trangHienTai ? 'active' : ''}" onclick="chuyenTrang(${i})">${i}</button>`;
+                } else if (i === trangHienTai - 2 || i === trangHienTai + 2) {
+                    container.innerHTML += `<span style="color: #64748b; font-size: 12px; padding: 0 2px;">...</span>`;
+                }
+            }
+
+            container.innerHTML += `<button class="page-btn" ${trangHienTai === tongSoTrang ? 'disabled' : ''} onclick="chuyenTrang(${trangHienTai + 1})">Sau ▶</button>`;
+        }
+
+        function chuyenTrang(trangMoi) {
+            trangThaiPhanTrang.trangHienTai = trangMoi;
+            hienThiBangVaPhanTrang();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         function sinhMaBarcodeTuDong() {
             let randomPart = Math.floor(10000000 + Math.random() * 90000000);
             return '86' + randomPart;
@@ -401,14 +503,16 @@
 
         function timKiemSanPham() {
             const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
-            const ketQuaLoc = danhSachSanPhamGoc.filter(item => {
+            danhSachDangLoc = danhSachSanPhamGoc.filter(item => {
+                let pkClean = layMaPhongKhamClean();
+                const maSP = ('sp' + pkClean + String(item.id)).toLowerCase();
                 const tenSP = (item.tensanpham || '').toLowerCase();
                 const barcode = (item.mabarcode || '').toLowerCase();
-                const maSP = ('sp' + String(item.id)).toLowerCase();
                 const nhom = (item.nhomsanpham || '').toLowerCase();
                 return tenSP.includes(tuKhoa) || barcode.includes(tuKhoa) || maSP.includes(tuKhoa) || nhom.includes(tuKhoa);
             });
-            hienThiBang(ketQuaLoc);
+            trangThaiPhanTrang.trangHienTai = 1;
+            hienThiBangVaPhanTrang();
         }
 
         function moModalThem() {
@@ -433,6 +537,9 @@
             const item = danhSachSanPhamGoc.find(x => x.id === id);
             if (!item) return;
 
+            let pkClean = layMaPhongKhamClean();
+            let displayMaSP = item.masanpham || ('SP' + pkClean + String(id).padStart(3, '0'));
+
             document.getElementById('editingId').value = item.id;
             document.getElementById('tensanpham').value = item.tensanpham || '';
             document.getElementById('mabarcode').value = item.mabarcode || sinhMaBarcodeTuDong();
@@ -446,7 +553,7 @@
             document.getElementById('mota').value = item.mota || '';
 
             document.getElementById('btnXoaModal').style.display = 'block';
-            document.getElementById('modalTitle').innerText = 'Cập nhật hàng hóa (ID: SP' + String(id).padStart(4, '0') + ')';
+            document.getElementById('modalTitle').innerText = 'Cập nhật hàng hóa (Mã: ' + displayMaSP + ')';
             document.getElementById('sanPhamModal').style.display = 'flex';
         }
 
@@ -458,7 +565,7 @@
             const id = document.getElementById('editingId').value;
             const tensanpham = document.getElementById('tensanpham').value.trim();
             const mabarcode = document.getElementById('mabarcode').value.trim();
-            const nhomsanpham = document.getElementById('nhomsanpham').value;
+            const nhomsanpham = document.getElementById('nhomsanpham').value.trim();
             const donvi = document.getElementById('donvi').value.trim();
             const gianhap = parseFloat(document.getElementById('gianhap').value) || 0;
             const giaban = parseFloat(document.getElementById('giaban').value) || 0;
@@ -484,7 +591,7 @@
             const payload = {
                 tensanpham,
                 mabarcode,
-                nhomsanpham,
+                nhomsanpham: nhomsanpham || 'Khác',
                 donvi,
                 gianhap,
                 giaban,
