@@ -14,8 +14,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/style.css">
-
+    
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         body { 
@@ -60,12 +59,12 @@
             font-size: 15px;
         }
 
-        /* Vùng nội dung cuộn */
+        /* Vùng nội dung cuộn (Đã chừa khoảng trống an toàn 85px ở đáy để không che menu) */
         .app-content {
             flex: 1;
             overflow-y: auto;
             padding: 16px;
-            padding-bottom: 75px;
+            padding-bottom: 85px;
         }
         
         .search-container { display: flex; gap: 6px; margin-bottom: 10px; align-items: stretch; }
@@ -189,9 +188,16 @@
         let danhSachPhongKhamToanCuc = [];
         let danhSachBacSiToanCuc = [];
         let userLocation = null;
+        let selectedPhongKhamChat = "PK_617723";
+        let ownerData = null;
 
         window.addEventListener('DOMContentLoaded', async () => {
+            const ownerStr = sessionStorage.getItem('currentPetOwner');
+            if (ownerStr) {
+                try { ownerData = JSON.parse(ownerStr); } catch(e) {}
+            }
             await taiDuLieuTuSupabase();
+            khoiTaoNutChatChuNuoi();
         });
 
         async function taiDuLieuTuSupabase() {
@@ -395,6 +401,131 @@
         function datLichVoiBacSi(tenBS) {
             alert('Chuyển đến trang đặt lịch với Bác sĩ: ' + tenBS);
             window.location.href = 'datlich.html';
+        }
+
+        // --- KHỞI TẠO NÚT CHAT NỔI CHO CHỦ NUÔI ---
+        async function khoiTaoNutChatChuNuoi() {
+            try {
+                if (document.getElementById('floatingChatBtn') !== null) return;
+                const sdt = ownerData?.sodienthoai || ownerData?.sdt || "0935778727";
+
+                const { data: dsThuCung } = await db.from('thucung').select('maphongkham').eq('sodienthoai', sdt);
+                const mapkList = [...new Set(dsThuCung?.map(t => t.maphongkham) || [])];
+                
+                const { data: dsPK } = await db.from('chupk').select('maphongkham, tenphongkham').in('maphongkham', mapkList.length ? mapkList : ['PK_617723']);
+                selectedPhongKhamChat = dsPK?.[0]?.maphongkham || "PK_617723";
+
+                let pkOptionsHTML = dsPK?.map(pk => `<option value="${pk.maphongkham}" ${pk.maphongkham === selectedPhongKhamChat ? 'selected' : ''}>${pk.tenphongkham || pk.maphongkham}</option>`).join('') || '<option value="PK_617723">Phòng khám mặc định</option>';
+
+                const chatHTML = `
+                <div id="floatingChatBtn" onclick="toggleMobileChat()" style="position: fixed; bottom: 80px; right: 20px; background: #0d9488; color: white; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 3px 8px rgba(0,0,0,0.3); cursor: pointer; z-index: 999999;">💬</div>
+
+                <div id="mobileChatWindow" style="display: none; position: fixed; bottom: 135px; right: 20px; width: 280px; height: 350px; background: #fff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 999999; flex-direction: column; overflow: hidden; font-family: 'Segoe UI', sans-serif; border: 1px solid #cbd5e1;">
+                    <div style="background: #0d9488; color: white; padding: 8px 10px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
+                        <span>💬 Trò chuyện với PK</span>
+                        <span onclick="toggleMobileChat()" style="cursor: pointer; font-size: 16px;">&times;</span>
+                    </div>
+                    <div style="padding: 4px; background: #f1f5f9; border-bottom: 1px solid #cbd5e1;">
+                        <select id="selectPhongKhamChat" onchange="doiPhongKhamChat(this.value)" style="width: 100%; padding: 3px; font-size: 11px; border-radius: 4px; border: 1px solid #cbd5e1; outline:none;">
+                            ${pkOptionsHTML}
+                        </select>
+                    </div>
+                    <div id="boxTinNhanMobile" style="flex: 1; padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; background: #f8fafc; font-size: 12px;"></div>
+                    <div style="display: flex; padding: 6px; background: #fff; border-top: 1px solid #cbd5e1; gap: 5px; align-items: center;">
+                        <label style="cursor: pointer; font-size: 18px;" title="Gửi ảnh">📷<input type="file" id="inputAnhMobile" accept="image/*" style="display:none" onchange="guiAnhChuNuoi(this)"></label>
+                        <input type="text" id="inputChatMobile" placeholder="Nhắn tin..." style="flex: 1; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; font-size: 12px;" autocomplete="off">
+                        <button onclick="chuNuoiGuiTinNhan()" style="background: #0d9488; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px;">Gửi</button>
+                    </div>
+                </div>`;
+                document.body.insertAdjacentHTML('beforeend', chatHTML);
+
+                if (typeof db !== 'undefined' && db.channel) {
+                    db.channel('realtime-chat-chunuoi').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tin_nhan' }, payload => {
+                        const win = document.getElementById('mobileChatWindow');
+                        const sdt = ownerData?.sodienthoai || ownerData?.sdt || "0935778727";
+                        if (win && win.style.display === 'flex' && payload.new.sodienthoai_chunuoi === sdt && payload.new.maphongkham === selectedPhongKhamChat) {
+                            hienThiTinNhanMobileUI(payload.new);
+                        }
+                    }).subscribe();
+                }
+            } catch(e) { console.log(e); }
+        }
+
+        function doiPhongKhamChat(mapk) {
+            selectedPhongKhamChat = mapk;
+            taiTinNhanMobile();
+        }
+
+        function toggleMobileChat() {
+            const win = document.getElementById('mobileChatWindow');
+            if (!win) return;
+            win.style.display = (win.style.display === 'flex' ? 'none' : 'flex');
+            if (win.style.display === 'flex') taiTinNhanMobile();
+        }
+
+        async function taiTinNhanMobile() {
+            if (typeof db === 'undefined') return;
+            const sdt = ownerData?.sodienthoai || ownerData?.sdt || "0935778727"; 
+            const mpk = selectedPhongKhamChat || "PK_617723"; 
+
+            const { data } = await db.from('tin_nhan').select('*').eq('maphongkham', mpk).eq('sodienthoai_chunuoi', sdt).order('created_at', { ascending: true });
+            const box = document.getElementById('boxTinNhanMobile');
+            if(box) {
+                box.innerHTML = '';
+                data?.forEach(m => hienThiTinNhanMobileUI(m));
+                box.scrollTop = box.scrollHeight;
+            }
+        }
+
+        async function chuNuoiGuiTinNhan() {
+            const input = document.getElementById('inputChatMobile');
+            if (!input) return;
+            const noiDung = input.value.trim();
+            if (!noiDung) return;
+            
+            const sdt = ownerData?.sodienthoai || ownerData?.sdt || "0935778727"; 
+            const mpk = selectedPhongKhamChat || "PK_617723";
+
+            await db.from('tin_nhan').insert([{ maphongkham: mpk, sodienthoai_chunuoi: sdt, nguoi_gui: 'chunuoi', noi_dung: noiDung, hinhanh: null }]);
+            input.value = '';
+            taiTinNhanMobile();
+        }
+
+        async function guiAnhChuNuoi(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            const sdt = ownerData?.sodienthoai || ownerData?.sdt || "0935778727"; 
+            const mpk = selectedPhongKhamChat || "PK_617723";
+
+            const fileName = `chat_${Date.now()}_${file.name}`;
+            const { error } = await db.storage.from('chat_images').upload(fileName, file);
+            if (error) { alert('Lỗi tải ảnh lên Storage!'); return; }
+
+            const { data: urlData } = db.storage.from('chat_images').getPublicUrl(fileName);
+            await db.from('tin_nhan').insert([{ 
+                maphongkham: mpk, 
+                sodienthoai_chunuoi: sdt, 
+                nguoi_gui: 'chunuoi', 
+                noi_dung: '[Hình ảnh]', 
+                hinhanh: urlData.publicUrl 
+            }]);
+            input.value = '';
+            taiTinNhanMobile();
+        }
+
+        function hienThiTinNhanMobileUI(msg) {
+            const box = document.getElementById('boxTinNhanMobile');
+            if (!box) return;
+            const div = document.createElement('div');
+            const isOwner = msg.nguoi_gui === 'chunuoi';
+            
+            let content = msg.hinhanh ? `<img src="${msg.hinhanh}" style="max-width:100%; border-radius:6px; cursor:pointer;" onclick="window.open('${msg.hinhanh}')"/>` : msg.noi_dung;
+            let labelNguoiGui = (!isOwner && msg.ten_nguoi_gui) ? `<div style="font-size: 9px; color: #475569; margin-bottom: 2px; font-weight: bold;">🏥 ${msg.ten_nguoi_gui}</div>` : '';
+            
+            div.style.cssText = `max-width: 85%; padding: 6px 10px; border-radius: 8px; font-size: 12px; line-height: 1.4; ${isOwner ? 'background: #0d9488; color: white; align-self: flex-end; margin-left: auto;' : 'background: #e2e8f0; color: #1e293b; align-self: flex-start;'}`;
+            div.innerHTML = `${labelNguoiGui}<div>${content}</div>`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         }
     </script>
 </body>
