@@ -136,6 +136,37 @@
         .badge-chuagiao { background: #fef3c7; color: #d97706; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
         .badge-dagiao { background: #d1fae5; color: #065f46; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
 
+        /* CSS Phân trang */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            font-size: 13px;
+        }
+        .pagination-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        .pagination-buttons button {
+            padding: 5px 10px;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .pagination-buttons button:hover:not(:disabled) {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+        .pagination-buttons button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         #printArea { display: none; }
 
         @media print {
@@ -242,7 +273,7 @@
                         <span>🛒</span> Quản Lý Lịch Sử Đơn Hàng & Bán Hàng
                     </h3>
                     <div class="card-header-actions">
-                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm theo tên KH, SĐT, tên sản phẩm..." onkeyup="timKiemDonHang()">
+                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm theo mã đơn, tên KH, SĐT, tên sản phẩm..." onkeyup="timKiemDonHang()">
                         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                             <button class="btn-primary" onclick="moModalThem()" style="background-color: #0284c7; padding: 9px 14px;">+ Lập Đơn Mới</button>
                         </div>
@@ -270,6 +301,16 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Khu vực Phân trang -->
+                <div class="pagination-container">
+                    <div id="pagination-info">Hiển thị 0 - 0 của 0 bản ghi</div>
+                    <div class="pagination-buttons">
+                        <button id="prevBtn" onclick="doiTrang(-1)">Trang trước</button>
+                        <span id="pageIndicator" style="padding: 5px 10px; align-self: center;">Trang 1 / 1</span>
+                        <button id="nextBtn" onclick="doiTrang(1)">Trang sau</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -281,6 +322,7 @@
         <div style="text-align: center; font-size: 14px; font-weight: bold; margin: 4px 0;">HÓA ĐƠN BÁN HÀNG</div>
         <div class="print-divider" style="margin-bottom: 8px;"></div>
         
+        <div style="font-size: 11px; margin-bottom: 3px;">Mã đơn: <span id="printMaDon"></span></div>
         <div style="font-size: 11px; margin-bottom: 3px;">Tg: <span id="printTime"></span></div>
         <div style="font-size: 11px; margin-bottom: 3px;">Khách hàng: <span id="printChuNuoi"></span></div>
         <div style="font-size: 11px; margin-bottom: 3px;">Điện thoại: <span id="printSdt"></span></div>
@@ -317,6 +359,12 @@
             </div>
             
             <input type="hidden" id="editingId">
+            
+            <!-- Ô hiển thị Mã đơn hàng tự động -->
+            <div class="form-group-modal">
+                <label>Mã đơn hàng (Tự động):</label>
+                <input type="text" id="madonhang" readonly style="background-color: #f1f5f9; font-weight: bold; color: #0284c7;">
+            </div>
             
             <div class="form-row">
                 <div class="form-group-modal">
@@ -383,13 +431,30 @@
 
     <script>
         let danhSachDonHangGoc = [];
+        let danhSachLoc = [];
         let danhSachKhachHangMap = [];
+        let trangHienTai = 1;
+        const soDongMoiTrang = 10;
 
         window.addEventListener('DOMContentLoaded', async () => {
-            kiemTraDangNhapPhongKham(); // Kiểm tra đăng nhập và maphongkham[cite: 1]
+            kiemTraDangNhapPhongKham(); // Kiểm tra đăng nhập và maphongkham
             await taiDanhSachKhachHang();
             await taiDanhSachDonHang();
         });
+
+        // Hàm lấy chính xác mã phòng khám hiện tại (tránh lặp chữ PK)
+        function layMaPhongKhamChuan() {
+            try {
+                const userStr = sessionStorage.getItem('currentUser');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    if (user?.maphongkham) return user.maphongkham.replace('PK_', '').replace('PK', '').replace('_', '');
+                }
+                const sessionMpk = sessionStorage.getItem('maphongkham');
+                if (sessionMpk) return sessionMpk.replace('PK_', '').replace('PK', '').replace('_', '');
+            } catch (e) {}
+            return '617723';
+        }
 
         // --- HÀM KIỂM TRA QUYỀN VÀ BẢO MẬT SỐ ĐIỆN THOẠI TUYỆT ĐỐI ---
         function anSoDienThoaiChoPC(sdt) {
@@ -411,7 +476,6 @@
                         String(user.tennhanvien || '')
                     ).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-                    // CHỈ CHO PHÉP nếu là admin hoặc chứa từ khóa chủ phòng khám / chupk[cite: 1]
                     if (infoToCheck.includes('admin') || infoToCheck.includes('chupk') || infoToCheck.includes('chu phong kham') || infoToCheck.includes('chu phong')) {
                         isAllowed = true;
                     }
@@ -423,12 +487,10 @@
                 }
             }
             
-            // Nếu là Chủ phòng khám hoặc Admin -> Hiển thị số điện thoại thật đầy đủ[cite: 1]
             if (isAllowed) {
                 return `<a href="tel:${displaySdt}" style="color: #2563eb; text-decoration: none; font-weight: bold;" title="Bấm để gọi">${displaySdt} 📞</a>`;
             }
             
-            // Nếu là Bác sĩ, Nhân viên, Lễ tân... -> Ẩn số thành ký tự bảo mật tuyệt đối[cite: 1]
             let sdtBiDau = '*'.repeat(displaySdt.length);
             return `<span style="color: #d97706; font-weight: bold;" title="Số điện thoại đã được bảo mật">${sdtBiDau} 🔒</span>`;
         }
@@ -463,8 +525,10 @@
             const { data, error } = await db.from('donhang').select('*').order('id', { ascending: false });
             if (!error) {
                 danhSachDonHangGoc = data || [];
+                danhSachLoc = [...danhSachDonHangGoc];
+                trangHienTai = 1;
                 tinhToanThongKe(danhSachDonHangGoc);
-                hienThiBang(danhSachDonHangGoc);
+                hienThiPhanTrang();
             }
         }
 
@@ -498,22 +562,32 @@
             return diaChi || '---';
         }
 
-        function hienThiBang(data) {
+        function hienThiPhanTrang() {
             const tableBody = document.getElementById('data-table');
             tableBody.innerHTML = '';
             
-            if(data.length === 0) {
+            if(danhSachLoc.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#777; padding: 20px;">Chưa có đơn hàng nào trong hệ thống</td></tr>`;
+                document.getElementById('pagination-info').innerText = 'Hiển thị 0 - 0 của 0 bản ghi';
+                document.getElementById('pageIndicator').innerText = 'Trang 1 / 1';
+                document.getElementById('prevBtn').disabled = true;
+                document.getElementById('nextBtn').disabled = true;
                 return;
             }
 
-            data.forEach((item) => {
-                const maDon = 'DH' + String(item.id).padStart(4, '0');
+            const tongSoTrang = Math.ceil(danhSachLoc.length / soDongMoiTrang);
+            if (trangHienTai > tongSoTrang) trangHienTai = tongSoTrang;
+            if (trangHienTai < 1) trangHienTai = 1;
+
+            const batDau = (trangHienTai - 1) * soDongMoiTrang;
+            const ketThuc = Math.min(batDau + soDongMoiTrang, danhSachLoc.length);
+            const duLieuTrang = danhSachLoc.slice(batDau, ketThuc);
+
+            duLieuTrang.forEach((item) => {
+                const maDon = item.madonhang || ('DHPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
                 const ngayBan = item.ngayban ? new Date(item.ngayban).toLocaleString('vi-VN') : '---';
                 
-                // Gọi hàm ẩn số điện thoại bảo mật phân quyền[cite: 1]
                 const sdtHtml = anSoDienThoaiChoPC(item.sdt);
-
                 const khachHangHtml = `<b>${item.tenkhachhang || 'Khách lẻ'}</b><br><span style="font-size:12px;">${sdtHtml}</span>`;
                 
                 const diaChi = layDiaChiKhachHang(item);
@@ -539,6 +613,16 @@
                     </td>
                 </tr>`;
             });
+
+            document.getElementById('pagination-info').innerText = `Hiển thị ${batDau + 1} - ${ketThuc} của ${danhSachLoc.length} bản ghi`;
+            document.getElementById('pageIndicator').innerText = `Trang ${trangHienTai} / ${tongSoTrang}`;
+            document.getElementById('prevBtn').disabled = (trangHienTai === 1);
+            document.getElementById('nextBtn').disabled = (trangHienTai === tongSoTrang);
+        }
+
+        function doiTrang(huong) {
+            trangHienTai += huong;
+            hienThiPhanTrang();
         }
 
         async function doiTrangThaiNhanh(id, trangThaiHienTai) {
@@ -559,12 +643,14 @@
             const item = danhSachDonHangGoc.find(x => x.id === id);
             if (!item) return;
 
+            const maDon = item.madonhang || ('DH' + String(item.id).padStart(4, '0'));
             const thoiGian = item.ngayban ? new Date(item.ngayban).toLocaleString('vi-VN') : new Date().toLocaleString('vi-VN');
             const chuNuoi = item.tenkhachhang || 'Khách lẻ';
             const sdt = item.sdt || '---';
             const diaChi = layDiaChiKhachHang(item);
             const nguoiBan = item.nguoiban || '---';
 
+            document.getElementById('printMaDon').innerText = maDon;
             document.getElementById('printTime').innerText = thoiGian;
             document.getElementById('printChuNuoi').innerText = chuNuoi;
             document.getElementById('printSdt').innerText = sdt;
@@ -590,19 +676,26 @@
 
         function timKiemDonHang() {
             const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
-            const ketQuaLoc = danhSachDonHangGoc.filter(item => {
+            danhSachLoc = danhSachDonHangGoc.filter(item => {
                 const tenKH = (item.tenkhachhang || '').toLowerCase();
                 const sdt = (item.sdt || '').toLowerCase();
                 const tenSP = (item.tensanpham || '').toLowerCase();
                 const diaChi = layDiaChiKhachHang(item).toLowerCase();
-                const maDon = ('dh' + String(item.id)).toLowerCase();
+                const maDon = (item.madonhang || ('dh' + String(item.id))).toLowerCase();
                 return tenKH.includes(tuKhoa) || sdt.includes(tuKhoa) || tenSP.includes(tuKhoa) || diaChi.includes(tuKhoa) || maDon.includes(tuKhoa);
             });
-            hienThiBang(ketQuaLoc);
+            trangHienTai = 1;
+            hienThiPhanTrang();
         }
 
         function moModalThem() {
             document.getElementById('editingId').value = '';
+            
+            // Sinh mã đơn hàng chuẩn tự động (DHPK + Mã phòng khám + 4 số ngẫu nhiên)
+            const maPK = layMaPhongKhamChuan();
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('madonhang').value = 'DHPK' + maPK + randomNum;
+
             document.getElementById('masanpham').value = '';
             document.getElementById('tensanpham').value = '';
             document.getElementById('soluongban').value = '1';
@@ -625,6 +718,7 @@
             const diaChi = layDiaChiKhachHang(item);
 
             document.getElementById('editingId').value = item.id;
+            document.getElementById('madonhang').value = item.madonhang || ('DHPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
             document.getElementById('masanpham').value = item.masanpham || '';
             document.getElementById('tensanpham').value = item.tensanpham || '';
             document.getElementById('soluongban').value = item.soluongban || 1;
@@ -636,7 +730,7 @@
             document.getElementById('nguoiban').value = item.nguoiban || '';
             document.getElementById('trangthaiModal').value = item.trangthai || 'Chưa giao hàng';
 
-            document.getElementById('modalTitle').innerText = 'Cập nhật đơn hàng (ID: DH' + String(id).padStart(4, '0') + ')';
+            document.getElementById('modalTitle').innerText = 'Cập nhật đơn hàng (Mã: ' + document.getElementById('madonhang').value + ')';
             document.getElementById('donHangModal').style.display = 'flex';
         }
 
@@ -646,6 +740,7 @@
 
         async function luuDonHang() {
             const id = document.getElementById('editingId').value;
+            const madonhang = document.getElementById('madonhang').value.trim();
             const masanpham = document.getElementById('masanpham').value.trim();
             const tensanpham = document.getElementById('tensanpham').value.trim();
             const soluongban = parseInt(document.getElementById('soluongban').value) || 1;
@@ -663,6 +758,7 @@
             }
 
             const rawPayload = {
+                madonhang,
                 masanpham,
                 tensanpham,
                 soluongban,
@@ -675,7 +771,7 @@
                 trangthai
             };
 
-            const payload = chuanBiPayload(rawPayload);
+            const payload = chuanBiPayload ? chuanBiPayload(rawPayload) : rawPayload;
 
             if (id === "") {
                 const { error } = await db.from('donhang').insert([payload]);

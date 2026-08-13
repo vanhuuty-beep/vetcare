@@ -76,6 +76,37 @@
             justify-content: flex-end;
             gap: 10px;
         }
+
+        /* CSS Phân trang */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            font-size: 13px;
+        }
+        .pagination-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        .pagination-buttons button {
+            padding: 5px 10px;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .pagination-buttons button:hover:not(:disabled) {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+        .pagination-buttons button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -116,6 +147,16 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Khu vực Phân trang -->
+                <div class="pagination-container">
+                    <div id="pagination-info">Hiển thị 0 - 0 của 0 bản ghi</div>
+                    <div class="pagination-buttons">
+                        <button id="prevBtn" onclick="doiTrang(-1)">Trang trước</button>
+                        <span id="pageIndicator" style="padding: 5px 10px; align-self: center;">Trang 1 / 1</span>
+                        <button id="nextBtn" onclick="doiTrang(1)">Trang sau</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -129,6 +170,12 @@
             </div>
             
             <input type="hidden" id="editingId">
+            
+            <!-- Ô hiển thị Mã nhật ký tiêm tự động -->
+            <div class="form-group-modal">
+                <label>Mã nhật ký (Tự động):</label>
+                <input type="text" id="manhatky" readonly style="background-color: #f1f5f9; font-weight: bold; color: #0284c7;">
+            </div>
             
             <div class="form-row">
                 <div class="form-group-modal">
@@ -183,9 +230,12 @@
 
     <script>
         let danhSachNhatKyGoc = [];
+        let danhSachLoc = [];
         let danhSachKhoVaccineGoc = [];
         let mapThuCung = {};
         let mapKhachHang = {};
+        let trangHienTai = 1;
+        const soDongMoiTrang = 10;
 
         window.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -200,6 +250,20 @@
                 moModalThem();
             }
         });
+
+        // Hàm lấy chính xác mã phòng khám hiện tại (tránh bị lặp chữ PK)
+        function layMaPhongKhamChuan() {
+            try {
+                const userStr = sessionStorage.getItem('currentUser');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    if (user?.maphongkham) return user.maphongkham.replace('PK_', '').replace('PK', '').replace('_', '');
+                }
+                const sessionMpk = sessionStorage.getItem('maphongkham');
+                if (sessionMpk) return sessionMpk.replace('PK_', '').replace('PK', '').replace('_', '');
+            } catch (e) {}
+            return '617723';
+        }
 
         async function fetchDuLieuBanDau() {
             // 1. Tải khách hàng
@@ -237,8 +301,10 @@
             if (error) {
                 console.error('Lỗi tải nhật ký tiêm vắc-xin:', error);
             } else {
-                danhSachNhatKyGoc = data;
-                hienThiBang(danhSachNhatKyGoc);
+                danhSachNhatKyGoc = data || [];
+                danhSachLoc = [...danhSachNhatKyGoc];
+                trangHienTai = 1;
+                hienThiPhanTrang();
             }
         }
 
@@ -246,17 +312,29 @@
             // Xử lý tự động nếu cần lấy thông tin thêm
         }
 
-        function hienThiBang(data) {
+        function hienThiPhanTrang() {
             const tableBody = document.getElementById('data-table');
             tableBody.innerHTML = '';
             
-            if(data.length === 0) {
+            if(danhSachLoc.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#777;">Chưa có lịch sử tiêm vắc-xin nào</td></tr>`;
+                document.getElementById('pagination-info').innerText = 'Hiển thị 0 - 0 của 0 bản ghi';
+                document.getElementById('pageIndicator').innerText = 'Trang 1 / 1';
+                document.getElementById('prevBtn').disabled = true;
+                document.getElementById('nextBtn').disabled = true;
                 return;
             }
 
-            data.forEach(item => {
-                const maNKFormatted = 'NK' + String(item.id).padStart(4, '0');
+            const tongSoTrang = Math.ceil(danhSachLoc.length / soDongMoiTrang);
+            if (trangHienTai > tongSoTrang) trangHienTai = tongSoTrang;
+            if (trangHienTai < 1) trangHienTai = 1;
+
+            const batDau = (trangHienTai - 1) * soDongMoiTrang;
+            const ketThuc = Math.min(batDau + soDongMoiTrang, danhSachLoc.length);
+            const duLieuTrang = danhSachLoc.slice(batDau, ketThuc);
+
+            duLieuTrang.forEach(item => {
+                const maNKFormatted = item.manhatky || ('NKPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
                 const maKBText = item.makhambenh ? 'KB' + String(item.makhambenh).padStart(4, '0') : 'Không có';
                 const infoPet = mapThuCung[item.mathucung] || { tenthucung: 'Không rõ', tenchu: 'Không rõ' };
                 const ngayTiemFormatted = item.ngaytiem ? new Date(item.ngaytiem).toLocaleDateString('vi-VN') : '';
@@ -283,22 +361,39 @@
                     </td>
                 </tr>`;
             });
+
+            document.getElementById('pagination-info').innerText = `Hiển thị ${batDau + 1} - ${ketThuc} của ${danhSachLoc.length} bản ghi`;
+            document.getElementById('pageIndicator').innerText = `Trang ${trangHienTai} / ${tongSoTrang}`;
+            document.getElementById('prevBtn').disabled = (trangHienTai === 1);
+            document.getElementById('nextBtn').disabled = (trangHienTai === tongSoTrang);
+        }
+
+        function doiTrang(huong) {
+            trangHienTai += huong;
+            hienThiPhanTrang();
         }
 
         function timKiemNhatKy() {
             const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
-            const ketQuaLoc = danhSachNhatKyGoc.filter(item => {
+            danhSachLoc = danhSachNhatKyGoc.filter(item => {
                 const tenVC = (item.tenvaccine || '').toLowerCase();
                 const maVC = (item.mavaccine || '').toLowerCase();
                 const bacSi = (item.bacsi || '').toLowerCase();
-                const maNK = ('nk' + String(item.id)).toLowerCase();
+                const maNK = (item.manhatky || ('nkpk' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'))).toLowerCase();
                 return tenVC.includes(tuKhoa) || maVC.includes(tuKhoa) || bacSi.includes(tuKhoa) || maNK.includes(tuKhoa);
             });
-            hienThiBang(ketQuaLoc);
+            trangHienTai = 1;
+            hienThiPhanTrang();
         }
 
         function moModalThem() {
             document.getElementById('editingId').value = '';
+            
+            // Tự động sinh mã nhật ký tiêm chuẩn phòng khám kèm 4 số ngẫu nhiên
+            const maPK = layMaPhongKhamChuan();
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('manhatky').value = 'NKPK' + maPK + randomNum;
+
             if (!window.location.search.includes('makhambenh')) {
                 document.getElementById('makhambenh').value = '';
             }
@@ -319,7 +414,10 @@
             const item = danhSachNhatKyGoc.find(x => x.id === id);
             if (!item) return;
 
+            const maNKFormatted = item.manhatky || ('NKPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
+
             document.getElementById('editingId').value = item.id;
+            document.getElementById('manhatky').value = maNKFormatted;
             document.getElementById('makhambenh').value = item.makhambenh || '';
             document.getElementById('mathucung').value = item.mathucung || '';
             document.getElementById('ngaytiem').value = item.ngaytiem || '';
@@ -336,7 +434,7 @@
                 }
             }
 
-            document.getElementById('modalTitle').innerText = 'Cập nhật nhật ký tiêm (ID: ' + id + ')';
+            document.getElementById('modalTitle').innerText = 'Cập nhật nhật ký tiêm (Mã: ' + maNKFormatted + ')';
             document.getElementById('nhatKyModal').style.display = 'flex';
         }
 
@@ -346,6 +444,7 @@
 
         async function luuNhatKy() {
             const id = document.getElementById('editingId').value;
+            const manhatky = document.getElementById('manhatky').value.trim();
             let rawMaKB = document.getElementById('makhambenh').value.trim().replace(/[^0-9]/g, '');
             let rawMaTC = document.getElementById('mathucung').value.trim().replace(/[^0-9]/g, '');
             
@@ -387,6 +486,7 @@
             }
 
             const payload = {
+                manhatky: manhatky,
                 makhambenh: makhambenh,
                 mathucung: mathucung,
                 mavaccine: mavaccine,

@@ -16,9 +16,6 @@
     <link rel="stylesheet" href="../css/mobile.css">
     <link rel="stylesheet" href="../css/style1.css">
 	<link rel="stylesheet" href="../css/smart-search.css">
-
-
-   
 </head>
 <body>
 
@@ -71,6 +68,12 @@
             
             <input type="hidden" id="editingId">
             
+            <!-- Ô hiển thị Mã dịch vụ Spa tự động -->
+            <div class="form-group-modal" style="margin-bottom: 12px;">
+                <label style="font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">Mã dịch vụ (Tự động):</label>
+                <input type="text" id="madichvu" readonly style="width: 100%; padding: 8px; font-size: 13px; background-color: #f1f5f9; font-weight: bold; color: #0284c7; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
+            </div>
+            
             <div class="form-group-modal" style="margin-bottom: 12px;">
                 <label style="font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">Tên dịch vụ (tendichvu) (*):</label>
                 <input type="text" id="tendichvu" placeholder="VD: Tắm cắt lông tạo kiểu, Cạo vôi răng..." style="width: 100%; padding: 8px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
@@ -100,6 +103,20 @@
             await taiDanhSachSpa();
         });
 
+        // Hàm lấy chính xác mã phòng khám hiện tại (tránh lặp chữ PK)
+        function layMaPhongKhamChuan() {
+            try {
+                const userStr = sessionStorage.getItem('currentUser');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    if (user?.maphongkham) return user.maphongkham.replace('PK_', '').replace('PK', '').replace('_', '');
+                }
+                const sessionMpk = sessionStorage.getItem('maphongkham');
+                if (sessionMpk) return sessionMpk.replace('PK_', '').replace('PK', '').replace('_', '');
+            } catch (e) {}
+            return '617723';
+        }
+
         async function taiDanhSachSpa() {
             const { data, error } = await db.from('spa').select('*').order('id', { ascending: false });
             if (error) {
@@ -121,10 +138,10 @@
             }
 
             data.forEach((item) => {
-                const maDV = 'DV' + String(item.id).padStart(4, '0');
+                const maDVFormatted = item.madichvu || ('DVPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
                 tableBody.innerHTML += `
                     <tr style="border-bottom: 1px solid #e2e8f0;">
-                        <td style="padding: 10px; font-weight: bold; color: #1e3a8a;">${maDV}</td>
+                        <td style="padding: 10px; font-weight: bold; color: #1e3a8a;">${maDVFormatted}</td>
                         <td style="padding: 10px; font-weight: 500; color: #0f172a;">${item.tendichvu || ''}</td>
                         <td style="padding: 10px; color: #dc2626; font-weight: bold;">${Number(item.gia || 0).toLocaleString('vi-VN')} đ</td>
                         <td style="padding: 10px; color: #64748b; font-size: 12px;">${item.ghichu || '---'}</td>
@@ -142,7 +159,7 @@
             const ketQuaLoc = danhSachSpaGoc.filter(item => {
                 const tenDV = (item.tendichvu || '').toLowerCase();
                 const ghiChu = (item.ghichu || '').toLowerCase();
-                const maDV = ('dv' + String(item.id)).toLowerCase();
+                const maDV = (item.madichvu || ('dvpk' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'))).toLowerCase();
                 return tenDV.includes(tuKhoa) || ghiChu.includes(tuKhoa) || maDV.includes(tuKhoa);
             });
             hienThiBang(ketQuaLoc);
@@ -150,6 +167,12 @@
 
         function moModalThem() {
             document.getElementById('editingId').value = '';
+            
+            // Tự động sinh mã dịch vụ Spa chuẩn phòng khám kèm 4 chữ số ngẫu nhiên
+            const maPK = layMaPhongKhamChuan();
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('madichvu').value = 'DVPK' + maPK + randomNum;
+
             document.getElementById('tendichvu').value = '';
             document.getElementById('gia').value = '';
             document.getElementById('ghichu').value = '';
@@ -161,11 +184,14 @@
             const item = danhSachSpaGoc.find(x => x.id === id);
             if (!item) return;
 
+            const maDVFormatted = item.madichvu || ('DVPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
+
             document.getElementById('editingId').value = item.id;
+            document.getElementById('madichvu').value = maDVFormatted;
             document.getElementById('tendichvu').value = item.tendichvu || '';
             document.getElementById('gia').value = item.gia || '';
             document.getElementById('ghichu').value = item.ghichu || '';
-            document.getElementById('modalTitle').innerText = 'Cập nhật dịch vụ Spa (ID: DV' + String(id).padStart(4, '0') + ')';
+            document.getElementById('modalTitle').innerText = 'Cập nhật dịch vụ Spa (Mã: ' + maDVFormatted + ')';
             document.getElementById('spaModal').style.display = 'flex';
         }
 
@@ -175,6 +201,7 @@
 
         async function luuSpa() {
             const id = document.getElementById('editingId').value;
+            const madichvu = document.getElementById('madichvu').value.trim();
             const tendichvu = document.getElementById('tendichvu').value.trim();
             const gia = parseFloat(document.getElementById('gia').value) || 0;
             const ghichu = document.getElementById('ghichu').value.trim();
@@ -184,7 +211,7 @@
                 return;
             }
 
-            const payload = { tendichvu, gia, ghichu };
+            const payload = { madichvu, tendichvu, gia, ghichu };
 
             if (id === "") {
                 const { error } = await db.from('spa').insert([payload]);

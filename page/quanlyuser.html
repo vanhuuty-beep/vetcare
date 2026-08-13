@@ -91,7 +91,7 @@
                 <div class="card-header">
                     <h3>Quản Lý Tài Khoản Hệ Thống</h3>
                     <div class="card-header-actions">
-                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm tên, email, vai trò..." onkeyup="timKiemUser()">
+                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm tên, mã NV, email..." onkeyup="timKiemUser()">
                         <button class="btn-primary" onclick="moModalThem()" style="background-color: #0284c7;">+ Thêm Tài Khoản</button>
                     </div>
                 </div>
@@ -100,7 +100,7 @@
                     <table>
                         <thead>
                             <tr style="background: #1e3a8a; color: white;">
-                                <th>ID</th>
+                                <th>Mã NV / ID</th>
                                 <th>Tên Đăng Nhập</th>
                                 <th>Email</th>
                                 <th>Vai Trò (Quyền)</th>
@@ -127,6 +127,12 @@
             </div>
             
             <input type="hidden" id="editingId">
+            
+            <!-- Ô hiển thị Mã nhân viên / tài khoản tự động -->
+            <div class="form-group-modal">
+                <label>Mã nhân viên (Tự động):</label>
+                <input type="text" id="manhanvien" readonly style="background-color: #f1f5f9; font-weight: bold; color: #0284c7;">
+            </div>
             
             <div class="form-group-modal">
                 <label>Tên đăng nhập (tentaikhoan) (*):</label>
@@ -174,6 +180,20 @@
             await taiDanhSachUser();
         });
 
+        // Hàm lấy chính xác mã phòng khám hiện tại (tránh lặp chữ PK)
+        function layMaPhongKhamChuan() {
+            try {
+                const userStr = sessionStorage.getItem('currentUser');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    if (user?.maphongkham) return user.maphongkham.replace('PK_', '').replace('PK', '').replace('_', '');
+                }
+                const sessionMpk = sessionStorage.getItem('maphongkham');
+                if (sessionMpk) return sessionMpk.replace('PK_', '').replace('PK', '').replace('_', '');
+            } catch (e) {}
+            return '617723';
+        }
+
         // Hàm mã hóa mật khẩu SHA-256
         async function maHoaMatKhau(password) {
             const msgBuffer = new TextEncoder().encode(password);
@@ -205,7 +225,8 @@
             }
 
             data.forEach(item => {
-                // Chỉ còn 2 phân loại huy hiệu: Bác sĩ và Nhân viên
+                const maNVFormatted = item.manhanvien || ('NVPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
+                
                 const vaiTroBadge = item.vaitro === 'Bác sĩ' 
                     ? `<span style="background: #e0f2fe; color: #0284c7; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">Bác sĩ</span>`
                     : `<span style="background: #f1f5f9; color: #334155; padding: 3px 8px; border-radius: 4px; font-size: 11px;">Nhân viên</span>`;
@@ -218,7 +239,7 @@
 
                 tableBody.innerHTML += `
                     <tr style="border-bottom: 1px solid #e2e8f0;">
-                        <td style="padding: 10px;"><strong>#${item.id}</strong></td>
+                        <td style="padding: 10px;"><strong>${maNVFormatted}</strong></td>
                         <td style="padding: 10px; color: #2563eb; font-weight: bold;">${item.tentaikhoan || ''}</td>
                         <td style="padding: 10px; color: #475569;">${item.email || '---'}</td>
                         <td style="padding: 10px;">${vaiTroBadge}</td>
@@ -239,13 +260,20 @@
                 const username = (item.tentaikhoan || '').toLowerCase();
                 const email = (item.email || '').toLowerCase();
                 const vaitro = (item.vaitro || '').toLowerCase();
-                return username.includes(tuKhoa) || email.includes(tuKhoa) || vaitro.includes(tuKhoa);
+                const maNV = (item.manhanvien || ('nvpk' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'))).toLowerCase();
+                return username.includes(tuKhoa) || email.includes(tuKhoa) || vaitro.includes(tuKhoa) || maNV.includes(tuKhoa);
             });
             hienThiBang(ketQuaLoc);
         }
 
         function moModalThem() {
             document.getElementById('editingId').value = '';
+            
+            // Tự động sinh mã nhân viên chuẩn phòng khám kèm 4 chữ số ngẫu nhiên
+            const maPK = layMaPhongKhamChuan();
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('manhanvien').value = 'NVPK' + maPK + randomNum;
+
             document.getElementById('tentaikhoan').value = '';
             document.getElementById('email').value = '';
             document.getElementById('matkhau').value = '';
@@ -260,14 +288,17 @@
             const item = danhSachUserGoc.find(x => x.id === id);
             if (!item) return;
 
+            const maNVFormatted = item.manhanvien || ('NVPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
+
             document.getElementById('editingId').value = item.id;
+            document.getElementById('manhanvien').value = maNVFormatted;
             document.getElementById('tentaikhoan').value = item.tentaikhoan || '';
             document.getElementById('email').value = item.email || '';
             document.getElementById('matkhau').value = ''; 
             document.getElementById('vaitro').value = item.vaitro || 'Nhân viên';
             document.getElementById('trangthai').value = item.trangthai || 'Hoạt động';
 
-            document.getElementById('modalTitle').innerText = 'Cập nhật tài khoản (ID: #' + id + ')';
+            document.getElementById('modalTitle').innerText = 'Cập nhật tài khoản (Mã: ' + maNVFormatted + ')';
             document.getElementById('userModal').style.display = 'flex';
         }
 
@@ -277,6 +308,7 @@
 
         async function luuUser() {
             const id = document.getElementById('editingId').value;
+            const manhanvien = document.getElementById('manhanvien').value.trim();
             const tentaikhoan = document.getElementById('tentaikhoan').value.trim();
             const email = document.getElementById('email').value.trim();
             const matKhauPlain = document.getElementById('matkhau').value.trim();
@@ -294,10 +326,11 @@
             }
 
             const payload = {
-                tentaikhoan,
-                email,
-                vaitro,
-                trangthai
+                manhanvien: manhanvien,
+                tentaikhoan: tentaikhoan,
+                email: email,
+                vaitro: vaitro,
+                trangthai: trangthai
             };
 
             if (matKhauPlain) {
@@ -326,7 +359,7 @@
         }
 
         async function xoaUser(id) {
-            if (confirm('Bạn có chắc chắn muốn xóa tài khoản ID #' + id + ' này không?')) {
+            if (confirm('Bạn có chắc chắn muốn xóa tài khoản này không?')) {
                 const { error } = await db.from('user').delete().eq('id', id);
                 if (error) {
                     alert('Lỗi khi xóa: ' + error.message);

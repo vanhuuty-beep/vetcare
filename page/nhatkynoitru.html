@@ -252,6 +252,12 @@
             
             <input type="hidden" id="editingId">
             
+            <!-- Ô hiển thị Mã nhật ký nội trú tự động -->
+            <div class="form-group-modal">
+                <label>Mã nhật ký nội trú (Tự động):</label>
+                <input type="text" id="manhatkynoitru" readonly style="background-color: #f1f5f9; font-weight: bold; color: #0284c7;">
+            </div>
+            
             <div class="form-row">
                 <div class="form-group-modal">
                     <label>Mã khám bệnh (makhambenh) (Không bắt buộc):</label>
@@ -380,11 +386,8 @@
                 
                 if (maKBParam) {
                     document.getElementById('makhambenh').value = maKBParam;
-                    // Tự động dò tìm xem mã khám bệnh này thuộc thú cưng nào để gán luôn cho tiện
                     if (mapKhamBenh[maKBParam]) {
-                        // Nếu map khám bệnh đã lưu sẵn thông tin thú cưng
                         const petInfo = mapKhamBenh[maKBParam];
-                        // Tìm ID thú cưng tương ứng trong danh sách search
                         const matchedPet = dsThuCungChoSearch.find(x => x.label.includes(petInfo.tenthucung));
                         if (matchedPet) {
                             document.getElementById('mathucung').value = matchedPet.value;
@@ -403,10 +406,28 @@
             }
         });
 
+        // Hàm lấy chính xác mã phòng khám hiện tại (tránh bị lặp chữ PK)
+        function layMaPhongKhamChuan() {
+            try {
+                const userStr = sessionStorage.getItem('currentUser');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    if (user?.maphongkham) return user.maphongkham.replace('PK_', '').replace('PK', '').replace('_', '');
+                }
+                const sessionMpk = sessionStorage.getItem('maphongkham');
+                if (sessionMpk) return sessionMpk.replace('PK_', '').replace('PK', '').replace('_', '');
+            } catch (e) {}
+            return '617723';
+        }
+
         function moModalThem() {
             document.getElementById('editingId').value = '';
             
-            // Giữ lại mã khám bệnh nếu được truyền từ trang Khám bệnh qua, nếu không thì để trống (vì mã khám không bắt buộc)
+            // Tự động sinh mã nhật ký nội trú chuẩn phòng khám kèm số ngẫu nhiên 4 chữ số
+            const maPK = layMaPhongKhamChuan();
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('manhatkynoitru').value = 'NTKPK' + maPK + randomNum;
+
             const urlParams = new URLSearchParams(window.location.search);
             const maKBParam = urlParams.get('makhambenh');
             if (!maKBParam) {
@@ -615,7 +636,7 @@
             const duLieuTrangHienTai = data.slice(viTriBatDau, viTriKetThuc);
 
             duLieuTrangHienTai.forEach(item => {
-                const maNKNT = 'NKNT' + String(item.id).padStart(4, '0');
+                const maNKNT = item.manhatkynoitru || ('NTKPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
                 const maKBText = item.makhambenh ? 'KB' + String(item.makhambenh).padStart(4, '0') : 'N/A';
                 
                 let infoPet = mapKhamBenh[item.makhambenh];
@@ -718,24 +739,20 @@
         async function capNhatTrangThaiPC(id, trangThaiMoi, maLong) {
             if (typeof db === 'undefined' || !db) return;
 
-            // Tìm record hiện tại trong danh sách để lấy thông tin ngày vào và chi phí
             const itemCu = danhSachNhatKyGoc.find(x => x.id === id);
             if (!itemCu) return;
 
             let updateData = { trangthai: trangThaiMoi };
 
-            // NẾU CHUYỂN SANG TRẠNG THÁI "ĐÃ XUẤT VIỆN"
             if (trangThaiMoi === 'Đã xuất viện') {
-                // Lấy ngày hiện tại định dạng YYYY-MM-DD
                 const todayStr = new Date().toISOString().split('T')[0];
                 updateData.ngayra = todayStr;
 
-                // Tự động tính toán lại số ngày lưu trú và tiền nếu có ngày vào và chi phí ngày
                 if (itemCu.ngayvao) {
                     const ngayVaoObj = new Date(itemCu.ngayvao);
                     const ngayRaObj = new Date(todayStr);
                     const diffTime = ngayRaObj - ngayVaoObj;
-                    let diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1; // Công thức tính trọn vẹn ngày
+                    let diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
                     if (diffDays <= 0) diffDays = 1;
 
                     const chiPhiNgay = parseFloat(itemCu.chiphingay) || 0;
@@ -747,7 +764,6 @@
                 }
             }
 
-            // Thực hiện update lên cơ sở dữ liệu Supabase
             const { error } = await db
                 .from('nhatkynoitru')
                 .update(updateData)
@@ -756,7 +772,6 @@
             if (error) {
                 alert('Lỗi cập nhật trạng thái: ' + error.message);
             } else {
-                // Nếu xuất viện thành công, giải phóng lồng thành 'Trống'
                 if (trangThaiMoi === 'Đã xuất viện' && maLong) {
                     await db.from('noitru').update({ trangthai: 'Trống' }).eq('id', maLong);
                 }
@@ -770,61 +785,30 @@
             ketQuaLocTamThoi = danhSachNhatKyGoc.filter(item => {
                 const maKB = String(item.makhambenh || '').toLowerCase();
                 const bacSi = (item.bacsiphutrach || '').toLowerCase();
-                const maNK = ('nknt' + String(item.id)).toLowerCase();
+                const maNK = (item.manhatkynoitru || ('ntkpk' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'))).toLowerCase();
                 return maKB.includes(tuKhoa) || bacSi.includes(tuKhoa) || maNK.includes(tuKhoa);
             });
             trangHienTai = 1;
             hienThiBang(ketQuaLocTamThoi);
         }
 
-        function moModalThem() {
-            document.getElementById('editingId').value = '';
-            if (!window.location.search.includes('makhambenh')) {
-                document.getElementById('makhambenh').value = '';
-            }
-            document.getElementById('mathucung').value = '';
-            document.getElementById('thucung_search').value = '';
-            document.getElementById('malong').value = '';
-            
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('ngayvao').value = today;
-            document.getElementById('ngayra').value = '';
-            
-            document.getElementById('bacsiphutrach').value = '';
-            document.getElementById('trangthai').value = 'Đang nằm viện';
-            document.getElementById('chiphingay').value = '';
-            document.getElementById('tongchiphi').value = '';
-            document.getElementById('tamung').value = '0';
-            document.getElementById('thanhtien').value = '0';
-            document.getElementById('ghichu').value = '';
-            
-            tinhUocTinh();
-            document.getElementById('modalTitle').innerText = 'Lập hồ sơ nội trú mới';
-            document.getElementById('nhatKyNoiTruModal').style.display = 'flex';
-        }
-
         function moModalSua(id) {
             const item = danhSachNhatKyGoc.find(x => x.id === id);
             if (!item) return;
 
+            const maNKFormatted = item.manhatkynoitru || ('NTKPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
+
             document.getElementById('editingId').value = item.id;
+            document.getElementById('manhatkynoitru').value = maNKFormatted;
             document.getElementById('makhambenh').value = item.makhambenh || '';
 
-            // TÌM KIẾM VÀ GÁN ID THÚ CƯNG LINH HOẠT (ƯU TIÊN MATHUCUNG, NẾU KHÔNG CÓ THÌ LẤY TỪ MAKHAMBENH)
             let maThuCungChinhXac = item.mathucung;
-            if (!maThuCungChinhXac && item.makhambenh && mapKhamBenh[item.makhambenh]) {
-                // Nếu bảng nhật ký chưa có mathucung nhưng có makhambenh, cố gắng tra ngược lại
-                // (hoặc bạn có thể map từ thông tin khám bệnh nếu có lưu ID pet bên đó)
-            }
-
             document.getElementById('mathucung').value = maThuCungChinhXac || '';
 
-            // GÁN TÊN THÚ CƯNG VÀO Ô INPUT TÌM KIẾM ĐỂ HIỂN THỊ CHÍNH XÁC
             if (maThuCungChinhXac && mapThuCung[maThuCungChinhXac]) {
                 const t = mapThuCung[maThuCungChinhXac];
                 document.getElementById('thucung_search').value = `${t.tenthucung} (Chủ: ${t.tenchu})`;
             } else {
-                // Thử tìm theo danh sách search nếu tìm thấy ID khớp
                 const foundItem = dsThuCungChoSearch.find(x => x.value == maThuCungChinhXac);
                 if (foundItem) {
                     document.getElementById('thucung_search').value = foundItem.label;
@@ -854,7 +838,7 @@
             document.getElementById('ghichu').value = item.ghichu || '';
 
             tinhUocTinh();
-            document.getElementById('modalTitle').innerText = 'Cập nhật hồ sơ nội trú (ID: ' + id + ')';
+            document.getElementById('modalTitle').innerText = 'Cập nhật hồ sơ nội trú (Mã: ' + maNKFormatted + ')';
             document.getElementById('nhatKyNoiTruModal').style.display = 'flex';
         }
 
@@ -864,6 +848,7 @@
 
         async function luuNhatKyNoiTru() {
             const id = document.getElementById('editingId').value;
+            const manhatkynoitru = document.getElementById('manhatkynoitru').value.trim();
             let rawMaKB = document.getElementById('makhambenh').value.trim().replace(/[^0-9]/g, '');
             const makhambenh = rawMaKB ? parseInt(rawMaKB) : null;
             const mathucung = document.getElementById('mathucung').value;
@@ -891,6 +876,7 @@
             }
 
             const payload = {
+                manhatkynoitru: manhatkynoitru,
                 makhambenh: makhambenh,
                 mathucung: mathucung ? parseInt(mathucung) : null,
                 malong: parseInt(malong),
@@ -1024,12 +1010,11 @@
     </div>
 
     <script>
-        // --- ĐIỀU CHỈNH CÔNG THỨC HÓA ĐƠN TRỌN VẸN SỐ NGÀY ---
         function moModalHoaDon(id) {
             const item = danhSachNhatKyGoc.find(x => x.id === id);
             if (!item) return;
 
-            const maNKNT = 'NKNT' + String(item.id).padStart(4, '0');
+            const maNKNT = item.manhatkynoitru || ('NTKPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
             
             let infoPet = mapKhamBenh[item.makhambenh];
             if (!infoPet && item.mathucung && mapThuCung[item.mathucung]) {
@@ -1044,7 +1029,7 @@
             let diffDays = 1;
             if (item.ngayvao && item.ngayra) {
                 const diffTime = new Date(item.ngayra) - new Date(item.ngayvao);
-                diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1; // Cộng bù 1 ngày trọn vẹn
+                diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
                 if (diffDays <= 0) diffDays = 1;
             }
 

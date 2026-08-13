@@ -253,6 +253,12 @@
             <input type="hidden" id="editingId">
             <input type="hidden" id="editingHinhanhOld">
             
+            <!-- Ô hiển thị Mã phiếu chỉ định tự động -->
+            <div class="form-group-modal">
+                <label>Mã phiếu chỉ định (Tự động):</label>
+                <input type="text" id="maphieuchidinh" readonly style="background-color: #f1f5f9; font-weight: bold; color: #0284c7;">
+            </div>
+            
             <div style="display: flex; gap: 10px;">
                 <div class="form-group-modal" style="flex: 1;">
                     <label>Tìm kiếm & Chọn mã khám bệnh (makhambenh) (*):</label>
@@ -466,6 +472,20 @@
             }
         });
 
+        // Hàm lấy chính xác mã phòng khám hiện tại (tránh lặp chữ PK)
+        function layMaPhongKhamChuan() {
+            try {
+                const userStr = sessionStorage.getItem('currentUser');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    if (user?.maphongkham) return user.maphongkham.replace('PK_', '').replace('PK', '').replace('_', '');
+                }
+                const sessionMpk = sessionStorage.getItem('maphongkham');
+                if (sessionMpk) return sessionMpk.replace('PK_', '').replace('PK', '').replace('_', '');
+            } catch (e) {}
+            return '617723';
+        }
+
         async function fetchDuLieuBanDau() {
             const { data: khData } = await db.from('khachhang').select('*');
             if (khData) {
@@ -643,8 +663,8 @@
             }
 
             pageData.forEach(item => {
-                const maPhieuFormatted = 'PCD' + String(item.id).padStart(4, '0');
-                const maKBText = 'KB' + String(item.makhambenh).padStart(4, '0');
+                const maPhieuFormatted = item.maphieuchidinh || ('PCKPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
+                const maKBText = item.makhambenh ? 'KB' + String(item.makhambenh).padStart(4, '0') : 'N/A';
                 const ngayFormatted = item.ngaychidinh ? new Date(item.ngaychidinh).toLocaleString('vi-VN') : '';
 
                 const infoPet = mapKhamBenh[item.makhambenh] || { tenthucung: 'Không rõ', tenchu: 'Không rõ' };
@@ -772,7 +792,7 @@
             currentPage = 1; // Reset về trang 1 khi tìm kiếm
             const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
             const ketQuaLoc = danhSachPhieuGoc.filter(item => {
-                const maPCD = ('pcd' + String(item.id)).toLowerCase();
+                const maPCD = (item.maphieuchidinh || ('pckpk' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'))).toLowerCase();
                 const maKB = String(item.makhambenh || '').toLowerCase();
                 const ketLuan = String(item.ketluan || '').toLowerCase();
                 return maPCD.includes(tuKhoa) || maKB.includes(tuKhoa) || ketLuan.includes(tuKhoa);
@@ -783,6 +803,12 @@
         function moModalThem() {
             document.getElementById('editingId').value = '';
             document.getElementById('editingHinhanhOld').value = '';
+            
+            // Tự động sinh mã phiếu chỉ định chuẩn phòng khám kèm 4 chữ số ngẫu nhiên
+            const maPK = layMaPhongKhamChuan();
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('maphieuchidinh').value = 'PCKPK' + maPK + randomNum;
+
             document.getElementById('makhambenh').value = '';
             document.getElementById('makhambenh_search').value = '';
             
@@ -819,7 +845,10 @@
             const item = danhSachPhieuGoc.find(x => x.id === id);
             if (!item) return;
 
+            const maPhieuFormatted = item.maphieuchidinh || ('PCKPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
+
             document.getElementById('editingId').value = item.id;
+            document.getElementById('maphieuchidinh').value = maPhieuFormatted;
             document.getElementById('makhambenh').value = item.makhambenh || '';
             
             let kbObj = dsMaKhamChoSearch.find(x => x.id == item.makhambenh);
@@ -853,7 +882,7 @@
                 });
             }
 
-            document.getElementById('modalTitle').innerText = 'Cập nhật phiếu chỉ định (ID: ' + id + ')';
+            document.getElementById('modalTitle').innerText = 'Cập nhật phiếu chỉ định (Mã: ' + maPhieuFormatted + ')';
             document.getElementById('phieuChiDinhModal').style.display = 'flex';
         }
 
@@ -863,6 +892,7 @@
 
         async function luuPhiếuChỉĐịnh() {
             const id = document.getElementById('editingId').value;
+            const maphieuchidinh = document.getElementById('maphieuchidinh').value.trim();
             let rawMaKB = document.getElementById('makhambenh').value.trim().replace(/[^0-9]/g, '');
             const makhambenh = rawMaKB ? parseInt(rawMaKB) : null;
             const ngaychidinh = document.getElementById('ngaychidinh').value;
@@ -923,6 +953,7 @@
             let tongThanhTien = chiTietDichVu.reduce((sum, item) => sum + item.thanhtien, 0);
 
             const payload = {
+                maphieuchidinh: maphieuchidinh,
                 makhambenh: makhambenh,
                 ngaychidinh: ngaychidinh ? new Date(ngaychidinh).toISOString() : new Date().toISOString(),
                 dongia: chiTietDichVu[0].dongia,
@@ -955,7 +986,7 @@
         }
 
         async function xoaPhiếuChỉĐịnh(id) {
-            if (confirm('Bạn có chắc chắn muốn xóa phiếu chỉ định ID: ' + id + ' này không?')) {
+            if (confirm('Bạn có chắc chắn muốn xóa phiếu chỉ định này không?')) {
                 const { error } = await db.from('phieuchidinh').delete().eq('id', id);
                 if (error) {
                     alert('Lỗi khi xóa: ' + error.message);
@@ -970,7 +1001,9 @@
             const item = danhSachPhieuGoc.find(x => x.id === id);
             if (!item) return;
 
-            document.getElementById('p-maphieu').innerText = 'Mã phiếu: PCD' + String(item.id).padStart(4, '0');
+            const maPhieuFormatted = item.maphieuchidinh || ('PCKPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
+
+            document.getElementById('p-maphieu').innerText = 'Mã phiếu: ' + maPhieuFormatted;
             document.getElementById('p-makhambenh').innerText = 'KB' + String(item.makhambenh).padStart(4, '0');
             document.getElementById('p-ngaychidinh').innerText = item.ngaychidinh ? new Date(item.ngaychidinh).toLocaleString('vi-VN') : '';
             document.getElementById('p-trangthai').innerText = item.trangthai || '';

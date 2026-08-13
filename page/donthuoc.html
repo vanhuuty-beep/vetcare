@@ -110,6 +110,37 @@
             font-size: 11px;
             font-weight: 500;
         }
+
+        /* CSS Phân trang */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            font-size: 13px;
+        }
+        .pagination-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        .pagination-buttons button {
+            padding: 5px 10px;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .pagination-buttons button:hover:not(:disabled) {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+        .pagination-buttons button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -147,6 +178,16 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Khu vực Phân trang -->
+                <div class="pagination-container">
+                    <div id="pagination-info">Hiển thị 0 - 0 của 0 bản ghi</div>
+                    <div class="pagination-buttons">
+                        <button id="prevBtn" onclick="doiTrang(-1)">Trang trước</button>
+                        <span id="pageIndicator" style="padding: 5px 10px; align-self: center;">Trang 1 / 1</span>
+                        <button id="nextBtn" onclick="doiTrang(1)">Trang sau</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -160,6 +201,12 @@
             </div>
             
             <input type="hidden" id="editingId">
+            
+            <!-- Ô hiển thị Mã đơn tự động -->
+            <div class="form-group-modal">
+                <label>Mã đơn (Tự động):</label>
+                <input type="text" id="madonhang" readonly style="background-color: #f1f5f9; font-weight: bold; color: #0284c7;">
+            </div>
             
             <div class="form-group-modal">
                 <label>Mã khám bệnh (makhambenh) (*):</label>
@@ -306,10 +353,13 @@
 
     <script>
         let danhSachDonThuocGoc = [];
+        let danhSachLoc = [];
         let danhSachKhoThuocGoc = [];
         let mapKhamBenh = {}; 
         let mapThuCung = {};    
         let mapKhachHang = {};  
+        let trangHienTai = 1;
+        const soDongMoiTrang = 10;
 
         window.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -323,6 +373,20 @@
                 moModalThem();
             }
         });
+
+        // Lấy chính xác mã phòng khám hiện tại (không bị lặp chữ PK)
+        function layMaPhongKhamChuan() {
+            try {
+                const userStr = sessionStorage.getItem('currentUser');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    if (user?.maphongkham) return user.maphongkham.replace('PK_', '').replace('PK', '').replace('_', '');
+                }
+                const sessionMpk = sessionStorage.getItem('maphongkham');
+                if (sessionMpk) return sessionMpk.replace('PK_', '').replace('PK', '').replace('_', '');
+            } catch (e) {}
+            return '617723';
+        }
 
         async function fetchDuLieuBanDau() {
             const { data: khData } = await db.from('khachhang').select('*');
@@ -358,8 +422,10 @@
             if (error) {
                 console.error('Lỗi tải hóa đơn thuốc:', error);
             } else {
-                danhSachDonThuocGoc = data;
-                hienThiBang(danhSachDonThuocGoc);
+                danhSachDonThuocGoc = data || [];
+                danhSachLoc = [...danhSachDonThuocGoc];
+                trangHienTai = 1;
+                hienThiPhanTrang();
             }
         }
 
@@ -441,17 +507,29 @@
             document.getElementById('tongTienHienThi').innerText = tong.toLocaleString('vi-VN') + ' đ';
         }
 
-        function hienThiBang(data) {
+        function hienThiPhanTrang() {
             const tableBody = document.getElementById('data-table');
             tableBody.innerHTML = '';
             
-            if(data.length === 0) {
+            if(danhSachLoc.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777;">Chưa có hóa đơn thuốc nào</td></tr>`;
+                document.getElementById('pagination-info').innerText = 'Hiển thị 0 - 0 của 0 bản ghi';
+                document.getElementById('pageIndicator').innerText = 'Trang 1 / 1';
+                document.getElementById('prevBtn').disabled = true;
+                document.getElementById('nextBtn').disabled = true;
                 return;
             }
 
-            data.forEach(item => {
-                const maDonFormatted = 'HD' + String(item.id).padStart(4, '0');
+            const tongSoTrang = Math.ceil(danhSachLoc.length / soDongMoiTrang);
+            if (trangHienTai > tongSoTrang) trangHienTai = tongSoTrang;
+            if (trangHienTai < 1) trangHienTai = 1;
+
+            const batDau = (trangHienTai - 1) * soDongMoiTrang;
+            const ketThuc = Math.min(batDau + soDongMoiTrang, danhSachLoc.length);
+            const duLieuTrang = danhSachLoc.slice(batDau, ketThuc);
+
+            duLieuTrang.forEach(item => {
+                const maDonFormatted = item.madonhang || ('HDPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
                 const maKBText = typeof formatMaKham === 'function' ? formatMaKham(item.makhambenh) : ('KB' + String(item.makhambenh).padStart(4, '0'));
                 const tenChuSoHuu = mapKhamBenh[item.makhambenh] || 'Không rõ chủ';
 
@@ -506,10 +584,26 @@
                     </td>
                 </tr>`;
             });
+
+            document.getElementById('pagination-info').innerText = `Hiển thị ${batDau + 1} - ${ketThuc} của ${danhSachLoc.length} bản ghi`;
+            document.getElementById('pageIndicator').innerText = `Trang ${trangHienTai} / ${tongSoTrang}`;
+            document.getElementById('prevBtn').disabled = (trangHienTai === 1);
+            document.getElementById('nextBtn').disabled = (trangHienTai === tongSoTrang);
+        }
+
+        function doiTrang(huong) {
+            trangHienTai += huong;
+            hienThiPhanTrang();
         }
 
         function moModalThem() {
             document.getElementById('editingId').value = '';
+            
+            // Sinh mã hóa đơn tự động chuẩn (HDPK + mã phòng khám + 4 số ngẫu nhiên)
+            const maPK = layMaPhongKhamChuan();
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('madonhang').value = 'HDPK' + maPK + randomNum;
+
             if (!window.location.search.includes('makhambenh')) {
                 document.getElementById('makhambenh').value = '';
             }
@@ -524,6 +618,7 @@
             if (!item) return;
 
             document.getElementById('editingId').value = item.id;
+            document.getElementById('madonhang').value = item.madonhang || ('HDPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
             document.getElementById('makhambenh').value = item.makhambenh || '';
             document.getElementById('dsThuocContainer').innerHTML = '';
 
@@ -559,6 +654,7 @@
 
         async function luuDonThuoc() {
             const id = document.getElementById('editingId').value;
+            const madonhang = document.getElementById('madonhang').value.trim();
             let rawMaKB = document.getElementById('makhambenh').value.trim();
             rawMaKB = rawMaKB.replace(/[^0-9]/g, '');
             const makhambenh = rawMaKB ? parseInt(rawMaKB) : null;
@@ -622,8 +718,8 @@
                 }
             }
 
-            // Sử dụng trường 'Gia' (viết hoa chữ G) khớp chuẩn với tên cột trên CSDL của bạn
             const payload = {
+                madonhang: madonhang,
                 makhambenh: makhambenh,
                 chitiet: JSON.stringify(chiTietThuoc),
                 mathuoc: chiTietThuoc[0].mathuoc,
@@ -685,21 +781,22 @@
 
         function timKiemDonThuoc() {
             const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
-            const ketQuaLoc = danhSachDonThuocGoc.filter(item => {
-                const maDon = ('hd' + String(item.id)).toLowerCase();
+            danhSachLoc = danhSachDonThuocGoc.filter(item => {
+                const maDon = (item.madonhang || ('hd' + String(item.id))).toLowerCase();
                 const maKB = String(item.makhambenh || '').toLowerCase();
                 const tenChu = String(mapKhamBenh[item.makhambenh] || '').toLowerCase();
                 const chitiet = String(item.chitiet || '').toLowerCase();
                 return maDon.includes(tuKhoa) || maKB.includes(tuKhoa) || tenChu.includes(tuKhoa) || chitiet.includes(tuKhoa);
             });
-            hienThiBang(ketQuaLoc);
+            trangHienTai = 1;
+            hienThiPhanTrang();
         }
 
         function inHoaDonThuoc(id) {
             const item = danhSachDonThuocGoc.find(x => x.id === id);
             if (!item) return;
 
-            document.getElementById('inv-madon').innerText = 'Mã đơn: HD' + String(item.id).padStart(4, '0');
+            document.getElementById('inv-madon').innerText = 'Mã đơn: ' + (item.madonhang || ('HD' + String(item.id).padStart(4, '0')));
             document.getElementById('inv-makhambenh').innerText = typeof formatMaKham === 'function' ? formatMaKham(item.makhambenh) : ('KB' + String(item.makhambenh).padStart(4, '0'));
             document.getElementById('inv-chusohuu').innerText = mapKhamBenh[item.makhambenh] || 'Không rõ chủ';
             document.getElementById('inv-ngaylap').innerText = new Date().toLocaleDateString('vi-VN');
