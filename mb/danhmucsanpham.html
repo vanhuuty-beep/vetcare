@@ -363,6 +363,7 @@
         </div>
 
         <div class="search-box-container">
+            <!-- Tích hợp độ trễ debounce giúp quét mã vạch hoặc tìm kiếm siêu mượt, không bị lag -->
             <input type="text" id="searchInput" class="search-input" placeholder="🔍 Tìm tên sản phẩm, barcode..." onkeyup="timKiemSanPham()">
         </div>
 
@@ -399,16 +400,17 @@
                 </div>
                 <div class="form-group-modal">
                     <label>Nhóm hàng:</label>
-                    <select id="nhomsanpham">
-                        <option value="">-- Chọn nhóm --</option>
-                        <option value="Thức ăn">Thức ăn</option>
-                        <option value="Thức ăn hạt">Thức ăn hạt</option>
-                        <option value="Thức ăn ướt">Thức ăn ướt</option>
-                        <option value="Phụ kiện - Đồ chơi">Phụ kiện - Đồ chơi</option>
-                        <option value="Sữa tắm - Vệ sinh">Sữa tắm - Vệ sinh</option>
-                        <option value="Thực phẩm chức năng">Thực phẩm chức năng</option>
-                        <option value="Khác">Khác</option>
-                    </select>
+                    <!-- Cho phép chọn nhanh hoặc tự gõ thêm nhóm mới giống PC -->
+                    <input type="text" id="nhomsanpham" list="danhSachNhomGoiY" placeholder="Chọn hoặc tự gõ nhóm...">
+                    <datalist id="danhSachNhomGoiY">
+                        <option value="Thức ăn">
+                        <option value="Thức ăn hạt">
+                        <option value="Thức ăn ướt">
+                        <option value="Phụ kiện - Đồ chơi">
+                        <option value="Sữa tắm - Vệ sinh">
+                        <option value="Thực phẩm chức năng">
+                        <option value="Khác">
+                    </datalist>
                 </div>
             </div>
 
@@ -478,6 +480,7 @@
 
 <script>
     let danhSachSanPhamGoc = [];
+    let timeoutTimKiem = null; // Biến hỗ trợ tối ưu độ trễ tìm kiếm / quét mã vạch
 
     window.addEventListener('DOMContentLoaded', async () => {
         await taiDanhSachSanPham();
@@ -491,8 +494,24 @@
         } else {
             danhSachSanPhamGoc = data || [];
             tinhToanThongKe(danhSachSanPhamGoc);
+            capNhatDatalistNhomHang(danhSachSanPhamGoc);
             hienThiBang(danhSachSanPhamGoc);
         }
+    }
+
+    // Tự động nạp thêm các nhóm hàng mới có trong cơ sở dữ liệu vào gợi ý datalist
+    function capNhatDatalistNhomHang(data) {
+        const datalist = document.getElementById('danhSachNhomGoiY');
+        let nhomSet = new Set(["Thức ăn", "Thức ăn hạt", "Thức ăn ướt", "Phụ kiện - Đồ chơi", "Sữa tắm - Vệ sinh", "Thực phẩm chức năng", "Khác"]);
+        
+        data.forEach(item => {
+            if (item.nhomsanpham) nhomSet.add(item.nhomsanpham.trim());
+        });
+
+        datalist.innerHTML = '';
+        nhomSet.forEach(nhom => {
+            datalist.innerHTML += `<option value="${nhom}">`;
+        });
     }
 
     function tinhToanThongKe(data) {
@@ -576,16 +595,20 @@
         return '86' + randomPart;
     }
 
+    // Tối ưu tốc độ tìm kiếm / quét mã vạch bằng độ trễ Debounce tránh giật lag
     function timKiemSanPham() {
-        const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
-        const ketQuaLoc = danhSachSanPhamGoc.filter(item => {
-            const tenSP = (item.tensanpham || '').toLowerCase();
-            const barcode = (item.mabarcode || '').toLowerCase();
-            const maSP = ('sp' + String(item.id)).toLowerCase();
-            const nhom = (item.nhomsanpham || '').toLowerCase();
-            return tenSP.includes(tuKhoa) || barcode.includes(tuKhoa) || maSP.includes(tuKhoa) || nhom.includes(tuKhoa);
-        });
-        hienThiBang(ketQuaLoc);
+        clearTimeout(timeoutTimKiem);
+        timeoutTimKiem = setTimeout(() => {
+            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+            const ketQuaLoc = danhSachSanPhamGoc.filter(item => {
+                const tenSP = (item.tensanpham || '').toLowerCase();
+                const barcode = (item.mabarcode || '').toLowerCase();
+                const maSP = ('sp' + String(item.id)).toLowerCase();
+                const nhom = (item.nhomsanpham || '').toLowerCase();
+                return barcode.includes(tuKhoa) || tenSP.includes(tuKhoa) || maSP.includes(tuKhoa) || nhom.includes(tuKhoa);
+            });
+            hienThiBang(ketQuaLoc);
+        }, 150);
     }
 
     function moModalThem() {
@@ -635,7 +658,7 @@
         const id = document.getElementById('editingId').value;
         const tensanpham = document.getElementById('tensanpham').value.trim();
         const mabarcode = document.getElementById('mabarcode').value.trim();
-        const nhomsanpham = document.getElementById('nhomsanpham').value;
+        const nhomsanpham = document.getElementById('nhomsanpham').value.trim();
         const donvi = document.getElementById('donvi').value.trim();
         const gianhap = parseFloat(document.getElementById('gianhap').value) || 0;
         const giaban = parseFloat(document.getElementById('giaban').value) || 0;
@@ -661,7 +684,7 @@
         const payload = {
             tensanpham,
             mabarcode,
-            nhomsanpham,
+            nhomsanpham: nhomsanpham || 'Khác',
             donvi,
             gianhap,
             giaban,
