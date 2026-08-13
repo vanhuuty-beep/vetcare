@@ -24,7 +24,7 @@ function formatTien(value) { return (value == null ? 0 : Number(value)).toLocale
     };
 
     window.kiemTraDangNhapPhongKham = function() {
-        if (window.location.href.includes('chunuoi') || window.location.href.includes('/mb/')) return;
+        if (window.location.href.includes('chunuoi')) return;
         const currentUser = sessionStorage.getItem('currentUser');
         const maphongkham = sessionStorage.getItem('maphongkham');
         if (!currentUser || !maphongkham) {
@@ -76,12 +76,12 @@ function formatTien(value) { return (value == null ? 0 : Number(value)).toLocale
     });
 })();
 
-// Nhận diện chuẩn xác trang mobile portal (/mb/ hoặc chunuoi)
-const isMobilePortal = window.location.href.includes('chunuoi') || window.location.href.includes('/mb/');
+// Chỉ duy nhất URL có chữ "chunuoi" mới được tính là giao diện Chủ Nuoi thực sự.
+const isThucSuChuNuoi = window.location.href.includes('chunuoi');
 
 window.addEventListener('load', function() {
     khoiTaoNutChatNoiHeThong();
-    if (!isMobilePortal) {
+    if (!isThucSuChuNuoi) {
         kiemTraTinNhanChuaDocBanDau();
     }
 });
@@ -89,7 +89,7 @@ window.addEventListener('load', function() {
 
 /**
  * ==========================================
- * HỆ THỐNG CHAT NỔI (TỰ ĐỘNG THU GỌN TRÊN MOBILE)
+ * HỆ THỐNG CHAT NỔI (PHÂN TÁCH CHUẨN XÁC)
  * ==========================================
  */
 let selectedPhongKhamChat = null;
@@ -97,8 +97,10 @@ let sdtChuNuoiDangChon = null;
 
 async function khoiTaoNutChatNoiHeThong() {
     try {
-        if (isMobilePortal) {
-            // --- GIAO DIỆN MOBILE (Dành cho Chủ Nuôi hoặc Chủ PK xem trên điện thoại) ---
+        if (isThucSuChuNuoi) {
+            // ==========================================
+            // 1. GIAO DIỆN CHỦ NUÔI (CHỌN PHÒNG KHÁM ĐỂ CHAT)
+            // ==========================================
             if (document.getElementById('floatingChatBtn') !== null) return;
             
             const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
@@ -108,7 +110,7 @@ async function khoiTaoNutChatNoiHeThong() {
             const mapkList = [...new Set(dsThuCung?.map(t => t.maphongkham) || [])];
             
             const { data: dsPK } = await db.from('chupk').select('maphongkham, tenphongkham').in('maphongkham', mapkList.length ? mapkList : ['PK_617723']);
-            selectedPhongKhamChat = dsPK?.[0]?.maphongkham || window.getMaPhongKham() || "PK_617723";
+            selectedPhongKhamChat = dsPK?.[0]?.maphongkham || "PK_617723";
 
             let pkOptionsHTML = dsPK?.map(pk => `<option value="${pk.maphongkham}" ${pk.maphongkham === selectedPhongKhamChat ? 'selected' : ''}>${pk.tenphongkham || pk.maphongkham}</option>`).join('') || '<option value="PK_617723">Phòng khám mặc định</option>';
 
@@ -135,22 +137,24 @@ async function khoiTaoNutChatNoiHeThong() {
             document.body.insertAdjacentHTML('beforeend', mobileChatHTML);
 
         } else {
-            // --- GIAO DIỆN MÁY TÍNH (PC - Quản lý phòng khám) ---
+            // ==========================================
+            // 2. GIAO DIỆN QUẢN LÝ PHÒNG KHÁM (DÙ TRÊN PC HAY MOBILE /mb/)
+            // ==========================================
             if (document.getElementById('floatingPCChatBtn') !== null) return;
             
             const pcChatHTML = `
-            <div id="floatingPCChatBtn" onclick="togglePCChat()" style="position: fixed; bottom: 20px; right: 20px; background: #2563eb; color: white; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 3px 8px rgba(0,0,0,0.3); cursor: pointer; z-index: 999999; transition: transform 0.2s;" title="Hộp thư tư vấn">
+            <div id="floatingPCChatBtn" onclick="togglePCChat()" style="position: fixed; bottom: 85px; right: 20px; background: #2563eb; color: white; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 3px 8px rgba(0,0,0,0.3); cursor: pointer; z-index: 999999; transition: transform 0.2s;" title="Hộp thư tư vấn">
                 💬
                 <span id="chatBadgeAlert" style="display: none; position: absolute; top: 0; right: 0; background: #ef4444; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></span>
             </div>
 
-            <div id="pcChatWindow" style="display: none; position: fixed; bottom: 75px; right: 20px; width: 500px; height: 350px; background: #fff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 999999; flex-direction: column; overflow: hidden; font-family: 'Segoe UI', sans-serif; border: 1px solid #cbd5e1;">
+            <div id="pcChatWindow" style="display: none; position: fixed; bottom: 140px; right: 15px; width: 480px; max-width: 92vw; height: 360px; background: #fff; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 999999; flex-direction: column; overflow: hidden; font-family: 'Segoe UI', sans-serif; border: 1px solid #cbd5e1;">
                 <div style="background: #1e3a8a; color: white; padding: 8px 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
                     <span>💬 Hộp thư Tư vấn Khách hàng</span>
                     <span onclick="togglePCChat()" style="cursor: pointer; font-size: 16px;">&times;</span>
                 </div>
                 <div style="display: flex; flex: 1; overflow: hidden;">
-                    <div id="dsKhachHangChat" style="width: 150px; border-right: 1px solid #cbd5e1; background: #f8fafc; overflow-y: auto; font-size: 11px;"></div>
+                    <div id="dsKhachHangChat" style="width: 140px; border-right: 1px solid #cbd5e1; background: #f8fafc; overflow-y: auto; font-size: 11px;"></div>
                     <div style="flex: 1; display: flex; flex-direction: column; background: #fff;">
                         <div id="tieuDeChatPK" style="padding: 6px 10px; font-weight: bold; border-bottom: 1px solid #e2e8f0; background: #f1f5f9; font-size: 11px; color: #1e293b;">Chọn khách hàng</div>
                         <div id="boxTinNhanPK" style="flex: 1; padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; font-size: 12px;"></div>
@@ -174,7 +178,7 @@ function doiPhongKhamChat(mapk) {
     taiTinNhanMobile();
 }
 
-// --- LOGIC GIAO DIỆN MOBILE ---
+// --- LOGIC CHO CHỦ NUÔI ---
 function toggleMobileChat() {
     const win = document.getElementById('mobileChatWindow');
     if (!win) return;
@@ -186,7 +190,7 @@ async function taiTinNhanMobile() {
     if (typeof db === 'undefined') return;
     const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
     const sdt = ownerData?.sodienthoai || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727"; 
-    const mpk = selectedPhongKhamChat || window.getMaPhongKham() || "PK_617723"; 
+    const mpk = selectedPhongKhamChat || "PK_617723"; 
 
     const { data } = await db.from('tin_nhan').select('*').eq('maphongkham', mpk).eq('sodienthoai_chunuoi', sdt).order('created_at', { ascending: true });
     const box = document.getElementById('boxTinNhanMobile');
@@ -205,13 +209,13 @@ async function guiTinNhanMobile() {
     
     const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
     const sdt = ownerData?.sodienthoai || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727"; 
-    const mpk = selectedPhongKhamChat || window.getMaPhongKham() || "PK_617723";
+    const mpk = selectedPhongKhamChat || "PK_617723";
     const tenNguoiGui = ownerData?.hovaten || ownerData?.tentaikhoan || "Chủ nuôi";
 
     await db.from('tin_nhan').insert([{ 
         maphongkham: mpk, 
         sodienthoai_chunuoi: sdt, 
-        nguoi_gui: isChuNuoiPage ? 'chunuoi' : 'nhanvien', 
+        nguoi_gui: 'chunuoi', 
         ten_nguoi_gui: tenNguoiGui,
         noi_dung: noiDung, 
         hinhanh: null 
@@ -225,7 +229,7 @@ async function guiAnhMobile(input) {
     const file = input.files[0];
     const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
     const sdt = ownerData?.sodienthoai || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727"; 
-    const mpk = selectedPhongKhamChat || window.getMaPhongKham() || "PK_617723";
+    const mpk = selectedPhongKhamChat || "PK_617723";
 
     const fileName = `chat_${Date.now()}_${file.name}`;
     const { error } = await db.storage.from('chat_images').upload(fileName, file);
@@ -235,7 +239,7 @@ async function guiAnhMobile(input) {
     await db.from('tin_nhan').insert([{ 
         maphongkham: mpk, 
         sodienthoai_chunuoi: sdt, 
-        nguoi_gui: isChuNuoiPage ? 'chunuoi' : 'nhanvien', 
+        nguoi_gui: 'chunuoi', 
         noi_dung: '[Hình ảnh]', 
         hinhanh: urlData.publicUrl 
     }]);
@@ -247,19 +251,17 @@ function hienThiTinNhanMobileUI(msg) {
     const box = document.getElementById('boxTinNhanMobile');
     if (!box) return;
     const div = document.createElement('div');
-    const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
-    const sdt = ownerData?.sodienthoai || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727";
-    const isMe = (isChuNuoiPage && msg.nguoi_gui === 'chunuoi') || (!isChuNuoiPage && msg.nguoi_gui === 'nhanvien');
+    const isMe = msg.nguoi_gui === 'chunuoi';
     
     let content = msg.hinhanh ? `<img src="${msg.hinhanh}" style="max-width:100%; border-radius:6px; cursor:pointer;" onclick="window.open('${msg.hinhanh}')"/>` : msg.noi_dung;
-    let labelNguoiGui = (!isMe && msg.ten_nguoi_gui) ? `<div style="font-size: 9px; color: #475569; margin-bottom: 2px; font-weight: bold;">${msg.ten_nguoi_gui}</div>` : '';
+    let labelNguoiGui = (!isMe && msg.ten_nguoi_gui) ? `<div style="font-size: 9px; color: #475569; margin-bottom: 2px; font-weight: bold;">🏥 ${msg.ten_nguoi_gui}</div>` : '';
     
     div.style.cssText = `max-width: 85%; padding: 6px 10px; border-radius: 8px; font-size: 12px; line-height: 1.4; ${isMe ? 'background: #0d9488; color: white; align-self: flex-end; margin-left: auto;' : 'background: #e2e8f0; color: #1e293b; align-self: flex-start;'}`;
     div.innerHTML = `${labelNguoiGui}<div>${content}</div>`;
     box.appendChild(div);
 }
 
-// --- LOGIC GIAO DIỆN PC (NHÂN VIÊN) ---
+// --- LOGIC CHO QUẢN LÝ PHÒNG KHÁM (NHÂN VIÊN) ---
 function togglePCChat() {
     const win = document.getElementById('pcChatWindow');
     if (!win) return;
@@ -274,7 +276,7 @@ function togglePCChat() {
 
 async function taiDanhSachKhachHangChat() {
     if (typeof db === 'undefined') return;
-    const mapk = sessionStorage.getItem('maphongkham') || "PK_617723"; 
+    const mapk = window.getMaPhongKham() || "PK_617723"; 
     const { data: listMsg } = await db.from('tin_nhan').select('sodienthoai_chunuoi, noi_dung, created_at').eq('maphongkham', mapk).order('created_at', { ascending: false });
     if (!listMsg) return;
     const dsSdt = [...new Set(listMsg.map(m => m.sodienthoai_chunuoi))];
@@ -299,7 +301,7 @@ async function chonKhachHangChat(sdt, tenKhach, element) {
     const titleEl = document.getElementById('tieuDeChatPK');
     if (titleEl) titleEl.innerText = `${tenKhach} (${sdt})`;
     
-    const mapk = sessionStorage.getItem('maphongkham') || "PK_617723";
+    const mapk = window.getMaPhongKham() || "PK_617723";
     const { data } = await db.from('tin_nhan').select('*').eq('maphongkham', mapk).eq('sodienthoai_chunuoi', sdt).order('created_at', { ascending: true });
     const box = document.getElementById('boxTinNhanPK');
     if(box) {
@@ -317,7 +319,7 @@ async function nhanVienGuiTinNhan() {
     if (!noiDung) return;
 
     const currentUsr = JSON.parse(sessionStorage.getItem('currentUser')) || {};
-    const mapk = sessionStorage.getItem('maphongkham') || "PK_617723"; 
+    const mapk = window.getMaPhongKham() || "PK_617723"; 
     const tenTaiKhoanGui = currentUsr?.tentaikhoan || currentUsr?.username || "Nhân viên";
     const vaiTroGui = currentUsr?.vaitro || "Nhân viên";
 
@@ -331,7 +333,7 @@ async function guiAnhNhanVien(input) {
     if (!input.files || !input.files[0]) return;
     const file = input.files[0];
     const currentUsr = JSON.parse(sessionStorage.getItem('currentUser')) || {};
-    const mapk = sessionStorage.getItem('maphongkham') || "PK_617723"; 
+    const mapk = window.getMaPhongKham() || "PK_617723"; 
     const tenTaiKhoanGui = currentUsr?.tentaikhoan || "Nhân viên";
     const vaiTroGui = currentUsr?.vaitro || "Nhân viên";
 
@@ -369,8 +371,8 @@ function hienThiTinNhanPCUI(msg) {
 }
 
 async function kiemTraTinNhanChuaDocBanDau() {
-    if (typeof db === 'undefined' || isMobilePortal) return;
-    const mapk = sessionStorage.getItem('maphongkham') || "PK_617723";
+    if (typeof db === 'undefined' || isThucSuChuNuoi) return;
+    const mapk = window.getMaPhongKham() || "PK_617723";
     const { data } = await db.from('tin_nhan').select('nguoi_gui').eq('maphongkham', mapk).order('created_at', { ascending: false }).limit(1);
     if (data && data.length > 0 && data[0].nguoi_gui === 'chunuoi') {
         hienThiCanhBaoTinNhanMoi(true);
@@ -390,7 +392,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (typeof db !== 'undefined' && db.channel) {
             const mapk = window.getMaPhongKham() || "PK_617723";
             
-            if (isMobilePortal) {
+            if (isThucSuChuNuoi) {
                 db.channel('realtime-chat-mobile-global').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tin_nhan' }, payload => {
                     const win = document.getElementById('mobileChatWindow');
                     if (win && win.style.display === 'flex' && payload.new.maphongkham === selectedPhongKhamChat) {
