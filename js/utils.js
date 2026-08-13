@@ -24,7 +24,7 @@ function formatTien(value) { return (value == null ? 0 : Number(value)).toLocale
     };
 
     window.kiemTraDangNhapPhongKham = function() {
-        if (window.location.href.includes('chunuoi')) return;
+        if (window.location.href.includes('chunuoi') || window.location.href.includes('/mb/')) return;
         const currentUser = sessionStorage.getItem('currentUser');
         const maphongkham = sessionStorage.getItem('maphongkham');
         if (!currentUser || !maphongkham) {
@@ -76,16 +76,12 @@ function formatTien(value) { return (value == null ? 0 : Number(value)).toLocale
     });
 })();
 
-const isChuNuoiPage = window.location.href.includes('chunuoi');
-
-// KHÔNG cấu hình Crisp ở trang quản lý phòng khám để tránh bị xung đột 2 nút chat
-if (!isChuNuoiPage) {
-    // Nếu muốn tắt hẳn Crisp ở phòng khám, bỏ qua đoạn script Crisp tại đây.
-}
+// Nhận diện chuẩn xác trang mobile portal (/mb/ hoặc chunuoi)
+const isMobilePortal = window.location.href.includes('chunuoi') || window.location.href.includes('/mb/');
 
 window.addEventListener('load', function() {
     khoiTaoNutChatNoiHeThong();
-    if (!isChuNuoiPage) {
+    if (!isMobilePortal) {
         kiemTraTinNhanChuaDocBanDau();
     }
 });
@@ -93,46 +89,53 @@ window.addEventListener('load', function() {
 
 /**
  * ==========================================
- * HỆ THỐNG CHAT NỔI (ĐÃ TÁCH BIỆT VÀ LÀM GỌN)
+ * HỆ THỐNG CHAT NỔI (TỰ ĐỘNG THU GỌN TRÊN MOBILE)
  * ==========================================
  */
 let selectedPhongKhamChat = null;
 let sdtChuNuoiDangChon = null;
 
-function khoiTaoNutChatNoiHeThong() {
+async function khoiTaoNutChatNoiHeThong() {
     try {
-        if (isChuNuoiPage) {
-            // --- 1. GIAO DIỆN CHỦ NUÔI (MOBILE) ---
+        if (isMobilePortal) {
+            // --- GIAO DIỆN MOBILE (Dành cho Chủ Nuôi hoặc Chủ PK xem trên điện thoại) ---
             if (document.getElementById('floatingChatBtn') !== null) return;
             
             const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
-            const sdt = ownerData?.sodienthoai || ownerData?.sdt || "0935778727";
+            const sdt = ownerData?.sodienthoai || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727";
+
+            const { data: dsThuCung } = await db.from('thucung').select('maphongkham').eq('sodienthoai', sdt);
+            const mapkList = [...new Set(dsThuCung?.map(t => t.maphongkham) || [])];
+            
+            const { data: dsPK } = await db.from('chupk').select('maphongkham, tenphongkham').in('maphongkham', mapkList.length ? mapkList : ['PK_617723']);
+            selectedPhongKhamChat = dsPK?.[0]?.maphongkham || window.getMaPhongKham() || "PK_617723";
+
+            let pkOptionsHTML = dsPK?.map(pk => `<option value="${pk.maphongkham}" ${pk.maphongkham === selectedPhongKhamChat ? 'selected' : ''}>${pk.tenphongkham || pk.maphongkham}</option>`).join('') || '<option value="PK_617723">Phòng khám mặc định</option>';
 
             const mobileChatHTML = `
-            <div id="floatingChatBtn" onclick="toggleMobileChat()" style="position: fixed; bottom: 20px; right: 20px; background: #0d9488; color: white; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 3px 8px rgba(0,0,0,0.3); cursor: pointer; z-index: 999999;">💬</div>
+            <div id="floatingChatBtn" onclick="toggleMobileChat()" style="position: fixed; bottom: 85px; right: 20px; background: #0d9488; color: white; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 3px 8px rgba(0,0,0,0.3); cursor: pointer; z-index: 999999;">💬</div>
 
-            <div id="mobileChatWindow" style="display: none; position: fixed; bottom: 75px; right: 20px; width: 280px; height: 350px; background: #fff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 999999; flex-direction: column; overflow: hidden; font-family: 'Segoe UI', sans-serif; border: 1px solid #cbd5e1;">
-                <div style="background: #0d9488; color: white; padding: 8px 10px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
-                    <span>💬 Trò chuyện với PK</span>
+            <div id="mobileChatWindow" style="display: none; position: fixed; bottom: 140px; right: 15px; width: 290px; max-width: 90vw; height: 380px; background: #fff; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 999999; flex-direction: column; overflow: hidden; font-family: 'Segoe UI', sans-serif; border: 1px solid #cbd5e1;">
+                <div style="background: #0d9488; color: white; padding: 8px 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
+                    <span>💬 Trò chuyện trực tuyến</span>
                     <span onclick="toggleMobileChat()" style="cursor: pointer; font-size: 16px;">&times;</span>
                 </div>
-                <div style="padding: 4px; background: #f1f5f9; border-bottom: 1px solid #cbd5e1;">
-                    <select id="selectPhongKhamChat" onchange="doiPhongKhamChat(this.value)" style="width: 100%; padding: 3px; font-size: 11px; border-radius: 4px; border: 1px solid #cbd5e1; outline:none;">
-                        <option value="PK_617723">Phòng khám mặc định</option>
+                <div style="padding: 5px; background: #f1f5f9; border-bottom: 1px solid #cbd5e1;">
+                    <select id="selectPhongKhamChat" onchange="doiPhongKhamChat(this.value)" style="width: 100%; padding: 4px; font-size: 11px; border-radius: 4px; border: 1px solid #cbd5e1; outline:none;">
+                        ${pkOptionsHTML}
                     </select>
                 </div>
                 <div id="boxTinNhanMobile" style="flex: 1; padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; background: #f8fafc; font-size: 12px;"></div>
                 <div style="display: flex; padding: 6px; background: #fff; border-top: 1px solid #cbd5e1; gap: 5px; align-items: center;">
-                    <label style="cursor: pointer; font-size: 18px;" title="Gửi ảnh">📷<input type="file" id="inputAnhMobile" accept="image/*" style="display:none" onchange="guiAnhChuNuoi(this)"></label>
+                    <label style="cursor: pointer; font-size: 18px;" title="Gửi ảnh">📷<input type="file" id="inputAnhMobile" accept="image/*" style="display:none" onchange="guiAnhMobile(this)"></label>
                     <input type="text" id="inputChatMobile" placeholder="Nhắn tin..." style="flex: 1; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; font-size: 12px;" autocomplete="off">
-                    <button onclick="chuNuoiGuiTinNhan()" style="background: #0d9488; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px;">Gửi</button>
+                    <button onclick="guiTinNhanMobile()" style="background: #0d9488; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px;">Gửi</button>
                 </div>
             </div>`;
             document.body.insertAdjacentHTML('beforeend', mobileChatHTML);
-            taiDanhSachPhongKhamCuaChuNuoi(sdt);
 
         } else {
-            // --- 2. GIAO DIỆN QUẢN LÝ PHÒNG KHÁM (CHỈ GIỮ LẠI 1 NÚT CHAT DUY NHẤT Ở GÓC PHẢI) ---
+            // --- GIAO DIỆN MÁY TÍNH (PC - Quản lý phòng khám) ---
             if (document.getElementById('floatingPCChatBtn') !== null) return;
             
             const pcChatHTML = `
@@ -166,29 +169,12 @@ function khoiTaoNutChatNoiHeThong() {
     }
 }
 
-async function taiDanhSachPhongKhamCuaChuNuoi(sdt) {
-    try {
-        if (typeof db === 'undefined') return;
-        const { data: dsThuCung } = await db.from('thucung').select('maphongkham').eq('sodienthoai', sdt);
-        const mapkList = [...new Set(dsThuCung?.map(t => t.maphongkham) || [])];
-        
-        const { data: dsPK } = await db.from('chupk').select('maphongkham, tenphongkham').in('maphongkham', mapkList.length ? mapkList : ['PK_617723']);
-        selectedPhongKhamChat = dsPK?.[0]?.maphongkham || "PK_617723";
-
-        const selectEl = document.getElementById('selectPhongKhamChat');
-        if (selectEl && dsPK) {
-            selectEl.innerHTML = dsPK.map(pk => `<option value="${pk.maphongkham}">${pk.tenphongkham || pk.maphongkham}</option>`).join('');
-            selectEl.value = selectedPhongKhamChat;
-        }
-    } catch(e) { console.log(e); }
-}
-
 function doiPhongKhamChat(mapk) {
     selectedPhongKhamChat = mapk;
     taiTinNhanMobile();
 }
 
-// --- LOGIC CHỦ NUÔI ---
+// --- LOGIC GIAO DIỆN MOBILE ---
 function toggleMobileChat() {
     const win = document.getElementById('mobileChatWindow');
     if (!win) return;
@@ -199,8 +185,8 @@ function toggleMobileChat() {
 async function taiTinNhanMobile() {
     if (typeof db === 'undefined') return;
     const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
-    const sdt = ownerData?.sodienthoai || ownerData?.sdt || "0935778727"; 
-    const mpk = selectedPhongKhamChat || "PK_617723"; 
+    const sdt = ownerData?.sodienthoai || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727"; 
+    const mpk = selectedPhongKhamChat || window.getMaPhongKham() || "PK_617723"; 
 
     const { data } = await db.from('tin_nhan').select('*').eq('maphongkham', mpk).eq('sodienthoai_chunuoi', sdt).order('created_at', { ascending: true });
     const box = document.getElementById('boxTinNhanMobile');
@@ -211,27 +197,35 @@ async function taiTinNhanMobile() {
     }
 }
 
-async function chuNuoiGuiTinNhan() {
+async function guiTinNhanMobile() {
     const input = document.getElementById('inputChatMobile');
     if (!input) return;
     const noiDung = input.value.trim();
     if (!noiDung) return;
     
     const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
-    const sdt = ownerData?.sodienthoai || ownerData?.sdt || "0935778727"; 
-    const mpk = selectedPhongKhamChat || "PK_617723";
+    const sdt = ownerData?.sodienthoai || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727"; 
+    const mpk = selectedPhongKhamChat || window.getMaPhongKham() || "PK_617723";
+    const tenNguoiGui = ownerData?.hovaten || ownerData?.tentaikhoan || "Chủ nuôi";
 
-    await db.from('tin_nhan').insert([{ maphongkham: mpk, sodienthoai_chunuoi: sdt, nguoi_gui: 'chunuoi', noi_dung: noiDung, hinhanh: null }]);
+    await db.from('tin_nhan').insert([{ 
+        maphongkham: mpk, 
+        sodienthoai_chunuoi: sdt, 
+        nguoi_gui: isChuNuoiPage ? 'chunuoi' : 'nhanvien', 
+        ten_nguoi_gui: tenNguoiGui,
+        noi_dung: noiDung, 
+        hinhanh: null 
+    }]);
     input.value = '';
     taiTinNhanMobile();
 }
 
-async function guiAnhChuNuoi(input) {
+async function guiAnhMobile(input) {
     if (!input.files || !input.files[0]) return;
     const file = input.files[0];
     const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
-    const sdt = ownerData?.sodienthoai || ownerData?.sdt || "0935778727"; 
-    const mpk = selectedPhongKhamChat || "PK_617723";
+    const sdt = ownerData?.sodienthoai || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727"; 
+    const mpk = selectedPhongKhamChat || window.getMaPhongKham() || "PK_617723";
 
     const fileName = `chat_${Date.now()}_${file.name}`;
     const { error } = await db.storage.from('chat_images').upload(fileName, file);
@@ -241,7 +235,7 @@ async function guiAnhChuNuoi(input) {
     await db.from('tin_nhan').insert([{ 
         maphongkham: mpk, 
         sodienthoai_chunuoi: sdt, 
-        nguoi_gui: 'chunuoi', 
+        nguoi_gui: isChuNuoiPage ? 'chunuoi' : 'nhanvien', 
         noi_dung: '[Hình ảnh]', 
         hinhanh: urlData.publicUrl 
     }]);
@@ -253,17 +247,19 @@ function hienThiTinNhanMobileUI(msg) {
     const box = document.getElementById('boxTinNhanMobile');
     if (!box) return;
     const div = document.createElement('div');
-    const isOwner = msg.nguoi_gui === 'chunuoi';
+    const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
+    const sdt = ownerData?.sodienthoai || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727";
+    const isMe = (isChuNuoiPage && msg.nguoi_gui === 'chunuoi') || (!isChuNuoiPage && msg.nguoi_gui === 'nhanvien');
     
     let content = msg.hinhanh ? `<img src="${msg.hinhanh}" style="max-width:100%; border-radius:6px; cursor:pointer;" onclick="window.open('${msg.hinhanh}')"/>` : msg.noi_dung;
-    let labelNguoiGui = (!isOwner && msg.ten_nguoi_gui) ? `<div style="font-size: 9px; color: #475569; margin-bottom: 2px; font-weight: bold;">🏥 ${msg.ten_nguoi_gui}</div>` : '';
+    let labelNguoiGui = (!isMe && msg.ten_nguoi_gui) ? `<div style="font-size: 9px; color: #475569; margin-bottom: 2px; font-weight: bold;">${msg.ten_nguoi_gui}</div>` : '';
     
-    div.style.cssText = `max-width: 85%; padding: 6px 10px; border-radius: 8px; font-size: 12px; line-height: 1.4; ${isOwner ? 'background: #0d9488; color: white; align-self: flex-end; margin-left: auto;' : 'background: #e2e8f0; color: #1e293b; align-self: flex-start;'}`;
+    div.style.cssText = `max-width: 85%; padding: 6px 10px; border-radius: 8px; font-size: 12px; line-height: 1.4; ${isMe ? 'background: #0d9488; color: white; align-self: flex-end; margin-left: auto;' : 'background: #e2e8f0; color: #1e293b; align-self: flex-start;'}`;
     div.innerHTML = `${labelNguoiGui}<div>${content}</div>`;
     box.appendChild(div);
 }
 
-// --- LOGIC NHÂN VIÊN PHÒNG KHÁM ---
+// --- LOGIC GIAO DIỆN PC (NHÂN VIÊN) ---
 function togglePCChat() {
     const win = document.getElementById('pcChatWindow');
     if (!win) return;
@@ -299,8 +295,9 @@ async function taiDanhSachKhachHangChat() {
 async function chonKhachHangChat(sdt, tenKhach, element) {
     sdtChuNuoiDangChon = sdt;
     document.querySelectorAll('#dsKhachHangChat > div:not(:first-child)').forEach(el => el.style.background = 'transparent');
-    element.style.background = '#e2e8f0';
-    document.getElementById('tieuDeChatPK').innerText = `${tenKhach} (${sdt})`;
+    if (element) element.style.background = '#e2e8f0';
+    const titleEl = document.getElementById('tieuDeChatPK');
+    if (titleEl) titleEl.innerText = `${tenKhach} (${sdt})`;
     
     const mapk = sessionStorage.getItem('maphongkham') || "PK_617723";
     const { data } = await db.from('tin_nhan').select('*').eq('maphongkham', mapk).eq('sodienthoai_chunuoi', sdt).order('created_at', { ascending: true });
@@ -326,7 +323,7 @@ async function nhanVienGuiTinNhan() {
 
     await db.from('tin_nhan').insert([{ maphongkham: mapk, sodienthoai_chunuoi: sdtChuNuoiDangChon, nguoi_gui: 'nhanvien', ten_nguoi_gui: tenTaiKhoanGui, vai_tro_nguoi_gui: vaiTroGui, noi_dung: noiDung, hinhanh: null }]);
     input.value = '';
-    chonKhachHangChat(sdtChuNuoiDangChon, document.getElementById('tieuDeChatPK').innerText, document.querySelector('#dsKhachHangChat div[style*="background: rgb(226, 232, 240)"]'));
+    chonKhachHangChat(sdtChuNuoiDangChon, document.getElementById('tieuDeChatPK').innerText.split(' (')[0], document.querySelector('#dsKhachHangChat div[style*="background: rgb(226, 232, 240)"]'));
 }
 
 async function guiAnhNhanVien(input) {
@@ -353,7 +350,7 @@ async function guiAnhNhanVien(input) {
         hinhanh: urlData.publicUrl 
     }]);
     input.value = '';
-    chonKhachHangChat(sdtChuNuoiDangChon, document.getElementById('tieuDeChatPK').innerText, document.querySelector('#dsKhachHangChat div[style*="background: rgb(226, 232, 240)"]'));
+    chonKhachHangChat(sdtChuNuoiDangChon, document.getElementById('tieuDeChatPK').innerText.split(' (')[0], document.querySelector('#dsKhachHangChat div[style*="background: rgb(226, 232, 240)"]'));
 }
 
 function hienThiTinNhanPCUI(msg) {
@@ -372,7 +369,7 @@ function hienThiTinNhanPCUI(msg) {
 }
 
 async function kiemTraTinNhanChuaDocBanDau() {
-    if (typeof db === 'undefined' || isChuNuoiPage) return;
+    if (typeof db === 'undefined' || isMobilePortal) return;
     const mapk = sessionStorage.getItem('maphongkham') || "PK_617723";
     const { data } = await db.from('tin_nhan').select('nguoi_gui').eq('maphongkham', mapk).order('created_at', { ascending: false }).limit(1);
     if (data && data.length > 0 && data[0].nguoi_gui === 'chunuoi') {
@@ -387,28 +384,40 @@ function hienThiCanhBaoTinNhanMoi(hien) {
     }
 }
 
-// --- LẮNG NGHE REALTIME CHO NHÂN VIÊN ---
+// --- LẮNG NGHE REALTIME ---
 window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
-        if (typeof db !== 'undefined' && db.channel && !isChuNuoiPage) {
+        if (typeof db !== 'undefined' && db.channel) {
             const mapk = window.getMaPhongKham() || "PK_617723";
-            db.channel('realtime-chat-pc-global').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tin_nhan', filter: `maphongkham=eq.${mapk}` }, payload => {
-                const win = document.getElementById('pcChatWindow');
-                const isStaffSend = payload.new.nguoi_gui === 'nhanvien';
-
-                if (!isStaffSend) {
-                    if (!win || win.style.display !== 'flex' || sdtChuNuoiDangChon !== payload.new.sodienthoai_chunuoi) {
-                        hienThiCanhBaoTinNhanMoi(true);
+            
+            if (isMobilePortal) {
+                db.channel('realtime-chat-mobile-global').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tin_nhan' }, payload => {
+                    const win = document.getElementById('mobileChatWindow');
+                    if (win && win.style.display === 'flex' && payload.new.maphongkham === selectedPhongKhamChat) {
+                        hienThiTinNhanMobileUI(payload.new);
+                        const box = document.getElementById('boxTinNhanMobile');
+                        if (box) box.scrollTop = box.scrollHeight;
                     }
-                }
+                }).subscribe();
+            } else {
+                db.channel('realtime-chat-pc-global').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tin_nhan', filter: `maphongkham=eq.${mapk}` }, payload => {
+                    const win = document.getElementById('pcChatWindow');
+                    const isStaffSend = payload.new.nguoi_gui === 'nhanvien';
 
-                if (win && win.style.display === 'flex') {
-                    if (sdtChuNuoiDangChon && payload.new.sodienthoai_chunuoi === sdtChuNuoiDangChon) {
-                        hienThiTinNhanPCUI(payload.new);
+                    if (!isStaffSend) {
+                        if (!win || win.style.display !== 'flex' || sdtChuNuoiDangChon !== payload.new.sodienthoai_chunuoi) {
+                            hienThiCanhBaoTinNhanMoi(true);
+                        }
                     }
-                    taiDanhSachKhachHangChat();
-                }
-            }).subscribe();
+
+                    if (win && win.style.display === 'flex') {
+                        if (sdtChuNuoiDangChon && payload.new.sodienthoai_chunuoi === sdtChuNuoiDangChon) {
+                            hienThiTinNhanPCUI(payload.new);
+                        }
+                        taiDanhSachKhachHangChat();
+                    }
+                }).subscribe();
+            }
         }
     }, 1000);
 });
