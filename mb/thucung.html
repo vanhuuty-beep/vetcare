@@ -181,7 +181,7 @@
             font-size: 13px;
             outline: none;
         }
-        .input-group input:focus {
+        .input-group input:focus, .input-group select:focus {
             border-color: #008080;
         }
         .form-row {
@@ -402,32 +402,41 @@
                     <label>Loài</label>
                     <input type="text" id="loai" placeholder="VD: Chó, Mèo...">
                 </div>
+                <!-- BỔ SUNG TRƯỜNG GIỚI TÍNH -->
+                <div class="input-group">
+                    <label>Giới tính</label>
+                    <select id="gioitinh">
+                        <option value="">-- Chọn --</option>
+                        <option value="Đực">Đực</option>
+                        <option value="Cái">Cái</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
                 <div class="input-group">
                     <label>Giống</label>
                     <input type="text" id="giong" placeholder="VD: Poodle...">
                 </div>
-            </div>
-            <div class="form-row">
                 <div class="input-group">
                     <label>Màu lông</label>
                     <input type="text" id="maulong" placeholder="VD: Vàng...">
                 </div>
+            </div>
+            <div class="form-row">
                 <div class="input-group">
                     <label>Tuổi</label>
                     <input type="number" id="tuoi" placeholder="Số tuổi">
                 </div>
-            </div>
-            <div class="form-row">
                 <div class="input-group">
                     <label>Cân nặng (kg)</label>
                     <input type="number" step="0.1" id="cannang" placeholder="VD: 4.5">
                 </div>
-                <div class="input-group">
-                    <label>Chủ nuôi</label>
-                    <select id="makhachhang">
-                        <option value="">-- Chọn chủ nuôi --</option>
-                    </select>
-                </div>
+            </div>
+            <div class="input-group">
+                <label>Chủ nuôi</label>
+                <select id="makhachhang">
+                    <option value="">-- Chọn chủ nuôi --</option>
+                </select>
             </div>
 
             <div class="modal-footer">
@@ -529,6 +538,7 @@
         dataList.forEach(item => {
             const ten = item.tenthucung || 'Chưa đặt tên';
             const loai = item.loai || 'Chó/Mèo';
+            const gioitinh = item.gioitinh || '---';
             const giong = item.giong || '---';
             const cannang = item.cannang ? `${item.cannang} kg` : '---';
             const maKH = item.makhachhang || item.khachhang_id;
@@ -542,7 +552,7 @@
                 <div class="pet-card">
                     <img src="${anhPet}" class="pet-avatar" alt="Avatar" onerror="this.src='https://cdn-icons-png.flaticon.com/512/616/616408.png'">
                     <div class="pet-info">
-                        <h4>${ten} <span style="font-size: 11px; font-weight: normal; color: #008080;">(${loai} - ${giong})</span></h4>
+                        <h4>${ten} <span style="font-size: 11px; font-weight: normal; color: #008080;">(${loai} - ${gioitinh} - ${giong})</span></h4>
                         <p><i class="fa-solid fa-user" style="color: #008080;"></i> Chủ: <b>${tenChu}</b></p>
                         <p><i class="fa-solid fa-weight-scale" style="color: #e74c3c;"></i> Cân nặng: ${cannang} | Tuổi: ${item.tuoi !== null ? item.tuoi : '---'}</p>
                     </div>
@@ -637,6 +647,7 @@
         document.getElementById('editingId').value = '';
         document.getElementById('tenthucung').value = '';
         document.getElementById('loai').value = '';
+        document.getElementById('gioitinh').value = '';
         document.getElementById('giong').value = '';
         document.getElementById('maulong').value = '';
         document.getElementById('tuoi').value = '';
@@ -662,6 +673,7 @@
         document.getElementById('editingId').value = item.id;
         document.getElementById('tenthucung').value = item.tenthucung || '';
         document.getElementById('loai').value = item.loai || '';
+        document.getElementById('gioitinh').value = item.gioitinh || '';
         document.getElementById('giong').value = item.giong || '';
         document.getElementById('maulong').value = item.maulong || '';
         document.getElementById('tuoi').value = item.tuoi !== null ? item.tuoi : '';
@@ -695,6 +707,7 @@
         const id = document.getElementById('editingId').value;
         const tenthucung = document.getElementById('tenthucung').value.trim();
         const loai = document.getElementById('loai').value.trim();
+        const gioitinh = document.getElementById('gioitinh').value;
         const giong = document.getElementById('giong').value.trim();
         const maulong = document.getElementById('maulong').value.trim();
         const tuoi = document.getElementById('tuoi').value.trim();
@@ -710,6 +723,7 @@
         const payload = {
             tenthucung: tenthucung,
             loai: loai,
+            gioitinh: gioitinh,
             giong: giong,
             maulong: maulong,
             tuoi: tuoi !== "" ? parseInt(tuoi) : null,
