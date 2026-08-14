@@ -625,7 +625,7 @@
                     const fileName = `sp_${maphongkham}_${Date.now()}.jpg`;
 
                     let { data, error } = await db.storage
-                        .from('logo')
+                        .from('images')
                         .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
 
                     if (error) {
@@ -634,7 +634,7 @@
                     }
 
                     const { data: publicURLData } = db.storage
-                        .from('logo')
+                        .from('images')
                         .getPublicUrl(fileName);
 
                     const publicUrl = publicURLData.publicUrl;
