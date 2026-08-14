@@ -140,6 +140,7 @@
             text-decoration: none;
             color: #333;
             transition: 0.2s;
+            position: relative;
         }
         .service-item:hover {
             background: #e6f2f2;
@@ -154,6 +155,20 @@
             font-size: 10px;
             font-weight: 500;
             line-height: 1.2;
+        }
+
+        /* Badge số lượng thông báo trên icon dịch vụ */
+        .badge-alert {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #ef4444;
+            color: white;
+            font-size: 9px;
+            font-weight: bold;
+            padding: 2px 5px;
+            border-radius: 10px;
+            display: none;
         }
 
         .promo-banner {
@@ -237,7 +252,7 @@
     <!-- NỘI DUNG CHÍNH (PHÂN QUYỀN HIỂN THỊ) -->
     <div class="app-content">
         
-        <!-- KHU VỰC 1: QUẢN LÝ CHUNG & HỆ THỐNG (Chỉ Chủ PK hoặc Admin Huuty thấy) -->
+        <!-- KHU VỰC 1: QUẢN LÝ CHUNG & HỆ THỐNG -->
         <div id="wrapperHeThong" style="display: none;">
             <div class="section-title">Khu Vực Quản Lý Hệ Thống</div>
             <div class="service-grid">
@@ -256,23 +271,36 @@
                 <a href="thucung.html" class="service-item"><i class="fa-solid fa-paw"></i><span>Thú cưng</span></a>
                 <a href="khambenh.html" class="service-item"><i class="fa-solid fa-stethoscope"></i><span>Khám bệnh</span></a>
                 <a href="phieuchidinh.html" class="service-item"><i class="fa-solid fa-file-medical"></i><span>Phiếu chỉ định</span></a>
-                <a href="lichhen.html" class="service-item"><i class="fa-solid fa-calendar-check"></i><span>Lịch hẹn</span></a>
-                <a href="nhatkyvaccine.html" class="service-item"><i class="fa-solid fa-syringe"></i><span>Tiêm phòng</span></a>
-                <a href="nhatkynoitru.html" class="service-item"><i class="fa-solid fa-hotel"></i><span>Lưu trú</span></a>
-				<a href="lichtrinh.html" class="service-item"><i class="fa-solid fa-timeline"></i><span>Lịch trình</span></a>
+                
+                <!-- Lịch hẹn có gắn badge chuông báo -->
+                <a href="lichhen.html" class="service-item">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    <span>Lịch hẹn</span>
+                    <span id="badgeLichHen" class="badge-alert">0</span>
+                </a>
+
+                <!-- Tiêm phòng có gắn badge chuông báo -->
+                <a href="khovaccine.html" class="service-item">
+                    <i class="fa-solid fa-syringe"></i>
+                    <span>Tiêm phòng</span>
+                    <span id="badgeVaccine" class="badge-alert">0</span>
+                </a>
+
+                <a href="noitru.html" class="service-item"><i class="fa-solid fa-hotel"></i><span>Lưu trú</span></a>
+                <a href="lichtrinh.html" class="service-item"><i class="fa-solid fa-timeline"></i><span>Lịch trình</span></a>
                 <a href="donthuoc.html" class="service-item"><i class="fa-solid fa-file-prescription"></i><span>Đơn thuốc</span></a>
                 <a href="khothuoc.html" class="service-item"><i class="fa-solid fa-pills"></i><span>Kho thuốc</span></a>
             </div>
         </div>
 
-        <!-- KHU VỰC 3: PETSHOP, POS & SPA (Bác sĩ bị ẩn phần bán hàng theo logic chuẩn) -->
+        <!-- KHU VỰC 3: PETSHOP, POS & SPA -->
         <div id="wrapperShopSpa">
             <div class="section-title">Petshop, POS & Spa</div>
             <div class="service-grid">
                 <a href="pos.html" class="service-item" style="background: #e0f2fe;"><i class="fa-solid fa-cash-register" style="color: #0284c7;"></i><span style="font-weight: bold; color: #0284c7;">BÁN HÀNG POS</span></a>
                 <a href="danhmucsanpham.html" class="service-item"><i class="fa-solid fa-boxes-stacked"></i><span>Thêm sản phẩm</span></a>
                 <a href="chitietbanhang.html" class="service-item"><i class="fa-solid fa-file-invoice-dollar"></i><span>Bán hàng</span></a>
-				<a href="nhatkykho.html" class="service-item"><i class="fa-solid fa-clipboard-check"></i><span>Nhật ký kho</span></a>
+                <a href="nhatkykho.html" class="service-item"><i class="fa-solid fa-clipboard-check"></i><span>Nhật ký kho</span></a>
                 <a href="nhatkyspa.html" class="service-item"><i class="fa-solid fa-scissors"></i><span>Spa & Tỉa</span></a>
             </div>
         </div>
@@ -310,9 +338,9 @@
 
 </div>
 
-<!-- SCRIPT XỬ LÝ PHÂN QUYỀN VÀ SỬA THÔNG TIN CÁ NHÂN TƯƠNG TỰ BẢN PC -->
+<!-- SCRIPT XỬ LÝ PHÂN QUYỀN, ÂM THANH CHUÔNG BÁO VÀ NHẮC LỊCH -->
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", async function() {
         let currentUser = null;
         try {
             currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
@@ -320,14 +348,12 @@
             currentUser = null;
         }
 
-        // Nếu chưa đăng nhập, đá về trang đăng nhập gốc
         if (!currentUser) {
             alert('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!');
             window.location.replace('../index.html');
             return;
         }
 
-        // Chuẩn hóa vai trò giống bản PC
         const vaitroRaw = currentUser.vaitro || currentUser.role || '';
         const vaitro = vaitroRaw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
         
@@ -338,29 +364,121 @@
         const isTrueOwner = vaitro.includes('chủ phòng khám') || vaitro.includes('chu phong kham') || vaitro.includes('chupk');
         const isBacSi = vaitro.includes('bac si') || vaitro === 'bacsi';
 
-        // Hiển thị tên và thông tin lên Header Mobile
         const tenHienThi = currentUser.tennhanvien || currentUser.hovaten || currentUser.tentaikhoan || 'Tài khoản';
         document.getElementById('hienThiTenUser').innerText = tenHienThi;
         document.getElementById('hienThiVaiTro').innerText = currentUser.vaitro || (isTrueOwner ? 'Chủ phòng khám' : 'Nhân viên');
         document.getElementById('hienThiTenPK').innerText = currentUser.tenphongkham || 'VetCare Pro';
 
-        // --- ÁP DỤNG PHÂN QUYỀN HIỂN THỊ MENU MOBILE ---
         const wrapperHeThong = document.getElementById('wrapperHeThong');
         const wrapperYTe = document.getElementById('wrapperYTe');
         const wrapperShopSpa = document.getElementById('wrapperShopSpa');
 
-        // 1. Nếu là Siêu quản lý (Huuty / 0935778727) hoặc Chủ phòng khám: Hiện đầy đủ khu vực hệ thống
         if (isHuuTy || isTrueOwner) {
             if (wrapperHeThong) wrapperHeThong.style.display = 'block';
         } else {
             if (wrapperHeThong) wrapperHeThong.style.display = 'none';
         }
 
-        // 2. Nếu là Bác sĩ: Ẩn phần Petshop & Bán hàng, giữ lại Y tế
         if (isBacSi && !isHuuTy) {
             if (wrapperShopSpa) wrapperShopSpa.style.display = 'none';
         }
+
+        // --- KÍCH HOẠT HỆ THỐNG KIỂM TRA LỊCH HẸN & VACCINE ĐẾN HẠN ---
+        await kiemTraLichHenVaVaccineHomNay();
     });
+
+    // 1. Hàm phát tiếng chuông cảnh báo kỹ thuật số (Web Audio API)
+    function phatChuongBaoDong() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(784, audioCtx.currentTime); // Âm báo cao
+            osc.frequency.setValueAtTime(523.25, audioCtx.currentTime + 0.25); // Tạo âm đôi
+
+            gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.7);
+
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.7);
+        } catch (e) {
+            console.log("Trình duyệt chờ tương tác để phát âm thanh.");
+        }
+    }
+
+    // 2. Kiểm tra dữ liệu lịch hẹn và lịch tiêm vaccine đến hạn hôm nay từ Supabase
+    async function kiemTraLichHenVaVaccineHomNay() {
+        if (typeof db === 'undefined' || !db) return;
+
+        // Lấy ngày hiện tại chuẩn YYYY-MM-DD
+        const todayStr = new Date().toISOString().split('T')[0];
+        let soLuongCanBao = 0;
+        let noiDungThongBao = "";
+
+        try {
+            // A. Kiểm tra lịch hẹn hôm nay (bảng 'lichhen')
+            // Thử các tên cột ngày phổ biến: ngayhen, ngaytiem, ngay
+            const { data: dataLichHen, error: errLichHen } = await db
+                .from('lichhen')
+                .select('*')
+                .or(`ngayhen.eq.${todayStr},ngay.eq.${todayStr}`);
+
+            if (!errLichHen && dataLichHen && dataLichHen.length > 0) {
+                soLuongCanBao += dataLichHen.length;
+                noiDungThongBao += `📅 Có ${dataLichHen.length} lịch hẹn khám hôm nay!\n`;
+                const badgeLH = document.getElementById('badgeLichHen');
+                if (badgeLH) {
+                    badgeLH.innerText = dataLichHen.length;
+                    badgeLH.style.display = 'block';
+                }
+            }
+
+            // B. Kiểm tra lịch tiêm phòng vaccine hôm nay (bảng 'nhatkyvaccine' hoặc 'lichtiem')
+            const { data: dataVaccine, error: errVaccine } = await db
+                .from('nhatkyvaccine')
+                .select('*')
+                .or(`ngaytiem.eq.${todayStr},ngayhen.eq.${todayStr},ngaytrakq.eq.${todayStr}`);
+
+            if (!errVaccine && dataVaccine && dataVaccine.length > 0) {
+                soLuongCanBao += dataVaccine.length;
+                noiDungThongBao += `💉 Có ${dataVaccine.length} lịch tiêm phòng vaccine đến hạn hôm nay!\n`;
+                const badgeVC = document.getElementById('badgeVaccine');
+                if (badgeVC) {
+                    badgeVC.innerText = dataVaccine.length;
+                    badgeVC.style.display = 'block';
+                }
+            }
+
+            // Nếu có lịch cần báo và chưa thông báo trong ngày hôm nay thì phát chuông
+            if (soLuongCanBao > 0) {
+                const keyDaBaoChuong = 'vetcare_baochuong_' + todayStr;
+                if (!localStorage.getItem(keyDaBaoChuong)) {
+                    phatChuongBaoDong();
+                    alert(`🔔 THÔNG BÁO NHẮC LỊCH HÔM NAY:\n\n${noiDungThongBao}\nVui lòng kiểm tra các mục tương ứng trên ứng dụng!`);
+                    localStorage.setItem(keyDaBaoChuong, 'true');
+                }
+            }
+
+        } catch (err) {
+            console.error("Lỗi kiểm tra lịch nhắc:", err);
+        }
+    }
+
+    // Mở khóa âm thanh khi người dùng chạm vào màn hình (tránh bị chặn bởi chính sách trình duyệt mobile)
+    document.body.addEventListener('click', function unlockAudioContext() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        } catch(e) {}
+    }, { once: true });
+
 
     // --- HÀM SỬA THÔNG TIN CÁ NHÂN TRÊN MOBILE (ĐỒNG BỘ VỚI PC) ---
     function moModalSuaThongTinCaNhanMobile() {
@@ -426,7 +544,6 @@
         if (matKhauMoi) updatePayload.matkhau = matKhauMoi;
 
         if (typeof db !== 'undefined' && db) {
-            // Xác định cập nhật bảng user hoặc chupk tùy theo đối tượng
             const isOwner = (currentUser.vaitro === 'Chủ phòng khám');
             const targetTable = isOwner ? 'chupk' : 'user';
             
