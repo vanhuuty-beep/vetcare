@@ -382,10 +382,9 @@
             
             <input type="hidden" id="editingId">
             
-            <!-- Ô CHỤP ẢNH TRỰC TIẾP TỪ CAMERA ĐIỆN THOẠI -->
+            <!-- Ô CHỤP ẢNH TRỰC TIẾP TỪ CAMERA ĐIỆN THOẠI (CÓ NÉN ẢNH TỐC ĐỘ CAO) -->
             <div class="input-group">
                 <label>Hình ảnh thú cưng (Chụp từ Camera)</label>
-                <!-- Thêm thuộc tính capture="environment" để kích hoạt camera sau trên điện thoại -->
                 <input type="file" id="pet_anhFile" accept="image/*" capture="environment" onchange="xuLyChonFileAnhThuCung(this)" style="padding: 5px; background: #f8fafc; font-size: 11px; cursor: pointer;">
                 <input type="hidden" id="pet_anhUrlHidden">
                 <div style="display: flex; align-items: center; gap: 10px; margin-top: 6px;">
@@ -569,40 +568,58 @@
         });
     }
 
-    // Hàm tự động upload ảnh chụp từ camera lên Supabase Storage
+    // --- HÀM NÉN VÀ TẢI ẢNH CHỤP TỪ CAMERA (TỐC ĐỘ CAO) ---
     async function xuLyChonFileAnhThuCung(input) {
         if (!input.files || input.files.length === 0) return;
         const file = input.files[0];
         const maphongkham = sessionStorage.getItem('maphongkham') || 'chung';
 
-        const fileExt = file.name.split('.').pop();
-        const fileName = `pet_cam_${maphongkham}_${Date.now()}.${fileExt}`;
+        alert('⏳ Đang nén và tải ảnh lên hệ thống...');
 
-        alert('⏳ Đang tải ảnh chụp lên hệ thống...');
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = async () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800; // Giới hạn kích thước tối ưu cho mobile
+                const scaleSize = MAX_WIDTH / img.width;
+                canvas.width = MAX_WIDTH;
+                canvas.height = img.height * scaleSize;
 
-        let { data, error } = await db.storage
-            .from('logo')
-            .upload(fileName, file, { upsert: true });
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        if (error) {
-            alert('❌ Lỗi tải ảnh: ' + error.message);
-            return;
-        }
+                canvas.toBlob(async (blob) => {
+                    const fileName = `pet_cam_${maphongkham}_${Date.now()}.jpg`;
 
-        const { data: publicURLData } = db.storage
-            .from('logo')
-            .getPublicUrl(fileName);
+                    let { data, error } = await db.storage
+                        .from('logo')
+                        .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
 
-        const publicUrl = publicURLData.publicUrl;
+                    if (error) {
+                        alert('❌ Lỗi tải ảnh: ' + error.message);
+                        return;
+                    }
 
-        document.getElementById('pet_anhUrlHidden').value = publicUrl;
-        const preview = document.getElementById('pet_imgPreview');
-        if (preview) {
-            preview.src = publicUrl;
-            preview.style.display = 'block';
-        }
-        
-        alert('✅ Chụp và tải ảnh thành công!');
+                    const { data: publicURLData } = db.storage
+                        .from('logo')
+                        .getPublicUrl(fileName);
+
+                    const publicUrl = publicURLData.publicUrl;
+
+                    document.getElementById('pet_anhUrlHidden').value = publicUrl;
+                    const preview = document.getElementById('pet_imgPreview');
+                    if (preview) {
+                        preview.src = publicUrl;
+                        preview.style.display = 'block';
+                    }
+                    
+                    alert('✅ Tải ảnh thành công!');
+                }, 'image/jpeg', 0.7);
+            };
+        };
     }
 
     function timKiemThuCung() {
