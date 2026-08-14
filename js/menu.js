@@ -150,7 +150,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
     dynamicMenuContent += heThongMenuHtml;
 
-    // Lấy màu nền menu đã lưu (mặc định xanh cổ vịt #058786)
     const savedTheme = localStorage.getItem('sidebarThemeStyle') || '#058786';
     const savedThemeClass = localStorage.getItem('sidebarThemeClass') || '';
 
@@ -161,7 +160,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div style="display: flex; align-items: center;">
                     <span style="font-size: 20px; margin-right: 8px;"><i class="fa-solid fa-paw" style="color: #60a5fa;"></i></span> <span class="menu-text">VetCare Pro</span>
                 </div>
-                <!-- BẢNG CHỌN MÀU GIAO DIỆN -->
                 <div class="theme-picker-wrapper" title="Đổi màu giao diện menu & header" style="position: relative; cursor: pointer;">
                     <span style="font-size: 14px; padding: 5px 8px; background: rgba(255,255,255,0.2); border-radius: 6px;"><i class="fa-solid fa-palette"></i></span>
                     <div class="theme-dropdown-palette">
@@ -404,21 +402,61 @@ document.addEventListener("DOMContentLoaded", function() {
         body.sidebar-collapsed .sidebar .theme-picker-wrapper { display: none !important; }
         body.sidebar-collapsed .submenu-container.open { display: none !important; }
 
-        /* KHẮC PHỤC LỖI TRÀN MÀN HÌNH CỦA KHUNG THÔNG BÁO */
+        /* KHẮC PHỤC TRIỆT ĐỂ LỖI TRÀN KHUNG CỦA LỊCH SỬ THÔNG BÁO */
         #pcNotificationDropdown {
             display: none;
-            position: absolute !important;
-            top: 50px !important;
-            right: 120px !important; /* Căn chỉnh đúng vị trí nút cái chuông */
-            width: 340px !important;
-            max-height: 380px !important;
+            position: fixed !important;
+            top: 60px !important;
+            right: 25px !important;
+            width: 320px !important;
+            max-width: calc(100vw - 40px) !important;
+            max-height: 70vh !important;
             overflow-y: auto !important;
+            overflow-x: hidden !important;
             background: #ffffff !important;
-            border-radius: 10px !important;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
-            z-index: 99999 !important;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+            z-index: 999999 !important;
             border: 1px solid #cbd5e1 !important;
+            word-break: break-word !important;
+        }
+        #pcNotificationDropdown * {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            word-wrap: break-word !important;
+            white-space: normal !important;
+        }
+
+        /* CHỐNG TRÀN CHO KHUNG BONG BÓNG THÔNG BÁO (TOAST) GÓC MÀN HÌNH */
+        #notification-center-pc {
+            position: fixed !important;
+            bottom: 20px !important;
+            right: 20px !important;
+            z-index: 9999999 !important;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .notify-toast-pc {
+            pointer-events: auto;
+            width: 320px !important;
+            max-width: 90vw !important;
+            background: #ffffff !important;
+            padding: 12px 15px !important;
+            border-radius: 10px !important;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
+            display: flex !important;
+            align-items: flex-start !important;
+            border-left: 4px solid #008080 !important;
+            box-sizing: border-box !important;
+            word-break: break-word !important;
+        }
+        .notify-toast-pc * {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            word-wrap: break-word !important;
+            white-space: normal !important;
         }
     </style>`;
 
@@ -516,9 +554,9 @@ document.addEventListener("DOMContentLoaded", function() {
         const dropdown = document.createElement('div');
         dropdown.id = 'pcNotificationDropdown';
         dropdown.innerHTML = `
-            <div style="background: #1e3a8a; color: white; padding: 10px 12px; font-weight: bold; font-size: 13px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="background: #1e3a8a; color: white; padding: 10px 12px; font-weight: bold; font-size: 13px; display: flex; justify-content: space-between; align-items: center; border-radius: 11px 11px 0 0;">
                 <span>🔔 Lịch sử thông báo</span>
-                <button onclick="xoaTatCaThongBaoPC()" style="background: none; border: none; color: #fbbf24; font-size: 11px; cursor: pointer;">Xóa tất cả</button>
+                <button onclick="xoaTatCaThongBaoPC()" style="background: rgba(255,255,255,0.2); border: none; color: #fbbf24; padding: 2px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">Xóa tất cả</button>
             </div>
             <div id="pcNotificationList" style="padding: 0;">
                 <div style="padding: 15px; text-align: center; color: #64748b; font-size: 12px;">Chưa có thông báo nào</div>
@@ -566,7 +604,6 @@ function changeSidebarTheme(colorValue, className) {
         }
     }
 
-    // Tự động thay đổi màu nền Topbar Header theo
     const topNavbar = document.getElementById('topNavbarHeader');
     if (topNavbar) {
         topNavbar.style.background = colorValue;
@@ -708,7 +745,7 @@ function xuLyCoDuLieuMoiPC(noiDungThongBao) {
     if (listDiv) {
         if (listDiv.innerHTML.includes('Chưa có thông báo nào')) listDiv.innerHTML = '';
         const timeNow = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-        listDiv.innerHTML = `<div style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; background: #f8fafc;"><div><div style="font-weight: bold; color: #1e293b; margin-bottom: 2px;">${noiDungThongBao}</div><div style="font-size: 10px; color: #64748b;">${timeNow}</div></div></div>` + listDiv.innerHTML;
+        listDiv.innerHTML = `<div style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; background: #f8fafc; word-break: break-word;"><div><div style="font-weight: bold; color: #1e293b; margin-bottom: 2px;">${noiDungThongBao}</div><div style="font-size: 10px; color: #64748b;">${timeNow}</div></div></div>` + listDiv.innerHTML;
     }
 }
 
