@@ -4,19 +4,19 @@
     <meta charset="UTF-8">
     <title>Quản lý Phiếu Chỉ Định - VetCare Pro</title>
     <!-- Thư viện Supabase JS -->
-   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-	<script src="../js/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
     <script src="../js/config.js"></script>
     <script src="../js/supabase.js"></script>
     <script src="../js/utils.js"></script>
     <script src="../js/menu.js"></script>
-	<script src="../js/smart-search.js"></script>
-	
+    <script src="../js/smart-search.js"></script>
+    
     <!-- Gọi file CSS chung -->
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/mobile.css">
     <link rel="stylesheet" href="../css/style1.css">
-	<link rel="stylesheet" href="../css/smart-search.css">
+    <link rel="stylesheet" href="../css/smart-search.css">
 
     <style>
         .search-box {
@@ -439,7 +439,7 @@
 
         // Biến phục vụ phân trang
         let currentPage = 1;
-        const rowsPerPage = 10;
+        let rowsPerPage = 10;
         let filteredDataCache = [];
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -711,8 +711,8 @@
                     <td>${item.ketluan || ''}</td>
                     <td style="text-align: center;">
                         <span onclick="capNhatTrangThaiPhieuChiDinhPC(${item.id}, '${nextStatus}')" 
-                              style="background-color: ${badgeColor}; color: white; font-size: 11px; padding: 3px 8px; border-radius: 12px; cursor: pointer; font-weight: bold; display: inline-block; white-space: nowrap;" 
-                              title="Bấm để đổi trạng thái">
+                            style="background-color: ${badgeColor}; color: white; font-size: 11px; padding: 3px 8px; border-radius: 12px; cursor: pointer; font-weight: bold; display: inline-block; white-space: nowrap;" 
+                            title="Bấm để đổi trạng thái">
                             ${trangThaiHienTai} 🔄
                         </span>
                     </td>
@@ -932,11 +932,13 @@
 
             if (fileInput.files && fileInput.files[0]) {
                 const file = fileInput.files[0];
-                const fileName = `phieuchidinh_${Date.now()}_${file.name}`;
+                
+                // ĐẶT TÊN FILE SẠCH SẼ CHỐNG LỖI KÝ TỰ ĐẶC BIỆT HOẶC LỖI 400 TRÊN SUPABASE
+                const fileName = `phieuchidinh_${Date.now()}.jpg`;
                 
                 const { error: uploadError } = await db.storage
                     .from('images')
-                    .upload(fileName, file);
+                    .upload(fileName, file, { contentType: 'image/jpeg', upsert: true });
 
                 if (uploadError) {
                     alert('Lỗi upload ảnh: ' + uploadError.message);

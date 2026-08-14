@@ -5,18 +5,18 @@
     <title>Danh Mục Sản Phẩm & Hàng Hóa - VetCare Pro</title>
     <!-- Thư viện Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-	<script src="../js/env.js"></script>
+    <script src="../js/env.js"></script>
     <script src="../js/config.js"></script>
     <script src="../js/supabase.js"></script>
     <script src="../js/utils.js"></script>
     <script src="../js/menu.js"></script>
-	<script src="../js/smart-search.js"></script>
+    <script src="../js/smart-search.js"></script>
 
     <!-- Gọi file CSS chung -->
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/mobile.css">
     <link rel="stylesheet" href="../css/style1.css">
-	<link rel="stylesheet" href="../css/smart-search.css">
+    <link rel="stylesheet" href="../css/smart-search.css">
 
     <style>
         .stats-container {
@@ -270,7 +270,6 @@
             <div class="form-row">
                 <div class="form-group-modal">
                     <label>Nhóm hàng (Chọn sẵn hoặc gõ trực tiếp tên nhóm mới):</label>
-                    <!-- Sử dụng input + datalist để người dùng có thể tùy ý thêm nhóm hàng mới -->
                     <input type="text" id="nhomsanpham" list="danhSachNhomGoiY" placeholder="Chọn hoặc tự gõ nhóm hàng mới...">
                     <datalist id="danhSachNhomGoiY">
                         <option value="Thức ăn">
@@ -303,10 +302,15 @@
                 </div>
             </div>
 
+            <!-- CHỤP / TẢI ẢNH AN TOÀN TRỰC TIẾP LÊN SUPABASE STORAGE -->
             <div class="form-group-modal">
                 <label>Hình ảnh sản phẩm (Tải lên file):</label>
-                <input type="file" id="fileHinhanh" accept="image/*" style="padding: 6px;">
+                <input type="file" id="fileHinhanh" accept="image/*" onchange="xuLyChonFileAnhSanPham(this)" style="padding: 6px; font-size: 13px;">
                 <input type="hidden" id="hinhanh">
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 6px;">
+                    <img id="sp_imgPreview" src="" alt="Ảnh sản phẩm" style="width: 50px; height: 50px; border-radius: 6px; border: 2px dashed #cbd5e1; object-fit: cover; background: #f8fafc; display: none;">
+                    <span style="font-size: 12px; color: #64748b;">Chọn file ảnh để tải lên hệ thống Cloud Storage.</span>
+                </div>
             </div>
 
             <div class="form-group-modal">
@@ -419,12 +423,12 @@
             const duLieuTrangNay = danhSachDangLoc.slice(viTriBatDau, viTriKetThuc);
 
             duLieuTrangNay.forEach((item) => {
-                // TẠO MÃ SP KẾT HỢP GIỮA SP, MÃ PHÒNG KHÁM VÀ ID/SỐ NGẪU NHIÊN
                 let pkClean = layMaPhongKhamClean();
                 const maSP = item.masanpham || ('SP' + pkClean + String(item.id).padStart(3, '0'));
                 
-                const imgTag = item.hinhanh 
-                    ? `<img src="${item.hinhanh}" class="product-img" onerror="this.src='https://via.placeholder.com/40?text=No+Img'">`
+                // ĐÃ LOẠI BỎ HOÀN TOÀN VIA.PLACEHOLDER.COM, DÙNG KHỐI DIV AN TOÀN
+                const imgTag = item.hinhanh && item.hinhanh.trim() !== ''
+                    ? `<img src="${item.hinhanh}" class="product-img" onerror="this.outerHTML='<div class=\'product-img\' style=\'display:flex;align-items:center;justify-content:center;background:#e2e8f0;font-size:9px;color:#64748b;\'>No Img</div>'">`
                     : `<div class="product-img" style="display:flex;align-items:center;justify-content:center;background:#e2e8f0;font-size:9px;color:#64748b;">No Img</div>`;
 
                 const barcodeVal = item.mabarcode || ('86' + String(item.id).padStart(8, '0'));
@@ -449,7 +453,6 @@
                 </tr>`;
             });
 
-            // Vẽ giao diện thanh phân trang
             veNutPhanTrang(tongSoTrang);
 
             setTimeout(() => {
@@ -503,31 +506,81 @@
 
         let timeoutTimKiem = null;
 
-    function timKiemSanPham() {
-        // Hủy bỏ lệnh tìm kiếm trước đó nếu người dùng đang quét/gõ liên tục để tránh nghẽn
-        clearTimeout(timeoutTimKiem);
-        
-        // Tạo độ trễ ngắn (150ms) để chờ nhập xong hẳn mới lọc bảng, giúp máy quét mã vạch bắn chữ cực nhanh mà không bị khựng
-        timeoutTimKiem = setTimeout(() => {
-            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
-            if (!tuKhoa) {
-                danhSachDangLoc = danhSachSanPhamGoc;
-            } else {
-                let pkClean = layMaPhongKhamClean();
-                danhSachDangLoc = danhSachSanPhamGoc.filter(item => {
-                    const maSP = ('sp' + pkClean + String(item.id)).toLowerCase();
-                    const tenSP = (item.tensanpham || '').toLowerCase();
-                    const barcode = (item.mabarcode || '').toLowerCase();
-                    const nhom = (item.nhomsanpham || '').toLowerCase();
-                    
-                    // Ưu tiên kiểm tra khớp chính xác barcode hoặc mã SP trước để tăng tốc độ phản hồi
-                    return barcode.includes(tuKhoa) || maSP.includes(tuKhoa) || tenSP.includes(tuKhoa) || nhom.includes(tuKhoa);
-                });
-            }
-            trangThaiPhanTrang.trangHienTai = 1;
-            hienThiBangVaPhanTrang();
-        }, 150);
-    }
+        function timKiemSanPham() {
+            clearTimeout(timeoutTimKiem);
+            timeoutTimKiem = setTimeout(() => {
+                const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+                if (!tuKhoa) {
+                    danhSachDangLoc = danhSachSanPhamGoc;
+                } else {
+                    let pkClean = layMaPhongKhamClean();
+                    danhSachDangLoc = danhSachSanPhamGoc.filter(item => {
+                        const maSP = ('sp' + pkClean + String(item.id)).toLowerCase();
+                        const tenSP = (item.tensanpham || '').toLowerCase();
+                        const barcode = (item.mabarcode || '').toLowerCase();
+                        const nhom = (item.nhomsanpham || '').toLowerCase();
+                        
+                        return barcode.includes(tuKhoa) || maSP.includes(tuKhoa) || tenSP.includes(tuKhoa) || nhom.includes(tuKhoa);
+                    });
+                }
+                trangThaiPhanTrang.trangHienTai = 1;
+                hienThiBangVaPhanTrang();
+            }, 150);
+        }
+
+        // --- HÀM NÉN VÀ TẢI ẢNH AN TOÀN TRỰC TIẾP LÊN SUPABASE STORAGE (BUCKET: images) ---
+        async function xuLyChonFileAnhSanPham(input) {
+            if (!input.files || input.files.length === 0) return;
+            const file = input.files[0];
+
+            alert('⏳ Đang nén và tải ảnh sản phẩm lên Cloud Storage...');
+
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = async () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800; 
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    canvas.toBlob(async (blob) => {
+                        // TÊN FILE CỰC KỲ SẠCH SẼ, CHỐNG MỌI LỖI KÝ TỰ %0D%0A HOẶC LỖI 400
+                        const fileName = 'sp_' + Date.now() + '.jpg';
+
+                        let { data, error } = await db.storage
+                            .from('images')
+                            .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
+
+                        if (error) {
+                            alert('❌ Lỗi tải ảnh: ' + error.message);
+                            return;
+                        }
+
+                        const { data: publicURLData } = db.storage
+                            .from('images')
+                            .getPublicUrl(fileName);
+
+                        const publicUrl = publicURLData.publicUrl;
+
+                        document.getElementById('hinhanh').value = publicUrl;
+                        const preview = document.getElementById('sp_imgPreview');
+                        if (preview) {
+                            preview.src = publicUrl;
+                            preview.style.display = 'block';
+                        }
+                        
+                        alert('✅ Tải ảnh thành công!');
+                    }, 'image/jpeg', 0.7);
+                };
+            };
+        }
 
         function moModalThem() {
             document.getElementById('editingId').value = '';
@@ -541,6 +594,12 @@
             document.getElementById('fileHinhanh').value = '';
             document.getElementById('hinhanh').value = '';
             document.getElementById('mota').value = '';
+            
+            const preview = document.getElementById('sp_imgPreview');
+            if (preview) {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
             
             document.getElementById('btnXoaModal').style.display = 'none';
             document.getElementById('modalTitle').innerText = 'Thêm hàng hóa mới';
@@ -563,7 +622,20 @@
             document.getElementById('giaban').value = item.giaban || '';
             document.getElementById('soluongton').value = item.soluongton || 0;
             document.getElementById('fileHinhanh').value = '';
-            document.getElementById('hinhanh').value = item.hinhanh || '';
+            
+            const hinhanh = item.hinhanh || '';
+            document.getElementById('hinhanh').value = hinhanh;
+            const preview = document.getElementById('sp_imgPreview');
+            if (preview) {
+                if (hinhanh && hinhanh.trim() !== '') {
+                    preview.src = hinhanh;
+                    preview.style.display = 'block';
+                } else {
+                    preview.src = '';
+                    preview.style.display = 'none';
+                }
+            }
+
             document.getElementById('mota').value = item.mota || '';
 
             document.getElementById('btnXoaModal').style.display = 'block';
@@ -585,17 +657,7 @@
             const giaban = parseFloat(document.getElementById('giaban').value) || 0;
             const soluongton = parseInt(document.getElementById('soluongton').value) || 0;
             const mota = document.getElementById('mota').value.trim();
-            
-            let hinhanh = document.getElementById('hinhanh').value;
-            const fileInput = document.getElementById('fileHinhanh');
-            if (fileInput.files && fileInput.files[0]) {
-                const file = fileInput.files[0];
-                hinhanh = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.readAsDataURL(file);
-                });
-            }
+            const hinhanh = document.getElementById('hinhanh').value.trim();
 
             if (!tensanpham || !giaban) {
                 alert('Vui lòng nhập Tên sản phẩm và Giá niêm yết (giá bán)!');
