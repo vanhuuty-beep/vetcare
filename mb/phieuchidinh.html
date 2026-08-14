@@ -441,11 +441,10 @@
         }
     }
 
-    // --- HÀM NÉN VÀ UPLOAD ẢNH CHỈ ĐỊNH TỐC ĐỘ CAO ---
+    // --- HÀM NÉN VÀ UPLOAD ẢNH CHỈ ĐỊNH DÙNG CHUNG BUCKET 'images' ---
     async function xuLyChonFileAnhChiDinh(input) {
         if (!input.files || input.files.length === 0) return;
         const file = input.files[0];
-        const maphongkham = sessionStorage.getItem('maphongkham') || 'chung';
 
         alert('⏳ Đang nén và tải ảnh lên hệ thống...');
 
@@ -456,7 +455,7 @@
             img.src = event.target.result;
             img.onload = async () => {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800; // Giới hạn kích thước ảnh tối ưu mobile
+                const MAX_WIDTH = 800; 
                 const scaleSize = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * scaleSize;
@@ -465,11 +464,10 @@
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
                 canvas.toBlob(async (blob) => {
-                    const fileName = `pcd_${maphongkham}_${Date.now()}.jpg`;
+                    const fileName = `pcd_${Date.now()}.jpg`;
 
-                    // Sử dụng bucket 'logo' theo chuẩn chung của các trang khác
                     let { data, error } = await db.storage
-                        .from('logo')
+                        .from('images') // Đồng bộ sang dùng chung bucket 'images'
                         .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
 
                     if (error) {
@@ -478,10 +476,10 @@
                     }
 
                     const { data: publicURLData } = db.storage
-                        .from('logo')
+                        .from('images')
                         .getPublicUrl(fileName);
 
-                    const publicUrl = publicURLData.publicUrl;
+                    const publicUrl = publicURLData.publicUrl; // Lấy chuẩn thuộc tính publicUrl
 
                     document.getElementById('hinhanhUrlHidden').value = publicUrl;
                     const preview = document.getElementById('pcd_imgPreview');
@@ -749,7 +747,7 @@
         
         const preview = document.getElementById('pcd_imgPreview');
         if (preview) {
-            if (hinhanh) {
+            if (hinhanh && hinhanh.trim() !== '') {
                 preview.src = hinhanh;
                 preview.style.display = 'block';
             } else {
@@ -812,7 +810,6 @@
         }
 
         let hinhanhUrl = document.getElementById('hinhanhUrlHidden').value.trim();
-
         let tongThanhTien = chiTietDichVu.reduce((sum, item) => sum + item.thanhtien, 0);
 
         const payload = {
