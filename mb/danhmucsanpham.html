@@ -262,6 +262,7 @@
             border-radius: 8px;
             border: 1px solid #cbd5e1;
             flex-shrink: 0;
+            background: #f8fafc;
         }
         .product-info {
             flex: 1;
@@ -363,7 +364,6 @@
         </div>
 
         <div class="search-box-container">
-            <!-- Tích hợp độ trễ debounce giúp quét mã vạch hoặc tìm kiếm siêu mượt, không bị lag -->
             <input type="text" id="searchInput" class="search-input" placeholder="🔍 Tìm tên sản phẩm, barcode..." onkeyup="timKiemSanPham()">
         </div>
 
@@ -400,7 +400,6 @@
                 </div>
                 <div class="form-group-modal">
                     <label>Nhóm hàng:</label>
-                    <!-- Cho phép chọn nhanh hoặc tự gõ thêm nhóm mới giống PC -->
                     <input type="text" id="nhomsanpham" list="danhSachNhomGoiY" placeholder="Chọn hoặc tự gõ nhóm...">
                     <datalist id="danhSachNhomGoiY">
                         <option value="Thức ăn">
@@ -436,10 +435,15 @@
                 </div>
             </div>
 
+            <!-- CHỤP ẢNH TRỰC TIẾP / NÉN ẢNH TỐC ĐỘ CAO -->
             <div class="form-group-modal">
-                <label>Hình ảnh sản phẩm:</label>
-                <input type="file" id="fileHinhanh" accept="image/*" style="font-size: 11px; padding: 4px;">
+                <label>Hình ảnh sản phẩm (Chụp từ Camera)</label>
+                <input type="file" id="fileHinhanh" accept="image/*" capture="environment" onchange="xuLyChonFileAnhSanPham(this)" style="font-size: 11px; padding: 4px; background: #f8fafc; cursor: pointer;">
                 <input type="hidden" id="hinhanh">
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 6px;">
+                    <img id="sp_imgPreview" src="" alt="Ảnh sản phẩm" style="width: 50px; height: 50px; border-radius: 6px; border: 2px dashed #cbd5e1; object-fit: cover; background: #f8fafc; display: none;">
+                    <span style="font-size: 11px; color: #64748b;">Chạm để mở camera chụp ảnh trực tiếp.</span>
+                </div>
             </div>
 
             <div class="form-group-modal">
@@ -464,7 +468,7 @@
         <a href="lichhen.html" class="nav-item">
             <i class="fa-solid fa-calendar-days"></i> Lịch hẹn
         </a>
-        <a href="thucung.html" class="nav-item active">
+        <a href="thucung.html" class="nav-item">
             <i class="fa-solid fa-paw"></i> Thú cưng
         </a>
         <a href="thongke.html" class="nav-item">
@@ -480,7 +484,7 @@
 
 <script>
     let danhSachSanPhamGoc = [];
-    let timeoutTimKiem = null; // Biến hỗ trợ tối ưu độ trễ tìm kiếm / quét mã vạch
+    let timeoutTimKiem = null;
 
     window.addEventListener('DOMContentLoaded', async () => {
         await taiDanhSachSanPham();
@@ -499,7 +503,6 @@
         }
     }
 
-    // Tự động nạp thêm các nhóm hàng mới có trong cơ sở dữ liệu vào gợi ý datalist
     function capNhatDatalistNhomHang(data) {
         const datalist = document.getElementById('danhSachNhomGoiY');
         let nhomSet = new Set(["Thức ăn", "Thức ăn hạt", "Thức ăn ướt", "Phụ kiện - Đồ chơi", "Sữa tắm - Vệ sinh", "Thực phẩm chức năng", "Khác"]);
@@ -595,7 +598,60 @@
         return '86' + randomPart;
     }
 
-    // Tối ưu tốc độ tìm kiếm / quét mã vạch bằng độ trễ Debounce tránh giật lag
+    // --- HÀM NÉN VÀ TẢI ẢNH SẢN PHẨM TỐC ĐỘ CAO ---
+    async function xuLyChonFileAnhSanPham(input) {
+        if (!input.files || input.files.length === 0) return;
+        const file = input.files[0];
+        const maphongkham = sessionStorage.getItem('maphongkham') || 'chung';
+
+        alert('⏳ Đang nén và tải ảnh sản phẩm...');
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = async () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800; // Tối ưu kích thước cho ảnh sản phẩm
+                const scaleSize = MAX_WIDTH / img.width;
+                canvas.width = MAX_WIDTH;
+                canvas.height = img.height * scaleSize;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                canvas.toBlob(async (blob) => {
+                    const fileName = `sp_${maphongkham}_${Date.now()}.jpg`;
+
+                    let { data, error } = await db.storage
+                        .from('logo')
+                        .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
+
+                    if (error) {
+                        alert('❌ Lỗi tải ảnh: ' + error.message);
+                        return;
+                    }
+
+                    const { data: publicURLData } = db.storage
+                        .from('logo')
+                        .getPublicUrl(fileName);
+
+                    const publicUrl = publicURLData.publicUrl;
+
+                    document.getElementById('hinhanh').value = publicUrl;
+                    const preview = document.getElementById('sp_imgPreview');
+                    if (preview) {
+                        preview.src = publicUrl;
+                        preview.style.display = 'block';
+                    }
+                    
+                    alert('✅ Tải ảnh thành công!');
+                }, 'image/jpeg', 0.7);
+            };
+        };
+    }
+
     function timKiemSanPham() {
         clearTimeout(timeoutTimKiem);
         timeoutTimKiem = setTimeout(() => {
@@ -624,6 +680,12 @@
         document.getElementById('hinhanh').value = '';
         document.getElementById('mota').value = '';
         
+        const preview = document.getElementById('sp_imgPreview');
+        if (preview) {
+            preview.src = '';
+            preview.style.display = 'none';
+        }
+        
         document.getElementById('btnXoaModal').style.display = 'none';
         document.getElementById('modalTitle').innerText = 'Thêm hàng hóa mới';
         document.getElementById('sanPhamModal').style.display = 'flex';
@@ -642,7 +704,20 @@
         document.getElementById('giaban').value = item.giaban || '';
         document.getElementById('soluongton').value = item.soluongton || 0;
         document.getElementById('fileHinhanh').value = '';
-        document.getElementById('hinhanh').value = item.hinhanh || '';
+        
+        const hinhanh = item.hinhanh || '';
+        document.getElementById('hinhanh').value = hinhanh;
+        const preview = document.getElementById('sp_imgPreview');
+        if (preview) {
+            if (hinhanh) {
+                preview.src = hinhanh;
+                preview.style.display = 'block';
+            } else {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
+        }
+
         document.getElementById('mota').value = item.mota || '';
 
         document.getElementById('btnXoaModal').style.display = 'block';
@@ -664,17 +739,7 @@
         const giaban = parseFloat(document.getElementById('giaban').value) || 0;
         const soluongton = parseInt(document.getElementById('soluongton').value) || 0;
         const mota = document.getElementById('mota').value.trim();
-        
-        let hinhanh = document.getElementById('hinhanh').value;
-        const fileInput = document.getElementById('fileHinhanh');
-        if (fileInput.files && fileInput.files[0]) {
-            const file = fileInput.files[0];
-            hinhanh = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.readAsDataURL(file);
-            });
-        }
+        const hinhanh = document.getElementById('hinhanh').value.trim();
 
         if (!tensanpham || !giaban) {
             alert('Vui lòng nhập Tên sản phẩm và Giá niêm yết (giá bán)!');
