@@ -398,13 +398,12 @@
             </div>
             
             <input type="hidden" id="editingId">
-            <input type="hidden" id="editingHinhanhOld">
+            <input type="hidden" id="kham_anhUrlHidden">
             
-            <!-- CHỤP ẢNH HOẶC TẢI ẢNH KHÁM BỆNH -->
+            <!-- CHỤP ẢNH HOẶC TẢI ẢNH KHÁM BỆNH (CÓ NÉN TỐC ĐỘ CAO) -->
             <div class="input-group">
                 <label>Hình ảnh khám bệnh / Chụp từ Camera</label>
                 <input type="file" id="kham_anhFile" accept="image/*" capture="environment" onchange="xuLyChonFileAnhKhamBenh(this)" style="padding: 5px; background: #f8fafc; font-size: 11px; cursor: pointer;">
-                <input type="hidden" id="kham_anhUrlHidden">
                 <div style="display: flex; align-items: center; gap: 10px; margin-top: 6px;">
                     <img id="kham_imgPreview" src="" alt="Ảnh khám bệnh" style="width: 50px; height: 50px; border-radius: 6px; border: 2px dashed #cbd5e1; object-fit: cover; background: #f8fafc; display: none;">
                     <span style="font-size: 11px; color: #64748b;">Chạm để chụp ảnh hoặc chọn ảnh.</span>
@@ -607,40 +606,58 @@
         }
     }
 
-    // --- HÀM UPLOAD ẢNH KHÁM BỆNH ---
+    // --- HÀM NÉN VÀ UPLOAD ẢNH KHÁM BỆNH TỐC ĐỘ CAO ---
     async function xuLyChonFileAnhKhamBenh(input) {
         if (!input.files || input.files.length === 0) return;
         const file = input.files[0];
         const maphongkham = sessionStorage.getItem('maphongkham') || 'chung';
 
-        const fileExt = file.name.split('.').pop();
-        const fileName = `kham_${maphongkham}_${Date.now()}.${fileExt}`;
+        alert('⏳ Đang nén và tải ảnh khám bệnh...');
 
-        alert('⏳ Đang tải ảnh khám bệnh lên hệ thống...');
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = async () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800; // Tối ưu kích thước tài liệu/ảnh khám
+                const scaleSize = MAX_WIDTH / img.width;
+                canvas.width = MAX_WIDTH;
+                canvas.height = img.height * scaleSize;
 
-        let { data, error } = await db.storage
-            .from('logo')
-            .upload(fileName, file, { upsert: true });
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        if (error) {
-            alert('❌ Lỗi tải ảnh: ' + error.message);
-            return;
-        }
+                canvas.toBlob(async (blob) => {
+                    const fileName = `kham_${maphongkham}_${Date.now()}.jpg`;
 
-        const { data: publicURLData } = db.storage
-            .from('logo')
-            .getPublicUrl(fileName);
+                    let { data, error } = await db.storage
+                        .from('logo')
+                        .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
 
-        const publicUrl = publicURLData.publicUrl;
+                    if (error) {
+                        alert('❌ Lỗi tải ảnh: ' + error.message);
+                        return;
+                    }
 
-        document.getElementById('kham_anhUrlHidden').value = publicUrl;
-        const preview = document.getElementById('kham_imgPreview');
-        if (preview) {
-            preview.src = publicUrl;
-            preview.style.display = 'block';
-        }
-        
-        alert('✅ Tải ảnh thành công!');
+                    const { data: publicURLData } = db.storage
+                        .from('logo')
+                        .getPublicUrl(fileName);
+
+                    const publicUrl = publicURLData.publicUrl;
+
+                    document.getElementById('kham_anhUrlHidden').value = publicUrl;
+                    const preview = document.getElementById('kham_imgPreview');
+                    if (preview) {
+                        preview.src = publicUrl;
+                        preview.style.display = 'block';
+                    }
+                    
+                    alert('✅ Tải ảnh thành công!');
+                }, 'image/jpeg', 0.7);
+            };
+        };
     }
 
     // --- HÀM THÊM DÒNG THUỐC ĐỒNG BỘ FORM ĐƠN THUỐC ---
@@ -890,12 +907,11 @@
 
     function moModalThem() {
         document.getElementById('editingId').value = '';
-        document.getElementById('editingHinhanhOld').value = '';
+        document.getElementById('kham_anhUrlHidden').value = '';
         document.getElementById('mathucung').value = '';
         document.getElementById('thucung_search').value = '';
         document.getElementById('suggestions-box').style.display = 'none';
         
-        document.getElementById('kham_anhUrlHidden').value = '';
         document.getElementById('kham_anhFile').value = '';
         const preview = document.getElementById('kham_imgPreview');
         if (preview) {
@@ -924,7 +940,6 @@
         if (!item) return;
 
         document.getElementById('editingId').value = item.id;
-        document.getElementById('editingHinhanhOld').value = item.hinhanh || '';
         document.getElementById('mathucung').value = item.mathucung || '';
         
         const tcItem = dsThuCungChoSearch.find(x => x.value == item.mathucung);
