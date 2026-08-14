@@ -1,4 +1,4 @@
-// 1. Kiểm tra thông tin phòng khám từ phiên đăng nhập (sessionStorage) hoặc tên miền
+// 1. Kiểm tra thông tin phòng khám từ phiên đăng nhập (sessionStorage)
 let currentUser = null;
 try {
     currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
@@ -6,30 +6,14 @@ try {
     currentUser = null;
 }
 
-const isMatpetByDomain = window.location.hostname.includes("matpet");
-const maPKLogin = currentUser ? String(currentUser.maphongkham || '').toLowerCase() : '';
-const tenPKLogin = currentUser ? String(currentUser.tenphongkham || '').toLowerCase() : '';
-
-const isMatpet = isMatpetByDomain || maPKLogin.includes('matpet') || tenPKLogin.includes('matpet');
-
 // 2. Cấu hình Database Supabase tự động
 const CONFIG = {
-    SUPABASE_URL: isMatpet 
-        ? "https://aykhvqrogmxzexhrzynv.supabase.co" 
-        : (window.ENV_SUPABASE_URL || "https://glbbycylllulafzrzfcz.supabase.co"),
-        
-    SUPABASE_KEY: isMatpet 
-        ? "sb_publishable_ZztHGsSnkrH36JXVq5W3DQ_jcrj1trx" 
-        : (window.ENV_SUPABASE_KEY || "sb_publishable_-T8VmENvk62ZD2Ao4hJa1g_mC29Zftk"),
+    SUPABASE_URL: window.ENV_SUPABASE_URL || "https://hylsdhrtzxhhzilcctzr.supabase.co",
+    SUPABASE_KEY: window.ENV_SUPABASE_KEY || "sb_publishable_V3ZATAo78EYq-Cv3paHRRg_XLGENjBp",
 };
 
 // 3. Khởi tạo giá trị mặc định ban đầu từ sessionStorage
-let CLINIC_INFO = isMatpet ? {
-    ten: currentUser?.tenphongkham ? currentUser.tenphongkham.toUpperCase() : "PHÒNG KHÁM THÚ Y MATPET",
-    diachi: currentUser?.diachi || "139 Mẹ Thứ, phường Hoà Xuân, tp Đà Nẵng",
-    dienthoai: currentUser?.sodienthoai || "087.77.31.079",
-    slogan: "Hệ thống quản lý thú y Matpet"
-} : {
+let CLINIC_INFO = {
     ten: currentUser?.tenphongkham ? currentUser.tenphongkham.toUpperCase() : "VETCARE PRO - PHÒNG KHÁM THÚ Y",
     diachi: currentUser?.diachi || "Đà Nẵng",
     dienthoai: currentUser?.sodienthoai || "0935.77.87.27",
