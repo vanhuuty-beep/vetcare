@@ -400,7 +400,7 @@
             <input type="hidden" id="editingId">
             <input type="hidden" id="kham_anhUrlHidden">
             
-            <!-- CHỤP ẢNH HOẶC TẢI ẢNH KHÁM BỆNH (CÓ NÉN TỐC ĐỘ CAO) -->
+            <!-- CHỤP ẢNH HOẶC TẢI ẢNH KHÁM BỆNH (ĐÃ LÀM SẠCH TÊN FILE & ĐỒNG BỘ BUCKET 'images') -->
             <div class="input-group">
                 <label>Hình ảnh khám bệnh / Chụp từ Camera</label>
                 <input type="file" id="kham_anhFile" accept="image/*" capture="environment" onchange="xuLyChonFileAnhKhamBenh(this)" style="padding: 5px; background: #f8fafc; font-size: 11px; cursor: pointer;">
@@ -442,12 +442,11 @@
                 <textarea id="dieutri" rows="2" placeholder="Nhập phác đồ điều trị..."></textarea>
             </div>
 
-            <!-- PHẦN KÊ ĐƠN THUỐC ĐỒNG BỘ CHUẨN ĐẸP Y HỆT TRANG ĐƠN THUỐC -->
+            <!-- PHẦN KÊ ĐƠN THUỐC -->
             <div class="input-group" style="margin-top: 12px;">
                 <label>Danh sách thuốc sử dụng:</label>
                 <div style="width: 100%; overflow-x: auto; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px;">
                     <div style="min-width: 520px;">
-                        <!-- Tiêu đề cột chuẩn form đơn thuốc -->
                         <div style="display: flex; background: #f1f5f9; padding: 6px 8px; font-size: 11px; font-weight: 600; color: #475569; border-radius: 6px; align-items: center; text-align: center; margin-bottom: 6px;">
                             <div style="flex: 2.2; text-align: left;">Tên thuốc</div>
                             <div style="flex: 0.5;">SL</div>
@@ -456,14 +455,12 @@
                             <div style="width: 32px;">Xóa</div>
                         </div>
 
-                        <!-- Các dòng thuốc -->
                         <div id="danhSachThuocContainer" style="display: flex; flex-direction: column; gap: 6px;">
                             <!-- Dữ liệu render tự động -->
                         </div>
                     </div>
                 </div>
 
-                <!-- Nút thêm thuốc chuẩn form đơn thuốc -->
                 <button type="button" onclick="themDongThuoc()" style="background: #0d9488; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 8px; display: inline-flex; align-items: center; gap: 4px;">
                     <i class="fa-solid fa-plus"></i> Thêm thuốc
                 </button>
@@ -606,11 +603,10 @@
         }
     }
 
-    // --- HÀM NÉN VÀ UPLOAD ẢNH KHÁM BỆNH TỐC ĐỘ CAO ---
+    // --- HÀM NÉN VÀ UPLOAD ẢNH KHÁM BỆNH TỐC ĐỘ CAO (ĐÃ LÀM SẠCH TÊN FILE CHỐNG LỖI 400 & DÙNG BUCKET 'images') ---
     async function xuLyChonFileAnhKhamBenh(input) {
         if (!input.files || input.files.length === 0) return;
         const file = input.files[0];
-        const maphongkham = sessionStorage.getItem('maphongkham') || 'chung';
 
         alert('⏳ Đang nén và tải ảnh khám bệnh...');
 
@@ -621,7 +617,7 @@
             img.src = event.target.result;
             img.onload = async () => {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800; // Tối ưu kích thước tài liệu/ảnh khám
+                const MAX_WIDTH = 800;
                 const scaleSize = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * scaleSize;
@@ -630,10 +626,11 @@
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
                 canvas.toBlob(async (blob) => {
-                    const fileName = `kham_${maphongkham}_${Date.now()}.jpg`;
+                    // Tạo tên file sạch hoàn toàn không chứa ký tự lạ/xuống dòng gây lỗi 400
+                    const fileName = `kham_${Date.now()}.jpg`;
 
                     let { data, error } = await db.storage
-                        .from('images')
+                        .from('images') // Trỏ đúng bucket chung 'images'
                         .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
 
                     if (error) {
@@ -645,7 +642,7 @@
                         .from('images')
                         .getPublicUrl(fileName);
 
-                    const publicUrl = publicURLData.publicUrl;
+                    const publicUrl = publicURLData.publicUrl; // Lấy chuẩn thuộc tính publicUrl
 
                     document.getElementById('kham_anhUrlHidden').value = publicUrl;
                     const preview = document.getElementById('kham_imgPreview');
@@ -660,7 +657,7 @@
         };
     }
 
-    // --- HÀM THÊM DÒNG THUỐC ĐỒNG BỘ FORM ĐƠN THUỐC ---
+    // --- HÀM THÊM DÒNG THUỐC ---
     function themDongThuoc(thuocCu = null) {
         const container = document.getElementById('danhSachThuocContainer');
         const index = danhSachKeDon.length;
@@ -748,7 +745,6 @@
         danhSachKeDon = [];
         currentData.forEach(t => themDongThuoc(t));
     }
-    // ---------------------------------------------
 
     function xuLyTimKiemThuCung(tuKhoa) {
         const box = document.getElementById('suggestions-box');
@@ -954,7 +950,7 @@
         document.getElementById('kham_anhFile').value = '';
         const preview = document.getElementById('kham_imgPreview');
         if (preview) {
-            if (hinhanh) {
+            if (hinhanh && hinhanh.trim() !== '') {
                 preview.src = hinhanh;
                 preview.style.display = 'block';
             } else {
