@@ -8,7 +8,7 @@
     <script src="../js/env.js"></script>
     <script src="../js/config.js"></script>
     <script src="../js/supabase.js"></script>
-        <script src="../js/utils.js"></script>
+    <script src="../js/utils.js"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -94,6 +94,29 @@
         .badge-kham { background: #e0f2fe; color: #0284c7; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
         .badge-tiem { background: #fef3c7; color: #d97706; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
         .badge-noitru { background: #fee2e2; color: #dc2626; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
+
+        /* Khung hiển thị ảnh/video đính kèm */
+        .card-gallery {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .card-thumb {
+            width: 55px;
+            height: 55px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+        }
+        .card-video-thumb {
+            width: 70px;
+            height: 55px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            background: #000;
+        }
 
         /* Thanh menu đáy ghim chặt bên trong khung mobile */
         .mobile-bottom-nav {
@@ -189,6 +212,32 @@
             await taiNhatKyYTeChinhXac(ownerData.id);
         });
 
+        // Hàm hỗ trợ bóc tách và tạo HTML hiển thị hình ảnh/video an toàn
+        function taoHtmlHinhAnh(rawHinhanh) {
+            if (!rawHinhanh) return '';
+            let listImg = [];
+            try {
+                listImg = JSON.parse(rawHinhanh);
+                if (!Array.isArray(listImg)) listImg = [rawHinhanh];
+            } catch (e) {
+                listImg = [rawHinhanh];
+            }
+
+            let galleryHtml = '';
+            listImg.forEach(url => {
+                if (url && typeof url === 'string' && url.trim() !== '') {
+                    const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i);
+                    if (isVideo) {
+                        galleryHtml += `<a href="${url}" target="_blank"><video src="${url}" class="card-video-thumb" muted></video></a>`;
+                    } else {
+                        galleryHtml += `<a href="${url}" target="_blank"><img src="${url}" class="card-thumb"></a>`;
+                    }
+                }
+            });
+
+            return galleryHtml ? `<div class="card-gallery">${galleryHtml}</div>` : '';
+        }
+
         async function taiNhatKyYTeChinhXac(ownerId) {
             const container = document.getElementById('danhSachLichSu');
             container.innerHTML = '';
@@ -217,6 +266,7 @@
 
             let allRecords = [];
 
+            // 1. Lấy dữ liệu Khám bệnh
             try {
                 let { data } = await db.from('khambenh').select('*').in('mathucung', petIds);
                 if (data) {
@@ -230,12 +280,14 @@
                             noiDung: `Triệu chứng: <b>${item.trieuchung || '---'}</b><br>Chẩn đoán: <span style="color: #008080; font-weight: 600;">${item.chandoan || '---'}</span><br>Phác đồ: ${item.dieutri || '---'}`,
                             badgeClass: 'badge-kham',
                             badgeText: 'Khám bệnh',
-                            rawDate: item.ngaykham || item.created_at || ''
+                            rawDate: item.ngaykham || item.created_at || '',
+                            hinhanhHtml: taoHtmlHinhAnh(item.hinhanh)
                         });
                     });
                 }
             } catch (e) { console.log('Lỗi bảng khambenh', e); }
 
+            // 2. Lấy dữ liệu Tiêm vaccine
             try {
                 let { data } = await db.from('nhatkylamvaccine').select('*').in('mathucung', petIds);
                 if (data) {
@@ -249,32 +301,40 @@
                             noiDung: `Mã VC: ${item.mavaccine || '---'}<br>Trạng thái: <b>${item.trangthai || 'Đã tiêm'}</b><br>Ngày nhắc lại: <span style="color: #d97706; font-weight: 600;">${item.ngaynhaclai || 'Không có'}</span><br>Bác sĩ tiêm: ${item.bacsi || '---'}`,
                             badgeClass: 'badge-tiem',
                             badgeText: 'Tiêm chủng',
-                            rawDate: item.ngaytiem || item.created_at || ''
+                            rawDate: item.ngaytiem || item.created_at || '',
+                            hinhanhHtml: taoHtmlHinhAnh(item.hinhanh)
                         });
                     });
                 }
             } catch (e) { console.log('Lỗi bảng nhatkylamvaccine', e); }
 
+            // 3. Lấy dữ liệu Nội trú
             try {
                 let { data: kbCheck } = await db.from('khambenh').select('id, mathucung, maphongkham').in('mathucung', petIds);
                 if (kbCheck && kbCheck.length > 0) {
                     let kbMapPK = {};
-                    kbCheck.forEach(k => kbMapPK[k.id] = k.maphongkham);
+                    let kbMapPet = {};
+                    kbCheck.forEach(k => {
+                        kbMapPK[k.id] = k.maphongkham;
+                        kbMapPet[k.id] = petMap[k.mathucung] || 'Thú cưng';
+                    });
                     let kbIds = kbCheck.map(k => k.id);
                     
                     let { data: ntData } = await db.from('nhatkynoitru').select('*').in('makhambenh', kbIds);
                     if (ntData) {
                         ntData.forEach(item => {
                             let pkName = item.maphongkham || kbMapPK[item.makhambenh] || 'Phòng khám VetCare';
+                            let petNameForNt = kbMapPet[item.makhambenh] || 'Thú cưng';
                             allRecords.push({
                                 ngay: item.ngayvao || item.created_at || 'Gần đây',
-                                tenPet: 'Thú cưng',
+                                tenPet: petNameForNt,
                                 tieuDe: '🏥 Nội trú (NKNT' + String(item.id).padStart(4, '0') + ')',
                                 phongKham: pkName,
                                 noiDung: `Trạng thái: <b>${item.trangthai || 'Đang nằm viện'}</b><br>Bác sĩ: ${item.bacsiphutrach || '---'}<br>Tổng viện phí: ${Number(item.tongchiphi || 0).toLocaleString('vi-VN')} đ`,
                                 badgeClass: 'badge-noitru',
                                 badgeText: 'Nội trú',
-                                rawDate: item.ngayvao || item.created_at || ''
+                                rawDate: item.ngayvao || item.created_at || '',
+                                hinhanhHtml: taoHtmlHinhAnh(item.hinhanh)
                             });
                         });
                     }
@@ -298,6 +358,7 @@
                             <div style="margin-bottom: 3px; color: #008080; font-size: 11px; font-weight: 600;"><i class="fa-solid fa-hospital"></i> Phòng khám: ${rec.phongKham}</div>
                             <div style="margin-bottom: 5px; color: #64748b; font-size: 11px;"><i class="fa-solid fa-calendar-days"></i> Ngày: ${rec.ngay}</div>
                             <div style="background: #f8fafc; padding: 8px; border-radius: 8px; border: 1px solid #f1f5f9;">${rec.noiDung}</div>
+                            ${rec.hinhanhHtml}
                         </div>
                     </div>
                 `;

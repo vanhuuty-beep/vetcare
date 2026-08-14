@@ -8,7 +8,7 @@
     <script src="../js/env.js"></script>
     <script src="../js/config.js"></script>
     <script src="../js/supabase.js"></script>
-        <script src="../js/utils.js"></script>
+    <script src="../js/utils.js"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -239,6 +239,45 @@
             await taiLichTrinhNoiTruChuNuoi(ownerData.id);
         });
 
+        // Hàm chuẩn hóa URL ảnh từ bucket 'images' hoặc link ngoài
+        function chuanHoaUrlAnh(url) {
+            if (!url || typeof url !== 'string' || url.trim() === '') return '';
+            if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('data:')) {
+                const { data: publicURLData } = db.storage
+                    .from('images')
+                    .getPublicUrl(url.trim());
+                return publicURLData ? publicURLData.publicUrl : url;
+            }
+            return url;
+        }
+
+        // Hàm xử lý tạo thư viện hình ảnh/video cho nội trú
+        function taoHtmlMediaNoiTru(hinhanhField) {
+            if (!hinhanhField) return '';
+            let listImg = [];
+            try {
+                listImg = JSON.parse(hinhanhField);
+                if (!Array.isArray(listImg)) listImg = [hinhanhField];
+            } catch (e) {
+                listImg = [hinhanhField];
+            }
+
+            let imgGalleryHtml = '';
+            listImg.forEach(rawUrl => {
+                const url = chuanHoaUrlAnh(rawUrl);
+                if (url && url.trim() !== '') {
+                    const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i);
+                    if (isVideo) {
+                        imgGalleryHtml += `<a href="${url}" target="_blank"><video src="${url}" class="progress-video-thumb" muted></video></a>`;
+                    } else {
+                        imgGalleryHtml += `<a href="${url}" target="_blank"><img src="${url}" class="progress-thumb"></a>`;
+                    }
+                }
+            });
+
+            return imgGalleryHtml ? `<div class="progress-gallery">${imgGalleryHtml}</div>` : '';
+        }
+
         async function taiLichTrinhNoiTruChuNuoi(ownerId) {
             const container = document.getElementById('danhSachNoiTru');
             container.innerHTML = '';
@@ -295,31 +334,7 @@
                     const ngayCapNhapStr = item.ngaycapnhap ? new Date(item.ngaycapnhap).toLocaleString('vi-VN') : '---';
                     const ghiChu = item.ghichu || 'Chưa cập nhật chi tiết tiến trình điều trị.';
 
-                    let imgGalleryHtml = '';
-                    if (item.hinhanh) {
-                        let listImg = [];
-                        try {
-                            listImg = JSON.parse(item.hinhanh);
-                            if (!Array.isArray(listImg)) listImg = [item.hinhanh];
-                        } catch (e) {
-                            listImg = [item.hinhanh];
-                        }
-
-                        if (listImg.length > 0) {
-                            imgGalleryHtml = `<div class="progress-gallery">`;
-                            listImg.forEach(url => {
-                                if (url && url.trim() !== '') {
-                                    const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i);
-                                    if (isVideo) {
-                                        imgGalleryHtml += `<a href="${url}" target="_blank"><video src="${url}" class="progress-video-thumb" muted></video></a>`;
-                                    } else {
-                                        imgGalleryHtml += `<a href="${url}" target="_blank"><img src="${url}" class="progress-thumb"></a>`;
-                                    }
-                                }
-                            });
-                            imgGalleryHtml += `</div>`;
-                        }
-                    }
+                    const imgGalleryHtml = taoHtmlMediaNoiTru(item.hinhanh);
 
                     container.innerHTML += `
                         <div class="timeline-card">
