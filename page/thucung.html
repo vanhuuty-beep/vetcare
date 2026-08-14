@@ -246,7 +246,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        .form-group-modal input {
+        .form-group-modal input, .form-group-modal select {
             padding: 10px 12px;
             font-size: 13px;
             width: 100%;
@@ -257,7 +257,7 @@
             transition: all 0.2s;
             background: #fff;
         }
-        .form-group-modal input:focus {
+        .form-group-modal input:focus, .form-group-modal select:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
@@ -348,7 +348,7 @@
                         <button class="btn-primary" onclick="moModalThem()"><i class="fa-solid fa-plus"></i> Thêm thú cưng mới</button>
                     </div>
                 </div>
-                
+
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -356,6 +356,7 @@
                                 <th>Mã thú cưng</th>
                                 <th>Tên thú cưng</th>
                                 <th>Loài</th>
+                                <th>Giới tính</th>
                                 <th>Giống</th>
                                 <th>Màu lông</th>
                                 <th>Tuổi</th>
@@ -390,15 +391,25 @@
             </div>
             
             <input type="hidden" id="editingId">
-            
+
             <div class="form-group-modal">
                 <label>Tên thú cưng (*):</label>
                 <input type="text" id="tenthucung" placeholder="Nhập tên thú cưng...">
             </div>
             
-            <div class="form-group-modal">
-                <label>Loài:</label>
-                <input type="text" id="loai" placeholder="Ví dụ: Chó, Mèo...">
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Loài:</label>
+                    <input type="text" id="loai" placeholder="Ví dụ: Chó, Mèo...">
+                </div>
+                <div class="form-group-modal">
+                    <label>Giới tính:</label>
+                    <select id="gioitinh">
+                        <option value="">-- Chọn --</option>
+                        <option value="Đực">Đực</option>
+                        <option value="Cái">Cái</option>
+                    </select>
+                </div>
             </div>
 
             <div class="form-row">
@@ -582,7 +593,7 @@
             tableBody.innerHTML = '';
             
             if(danhSachDangHienThi.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding: 30px;">Không có dữ liệu thú cưng</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:var(--text-muted); padding: 30px;">Không có dữ liệu thú cưng</td></tr>`;
                 document.getElementById('paginationInfo').innerText = `Hiển thị 0 - 0 của 0 thú cưng`;
                 document.getElementById('paginationButtons').innerHTML = '';
                 return;
@@ -632,12 +643,13 @@
                 const tenChuNuoi = chuNuoiDauTien.hovaten || chuNuoiDauTien.tenkhachhang || '';
                 const sdtChuNuoi = chuNuoiDauTien.sodienthoai || chuNuoiDauTien.sdt || '';
 
-                item._searchString = `${maTC} ${item.tenthucung || ''} ${item.loai || ''} ${item.giong || ''} ${item.maulong || ''} ${chuNuoiSearchStr}`.toLowerCase();
+                item._searchString = `${maTC} ${item.tenthucung || ''} ${item.loai || ''} ${item.gioitinh || ''} ${item.giong || ''} ${item.maulong || ''} ${chuNuoiSearchStr}`.toLowerCase();
 
                 tableBody.innerHTML += `<tr>
                     <td><strong>${maTC}</strong></td>
                     <td><b style="color: #0f172a;">${item.tenthucung || ''}</b></td>
                     <td>${item.loai || ''}</td>
+                    <td>${item.gioitinh || '---'}</td>
                     <td>${item.giong || ''}</td>
                     <td>${item.maulong || ''}</td>
                     <td>${item.tuoi !== null && item.tuoi !== undefined ? item.tuoi : ''}</td>
@@ -874,6 +886,7 @@
             document.getElementById('editingId').value = '';
             document.getElementById('tenthucung').value = '';
             document.getElementById('loai').value = '';
+            document.getElementById('gioitinh').value = '';
             document.getElementById('giong').value = '';
             document.getElementById('maulong').value = '';
             document.getElementById('tuoi').value = '';
@@ -895,6 +908,7 @@
             document.getElementById('editingId').value = item.id;
             document.getElementById('tenthucung').value = item.tenthucung || '';
             document.getElementById('loai').value = item.loai || '';
+            document.getElementById('gioitinh').value = item.gioitinh || '';
             document.getElementById('giong').value = item.giong || '';
             document.getElementById('maulong').value = item.maulong || '';
             document.getElementById('tuoi').value = item.tuoi !== null ? item.tuoi : '';
@@ -921,6 +935,7 @@
             const id = document.getElementById('editingId').value;
             const tenthucung = document.getElementById('tenthucung').value.trim();
             const loai = document.getElementById('loai').value.trim();
+            const gioitinh = document.getElementById('gioitinh').value;
             const giong = document.getElementById('giong').value.trim();
             const maulong = document.getElementById('maulong').value.trim();
             const tuoiStr = document.getElementById('tuoi').value.trim();
@@ -931,7 +946,11 @@
             const maKhachHangChinh = selectedOwnerIds.length > 0 ? parseInt(selectedOwnerIds[0]) : null;
 
             const payload = {
-                tenthucung, loai, giong, maulong,
+                tenthucung, 
+                loai, 
+                gioitinh, 
+                giong, 
+                maulong,
                 tuoi: tuoiStr !== "" ? parseFloat(tuoiStr) : null,
                 cannang: cannangStr !== "" ? parseFloat(cannangStr) : null,
                 makhachhang: maKhachHangChinh
