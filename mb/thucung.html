@@ -301,7 +301,7 @@
         .btn-medical { color: #0284c7; background: #e0f2fe; }   /* Khám bệnh */
         .btn-vaccine { color: #16a34a; background: #dcfce7; }   /* Tiêm vaccine */
         .btn-boarding { color: #ea580c; background: #ffedd5; }  /* Lưu trú */
-        .btn-edit { color: #d97706; background: #fef3c7; }       /* Sửa */
+        .btn-edit { color: #d97706; background: #fef3c7; }        /* Sửa */
         .btn-delete { color: #dc2626; background: #fee2e2; }     /* Xóa */
 
         /* Bottom Nav cố định dưới đáy */
@@ -382,14 +382,15 @@
             
             <input type="hidden" id="editingId">
             
-            <!-- Ô TẢI ẢNH THÚ CƯNG -->
+            <!-- Ô CHỤP ẢNH TRỰC TIẾP TỪ CAMERA ĐIỆN THOẠI -->
             <div class="input-group">
-                <label>Hình ảnh thú cưng</label>
-                <input type="file" id="pet_anhFile" accept="image/*" onchange="xuLyChonFileAnhThuCung(this)" style="padding: 5px; background: #f8fafc; font-size: 11px; cursor: pointer;">
+                <label>Hình ảnh thú cưng (Chụp từ Camera)</label>
+                <!-- Thêm thuộc tính capture="environment" để kích hoạt camera sau trên điện thoại -->
+                <input type="file" id="pet_anhFile" accept="image/*" capture="environment" onchange="xuLyChonFileAnhThuCung(this)" style="padding: 5px; background: #f8fafc; font-size: 11px; cursor: pointer;">
                 <input type="hidden" id="pet_anhUrlHidden">
                 <div style="display: flex; align-items: center; gap: 10px; margin-top: 6px;">
                     <img id="pet_imgPreview" src="" alt="Ảnh thú cưng" style="width: 50px; height: 50px; border-radius: 6px; border: 2px dashed #cbd5e1; object-fit: cover; background: #f8fafc; display: none;">
-                    <span style="font-size: 11px; color: #64748b;">Chọn ảnh từ điện thoại.</span>
+                    <span style="font-size: 11px; color: #64748b;">Chạm để mở camera chụp ảnh trực tiếp.</span>
                 </div>
             </div>
 
@@ -534,7 +535,6 @@
             const maKH = item.makhachhang || item.khachhang_id;
             const tenChu = (maKH && mapKhachHang[maKH]) ? mapKhachHang[maKH] : 'Chưa rõ chủ';
             
-            // Xử lý hiển thị ảnh (nếu có lấy từ item.hinhanh, không có dùng icon mặc định)
             const anhPet = item.hinhanh && item.hinhanh.trim() !== '' 
                 ? item.hinhanh 
                 : 'https://cdn-icons-png.flaticon.com/512/616/616408.png';
@@ -569,16 +569,16 @@
         });
     }
 
-    // Hàm tự động upload ảnh thú cưng lên Supabase Storage
+    // Hàm tự động upload ảnh chụp từ camera lên Supabase Storage
     async function xuLyChonFileAnhThuCung(input) {
         if (!input.files || input.files.length === 0) return;
         const file = input.files[0];
         const maphongkham = sessionStorage.getItem('maphongkham') || 'chung';
 
         const fileExt = file.name.split('.').pop();
-        const fileName = `pet_${maphongkham}_${Date.now()}.${fileExt}`;
+        const fileName = `pet_cam_${maphongkham}_${Date.now()}.${fileExt}`;
 
-        alert('⏳ Đang tải ảnh thú cưng lên hệ thống...');
+        alert('⏳ Đang tải ảnh chụp lên hệ thống...');
 
         let { data, error } = await db.storage
             .from('logo')
@@ -602,7 +602,7 @@
             preview.style.display = 'block';
         }
         
-        alert('✅ Tải ảnh thú cưng thành công!');
+        alert('✅ Chụp và tải ảnh thành công!');
     }
 
     function timKiemThuCung() {
