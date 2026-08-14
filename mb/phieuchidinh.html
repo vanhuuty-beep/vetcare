@@ -87,7 +87,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 12px;
-            padding-bottom: 80px; /* Chừa chỗ cho bottom nav */
+            padding-bottom: 80px;
             background: #f8fafc;
         }
 
@@ -289,8 +289,13 @@
                         </select>
                     </div>
                     <div class="form-group-m" style="flex: 1;">
-                        <label>Hình ảnh:</label>
-                        <input type="file" id="hinhanh" accept="image/*" capture="environment" style="padding: 3px; font-size: 10px;">
+                        <label>Hình ảnh (Chụp từ Camera):</label>
+                        <input type="file" id="hinhanh" accept="image/*" capture="environment" onchange="xuLyChonFileAnhChiDinh(this)" style="padding: 3px; font-size: 10px; background: #f8fafc; cursor: pointer;">
+                        <input type="hidden" id="hinhanhUrlHidden">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                            <img id="pcd_imgPreview" src="" alt="Ảnh chỉ định" style="width: 40px; height: 40px; border-radius: 6px; border: 2px dashed #cbd5e1; object-fit: cover; background: #f8fafc; display: none;">
+                            <span style="font-size: 10px; color: #64748b;">Chạm để chụp ảnh.</span>
+                        </div>
                     </div>
                 </div>
 
@@ -436,6 +441,61 @@
         }
     }
 
+    // --- HÀM NÉN VÀ UPLOAD ẢNH CHỈ ĐỊNH TỐC ĐỘ CAO ---
+    async function xuLyChonFileAnhChiDinh(input) {
+        if (!input.files || input.files.length === 0) return;
+        const file = input.files[0];
+        const maphongkham = sessionStorage.getItem('maphongkham') || 'chung';
+
+        alert('⏳ Đang nén và tải ảnh lên hệ thống...');
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = async () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800; // Giới hạn kích thước ảnh tối ưu mobile
+                const scaleSize = MAX_WIDTH / img.width;
+                canvas.width = MAX_WIDTH;
+                canvas.height = img.height * scaleSize;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                canvas.toBlob(async (blob) => {
+                    const fileName = `pcd_${maphongkham}_${Date.now()}.jpg`;
+
+                    // Sử dụng bucket 'logo' theo chuẩn chung của các trang khác
+                    let { data, error } = await db.storage
+                        .from('logo')
+                        .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
+
+                    if (error) {
+                        alert('❌ Lỗi tải ảnh: ' + error.message);
+                        return;
+                    }
+
+                    const { data: publicURLData } = db.storage
+                        .from('logo')
+                        .getPublicUrl(fileName);
+
+                    const publicUrl = publicURLData.publicUrl;
+
+                    document.getElementById('hinhanhUrlHidden').value = publicUrl;
+                    const preview = document.getElementById('pcd_imgPreview');
+                    if (preview) {
+                        preview.src = publicUrl;
+                        preview.style.display = 'block';
+                    }
+                    
+                    alert('✅ Tải ảnh thành công!');
+                }, 'image/jpeg', 0.7);
+            };
+        };
+    }
+
     function xuLyTimKiemMaKham(tuKhoa) {
         const box = document.getElementById('suggestions-box-kb');
         document.getElementById('makhambenh').value = ''; 
@@ -577,6 +637,11 @@
             if (trangThai === 'Đang thực hiện') { stClass = 'st-doing'; nextStatus = 'Đã hoàn thành'; }
             else if (trangThai === 'Đã hoàn thành') { stClass = 'st-done'; nextStatus = 'Chờ thực hiện'; }
 
+            let anhHtml = '';
+            if (item.hinhanh && item.hinhanh.trim() !== '') {
+                anhHtml = `<div style="margin-top: 4px;"><a href="${item.hinhanh}" target="_blank"><img src="${item.hinhanh}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1;" alt="Ảnh chỉ định"></a></div>`;
+            }
+
             container.innerHTML += `
                 <div class="pcd-card-mobile">
                     <div class="card-top-row">
@@ -593,6 +658,7 @@
                     <div class="pcd-info-row" style="font-size: 10px; color: #64748b;">
                         Kết luận: ${item.ketluan || 'Chưa có kết luận'}
                     </div>
+                    ${anhHtml}
                     <div class="card-footer-row">
                         <span class="pcd-total">${Number(item.thanhtien || 0).toLocaleString('vi-VN')} đ</span>
                     </div>
@@ -626,8 +692,16 @@
     function moModalThem() {
         document.getElementById('editingId').value = '';
         document.getElementById('editingHinhanhOld').value = '';
+        document.getElementById('hinhanhUrlHidden').value = '';
         document.getElementById('makhambenh').value = '';
         document.getElementById('makhambenh_search').value = '';
+        document.getElementById('hinhanh').value = '';
+        
+        const preview = document.getElementById('pcd_imgPreview');
+        if (preview) {
+            preview.src = '';
+            preview.style.display = 'none';
+        }
         
         const box = document.getElementById('suggestions-box-kb');
         if (box) box.style.display = 'none';
@@ -643,7 +717,6 @@
         document.getElementById('ngaychidinh').value = new Date().toISOString().slice(0, 16);
         document.getElementById('ketluan').value = '';
         document.getElementById('trangthai').value = 'Chờ thực hiện';
-        document.getElementById('hinhanh').value = '';
         document.getElementById('dsDichVuContainer').innerHTML = '';
         themDongDichVu();
         
@@ -668,8 +741,22 @@
         document.getElementById('ngaychidinh').value = item.ngaychidinh ? item.ngaychidinh.slice(0, 16) : '';
         document.getElementById('ketluan').value = item.ketluan || '';
         document.getElementById('trangthai').value = item.trangthai || 'Chờ thực hiện';
-        document.getElementById('editingHinhanhOld').value = item.hinhanh || '';
+        
+        const hinhanh = item.hinhanh || '';
+        document.getElementById('editingHinhanhOld').value = hinhanh;
+        document.getElementById('hinhanhUrlHidden').value = hinhanh;
         document.getElementById('hinhanh').value = '';
+        
+        const preview = document.getElementById('pcd_imgPreview');
+        if (preview) {
+            if (hinhanh) {
+                preview.src = hinhanh;
+                preview.style.display = 'block';
+            } else {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
+        }
 
         document.getElementById('dsDichVuContainer').innerHTML = '';
         let danhSachChiTiet = [];
@@ -724,18 +811,7 @@
             return;
         }
 
-        const fileInput = document.getElementById('hinhanh');
-        let hinhanhUrl = document.getElementById('editingHinhanhOld').value;
-
-        if (fileInput.files && fileInput.files[0]) {
-            const file = fileInput.files[0];
-            const fileName = `phieuchidinh_${Date.now()}_${file.name}`;
-            const { error: uploadError } = await db.storage.from('images').upload(fileName, file);
-            if (!uploadError) {
-                const { data: publicUrlData } = db.storage.from('images').getPublicUrl(fileName);
-                hinhanhUrl = publicUrlData.publicUrl;
-            }
-        }
+        let hinhanhUrl = document.getElementById('hinhanhUrlHidden').value.trim();
 
         let tongThanhTien = chiTietDichVu.reduce((sum, item) => sum + item.thanhtien, 0);
 
