@@ -318,7 +318,7 @@
         .btn-nhapvien { color: #ea580c; background: #ffedd5; }  /* Nhập viện / Lưu trú */
         .btn-vaccine { color: #16a34a; background: #dcfce7; }   /* Vaccine */
         .btn-donthuoc { color: #7c3aed; background: #f3e8ff; }  /* Đơn thuốc */
-        .btn-edit { color: #d97706; background: #fef3c7; }       /* Sửa */
+        .btn-edit { color: #d97706; background: #fef3c7; }        /* Sửa */
         .btn-delete { color: #dc2626; background: #fee2e2; }     /* Xóa */
 
         /* Bottom Nav cố định dưới đáy chuẩn Mobile app */
@@ -400,6 +400,17 @@
             <input type="hidden" id="editingId">
             <input type="hidden" id="editingHinhanhOld">
             
+            <!-- CHỤP ẢNH HOẶC TẢI ẢNH KHÁM BỆNH -->
+            <div class="input-group">
+                <label>Hình ảnh khám bệnh / Chụp từ Camera</label>
+                <input type="file" id="kham_anhFile" accept="image/*" capture="environment" onchange="xuLyChonFileAnhKhamBenh(this)" style="padding: 5px; background: #f8fafc; font-size: 11px; cursor: pointer;">
+                <input type="hidden" id="kham_anhUrlHidden">
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 6px;">
+                    <img id="kham_imgPreview" src="" alt="Ảnh khám bệnh" style="width: 50px; height: 50px; border-radius: 6px; border: 2px dashed #cbd5e1; object-fit: cover; background: #f8fafc; display: none;">
+                    <span style="font-size: 11px; color: #64748b;">Chạm để chụp ảnh hoặc chọn ảnh.</span>
+                </div>
+            </div>
+
             <div class="input-group">
                 <label>Tìm chọn thú cưng (*)</label>
                 <input type="text" id="thucung_search" placeholder="Gõ tên thú cưng hoặc chủ nuôi..." autocomplete="off" oninput="xuLyTimKiemThuCung(this.value)">
@@ -596,6 +607,42 @@
         }
     }
 
+    // --- HÀM UPLOAD ẢNH KHÁM BỆNH ---
+    async function xuLyChonFileAnhKhamBenh(input) {
+        if (!input.files || input.files.length === 0) return;
+        const file = input.files[0];
+        const maphongkham = sessionStorage.getItem('maphongkham') || 'chung';
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `kham_${maphongkham}_${Date.now()}.${fileExt}`;
+
+        alert('⏳ Đang tải ảnh khám bệnh lên hệ thống...');
+
+        let { data, error } = await db.storage
+            .from('logo')
+            .upload(fileName, file, { upsert: true });
+
+        if (error) {
+            alert('❌ Lỗi tải ảnh: ' + error.message);
+            return;
+        }
+
+        const { data: publicURLData } = db.storage
+            .from('logo')
+            .getPublicUrl(fileName);
+
+        const publicUrl = publicURLData.publicUrl;
+
+        document.getElementById('kham_anhUrlHidden').value = publicUrl;
+        const preview = document.getElementById('kham_imgPreview');
+        if (preview) {
+            preview.src = publicUrl;
+            preview.style.display = 'block';
+        }
+        
+        alert('✅ Tải ảnh thành công!');
+    }
+
     // --- HÀM THÊM DÒNG THUỐC ĐỒNG BỘ FORM ĐƠN THUỐC ---
     function themDongThuoc(thuocCu = null) {
         const container = document.getElementById('danhSachThuocContainer');
@@ -774,6 +821,11 @@
                     }
                 } catch(e) {}
             }
+
+            let anhHtml = '';
+            if (item.hinhanh && item.hinhanh.trim() !== '') {
+                anhHtml = `<div style="margin-top: 6px;"><a href="${item.hinhanh}" target="_blank"><img src="${item.hinhanh}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1;" alt="Ảnh khám"></a></div>`;
+            }
             
             container.innerHTML += `
                 <div class="kham-card">
@@ -782,7 +834,8 @@
                         <p><i class="fa-solid fa-user"></i> Chủ: ${tenChu}</p>
                         <p><i class="fa-solid fa-stethoscope"></i> ${trieuChungText}</p>
                         ${donThuocSummary}
-                        <p>
+                        ${anhHtml}
+                        <p style="margin-top: 6px;">
                             <i class="fa-solid fa-calendar-days"></i> ${item.ngaykham || ''} | 
                             <b style="color:#0284c7; cursor:pointer;" onclick="doiTrangThai(${item.id}, '${trangThai}')" title="Bấm để đổi trạng thái">${trangThai} 🔄</b>
                         </p>
@@ -842,6 +895,14 @@
         document.getElementById('thucung_search').value = '';
         document.getElementById('suggestions-box').style.display = 'none';
         
+        document.getElementById('kham_anhUrlHidden').value = '';
+        document.getElementById('kham_anhFile').value = '';
+        const preview = document.getElementById('kham_imgPreview');
+        if (preview) {
+            preview.src = '';
+            preview.style.display = 'none';
+        }
+
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('ngaykham').value = today;
         document.getElementById('nhietdo').value = '';
@@ -871,6 +932,20 @@
             document.getElementById('thucung_search').value = tcItem.label;
         } else {
             document.getElementById('thucung_search').value = '';
+        }
+
+        const hinhanh = item.hinhanh || '';
+        document.getElementById('kham_anhUrlHidden').value = hinhanh;
+        document.getElementById('kham_anhFile').value = '';
+        const preview = document.getElementById('kham_imgPreview');
+        if (preview) {
+            if (hinhanh) {
+                preview.src = hinhanh;
+                preview.style.display = 'block';
+            } else {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
         }
 
         document.getElementById('ngaykham').value = item.ngaykham || '';
@@ -910,7 +985,7 @@
         const dieutri = document.getElementById('dieutri').value.trim();
         const chiphiStr = document.getElementById('chiphi').value.trim();
         const trangthai = document.getElementById('trangthai').value;
-        const hinhanhUrl = document.getElementById('editingHinhanhOld').value;
+        const hinhanhUrl = document.getElementById('kham_anhUrlHidden').value.trim();
 
         const mathucung = mathucungStr.replace(/[^0-9]/g, '');
         if (!mathucung || !ngaykham) {
