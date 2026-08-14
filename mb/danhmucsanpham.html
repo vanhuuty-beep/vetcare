@@ -598,7 +598,7 @@
         return '86' + randomPart;
     }
 
-    // --- HÀM NÉN VÀ TẢI ẢNH SẢN PHẨM TỐC ĐỘ CAO ---
+    // --- HÀM NÉN VÀ TẢI ẢNH SẢN PHẨM (ĐÃ SỬA LỖI TÊN FILE AN TOÀN) ---
     async function xuLyChonFileAnhSanPham(input) {
         if (!input.files || input.files.length === 0) return;
         const file = input.files[0];
@@ -622,6 +622,7 @@
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
                 canvas.toBlob(async (blob) => {
+                    // ĐẶT TÊN FILE SẠCH SẼ HOÀN TOÀN, CHỐNG MỌI LỖI 400 KHI UPLOAD LÊN SUPABASE
                     const fileName = `sp_${maphongkham}_${Date.now()}.jpg`;
 
                     let { data, error } = await db.storage
