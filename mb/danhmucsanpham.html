@@ -598,11 +598,14 @@
         return '86' + randomPart;
     }
 
-    // --- HÀM NÉN VÀ TẢI ẢNH SẢN PHẨM (ĐÃ SỬA LỖI TÊN FILE AN TOÀN) ---
+    // --- HÀM NÉN VÀ TẢI ẢNH SẢN PHẨM (ĐÃ LÀM SẠCH TÊN FILE AN TOÀN, LOẠI BỎ LỖI 400) ---
     async function xuLyChonFileAnhSanPham(input) {
         if (!input.files || input.files.length === 0) return;
         const file = input.files[0];
-        const maphongkham = sessionStorage.getItem('maphongkham') || 'chung';
+        
+        // Lấy mã phòng khám và loại bỏ toàn bộ khoảng trắng, ký tự xuống dòng rác
+        let maphongkham = sessionStorage.getItem('maphongkham') || 'chung';
+        maphongkham = maphongkham.toString().replace(/[^a-zA-Z0-9]/g, '');
 
         alert('⏳ Đang nén và tải ảnh sản phẩm...');
 
@@ -613,7 +616,7 @@
             img.src = event.target.result;
             img.onload = async () => {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800; // Tối ưu kích thước cho ảnh sản phẩm
+                const MAX_WIDTH = 600; 
                 const scaleSize = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * scaleSize;
@@ -622,7 +625,12 @@
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
                 canvas.toBlob(async (blob) => {
-                    // ĐẶT TÊN FILE SẠCH SẼ HOÀN TOÀN, CHỐNG MỌI LỖI 400 KHI UPLOAD LÊN SUPABASE
+                    if (!blob) {
+                        alert("❌ Lỗi nén ảnh, vui lòng thử lại!");
+                        return;
+                    }
+
+                    // Tên file hoàn toàn sạch, chống lỗi 400
                     const fileName = `sp_${maphongkham}_${Date.now()}.jpg`;
 
                     let { data, error } = await db.storage
@@ -648,7 +656,7 @@
                     }
                     
                     alert('✅ Tải ảnh thành công!');
-                }, 'image/jpeg', 0.7);
+                }, 'image/jpeg', 0.8);
             };
         };
     }
