@@ -854,8 +854,8 @@
                     <td><strong style="color: #059669;">${chiPhiFormatted}</strong></td>
                     <td style="text-align: center;">
                         <span onclick="capNhatTrangThaiKhambenh(${item.id}, '${nextStatus}')" 
-                              style="background-color: ${badgeColor}; color: white; font-size: 11px; padding: 3px 8px; border-radius: 12px; cursor: pointer; font-weight: bold; display: inline-block; white-space: nowrap;" 
-                              title="Bấm để đổi trạng thái">
+                            style="background-color: ${badgeColor}; color: white; font-size: 11px; padding: 3px 8px; border-radius: 12px; cursor: pointer; font-weight: bold; display: inline-block; white-space: nowrap;" 
+                            title="Bấm để đổi trạng thái">
                             ${trangThaiHienTai} 🔄
                         </span>
                     </td>
@@ -1109,11 +1109,13 @@
 
             if (fileInput.files && fileInput.files[0]) {
                 const file = fileInput.files[0];
-                const fileName = `kham_${Date.now()}_${file.name}`;
+                
+                // TÊN FILE CỰC KỲ SẠCH SẼ, CHỐNG MỌI LỖI URL HOẶC LỖI 400 TRÊN SUPABASE MỚI
+                const fileName = `kham_${Date.now()}.jpg`;
                 
                 const { data: uploadData, error: uploadError } = await db.storage
                     .from('images')
-                    .upload(fileName, file);
+                    .upload(fileName, file, { contentType: 'image/jpeg', upsert: true });
 
                 if (uploadError) {
                     alert('Lỗi upload ảnh lên Storage: ' + uploadError.message);
