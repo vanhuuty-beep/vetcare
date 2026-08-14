@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", function() {
         currentUser = null;
     }
 
-    // Đảm bảo trang web đã nhúng Font Awesome (nếu chưa có trong thẻ <head> của trang html chính)
+    // Đảm bảo trang web đã nhúng Font Awesome
     if (!document.getElementById('font-awesome-cdn')) {
         const faLink = document.createElement('link');
         faLink.id = 'font-awesome-cdn';
@@ -19,15 +19,12 @@ document.addEventListener("DOMContentLoaded", function() {
     const vaitroRaw = currentUser ? (currentUser.vaitro || currentUser.role || '') : '';
     const vaitro = vaitroRaw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
     
-    // Xác định tài khoản siêu quản lý hệ thống (huuty hoặc số điện thoại 0935778727)
+    // Xác định tài khoản siêu quản lý hệ thống
     const tentaiKhoanHienTai = currentUser ? String(currentUser.tentaikhoan || currentUser.username || currentUser.sodienthoai || '').toLowerCase().trim() : '';
     const sdtHienTai = currentUser ? String(currentUser.sodienthoai || currentUser.sdt || '').trim() : '';
     const isHuuTy = (tentaiKhoanHienTai === 'huuty' || tentaiKhoanHienTai.includes('huuty') || sdtHienTai === '0935778727');
 
-    // Xác định quyền Chủ phòng khám
     const isTrueOwner = vaitro.includes('chủ phòng khám') || vaitro.includes('chu phong kham') || vaitro.includes('chupk');
-    
-    // Bác sĩ
     const isBacSi = vaitro.includes('bac si') || vaitro === 'bacsi';
 
     // --- LỚP PHONG TỎA & ĐIỀU HƯỚNG KHI HẾT HẠN ---
@@ -42,7 +39,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (isExpired) {
         if (isTrueOwner && !isHuuTy) {
             alert('⚠️ Tài khoản phòng khám của bạn đã hết hạn bản quyền! Hệ thống sẽ chuyển hướng đến trang thanh toán.');
-            window.location.replace('thanhtoan.html');
+            window.location.replace('../quanly/thanhtoan.html');
             return;
         } else if (!isHuuTy) {
             hienThiPopupGiaHanChoNhanVien();
@@ -60,7 +57,6 @@ document.addEventListener("DOMContentLoaded", function() {
             <li class="menu-item" id="menu-quanlychung" onclick="window.location.href='quanlychung.html'">
                 <span><i class="fa-solid fa-crown"></i></span> <span class="menu-text" style="font-weight: bold;">Quản lý chung (Hệ thống)</span>
             </li>
-            
             <li class="menu-item" id="menu-lienhe" onclick="window.location.href='lienhe.html'"><span><i class="fa-solid fa-headset"></i></span> <span class="menu-text">Liên hệ</span></li>
         `;
     } else if (isTrueOwner) {
@@ -80,9 +76,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const options = { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' };
     const ngayHienTai = now.toLocaleDateString('vi-VN', options);
 
-    // XÂY DỰNG CÁC NHÓM MENU CHUYÊN MÔN VỚI FONT AWESOME ICONS
     let dynamicMenuContent = '';
-
     dynamicMenuContent += `<li class="menu-item" id="menu-thongke" onclick="window.location.href='thongke.html'"><span><i class="fa-solid fa-chart-pie"></i></span> <span class="menu-text">Thống kê</span></li>`;
 
     dynamicMenuContent += `
@@ -156,8 +150,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     dynamicMenuContent += heThongMenuHtml;
 
-    // Lấy giao diện màu đã lưu trong localStorage (mặc định xanh Navy)
-    const savedTheme = localStorage.getItem('sidebarThemeStyle') || 'linear-gradient(180deg, #1e3a8a 0%, #1e293b 100%)';
+    // Lấy màu nền menu đã lưu (mặc định xanh cổ vịt #058786)
+    const savedTheme = localStorage.getItem('sidebarThemeStyle') || '#058786';
     const savedThemeClass = localStorage.getItem('sidebarThemeClass') || '';
 
     const menuHTML = `
@@ -167,14 +161,16 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div style="display: flex; align-items: center;">
                     <span style="font-size: 20px; margin-right: 8px;"><i class="fa-solid fa-paw" style="color: #60a5fa;"></i></span> <span class="menu-text">VetCare Pro</span>
                 </div>
-                <!-- BẢNG CHỌN MÀU GIAO DIỆN (CÓ MÀU ĐỎ, XÁM NHẸ & TRẮNG MỜ) -->
-                <div class="theme-picker-wrapper" title="Đổi màu giao diện menu" style="position: relative; cursor: pointer;">
+                <!-- BẢNG CHỌN MÀU GIAO DIỆN -->
+                <div class="theme-picker-wrapper" title="Đổi màu giao diện menu & header" style="position: relative; cursor: pointer;">
                     <span style="font-size: 14px; padding: 5px 8px; background: rgba(255,255,255,0.2); border-radius: 6px;"><i class="fa-solid fa-palette"></i></span>
                     <div class="theme-dropdown-palette">
+                        <div onclick="changeSidebarTheme('#058786', '')" style="background: #058786;" title="Xanh cổ vịt (#058786)"></div>
                         <div onclick="changeSidebarTheme('linear-gradient(180deg, #1e3a8a 0%, #1e293b 100%)', '')" style="background: linear-gradient(180deg, #1e3a8a, #1e293b);" title="Xanh Navy"></div>
                         <div onclick="changeSidebarTheme('linear-gradient(180deg, #0f172a 0%, #334155 100%)', '')" style="background: linear-gradient(180deg, #0f172a, #334155);" title="Đen Xám Khói"></div>
-                        <div onclick="changeSidebarTheme('linear-gradient(180deg, #065f46 0%, #064e3b 100%)', '')" style="background: linear-gradient(180deg, #065f46, #064e3b);" title="Xanh Ngọc Sẫm"></div>
+                        <div onclick="changeSidebarTheme('linear-gradient(180deg, #1e3a8a 0%, #064e3b 100%)', '')" style="background: linear-gradient(180deg, #065f46, #064e3b);" title="Xanh Ngọc Sẫm"></div>
                         <div onclick="changeSidebarTheme('linear-gradient(180deg, #dc2626 0%, #991b1b 100%)', '')" style="background: linear-gradient(180deg, #dc2626, #991b1b);" title="Đỏ nổi bật"></div>
+                        <div onclick="changeSidebarTheme('linear-gradient(180deg, #38bdf8 0%, #0284c7 100%)', 'theme-sang-xanh')" style="background: linear-gradient(180deg, #38bdf8, #0284c7);" title="Xanh da trời sáng"></div>
                         <div onclick="changeSidebarTheme('#64748b', 'theme-xam-nhe')" style="background: #64748b;" title="Xám nhẹ"></div>
                         <div onclick="changeSidebarTheme('rgba(255, 255, 255, 0.18)', 'theme-trang-mo')" style="background: rgba(255, 255, 255, 0.4); border: 1px solid #cbd5e1;" title="Trắng mờ (Kính mờ)"></div>
                     </div>
@@ -197,7 +193,6 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     <style>
-        /* === GIAO DIỆN MENU HIỆN ĐẠI & TÙY CHỌN MÀU === */
         .sidebar {
             width: 275px !important;
             min-width: 275px !important;
@@ -214,7 +209,6 @@ document.addEventListener("DOMContentLoaded", function() {
             font-family: 'Inter', 'Segoe UI', sans-serif;
         }
 
-        /* Hiệu ứng màu Trắng mờ dạng kính (Glassmorphism) */
         .sidebar.theme-trang-mo {
             background: rgba(255, 255, 255, 0.18) !important;
             backdrop-filter: blur(12px);
@@ -234,7 +228,21 @@ document.addEventListener("DOMContentLoaded", function() {
             background: rgba(255, 255, 255, 0.3) !important;
         }
 
-        /* Bảng chọn màu popup */
+        .sidebar.theme-sang-xanh {
+            color: #0f172a !important;
+        }
+        .sidebar.theme-sang-xanh .menu-item,
+        .sidebar.theme-sang-xanh .menu-dropdown-toggle,
+        .sidebar.theme-sang-xanh .menu-category,
+        .sidebar.theme-sang-xanh .sidebar-header .menu-text,
+        .sidebar.theme-sang-xanh #sidebar-date {
+            color: #ffffff !important;
+        }
+        .sidebar.theme-sang-xanh .menu-item:hover,
+        .sidebar.theme-sang-xanh .menu-dropdown-toggle:hover {
+            background: rgba(255, 255, 255, 0.2) !important;
+        }
+
         .theme-picker-wrapper:hover .theme-dropdown-palette {
             display: flex;
         }
@@ -308,10 +316,10 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         .sidebar .menu-item.active {
-            background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%) !important;
+            background: rgba(255, 255, 255, 0.2) !important;
             color: #ffffff !important;
             font-weight: 700 !important;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .sidebar .menu-item span.menu-text { display: inline-block !important; visibility: visible !important; opacity: 1 !important; }
@@ -364,16 +372,16 @@ document.addEventListener("DOMContentLoaded", function() {
         .submenu-container .menu-item { padding: 8px 12px 8px 10px; font-size: 13px !important; margin: 2px 4px; }
 
         .menu-pos-highlight {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+            background: rgba(255, 255, 255, 0.25) !important;
             color: #ffffff !important;
             border-radius: 8px;
             margin: 12px 10px !important;
             padding: 11px 14px !important;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        .menu-pos-highlight:hover { background: linear-gradient(135deg, #1d4ed8, #1e40af) !important; transform: translateY(-1px); }
+        .menu-pos-highlight:hover { background: rgba(255, 255, 255, 0.35) !important; transform: translateY(-1px); }
         .menu-pos-highlight .pos-icon { font-size: 15px; margin-right: 10px; }
         .menu-pos-highlight .pos-badge { background-color: #dc2626; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: auto; }
 
@@ -396,21 +404,18 @@ document.addEventListener("DOMContentLoaded", function() {
         body.sidebar-collapsed .sidebar .theme-picker-wrapper { display: none !important; }
         body.sidebar-collapsed .submenu-container.open { display: none !important; }
 
-        #notification-center-pc { position: fixed; top: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; max-width: 350px; width: 100%; pointer-events: none; }
-        .notify-toast-pc { background: #ffffff; border-left: 5px solid #059669; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); padding: 12px 15px; border-radius: 6px; pointer-events: auto; display: flex; align-items: flex-start; justify-content: space-between; animation: slideInRight 0.3s ease-out forwards; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
+        /* KHẮC PHỤC LỖI TRÀN MÀN HÌNH CỦA KHUNG THÔNG BÁO */
         #pcNotificationDropdown {
             display: none;
-            position: fixed !important;
-            top: 60px !important;
-            right: 20px !important;
+            position: absolute !important;
+            top: 50px !important;
+            right: 120px !important; /* Căn chỉnh đúng vị trí nút cái chuông */
             width: 340px !important;
             max-height: 380px !important;
             overflow-y: auto !important;
             background: #ffffff !important;
             border-radius: 10px !important;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
             z-index: 99999 !important;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
             border: 1px solid #cbd5e1 !important;
@@ -428,7 +433,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     e.preventDefault();
                     e.stopPropagation();
                     if (isTrueOwner) {
-                        window.location.href = 'thanhtoan.html';
+                        window.location.href = '../quanly/thanhtoan.html';
                     } else {
                         hienThiPopupGiaHanChoNhanVien();
                     }
@@ -457,25 +462,27 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const topnavContainer = document.getElementById('topnav-container');
     if (topnavContainer) {
+        const currentHeaderBg = localStorage.getItem('sidebarThemeStyle') || '#058786';
+
         topnavContainer.innerHTML = `
-            <div class="top-navbar" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 25px; background: #ffffff; border-bottom: 1px solid #e2e8f0; height: 55px; box-sizing: border-box; position: relative;">
+            <div class="top-navbar" id="topNavbarHeader" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 25px; background: ${currentHeaderBg}; border-bottom: 1px solid rgba(255,255,255,0.15); height: 55px; box-sizing: border-box; position: relative; color: white; transition: background 0.3s ease;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: none; border: none; font-size: 18px;"><i class="fa-solid fa-bars"></i></button>
-                    <h2 style="margin: 0; font-size: 14px; font-weight: bold; color: #1e3a8a;">HỆ THỐNG QUẢN LÝ PHÒNG KHÁM THÚ Y</h2>
+                    <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: rgba(255,255,255,0.15); border: none; font-size: 16px; color: white; width: 32px; height: 32px; border-radius: 6px;"><i class="fa-solid fa-bars"></i></button>
+                    <h2 style="margin: 0; font-size: 14px; font-weight: bold; color: white;">HỆ THỐNG QUẢN LÝ PHÒNG KHÁM THÚ Y</h2>
                 </div>
                 
-                <div style="display: flex; align-items: center; gap: 14px; margin-right: 10px;">
+                <div style="display: flex; align-items: center; gap: 14px; position: relative; margin-right: 10px;">
                     <div id="headerBellBtnPC" style="position: relative; display: flex; align-items: center; cursor: pointer; padding: 5px;" title="Bấm để xem lịch sử thông báo">
                         <span style="font-size: 20px; color: #fbbf24; text-shadow: 0 1px 2px rgba(0,0,0,0.3);"><i class="fa-solid fa-bell"></i></span>
                         <span id="navNotificationBadge" style="position: absolute; top: 0; right: 0; background: #dc2626; color: white; font-size: 10px; padding: 1px 5px; border-radius: 50%; display: none; font-weight: bold;">0</span>
                     </div>
 
                     <div class="search-container" style="position: relative; margin: 0;">
-                        <input type="text" id="globalSearchInput" class="search-box" placeholder="🔍 Tìm tên KH, SĐT, thú cưng..." autocomplete="off" style="padding: 7px 12px; width: 220px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none;">
+                        <input type="text" id="globalSearchInput" class="search-box" placeholder="🔍 Tìm tên KH, SĐT, thú cưng..." autocomplete="off" style="padding: 7px 12px; width: 220px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 13px; outline: none; background: rgba(255,255,255,0.9); color: #1e293b;">
                         <div id="searchDropdown" class="search-dropdown"></div>
                     </div>
 
-                    <div onclick="moModalSuaThongTinCaNhan()" style="display: flex; align-items: center; gap: 6px; background: #f1f5f9; padding: 5px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; font-weight: 600; color: #1e293b; cursor: pointer; white-space: nowrap;" title="Bấm để chỉnh sửa thông tin cá nhân">
+                    <div onclick="moModalSuaThongTinCaNhan()" style="display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); font-size: 12px; font-weight: 600; color: white; cursor: pointer; white-space: nowrap;" title="Bấm để chỉnh sửa thông tin cá nhân">
                         <span><i class="fa-solid fa-user"></i></span> <span style="max-width: 110px; overflow: hidden; text-overflow: ellipsis;">${tenHienThi}</span>
                     </div>
                     
@@ -548,7 +555,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
-// --- CÁC HÀM TIỆN ÍCH & ĐỔI MÀU GIAO DIỆN ---
+// --- HÀM ĐỔI MÀU GIAO DIỆN ĐỒNG BỘ CẢ MENU & HEADER ---
 function changeSidebarTheme(colorValue, className) {
     const sidebar = document.getElementById('sidebar');
     if (sidebar) {
@@ -557,9 +564,16 @@ function changeSidebarTheme(colorValue, className) {
         if (className) {
             sidebar.classList.add(className);
         }
-        localStorage.setItem('sidebarThemeStyle', colorValue);
-        localStorage.setItem('sidebarThemeClass', className || '');
     }
+
+    // Tự động thay đổi màu nền Topbar Header theo
+    const topNavbar = document.getElementById('topNavbarHeader');
+    if (topNavbar) {
+        topNavbar.style.background = colorValue;
+    }
+
+    localStorage.setItem('sidebarThemeStyle', colorValue);
+    localStorage.setItem('sidebarThemeClass', className || '');
 }
 
 function toggleSidebar() {
