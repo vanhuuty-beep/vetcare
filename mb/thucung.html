@@ -302,7 +302,7 @@
         .btn-vaccine { color: #16a34a; background: #dcfce7; }   /* Tiêm vaccine */
         .btn-boarding { color: #ea580c; background: #ffedd5; }  /* Lưu trú */
         .btn-edit { color: #d97706; background: #fef3c7; }        /* Sửa */
-        .btn-delete { color: #dc2626; background: #fee2e2; }     /* Xóa */
+        .btn-delete { color: #dc2626; background: #fee2e2; }      /* Xóa */
 
         /* Bottom Nav cố định dưới đáy */
         .bottom-nav {
@@ -382,7 +382,7 @@
             
             <input type="hidden" id="editingId">
             
-            <!-- Ô CHỤP ẢNH TRỰC TIẾP TỪ CAMERA ĐIỆN THOẠI (CÓ NÉN ẢNH TỐC ĐỘ CAO) -->
+            <!-- Ô CHỤP ẢNH TRỰC TIẾP TỪ CAMERA ĐIỆN THOẠI (CÓ NÉN ẢNH TỐC ĐỘ CAO VÀ LƯU VÀO BUCKET IMAGES) -->
             <div class="input-group">
                 <label>Hình ảnh thú cưng (Chụp từ Camera)</label>
                 <input type="file" id="pet_anhFile" accept="image/*" capture="environment" onchange="xuLyChonFileAnhThuCung(this)" style="padding: 5px; background: #f8fafc; font-size: 11px; cursor: pointer;">
@@ -568,7 +568,7 @@
         });
     }
 
-    // --- HÀM NÉN VÀ TẢI ẢNH CHỤP TỪ CAMERA (TỐC ĐỘ CAO) ---
+    // --- HÀM NÉN VÀ TẢI ẢNH CHỤP VÀO BUCKET IMAGES (TỐC ĐỘ CAO) ---
     async function xuLyChonFileAnhThuCung(input) {
         if (!input.files || input.files.length === 0) return;
         const file = input.files[0];
@@ -595,7 +595,7 @@
                     const fileName = `pet_cam_${maphongkham}_${Date.now()}.jpg`;
 
                     let { data, error } = await db.storage
-                        .from('logo')
+                        .from('images')
                         .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
 
                     if (error) {
@@ -604,7 +604,7 @@
                     }
 
                     const { data: publicURLData } = db.storage
-                        .from('logo')
+                        .from('images')
                         .getPublicUrl(fileName);
 
                     const publicUrl = publicURLData.publicUrl;
@@ -644,6 +644,7 @@
         document.getElementById('makhachhang').value = '';
         document.getElementById('pet_anhUrlHidden').value = '';
         document.getElementById('pet_anhFile').value = '';
+        
         const preview = document.getElementById('pet_imgPreview');
         if (preview) {
             preview.src = '';
@@ -670,9 +671,10 @@
         const hinhanh = item.hinhanh || '';
         document.getElementById('pet_anhUrlHidden').value = hinhanh;
         document.getElementById('pet_anhFile').value = '';
+        
         const preview = document.getElementById('pet_imgPreview');
         if (preview) {
-            if (hinhanh) {
+            if (hinhanh && hinhanh.trim() !== '') {
                 preview.src = hinhanh;
                 preview.style.display = 'block';
             } else {
