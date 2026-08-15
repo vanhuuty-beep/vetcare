@@ -430,9 +430,9 @@
                     <textarea id="ghichu" rows="3" class="form-control" placeholder="Nhập tình trạng, ăn uống, truyền dịch..."></textarea>
                 </div>
 
-                <!-- CHỤP ẢNH TỰ ĐỘNG NÉN -->
+                <!-- CHỌN ẢNH HOẶC VIDEO (TỐI ĐA 5 GIÂY) -->
                 <div class="form-group-modal">
-                    <label>Chọn hoặc chụp ảnh / video:</label>
+                    <label>Chọn hoặc chụp ảnh / video (Video tối đa 5 giây):</label>
                     <input type="file" id="hinhAnhFile" accept="image/*,video/*" multiple capture="environment" style="font-size: 12px; background: #f8fafc; padding: 4px; cursor: pointer;" onchange="previewSelectedFiles(this)">
                     <div id="previewImages" class="preview-img-container"></div>
                 </div>
@@ -481,21 +481,61 @@
         soDongMoiTrang: 5
     };
 
-    function previewSelectedFiles(input) {
+    // Hàm đo thời lượng video bằng thẻ video ẩn
+    function getVideoDuration(file) {
+        return new Promise((resolve) => {
+            const videoElement = document.createElement('video');
+            videoElement.preload = 'metadata';
+            videoElement.onloadedmetadata = function() {
+                window.URL.revokeObjectURL(videoElement.src);
+                resolve(videoElement.duration);
+            };
+            videoElement.onerror = function() {
+                resolve(0);
+            };
+            videoElement.src = URL.createObjectURL(file);
+        });
+    }
+
+    // Hàm kiểm tra thời lượng video <= 5 giây và xem trước file
+    async function previewSelectedFiles(input) {
         const previewContainer = document.getElementById('previewImages');
         previewContainer.innerHTML = '';
-        if (input.files) {
-            Array.from(input.files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    if (file.type.startsWith('video/')) {
-                        previewContainer.innerHTML += `<video src="${e.target.result}" class="preview-video-thumb" controls muted></video>`;
-                    } else {
-                        previewContainer.innerHTML += `<img src="${e.target.result}" class="preview-thumb">`;
-                    }
+        
+        if (!input.files || input.files.length === 0) return;
+
+        let hopLe = true;
+        let validFiles = [];
+
+        for (let i = 0; i < input.files.length; i++) {
+            const file = input.files[i];
+
+            // Nếu là video, bắt buộc kiểm tra thời lượng không quá 5 giây
+            if (file.type.startsWith('video/')) {
+                const duration = await getVideoDuration(file);
+                if (duration > 5.0) {
+                    alert(`⚠️ Video "${file.name}" dài ${duration.toFixed(1)} giây. Quy định hệ thống video không được vượt quá 5 giây!`);
+                    hopLe = false;
+                    continue; // Bỏ qua file vi phạm
                 }
-                reader.readAsDataURL(file);
-            });
+            }
+            validFiles.push(file);
+
+            // Hiển thị preview giao diện
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (file.type.startsWith('video/')) {
+                    previewContainer.innerHTML += `<video src="${e.target.result}" class="preview-video-thumb" controls muted></video>`;
+                } else {
+                    previewContainer.innerHTML += `<img src="${e.target.result}" class="preview-thumb">`;
+                }
+            }
+            reader.readAsDataURL(file);
+        }
+
+        // Nếu có video vi phạm > 5s và không còn file hợp lệ nào khác, reset lại input
+        if (!hopLe && validFiles.length === 0) {
+            input.value = '';
         }
     }
 </script>
@@ -810,7 +850,7 @@
 
         const btn = document.getElementById('btnSave');
         btn.disabled = true;
-        btn.textContent = '⏳ Đang nén & lưu ảnh...';
+        btn.textContent = '⏳ Đang xử lý & lưu...';
 
         let imageUrls = [];
         let oldHinhanh = document.getElementById('hinhanhOld').value;
@@ -828,19 +868,28 @@
         if (fileInput.files && fileInput.files.length > 0) {
             for (let i = 0; i < fileInput.files.length; i++) {
                 const fileGoc = fileInput.files[i];
+                
+                // Kiểm tra lại lần nữa trước khi upload thật
+                if (fileGoc.type.startsWith('video/')) {
+                    const duration = await getVideoDuration(fileGoc);
+                    if (duration > 5.0) {
+                        alert(`⚠️ Video "${fileGoc.name}" dài hơn 5 giây và đã bị bỏ qua.`);
+                        continue;
+                    }
+                }
+
                 const fileCanUpload = await xuLyNenAnhTruocKhiUpload(fileGoc);
 
-                // Tên file sạch chống lỗi 400 và trỏ chuẩn vào bucket 'images'
                 const fileName = `lichtrinh_${Date.now()}_${i}.jpg`;
                 
                 const { error: uploadError } = await db.storage
-                    .from('images') // Đồng bộ sang dùng chung bucket 'images'
+                    .from('images')
                     .upload(fileName, fileCanUpload, { contentType: fileCanUpload.type || 'image/jpeg', upsert: true });
 
                 if (!uploadError) {
                     const { data: publicUrlData } = db.storage
                         .from('images')
-                        .getPublicUrl(fileName); // Lấy chuẩn thuộc tính publicUrl
+                        .getPublicUrl(fileName);
 
                     if (publicUrlData && publicUrlData.publicUrl) {
                         imageUrls.push(publicUrlData.publicUrl);
