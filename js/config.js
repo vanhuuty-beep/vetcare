@@ -30,7 +30,7 @@ let CLINIC_INFO = isMatpet ? {
     dienthoai: currentUser?.sodienthoai || "087.77.31.079",
     slogan: "Hệ thống quản lý thú y Matpet"
 } : {
-    ten: currentUser?.tenphongkham ? currentUser.tenphongkham.toUpperCase() : "VETCARE PRO - PHÒNG KHÁM THÚ Y",
+    ten: currentUser?.tenphongkham ? currentUser.tenphongkham.toUpperCase() : "VETCARE PRO",
     diachi: currentUser?.diachi || "Đà Nẵng",
     dienthoai: currentUser?.sodienthoai || "0935.77.87.27",
     slogan: "Hệ thống quản lý thú y thông minh"
