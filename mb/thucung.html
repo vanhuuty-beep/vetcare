@@ -382,7 +382,7 @@
             
             <input type="hidden" id="editingId">
             
-            <!-- Ô CHỤP ẢNH TRỰC TIẾP TỪ CAMERA ĐIỆN THOẠI (CÓ NÉN ẢNH TỐC ĐỘ CAO VÀ LƯU VÀO BUCKET IMAGES) -->
+            <!-- Ô CHỤP ẢNH TRỰC TIẾP TỪ CAMERA ĐIỆN THOẠI -->
             <div class="input-group">
                 <label>Hình ảnh thú cưng (Chụp từ Camera)</label>
                 <input type="file" id="pet_anhFile" accept="image/*" capture="environment" onchange="xuLyChonFileAnhThuCung(this)" style="padding: 5px; background: #f8fafc; font-size: 11px; cursor: pointer;">
@@ -402,7 +402,6 @@
                     <label>Loài</label>
                     <input type="text" id="loai" placeholder="VD: Chó, Mèo...">
                 </div>
-                <!-- BỔ SUNG TRƯỜNG GIỚI TÍNH -->
                 <div class="input-group">
                     <label>Giới tính</label>
                     <select id="gioitinh">
@@ -544,9 +543,11 @@
             const maKH = item.makhachhang || item.khachhang_id;
             const tenChu = (maKH && mapKhachHang[maKH]) ? mapKhachHang[maKH] : 'Chưa rõ chủ';
             
-            const anhPet = item.hinhanh && item.hinhanh.trim() !== '' 
-                ? item.hinhanh 
-                : 'https://cdn-icons-png.flaticon.com/512/616/616408.png';
+            // Xử lý chuẩn hóa link ảnh, loại bỏ khoảng trắng và ký tự lạ nếu có
+            let anhPet = item.hinhanh ? item.hinhanh.trim() : '';
+            if (!anhPet || anhPet === 'null' || anhPet === 'undefined') {
+                anhPet = 'https://cdn-icons-png.flaticon.com/512/616/616408.png';
+            }
 
             container.innerHTML += `
                 <div class="pet-card">
@@ -578,11 +579,14 @@
         });
     }
 
-    // --- HÀM NÉN VÀ TẢI ẢNH CHỤP VÀO BUCKET IMAGES (TỐC ĐỘ CAO) ---
+    // --- HÀM NÉN VÀ TẢI ẢNH CHỤP AN TOÀN (ĐÃ LOẠI BỎ KÝ TỰ XUỐNG DÒNG LỖI) ---
     async function xuLyChonFileAnhThuCung(input) {
         if (!input.files || input.files.length === 0) return;
         const file = input.files[0];
-        const maphongkham = sessionStorage.getItem('maphongkham') || 'chung';
+        
+        // Làm sạch mã phòng khám, loại bỏ hoàn toàn khoảng trắng và ký tự xuống dòng
+        let maphongkham = sessionStorage.getItem('maphongkham') || 'chung';
+        maphongkham = String(maphongkham).replace(/[\r\n]+/g, "").trim();
 
         alert('⏳ Đang nén và tải ảnh lên hệ thống...');
 
@@ -602,7 +606,8 @@
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
                 canvas.toBlob(async (blob) => {
-                    const fileName = `pet_cam_${maphongkham}_${Date.now()}.jpg`;
+                    // Tạo tên file chuẩn không chứa khoảng trắng hay ký tự xuống dòng
+                    const fileName = `pet_cam_${maphongkham}_${Date.now()}.jpg`.replace(/[\r\n]+/g, "").trim();
 
                     let { data, error } = await db.storage
                         .from('images')
@@ -617,7 +622,7 @@
                         .from('images')
                         .getPublicUrl(fileName);
 
-                    const publicUrl = publicURLData.publicUrl;
+                    const publicUrl = publicURLData.publicUrl.trim();
 
                     document.getElementById('pet_anhUrlHidden').value = publicUrl;
                     const preview = document.getElementById('pet_imgPreview');
@@ -680,13 +685,13 @@
         document.getElementById('cannang').value = item.cannang !== null ? item.cannang : '';
         document.getElementById('makhachhang').value = item.makhachhang || item.khachhang_id || '';
         
-        const hinhanh = item.hinhanh || '';
+        const hinhanh = item.hinhanh ? item.hinhanh.trim() : '';
         document.getElementById('pet_anhUrlHidden').value = hinhanh;
         document.getElementById('pet_anhFile').value = '';
         
         const preview = document.getElementById('pet_imgPreview');
         if (preview) {
-            if (hinhanh && hinhanh.trim() !== '') {
+            if (hinhanh && hinhanh !== '') {
                 preview.src = hinhanh;
                 preview.style.display = 'block';
             } else {
