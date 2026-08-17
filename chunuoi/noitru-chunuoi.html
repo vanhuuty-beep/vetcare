@@ -187,7 +187,7 @@
 
         <div class="app-content">
             <div id="danhSachNoiTru">
-                <div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">Đang tải lịch trình nội trú theo phòng khám...</div>
+                <div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">Đang quét lịch trình nội trú toàn hệ thống...</div>
             </div>
         </div>
 
@@ -236,7 +236,7 @@
             const ownerData = JSON.parse(ownerStr);
             document.getElementById('tenChuNuoiLabel').innerText = ownerData.hovaten || ownerData.tenkhachhang || 'Chủ nuôi';
 
-            await taiLichTrinhNoiTruChuNuoi(ownerData.id);
+            await taiLichTrinhNoiTruToanHeThong(ownerData);
         });
 
         // Hàm chuẩn hóa URL ảnh từ bucket 'images' hoặc link ngoài
@@ -278,90 +278,156 @@
             return imgGalleryHtml ? `<div class="progress-gallery">${imgGalleryHtml}</div>` : '';
         }
 
-        async function taiLichTrinhNoiTruChuNuoi(ownerId) {
+        async function taiLichTrinhNoiTruToanHeThong(ownerData) {
             const container = document.getElementById('danhSachNoiTru');
             container.innerHTML = '';
 
-            try {
-                let listPets = null;
-                for (let col of ['makhachhang', 'makh', 'khachhang_id', 'idkhachhang']) {
-                    let { data } = await db.from('thucung').select('*').eq(col, ownerId);
-                    if (data && data.length > 0) {
-                        listPets = data;
-                        break;
+            let ownerId = ownerData.id;
+            let sdtCanTim = ownerData.sodienthoai || ownerData.sdt;
+
+            // 1. Tìm tất cả các ID khách hàng trên toàn hệ thống có chung số điện thoại này
+            let danhSachIdKhachHang = [Number(ownerId)];
+            if (sdtCanTim) {
+                try {
+                    let { data: samePhoneList } = await db.from('khachhang').select('id').eq('sodienthoai', sdtCanTim);
+                    if (samePhoneList) {
+                        samePhoneList.forEach(k => {
+                            if (!danhSachIdKhachHang.includes(k.id)) danhSachIdKhachHang.push(k.id);
+                        });
                     }
+                    let { data: samePhoneList2 } = await db.from('khachhang').select('id').eq('sdt', sdtCanTim);
+                    if (samePhoneList2) {
+                        samePhoneList2.forEach(k => {
+                            if (!danhSachIdKhachHang.includes(k.id)) danhSachIdKhachHang.push(k.id);
+                        });
+                    }
+                } catch(e){}
+            }
+
+            // 2. Lấy toàn bộ thú cưng liên quan đến các ID khách hàng trên toàn hệ thống
+            let petMap = {};
+            let petClinicMap = {};
+            let petIds = [];
+
+            for (let kId of danhSachIdKhachHang) {
+                for (let col of ['makhachhang', 'makh', 'khachhang_id', 'idkhachhang']) {
+                    try {
+                        let { data } = await db.from('thucung').select('*').eq(col, kId);
+                        if (data) {
+                            data.forEach(p => {
+                                if (!petIds.includes(p.id)) {
+                                    petIds.push(p.id);
+                                    petMap[p.id] = p.tenthecung || p.tenthucung || p.ten || 'Thú cưng';
+                                    petClinicMap[p.id] = p.maphongkham || 'Hệ thống chính';
+                                }
+                            });
+                        }
+                    } catch(e){}
                 }
 
-                if (!listPets || listPets.length === 0) {
-                    container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">Chưa tìm thấy thú cưng liên kết với tài khoản của bạn.</div>`;
-                    return;
-                }
+                // Quét thêm bảng trung gian thucung_khachhang nếu có
+                try {
+                    let { data: lkData } = await db.from('thucung_khachhang').select('thucung_id').eq('makhachhang', kId);
+                    if (lkData) {
+                        for (let lk of lkData) {
+                            if (!petIds.includes(lk.thucung_id)) {
+                                petIds.push(lk.thucung_id);
+                                let { data: pInfo } = await db.from('thucung').select('*').eq('id', lk.thucung_id).maybeSingle();
+                                if (pInfo) {
+                                    petMap[pInfo.id] = pInfo.tenthecung || pInfo.tenthucung || pInfo.ten || 'Thú cưng';
+                                    petClinicMap[pInfo.id] = pInfo.maphongkham || 'Hệ thống chính';
+                                }
+                            }
+                        }
+                    }
+                } catch(e){}
+            }
 
-                const petIds = listPets.map(p => p.id);
-                const petMap = {};
-                const petClinicMap = {};
-                listPets.forEach(p => {
-                    petMap[p.id] = p.tenthecung || p.tenthucung || p.ten || 'Thú cưng';
-                    petClinicMap[p.id] = p.maphongkham || 'Hệ thống chính';
-                });
+            if (petIds.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">Chưa tìm thấy thú cưng liên kết với tài khoản của bạn.</div>`;
+                return;
+            }
 
+            // 3. Lấy danh sách khám bệnh tương ứng với các thú cưng trên
+            let kbMap = {};
+            let kbClinicMap = {};
+            let kbIds = [];
+
+            try {
                 let { data: kbData } = await db.from('khambenh').select('id, mathucung, maphongkham').in('mathucung', petIds);
-                if (!kbData || kbData.length === 0) {
-                    container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">Hiện tại không có lịch trình nội trú nào cho thú cưng của bạn.</div>`;
-                    return;
+                if (kbData && kbData.length > 0) {
+                    kbData.forEach(kb => {
+                        kbMap[kb.id] = petMap[kb.mathucung] || 'Thú cưng';
+                        kbClinicMap[kb.id] = kb.maphongkham || petClinicMap[kb.mathucung] || 'Phòng khám VetCare';
+                        if (!kbIds.includes(kb.id)) kbIds.push(kb.id);
+                    });
                 }
+            } catch(e){}
 
-                const kbMap = {};
-                const kbClinicMap = {};
-                kbData.forEach(kb => {
-                    kbMap[kb.id] = petMap[kb.mathucung] || 'Thú cưng';
-                    kbClinicMap[kb.id] = kb.maphongkham || petClinicMap[kb.mathucung] || 'Phòng khám VetCare';
-                });
-                const kbIds = kbData.map(k => k.id);
+            // Quét thêm khambenh theo makhachhang
+            for (let kId of danhSachIdKhachHang) {
+                try {
+                    let { data: kbData } = await db.from('khambenh').select('id, mathucung, maphongkham').eq('makhachhang', kId);
+                    if (kbData && kbData.length > 0) {
+                        kbData.forEach(kb => {
+                            kbMap[kb.id] = petMap[kb.mathucung] || 'Thú cưng';
+                            kbClinicMap[kb.id] = kb.maphongkham || 'Phòng khám VetCare';
+                            if (!kbIds.includes(kb.id)) kbIds.push(kb.id);
+                        });
+                    }
+                } catch(e){}
+            }
 
-                let { data: ltData, error } = await db.from('lichtrinh').select('*').in('makhambenh', kbIds).order('id', { ascending: false });
-                if (error) throw error;
+            if (kbIds.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">Hiện tại không có lịch trình nội trú nào cho thú cưng của bạn.</div>`;
+                return;
+            }
 
-                if (!ltData || ltData.length === 0) {
-                    container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">🐾 Hiện tại chưa có nhật ký lịch trình nào được cập nhật.</div>`;
-                    return;
+            // 4. Lấy dữ liệu từ bảng lichtrinh
+            let ltData = [];
+            try {
+                let { data, error } = await db.from('lichtrinh').select('*').in('makhambenh', kbIds).order('id', { ascending: false });
+                if (!error && data) {
+                    ltData = data;
                 }
+            } catch(e){}
 
-                container.innerHTML = '';
-                ltData.forEach(item => {
-                    const tenPet = kbMap[item.makhambenh] || 'Thú cưng';
-                    const phongKhamHienThi = item.maphongkham || kbClinicMap[item.makhambenh] || 'Phòng khám VetCare';
-                    const ngayCapNhapStr = item.ngaycapnhap ? new Date(item.ngaycapnhap).toLocaleString('vi-VN') : '---';
-                    const ghiChu = item.ghichu || 'Chưa cập nhật chi tiết tiến trình điều trị.';
+            if (!ltData || ltData.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">🐾 Hiện tại chưa có nhật ký lịch trình nào được cập nhật.</div>`;
+                return;
+            }
 
-                    const imgGalleryHtml = taoHtmlMediaNoiTru(item.hinhanh);
+            container.innerHTML = '';
+            ltData.forEach(item => {
+                const tenPet = kbMap[item.makhambenh] || 'Thú cưng';
+                const phongKhamHienThi = item.maphongkham || kbClinicMap[item.makhambenh] || 'Phòng khám VetCare';
+                const ngayCapNhapStr = item.ngaycapnhap || item.created_at ? new Date(item.ngaycapnhap || item.created_at).toLocaleString('vi-VN') : '---';
+                const ghiChu = item.ghichu || 'Chưa cập nhật chi tiết tiến trình điều trị.';
 
-                    container.innerHTML += `
-                        <div class="timeline-card">
-                            <div class="timeline-header">
-                                <span class="pet-name"><i class="fa-solid fa-paw" style="color: #008080;"></i> ${tenPet}</span>
-                                <span class="badge-noitru">Đang điều trị</span>
-                            </div>
-                            <div class="timeline-content">
-                                <div style="margin-bottom: 3px; color: #008080; font-weight: 600; font-size: 11px;"><i class="fa-solid fa-hospital"></i> Phòng khám: ${phongKhamHienThi}</div>
-                                <div style="margin-bottom: 3px; color: #059669; font-weight: 600;"><i class="fa-solid fa-user-doctor"></i> Bác sĩ: ${item.bacsiphutrach || 'Chưa rõ'}</div>
-                                <div style="margin-bottom: 5px; color: #64748b; font-size: 11px;"><i class="fa-solid fa-calendar-days"></i> Cập nhật: ${ngayCapNhapStr}</div>
-                                
-                                <div class="progress-row">
-                                    <div class="progress-text">
-                                        <strong><i class="fa-solid fa-clipboard-list"></i> Lịch trình điều trị & Diễn biến:</strong><br>${ghiChu}
-                                    </div>
-                                    ${imgGalleryHtml}
+                const imgGalleryHtml = taoHtmlMediaNoiTru(item.hinhanh);
+
+                container.innerHTML += `
+                    <div class="timeline-card">
+                        <div class="timeline-header">
+                            <span class="pet-name"><i class="fa-solid fa-paw" style="color: #008080;"></i> ${tenPet}</span>
+                            <span class="badge-noitru">Đang điều trị</span>
+                        </div>
+                        <div class="timeline-content">
+                            <div style="margin-bottom: 3px; color: #008080; font-weight: 600; font-size: 11px;"><i class="fa-solid fa-hospital"></i> Phòng khám: ${phongKhamHienThi}</div>
+                            <div style="margin-bottom: 3px; color: #059669; font-weight: 600;"><i class="fa-solid fa-user-doctor"></i> Bác sĩ: ${item.bacsiphutrach || 'Chưa rõ'}</div>
+                            <div style="margin-bottom: 5px; color: #64748b; font-size: 11px;"><i class="fa-solid fa-calendar-days"></i> Cập nhật: ${ngayCapNhapStr}</div>
+                            
+                            <div class="progress-row">
+                                <div class="progress-text">
+                                    <strong><i class="fa-solid fa-clipboard-list"></i> Lịch trình điều trị & Diễn biến:</strong><br>${ghiChu}
                                 </div>
+                                ${imgGalleryHtml}
                             </div>
                         </div>
-                    `;
-                });
+                    </div>
+                `;
+            });
 
-            } catch (err) {
-                console.error('Lỗi tải lịch trình chủ nuôi:', err);
-                container.innerHTML = `<div style="text-align: center; color: red; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">Không thể tải dữ liệu lúc này. Vui lòng thử lại sau.</div>`;
-            }
         }
     </script>
 </body>
