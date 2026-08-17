@@ -209,10 +209,9 @@
             const ownerData = JSON.parse(ownerStr);
             document.getElementById('tenChuNuoiLabel').innerText = ownerData.hovaten || ownerData.tenkhachhang || 'Chủ nuôi';
 
-            await taiNhatKyYTeChinhXac(ownerData.id);
+            await taiNhatKyYTeToanHeThong(ownerData);
         });
 
-        // Hàm hỗ trợ bóc tách và tạo HTML hiển thị hình ảnh/video an toàn
         function taoHtmlHinhAnh(rawHinhanh) {
             if (!rawHinhanh) return '';
             let listImg = [];
@@ -238,35 +237,79 @@
             return galleryHtml ? `<div class="card-gallery">${galleryHtml}</div>` : '';
         }
 
-        async function taiNhatKyYTeChinhXac(ownerId) {
+        async function taiNhatKyYTeToanHeThong(ownerData) {
             const container = document.getElementById('danhSachLichSu');
             container.innerHTML = '';
 
-            let listPets = null;
-            for (let col of ['makhachhang', 'makh', 'khachhang_id', 'idkhachhang']) {
-                let { data } = await db.from('thucung').select('*').eq(col, ownerId);
-                if (data && data.length > 0) {
-                    listPets = data;
-                    break;
-                }
+            let ownerId = ownerData.id;
+            let sdtCanTim = ownerData.sodienthoai || ownerData.sdt;
+
+            // 1. Tìm tất cả các ID khách hàng trên toàn hệ thống có chung số điện thoại này (để gom dữ liệu ở nhiều phòng khám)
+            let danhSachIdKhachHang = [Number(ownerId)];
+            if (sdtCanTim) {
+                try {
+                    let { data: samePhoneList } = await db.from('khachhang').select('id').eq('sodienthoai', sdtCanTim);
+                    if (samePhoneList) {
+                        samePhoneList.forEach(k => {
+                            if (!danhSachIdKhachHang.includes(k.id)) danhSachIdKhachHang.push(k.id);
+                        });
+                    }
+                    let { data: samePhoneList2 } = await db.from('khachhang').select('id').eq('sdt', sdtCanTim);
+                    if (samePhoneList2) {
+                        samePhoneList2.forEach(k => {
+                            if (!danhSachIdKhachHang.includes(k.id)) danhSachIdKhachHang.push(k.id);
+                        });
+                    }
+                } catch(e){}
             }
 
-            if (!listPets || listPets.length === 0) {
+            // 2. Lấy toàn bộ thú cưng liên quan đến các ID khách hàng này
+            let petMap = {};
+            let petClinicMap = {};
+            let petIds = [];
+
+            for (let kId of danhSachIdKhachHang) {
+                for (let col of ['makhachhang', 'makh', 'khachhang_id', 'idkhachhang']) {
+                    try {
+                        let { data } = await db.from('thucung').select('*').eq(col, kId);
+                        if (data) {
+                            data.forEach(p => {
+                                if (!petIds.includes(p.id)) {
+                                    petIds.push(p.id);
+                                    petMap[p.id] = p.tenthecung || p.tenthucung || p.ten || 'Thú cưng';
+                                    petClinicMap[p.id] = p.maphongkham || 'Hệ thống chính';
+                                }
+                            });
+                        }
+                    } catch(e){}
+                }
+
+                // Quét thêm bảng trung gian thucung_khachhang nếu có
+                try {
+                    let { data: lkData } = await db.from('thucung_khachhang').select('thucung_id').eq('makhachhang', kId);
+                    if (lkData) {
+                        for (let lk of lkData) {
+                            if (!petIds.includes(lk.thucung_id)) {
+                                petIds.push(lk.thucung_id);
+                                let { data: pInfo } = await db.from('thucung').select('*').eq('id', lk.thucung_id).maybeSingle();
+                                if (pInfo) {
+                                    petMap[pInfo.id] = pInfo.tenthecung || pInfo.tenthucung || pInfo.ten || 'Thú cưng';
+                                    petClinicMap[pInfo.id] = pInfo.maphongkham || 'Hệ thống chính';
+                                }
+                            }
+                        }
+                    }
+                } catch(e){}
+            }
+
+            if (petIds.length === 0) {
                 container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">Chưa tìm thấy thú cưng liên kết với tài khoản.</div>`;
                 return;
             }
 
-            const petIds = listPets.map(p => p.id);
-            const petMap = {};
-            const petClinicMap = {};
-            listPets.forEach(p => {
-                petMap[p.id] = p.tenthecung || p.tenthucung || p.ten || 'Thú cưng';
-                petClinicMap[p.id] = p.maphongkham || 'Hệ thống chính';
-            });
-
             let allRecords = [];
 
-            // 1. Lấy dữ liệu Khám bệnh
+            // 3. Lấy dữ liệu Khám bệnh từ mọi phòng khám
             try {
                 let { data } = await db.from('khambenh').select('*').in('mathucung', petIds);
                 if (data) {
@@ -287,7 +330,7 @@
                 }
             } catch (e) { console.log('Lỗi bảng khambenh', e); }
 
-            // 2. Lấy dữ liệu Tiêm vaccine
+            // 4. Lấy dữ liệu Tiêm vaccine từ mọi phòng khám
             try {
                 let { data } = await db.from('nhatkylamvaccine').select('*').in('mathucung', petIds);
                 if (data) {
@@ -308,7 +351,7 @@
                 }
             } catch (e) { console.log('Lỗi bảng nhatkylamvaccine', e); }
 
-            // 3. Lấy dữ liệu Nội trú
+            // 5. Lấy dữ liệu Nội trú từ mọi phòng khám
             try {
                 let { data: kbCheck } = await db.from('khambenh').select('id, mathucung, maphongkham').in('mathucung', petIds);
                 if (kbCheck && kbCheck.length > 0) {
@@ -340,6 +383,9 @@
                     }
                 }
             } catch (e) { console.log('Lỗi bảng nhatkynoitru', e); }
+
+            // Sắp xếp sự kiện mới nhất lên đầu
+            allRecords.sort((a, b) => new Date(b.rawDate || 0) - new Date(a.rawDate || 0));
 
             if (allRecords.length === 0) {
                 container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">Chưa có dữ liệu khám bệnh, tiêm vaccine hay nội trú nào trong hệ thống.</div>`;
