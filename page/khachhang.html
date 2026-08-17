@@ -5,15 +5,13 @@
     <title>Quản lý Khách hàng - VetCare Pro</title>
     <!-- Thư viện Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Thư viện mã hóa CryptoJS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="../js/env.js"></script>
     <script src="../js/config.js"></script>
     <script src="../js/supabase.js"></script>
     <script src="../js/utils.js"></script>
     <script src="../js/menu.js"></script>
     <script src="../js/smart-search.js"></script>
-	<script src="../js/canhbao.js"></script>
+    <script src="../js/canhbao.js"></script>
 
     <!-- Gọi file CSS chung -->
     <link rel="stylesheet" href="../css/style.css">
@@ -121,68 +119,16 @@
     </div>
 
     <script>
-        // --- KHÓA BÍ MẬT DÙNG ĐỂ MÃ HÓA / GIẢI MÃ ---
-        const SECRET_KEY = 'vetcare_khoa_bi_mat_bao_mat_2026';
-
-        function maHoaDuLieu(text) {
-            if (!text) return '';
-            return CryptoJS.AES.encrypt(String(text), SECRET_KEY).toString();
-        }
-
-        function giaiMaDuLieu(ciphertext) {
-            if (!ciphertext) return '';
-            try {
-                const bytes = CryptoJS.AES.decrypt(ciphertext, SECRET_KEY);
-                const originalText = bytes.toString(CryptoJS.enc.Utf8);
-                return originalText || ciphertext; // Nếu dữ liệu cũ chưa mã hóa thì trả về nguyên bản
-            } catch (e) {
-                return ciphertext;
-            }
-        }
-
         let danhSachKhachHangGoc = [];
         let mapThuCung = {};
         let mapLichSuKham = {};
 
-        // --- HÀM KIỂM TRA QUYỀN VÀ BẢO MẬT SỐ ĐIỆN THOẠI TUYỆT ĐỐI ---
-        function anSoDienThoaiChoPC(sdtGiaiMa) {
-            if (!sdtGiaiMa) return '---';
-            
-            let sdtStr = String(sdtGiaiMa).trim();
+        // Hiển thị số điện thoại trực tiếp (vẫn giữ tính năng bấm gọi)
+        function hienThiSoDienThoai(sdt) {
+            if (!sdt) return '---';
+            let sdtStr = String(sdt).trim();
             let displaySdt = sdtStr.startsWith('0') ? sdtStr : '0' + sdtStr;
-            
-            let isAllowed = false;
-            try {
-                let rawUser = sessionStorage.getItem('currentUser');
-                if (rawUser) {
-                    let user = JSON.parse(rawUser);
-                    let infoToCheck = (
-                        String(user.vaitro || '') + ' ' + 
-                        String(user.role || '') + ' ' + 
-                        String(user.tentaikhoan || '') + ' ' + 
-                        String(user.username || '') + ' ' +
-                        String(user.tennhanvien || '')
-                    ).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-                    if (infoToCheck.includes('admin') || infoToCheck.includes('chupk') || infoToCheck.includes('chu phong kham') || infoToCheck.includes('chu phong')) {
-                        isAllowed = true;
-                    }
-                }
-            } catch (e) {
-                let rawStr = (sessionStorage.getItem('currentUser') || '').toLowerCase();
-                if (rawStr.includes('admin') || rawStr.includes('chupk')) {
-                    isAllowed = true;
-                }
-            }
-            
-            // Nếu là Chủ phòng khám hoặc Admin -> Hiển thị số điện thoại thật đầy đủ
-            if (isAllowed) {
-                return `<a href="tel:${displaySdt}" style="color: #2563eb; text-decoration: none; font-weight: bold;" title="Bấm để gọi">${displaySdt} 📞</a>`;
-            }
-            
-            // Nếu là Bác sĩ, Nhân viên, Lễ tân... -> Ẩn số thành ký tự bảo mật tuyệt đối
-            let sdtBiDau = '*'.repeat(displaySdt.length);
-            return `<span style="color: #d97706; font-weight: bold;" title="Số điện thoại đã được bảo mật">${sdtBiDau} 🔒</span>`;
+            return `<a href="tel:${displaySdt}" style="color: #2563eb; text-decoration: none; font-weight: bold;" title="Bấm để gọi">${displaySdt} 📞</a>`;
         }
 
         async function fetchKhachHang() {
@@ -312,12 +258,7 @@
             if (error) {
                 console.error('Lỗi tải dữ liệu:', error);
             } else {
-                // Giải mã Tên và SĐT của toàn bộ danh sách khách hàng để xử lý hiển thị / tìm kiếm chuẩn xác
-                danhSachKhachHangGoc = (data || []).map(item => ({
-                    ...item,
-                    hovatenGiaiMa: giaiMaDuLieu(item.hovaten),
-                    sdtGiaiMa: giaiMaDuLieu(item.sodienthoai)
-                }));
+                danhSachKhachHangGoc = data || [];
                 hienThiBang(danhSachKhachHangGoc);
             }
         }
@@ -334,12 +275,12 @@
             data.forEach(item => {
                 const maKhachHang = formatMaKhachHang(item.id);
                 
-                const tenHienThi = item.hovatenGiaiMa || '';
-                const sdtGiaiMa = item.sdtGiaiMa || '';
+                const tenHienThi = item.hovaten || item.ten || '';
+                const sdt = item.sodienthoai || item.sdt || '';
 
-                const soDienThoaiHtml = anSoDienThoaiChoPC(sdtGiaiMa);
+                const soDienThoaiHtml = hienThiSoDienThoai(sdt);
 
-                let rawSdt = String(sdtGiaiMa).trim();
+                let rawSdt = String(sdt).trim();
                 let displaySdt = rawSdt ? (rawSdt.startsWith('0') ? rawSdt : '0' + rawSdt) : '';
                 const qrText = encodeURIComponent(`KH_${item.id}_${tenHienThi}_${displaySdt}`);
                 const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${qrText}`;
@@ -380,7 +321,7 @@
                     <td>${loaiKhachHtml}</td>
                     <td style="white-space: nowrap;">
                         <button class="btn-add-pet" onclick="themThuCungChoKhach(${item.id})" title="Thêm thú cưng">+ Thú cưng</button>
-                        <button class="btn-edit" onclick="moModalSua(${item.id}, '${tenHienThi.replace(/'/g, "\\'")}', '${sdtGiaiMa}', '${item.diachi || ''}')">Sửa</button>
+                        <button class="btn-edit" onclick="moModalSua(${item.id}, '${tenHienThi.replace(/'/g, "\\'")}', '${sdt}', '${item.diachi || ''}')">Sửa</button>
                         <button class="btn-delete" onclick="xoaKhachHang(${item.id})">Xóa</button>
                     </td>
                 </tr>`;
@@ -394,8 +335,8 @@
         function timKiemKhachHang() {
             const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
             const ketQuaLoc = danhSachKhachHangGoc.filter(item => {
-                const ten = (item.hovatenGiaiMa || '').toLowerCase();
-                const sdt = (item.sdtGiaiMa || '').toLowerCase();
+                const ten = (item.hovaten || item.ten || '').toLowerCase();
+                const sdt = (item.sodienthoai || item.sdt || '').toLowerCase();
                 const ma = formatMaKhachHang(item.id).toLowerCase();
                 return ten.includes(tuKhoa) || sdt.includes(tuKhoa) || ma.includes(tuKhoa);
             });
@@ -426,18 +367,14 @@
 
         async function luuKhachHang() {
             const id = document.getElementById('editingId').value;
-            const hovatenRaw = document.getElementById('hovaten').value.trim();
-            const sodienthoaiRaw = document.getElementById('sodienthoai').value.trim();
+            const hovaten = document.getElementById('hovaten').value.trim();
+            const sodienthoai = document.getElementById('sodienthoai').value.trim();
             const diachi = document.getElementById('diachi').value.trim();
 
-            if (!hovatenRaw) {
+            if (!hovaten) {
                 alert('Vui lòng nhập tên khách hàng!');
                 return;
             }
-
-            // --- TIẾN HÀNH MÃ HÓA HỌ TÊN VÀ SỐ ĐIỆN THOẠI TRƯỚC KHI LƯU ---
-            const hovaten = maHoaDuLieu(hovatenRaw);
-            const sodienthoai = maHoaDuLieu(sodienthoaiRaw);
 
             if (id === "") {
                 const { error } = await db.from('khachhang').insert([{ hovaten, sodienthoai, diachi }]);
