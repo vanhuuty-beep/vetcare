@@ -166,7 +166,7 @@
 
         <div class="app-content">
             <div id="danhSachKetQua">
-                <div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">Đang tải kết quả chỉ định...</div>
+                <div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">Đang quét kết quả chỉ định toàn hệ thống...</div>
             </div>
         </div>
 
@@ -215,13 +215,12 @@
             const ownerData = JSON.parse(ownerStr);
             document.getElementById('tenChuNuoiLabel').innerText = ownerData.hovaten || ownerData.tenkhachhang || 'Chủ nuôi';
 
-            await taiKetQuaChiDinhChuNuoi(ownerData.id);
+            await taiKetQuaChiDinhToanHeThong(ownerData);
         });
 
         // Hàm hỗ trợ chuẩn hóa URL ảnh từ bucket 'images' hoặc link ngoài
         function chuanHoaUrlAnh(url) {
             if (!url || typeof url !== 'string' || url.trim() === '') return '';
-            // Nếu là đường dẫn lưu trong storage supabase (chứa tên file đơn thuần không có http)
             if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('data:')) {
                 const { data: publicURLData } = db.storage
                     .from('images')
@@ -258,87 +257,156 @@
             return mediaHtml ? `<div class="media-gallery">${mediaHtml}</div>` : '';
         }
 
-        async function taiKetQuaChiDinhChuNuoi(ownerId) {
+        async function taiKetQuaChiDinhToanHeThong(ownerData) {
             const container = document.getElementById('danhSachKetQua');
             container.innerHTML = '';
 
-            try {
-                let listPets = null;
-                for (let col of ['makhachhang', 'makh', 'khachhang_id', 'idkhachhang']) {
-                    let { data } = await db.from('thucung').select('*').eq(col, ownerId);
-                    if (data && data.length > 0) {
-                        listPets = data;
-                        break;
+            let ownerId = ownerData.id;
+            let sdtCanTim = ownerData.sodienthoai || ownerData.sdt;
+
+            // 1. Tìm tất cả các ID khách hàng trên toàn hệ thống có chung số điện thoại này
+            let danhSachIdKhachHang = [Number(ownerId)];
+            if (sdtCanTim) {
+                try {
+                    let { data: samePhoneList } = await db.from('khachhang').select('id').eq('sodienthoai', sdtCanTim);
+                    if (samePhoneList) {
+                        samePhoneList.forEach(k => {
+                            if (!danhSachIdKhachHang.includes(k.id)) danhSachIdKhachHang.push(k.id);
+                        });
                     }
-                }
-
-                if (!listPets || listPets.length === 0) {
-                    container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">Chưa tìm thấy thú cưng liên kết với tài khoản của bạn.</div>`;
-                    return;
-                }
-
-                const petIds = listPets.map(p => p.id);
-                const petMap = {};
-                listPets.forEach(p => {
-                    petMap[p.id] = p.tenthecung || p.tenthucung || p.ten || 'Thú cưng';
-                });
-
-                let { data: kbData } = await db.from('khambenh').select('id, mathucung').in('mathucung', petIds);
-                if (!kbData || kbData.length === 0) {
-                    container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">Chưa có dữ liệu khám bệnh hoặc chỉ định nào.</div>`;
-                    return;
-                }
-
-                const kbMap = {};
-                kbData.forEach(kb => {
-                    kbMap[kb.id] = petMap[kb.mathucung] || 'Thú cưng';
-                });
-                const kbIds = kbData.map(k => k.id);
-
-                let { data: cdData, error } = await db.from('phieuchidinh').select('*').in('makhambenh', kbIds).order('id', { ascending: false });
-                
-                if (error) {
-                    let { data: cdDataAlt } = await db.from('chidinh').select('*').in('makhambenh', kbIds).order('id', { ascending: false });
-                    cdData = cdDataAlt;
-                }
-
-                if (!cdData || cdData.length === 0) {
-                    container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">🔬 Hiện tại chưa có kết quả xét nghiệm, siêu âm hay X-quang nào.</div>`;
-                    return;
-                }
-
-                container.innerHTML = '';
-                cdData.forEach(item => {
-                    const tenPet = kbMap[item.makhambenh] || 'Thú cưng';
-                    const ngayTaoStr = item.ngaychidinh ? new Date(item.ngaychidinh).toLocaleString('vi-VN') : '---';
-                    const tenLoaiChiDinh = item.loai || item.tenchidinh || item.tendichvu || 'Chỉ định Y tế';
-                    const ketLuan = item.ketluan || item.chiso || item.ketqua || 'Chưa có kết quả chi tiết.';
-
-                    const mediaField = item.hinhanh || item.filedinhkem || item.media;
-                    const mediaHtml = taoHtmlMedia(mediaField);
-
-                    container.innerHTML += `
-                        <div class="result-card">
-                            <div class="result-header">
-                                <span class="pet-name"><i class="fa-solid fa-paw" style="color: #008080;"></i> ${tenPet}</span>
-                                <span class="badge-type">${tenLoaiChiDinh}</span>
-                            </div>
-                            <div class="result-content">
-                                <div style="margin-bottom: 3px; color: #008080; font-weight: 600;"><i class="fa-solid fa-stethoscope"></i> Dịch vụ: ${item.tendichvu || tenLoaiChiDinh}</div>
-                                <div style="margin-bottom: 5px; color: #64748b; font-size: 11px;"><i class="fa-solid fa-calendar-days"></i> Ngày thực hiện: ${ngayTaoStr}</div>
-                                <div style="background: #f8fafc; border-left: 3px solid #008080; padding: 8px 10px; border-radius: 6px; margin-top: 6px; border: 1px solid #f1f5f9;">
-                                    <strong><i class="fa-solid fa-clipboard-check"></i> Kết quả / Kết luận:</strong><br>${ketLuan}
-                                </div>
-                                ${mediaHtml}
-                            </div>
-                        </div>
-                    `;
-                });
-
-            } catch (err) {
-                console.error('Lỗi tải kết quả chỉ định:', err);
-                container.innerHTML = `<div style="text-align: center; color: red; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">Không thể tải dữ liệu lúc này. Vui lòng thử lại sau.</div>`;
+                    let { data: samePhoneList2 } = await db.from('khachhang').select('id').eq('sdt', sdtCanTim);
+                    if (samePhoneList2) {
+                        samePhoneList2.forEach(k => {
+                            if (!danhSachIdKhachHang.includes(k.id)) danhSachIdKhachHang.push(k.id);
+                        });
+                    }
+                } catch(e){}
             }
+
+            // 2. Lấy toàn bộ thú cưng liên quan đến các ID khách hàng trên toàn hệ thống
+            let petMap = {};
+            let petClinicMap = {};
+            let petIds = [];
+
+            for (let kId of danhSachIdKhachHang) {
+                for (let col of ['makhachhang', 'makh', 'khachhang_id', 'idkhachhang']) {
+                    try {
+                        let { data } = await db.from('thucung').select('*').eq(col, kId);
+                        if (data) {
+                            data.forEach(p => {
+                                if (!petIds.includes(p.id)) {
+                                    petIds.push(p.id);
+                                    petMap[p.id] = p.tenthecung || p.tenthucung || p.ten || 'Thú cưng';
+                                    petClinicMap[p.id] = p.maphongkham || 'Hệ thống chính';
+                                }
+                            });
+                        }
+                    } catch(e){}
+                }
+
+                // Quét thêm bảng trung gian thucung_khachhang nếu có
+                try {
+                    let { data: lkData } = await db.from('thucung_khachhang').select('thucung_id').eq('makhachhang', kId);
+                    if (lkData) {
+                        for (let lk of lkData) {
+                            if (!petIds.includes(lk.thucung_id)) {
+                                petIds.push(lk.thucung_id);
+                                let { data: pInfo } = await db.from('thucung').select('*').eq('id', lk.thucung_id).maybeSingle();
+                                if (pInfo) {
+                                    petMap[pInfo.id] = pInfo.tenthecung || pInfo.tenthucung || pInfo.ten || 'Thú cưng';
+                                    petClinicMap[pInfo.id] = pInfo.maphongkham || 'Hệ thống chính';
+                                }
+                            }
+                        }
+                    }
+                } catch(e){}
+            }
+
+            if (petIds.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">Chưa tìm thấy thú cưng liên kết với tài khoản.</div>`;
+                return;
+            }
+
+            // 3. Lấy danh sách khám bệnh tương ứng với các thú cưng trên
+            let kbMap = {};
+            let kbIds = [];
+            try {
+                let { data: kbData } = await db.from('khambenh').select('id, mathucung, maphongkham').in('mathucung', petIds);
+                if (kbData && kbData.length > 0) {
+                    kbData.forEach(kb => {
+                        kbMap[kb.id] = petMap[kb.mathucung] || 'Thú cưng';
+                        if (!kbIds.includes(kb.id)) kbIds.push(kb.id);
+                    });
+                }
+            } catch(e){}
+
+            // Quét thêm khambenh theo makhachhang
+            for (let kId of danhSachIdKhachHang) {
+                try {
+                    let { data: kbData } = await db.from('khambenh').select('id, mathucung, maphongkham').eq('makhachhang', kId);
+                    if (kbData && kbData.length > 0) {
+                        kbData.forEach(kb => {
+                            kbMap[kb.id] = petMap[kb.mathucung] || 'Thú cưng';
+                            if (!kbIds.includes(kb.id)) kbIds.push(kb.id);
+                        });
+                    }
+                } catch(e){}
+            }
+
+            if (kbIds.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">🔬 Hiện tại chưa có kết quả xét nghiệm, siêu âm hay X-quang nào.</div>`;
+                return;
+            }
+
+            // 4. Lấy dữ liệu chỉ định từ bảng phieuchidinh hoặc chidinh
+            let cdData = [];
+            try {
+                let { data, error } = await db.from('phieuchidinh').select('*').in('makhambenh', kbIds).order('id', { ascending: false });
+                if (error || !data || data.length === 0) {
+                    let { data: cdDataAlt } = await db.from('chidinh').select('*').in('makhambenh', kbIds).order('id', { ascending: false });
+                    cdData = cdDataAlt || [];
+                } else {
+                    cdData = data;
+                }
+            } catch(e) {
+                try {
+                    let { data: cdDataAlt } = await db.from('chidinh').select('*').in('makhambenh', kbIds).order('id', { ascending: false });
+                    cdData = cdDataAlt || [];
+                } catch(err){}
+            }
+
+            if (!cdData || cdData.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 14px; font-size: 12px; border: 1px solid #e2e8f0;">🔬 Hiện tại chưa có kết quả xét nghiệm, siêu âm hay X-quang nào.</div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            cdData.forEach(item => {
+                const tenPet = kbMap[item.makhambenh] || 'Thú cưng';
+                const ngayTaoStr = item.ngaychidinh || item.created_at ? new Date(item.ngaychidinh || item.created_at).toLocaleString('vi-VN') : '---';
+                const tenLoaiChiDinh = item.loai || item.tenchidinh || item.tendichvu || 'Chỉ định Y tế';
+                const ketLuan = item.ketluan || item.chiso || item.ketqua || 'Chưa có kết quả chi tiết.';
+                const mediaField = item.hinhanh || item.filedinhkem || item.media;
+                const mediaHtml = taoHtmlMedia(mediaField);
+
+                container.innerHTML += `
+                    <div class="result-card">
+                        <div class="result-header">
+                            <span class="pet-name"><i class="fa-solid fa-paw" style="color: #008080;"></i> ${tenPet}</span>
+                            <span class="badge-type">${tenLoaiChiDinh}</span>
+                        </div>
+                        <div class="result-content">
+                            <div style="margin-bottom: 3px; color: #008080; font-weight: 600;"><i class="fa-solid fa-stethoscope"></i> Dịch vụ: ${item.tendichvu || tenLoaiChiDinh}</div>
+                            <div style="margin-bottom: 5px; color: #64748b; font-size: 11px;"><i class="fa-solid fa-calendar-days"></i> Ngày thực hiện: ${ngayTaoStr}</div>
+                            <div style="background: #f8fafc; border-left: 3px solid #008080; padding: 8px 10px; border-radius: 6px; margin-top: 6px; border: 1px solid #f1f5f9;">
+                                <strong><i class="fa-solid fa-clipboard-check"></i> Kết quả / Kết luận:</strong><br>${ketLuan}
+                            </div>
+                            ${mediaHtml}
+                        </div>
+                    </div>
+                `;
+            });
+
         }
     </script>
 </body>
