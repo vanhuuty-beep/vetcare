@@ -273,7 +273,8 @@
             }
 
             data.forEach(item => {
-                const maKhachHang = formatMaKhachHang(item.id);
+                // Ưu tiên lấy mã đã lưu trong DB, nếu chưa có thì format theo ID cố định để không bị đổi khi F5
+                const maKhachHang = item.makhachhang || formatMaKhachHang(item.id);
                 
                 const tenHienThi = item.hovaten || item.ten || '';
                 const sdt = item.sodienthoai || item.sdt || '';
@@ -337,7 +338,7 @@
             const ketQuaLoc = danhSachKhachHangGoc.filter(item => {
                 const ten = (item.hovaten || item.ten || '').toLowerCase();
                 const sdt = (item.sodienthoai || item.sdt || '').toLowerCase();
-                const ma = formatMaKhachHang(item.id).toLowerCase();
+                const ma = (item.makhachhang || formatMaKhachHang(item.id)).toLowerCase();
                 return ten.includes(tuKhoa) || sdt.includes(tuKhoa) || ma.includes(tuKhoa);
             });
             hienThiBang(ketQuaLoc);
@@ -376,29 +377,33 @@
                 return;
             }
 
-            // Lấy mã phòng khám hiện tại từ sessionStorage
             const maphongkham = sessionStorage.getItem('maphongkham') || '';
 
             if (id === "") {
-                // Tự sinh mã khách hàng bằng hàm có sẵn trong utils.js
-                const makhachhang = formatMaKhachHang();
-
-                // Lưu trực tiếp makhachhang vào cột makhachhang
-                const { error } = await db.from('khachhang').insert([{ 
-                    makhachhang: makhachhang,
+                // 1. Thêm mới bản ghi trước để lấy ID tự tăng từ Database
+                const { data, error } = await db.from('khachhang').insert([{ 
                     hovaten: hovaten, 
                     sodienthoai: sodienthoai, 
                     diachi: diachi, 
                     maphongkham: maphongkham 
-                }]);
+                }]).select();
                 
                 if (error) {
                     alert('Lỗi thêm dữ liệu: ' + error.message);
-                } else {
-                    alert('Thêm khách hàng thành công!');
-                    dongModal();
-                    fetchKhachHang();
+                    return;
                 }
+
+                // 2. Sau khi có ID, sinh mã chuẩn dựa trên ID đó và cập nhật ngược lại cột makhachhang
+                if (data && data.length > 0) {
+                    const newId = data[0].id;
+                    const makhachhang = formatMaKhachHang(newId);
+                    
+                    await db.from('khachhang').update({ makhachhang: makhachhang }).eq('id', newId);
+                }
+
+                alert('Thêm khách hàng thành công!');
+                dongModal();
+                fetchKhachHang();
             } else {
                 // Cập nhật thông tin khách hàng (giữ nguyên mã cũ)
                 const { error } = await db.from('khachhang').update({ 

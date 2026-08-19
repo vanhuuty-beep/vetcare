@@ -49,7 +49,6 @@
             margin: 0;
         }
 
-        /* Card Tổng Thể */
         .card {
             background: var(--card-bg);
             border-radius: var(--radius);
@@ -87,7 +86,6 @@
             flex-wrap: wrap;
         }
 
-        /* Search Box Hiện Đại */
         .search-box {
             padding: 10px 14px 10px 38px;
             width: 280px;
@@ -105,7 +103,6 @@
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
-        /* Nút Bấm Modern */
         button {
             font-family: 'Inter', sans-serif;
             cursor: pointer;
@@ -129,7 +126,6 @@
             transform: translateY(-1px);
         }
 
-        /* Bảng Dữ Liệu */
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -161,7 +157,6 @@
             background-color: #f8fafc;
         }
 
-        /* Tối ưu hóa cột Thao Tác siêu gọn gàng, hiện đại */
         table td:last-child {
             white-space: normal;
             min-width: 280px;
@@ -190,7 +185,6 @@
             transform: translateY(-1px);
         }
 
-        /* Modal Hiện Đại */
         .modal-overlay {
             background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(4px);
@@ -280,7 +274,6 @@
             gap: 10px;
         }
 
-        /* Phân trang hiện đại */
         .pagination-container {
             display: flex;
             justify-content: space-between;
@@ -565,7 +558,7 @@
 
         async function fetchDuLieu() {
             try {
-                const { data: khData } = await db.from('khachhang').select('id, hovaten, sodienthoai');
+                const { data: khData } = await db.from('khachhang').select('id, hovaten, sodienthoai, makhachhang');
                 if (khData) {
                     khData.forEach(kh => { mapKhachHang[kh.id] = kh; });
                 }
@@ -609,7 +602,8 @@
             const pageData = danhSachDangHienThi.slice(startIndex, endIndex);
 
             pageData.forEach(item => {
-                const maTC = formatMaThuCung(item.id);
+                // Ưu tiên đọc cột mathucung trong DB, nếu chưa có thì format theo ID cố định để F5 không bao giờ bị đổi
+                const maTC = item.mathucung || formatMaThuCung(item.id);
                 
                 const cacChuNuoi = danhSachLienKetGoc.filter(lk => {
                     const petId = lk.thucung_id !== undefined ? lk.thucung_id : lk.mathucung;
@@ -625,7 +619,7 @@
                         const kh = mapKhachHang[khId] || {};
                         const ten = kh.hovaten || kh.tenkhachhang || 'Chưa rõ';
                         const sdt = kh.sodienthoai || kh.sdt || '';
-                        const maKHText = formatMaKhachHang(khId);
+                        const maKHText = kh.makhachhang || formatMaKhachHang(khId);
                         chuNuoiSearchStr += ` ${maKHText} ${ten} ${sdt}`;
                         return `<div style="margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #f1f5f9; padding-bottom: 3px;">
                             <div><span style="color: var(--primary); font-weight: bold;">${maKHText}</span> - <b>${ten}</b> <span style="font-size:11px; color:var(--text-muted);">(${sdt})</span></div>
@@ -839,7 +833,7 @@
                 const kh = mapKhachHang[id] || {};
                 const khName = kh.hovaten || kh.tenkhachhang || `KH #${id}`;
                 const khSdt = kh.sodienthoai || kh.sdt || '---';
-                const maKHText = formatMaKhachHang(id);
+                const maKHText = kh.makhachhang || formatMaKhachHang(id);
 
                 return `<div style="display: flex; justify-content: space-between; align-items: center; background: #e0f2fe; padding: 6px 10px; border-radius: 6px; font-size: 12px;">
                     <div><span style="color: #0369a1; font-weight: bold;">${maKHText}</span> - <b>${khName}</b> <span style="color: var(--text-muted);">(${khSdt})</span></div>
@@ -925,7 +919,7 @@
             selectedOwnerIds = cacChuNuoi.map(lk => Number(lk.makhachhang !== undefined ? lk.makhachhang : lk.khachhang_id)).filter(num => !isNaN(num));
 
             renderSelectedOwners();
-            document.getElementById('modalTitle').innerText = 'Cập nhật thông tin thú cưng (Mã: ' + formatMaThuCung(id) + ')';
+            document.getElementById('modalTitle').innerText = 'Cập nhật thông tin thú cưng (Mã: ' + (item.mathucung || formatMaThuCung(id)) + ')';
             document.getElementById('petModal').style.display = 'flex';
         }
 
@@ -943,10 +937,7 @@
 
             if (!tenthucung) { alert('Vui lòng nhập tên thú cưng!'); return; }
 
-            // Lấy mã khách hàng chính (chủ nuôi đầu tiên được chọn)
             const maKhachHangChinh = selectedOwnerIds.length > 0 ? parseInt(selectedOwnerIds[0]) : null;
-            
-            // Lấy mã phòng khám đang đăng nhập từ sessionStorage
             const maphongkham = sessionStorage.getItem('maphongkham') || '';
 
             let payload = {
@@ -963,14 +954,16 @@
 
             let petId = id;
             if (id === "") {
-                // Tự sinh mã thú cưng dựa theo hàm chuẩn trong utils.js (ví dụ: TC + mã PK + ngẫu nhiên)
-                // Nếu bảng thucung của bạn có cột 'mathucung' dạng chuỗi, ta sinh trực tiếp:
-                const maThuCungTuSinh = typeof formatMaThuCung === 'function' ? formatMaThuCung() : ('TC' + Date.now());
-                payload.mathucung = maThuCungTuSinh;
-
+                // 1. Thêm bản ghi trước để lấy ID tự tăng từ Database
                 const { data, error } = await db.from('thucung').insert([payload]).select().single();
                 if (error) { alert('Lỗi thêm dữ liệu: ' + error.message); return; }
+                
                 petId = data.id;
+
+                // 2. Sau khi có ID, sinh mã chuẩn dựa trên ID đó và cập nhật ngược lại cột mathucung
+                const mathucung = formatMaThuCung(petId);
+                await db.from('thucung').update({ mathucung: mathucung }).eq('id', petId);
+
             } else {
                 const { error } = await db.from('thucung').update(payload).eq('id', id);
                 if (error) { alert('Lỗi cập nhật dữ liệu: ' + error.message); return; }

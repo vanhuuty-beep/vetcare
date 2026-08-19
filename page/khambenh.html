@@ -49,7 +49,7 @@
         }
         .form-group-modal {
             margin-bottom: 10px;
-            position: relative; /* Quan trọng để neo danh sách gợi ý */
+            position: relative;
         }
         .form-group-modal label {
             font-size: 13px;
@@ -112,7 +112,6 @@
             font-weight: 500;
         }
         
-        /* CỐ ĐỊNH KHUNG BẢNG CHÍNH CÓ THANH TRƯỢT NGANG MƯỢT MÀ */
         .table-responsive {
             width: 100%;
             overflow-x: auto !important;
@@ -143,7 +142,6 @@
             white-space: nowrap;
         }
 
-        /* TỐI ƯU CỘT THAO TÁC THÀNH 3 HÀNG CHUẨN XÁC */
         table td:last-child {
             white-space: normal;
             text-align: center;
@@ -171,7 +169,6 @@
             white-space: nowrap;
         }
 
-        /* PHÂN TRANG GIAO DIỆN */
         .pagination-container {
             display: flex;
             justify-content: space-between;
@@ -205,7 +202,6 @@
             color: #334155;
         }
 
-        /* BẢNG KÊ ĐƠN THUỐC BÊN TRONG MODAL */
         .table-thuoc-scroll-wrapper {
             max-height: 220px;
             overflow-y: auto;
@@ -305,7 +301,7 @@
     </div>
 
     <!-- POPUP FORM THÊM / SỬA KHÁM BỆNH -->
-    <div class="modal-overlay" id="khamModal">
+    <div class="modal-overlay" id="khamModal" style="display: none;">
         <div class="modal-container">
             <div class="modal-header">
                 <h3 id="modalTitle">Thêm phiếu khám bệnh mới</h3>
@@ -318,10 +314,8 @@
             <div class="form-row">
                 <div class="form-group-modal">
                     <label>Mã thú cưng (ID thú cưng) (*):</label>
-                    <!-- Tích hợp Smart Search thủ công trực tiếp, không bị lỗi gõ chữ -->
                     <input type="text" id="thucung_search" placeholder="Gõ tên thú cưng hoặc tên chủ để tìm..." autocomplete="off" oninput="xuLyTimKiemThuCung(this.value)">
                     <input type="hidden" id="mathucung">
-                    <!-- Hộp hiển thị kết quả gợi ý -->
                     <div id="suggestions-box"></div>
                 </div>
                 <div class="form-group-modal">
@@ -646,7 +640,6 @@
         let mapHoaDonThuoc = {}; 
         let dsThuCungChoSearch = []; 
 
-        // Biến phân trang
         let trangHienTai = 1;
         let soDongMoiTrang = 10;
         let duLieuHienThiHienTai = [];
@@ -666,7 +659,6 @@
             }
             await fetchDuLieu();
 
-            // Đóng hộp gợi ý khi click ra ngoài
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.form-group-modal')) {
                     document.getElementById('suggestions-box').style.display = 'none';
@@ -685,7 +677,6 @@
         async function taiDuLieuDanhMucVaKho() {
             if (typeof db === 'undefined' || !db) return;
 
-            // 1. Tải danh mục khách hàng
             const { data: khData } = await db.from('khachhang').select('*');
             let mapKH = {};
             if (khData) {
@@ -694,7 +685,6 @@
                 });
             }
 
-            // 2. Tải danh mục thú cưng phục vụ Smart Search và map tên
             const { data: tcData } = await db.from('thucung').select('*');
             dsThuCungChoSearch = [];
             if (tcData) {
@@ -714,7 +704,6 @@
                 });
             }
 
-            // 3. Tải kho thuốc
             try {
                 let res = await db.from('khothuoc').select('*');
                 if (res.error || !res.data || res.data.length === 0) {
@@ -731,7 +720,6 @@
             }
         }
 
-        // Hàm xử lý tìm kiếm thông minh trực tiếp cho ô chọn thú cưng
         function xuLyTimKiemThuCung(tuKhoa) {
             const box = document.getElementById('suggestions-box');
             document.getElementById('mathucung').value = ''; 
@@ -819,7 +807,8 @@
             const trangDuLieu = duLieuHienThiHienTai.slice(batDau, ketThuc);
 
             trangDuLieu.forEach(item => {
-                const maKB = formatMaKham(item.id);
+                // Ưu tiên đọc cột makhambenh trong DB, nếu chưa có thì format theo ID cố định để F5 không bao giờ bị đổi
+                const maKB = item.makhambenh || formatMaKham(item.id);
                 const maTCText = formatMaThuCung(item.mathucung);
                 const tenTC = (item.mathucung && mapThuCung[item.mathucung]) ? mapThuCung[item.mathucung] : 'Không rõ';
                 const tenChuSoHuu = (item.mathucung && mapKhachHang[item.mathucung]) ? mapKhachHang[item.mathucung] : 'Chưa rõ chủ';
@@ -906,7 +895,7 @@
         function timKiemKhamBenh() {
             const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
             duLieuHienThiHienTai = danhSachKhamBenhGoc.filter(item => {
-                const maKB = formatMaKham(item.id).toLowerCase();
+                const maKB = (item.makhambenh || formatMaKham(item.id)).toLowerCase();
                 const tenTC = (item.mathucung && mapThuCung[item.mathucung]) ? mapThuCung[item.mathucung].toLowerCase() : '';
                 const trieuChung = (item.trieuchung || '').toLowerCase();
                 const chanDoan = (item.chandoan || '').toLowerCase();
@@ -952,7 +941,6 @@
             document.getElementById('editingHinhanhOld').value = item.hinhanh || '';
             document.getElementById('mathucung').value = item.mathucung || '';
             
-            // Gán nhãn tên thú cưng vào ô tìm kiếm 
             const tcItem = dsThuCungChoSearch.find(x => x.value == item.mathucung);
             if (tcItem) {
                 document.getElementById('thucung_search').value = tcItem.label;
@@ -999,7 +987,7 @@
                 themDongThuocKham();
             }
 
-            document.getElementById('modalTitle').innerText = 'Cập nhật phiếu khám bệnh (ID: ' + id + ')';
+            document.getElementById('modalTitle').innerText = 'Cập nhật phiếu khám bệnh (Mã: ' + (item.makhambenh || formatMaKham(id)) + ')';
             document.getElementById('khamModal').style.display = 'flex';
             tinhTongTienKham();
         }
@@ -1093,7 +1081,7 @@
             document.getElementById('hienThiTongTienChung').innerText = tongCong.toLocaleString('vi-VN') + ' đ';
         }
 
-       async function luuKhamBenh() {
+        async function luuKhamBenh() {
             const id = document.getElementById('editingId').value;
             const mathucungStr = document.getElementById('mathucung').value.trim();
             const ngaykham = document.getElementById('ngaykham').value;
@@ -1133,7 +1121,6 @@
                 return;
             }
 
-            // Lấy mã phòng khám từ sessionStorage
             const maphongkham = sessionStorage.getItem('maphongkham') || '';
 
             const payload = {
@@ -1152,19 +1139,18 @@
             let maKhamId = id;
             
             if (id === "") {
-                // Gọi hàm sinh mã tự động từ utils.js (ví dụ hàm sinh mã khám hoặc tự tạo theo chuẩn KB...)
-                // Nếu trong utils.js có hàm hỗ trợ riêng, ta gọi trực tiếp, nếu không sẽ dùng cơ chế format tương tự
-                const maKhamTuSinh = typeof formatMaKham === 'function' ? formatMaKham(Date.now()) : ('KB' + Date.now());
-                
-                // Đưa mã tự sinh vào cột makhambenh của payload
-                payload.makhambenh = maKhamTuSinh;
-
-                const { data, error } = await db.from('khambenh').insert([payload]).select();
+                // 1. Thêm bản ghi trước để lấy ID tự tăng từ Database
+                const { data, error } = await db.from('khambenh').insert([payload]).select().single();
                 if (error) {
                     alert('Lỗi thêm phiếu khám: ' + error.message);
                     return;
                 }
-                if (data && data.length > 0) maKhamId = data[0].id;
+                maKhamId = data.id;
+
+                // 2. Sau khi có ID, sinh mã chuẩn dựa trên ID đó và cập nhật ngược lại cột makhambenh
+                const makhambenh = formatMaKham(maKhamId);
+                await db.from('khambenh').update({ makhambenh: makhambenh }).eq('id', maKhamId);
+
             } else {
                 const { error } = await db.from('khambenh').update(payload).eq('id', id);
                 if (error) {
@@ -1181,6 +1167,7 @@
             dongModal();
             fetchDuLieu();
         }
+
         async function xuLyTruKhoVaTaoHoaDonKham(maKhamBenhMoi) {
             const rows = document.querySelectorAll('#dsThuocKhamContainer tr');
             if (rows.length === 0) return;
@@ -1225,7 +1212,8 @@
         }
 
         async function xoaKhamBenh(id) {
-            const maKB = formatMaKham(id);
+            const item = danhSachKhamBenhGoc.find(x => x.id === id);
+            const maKB = item ? (item.makhambenh || formatMaKham(id)) : formatMaKham(id);
             if (confirm('Bạn có chắc chắn muốn xóa phiếu khám ' + maKB + ' này không?')) {
                 const { error } = await db.from('khambenh').delete().eq('id', id);
                 if (error) {
@@ -1244,7 +1232,7 @@
             const tenTC = (item.mathucung && mapThuCung[item.mathucung]) ? mapThuCung[item.mathucung] : 'Không rõ';
             const tenChuSoHuu = (item.mathucung && mapKhachHang[item.mathucung]) ? mapKhachHang[item.mathucung] : 'Không rõ';
 
-            document.getElementById('p-makham').innerText = 'Mã phiếu: ' + formatMaKham(item.id);
+            document.getElementById('p-makham').innerText = 'Mã phiếu: ' + (item.makhambenh || formatMaKham(item.id));
             document.getElementById('p-chusohuu').innerText = tenChuSoHuu;
             document.getElementById('p-thucung').innerText = formatMaThuCung(item.mathucung) + ' - ' + tenTC;
             document.getElementById('p-trieuchung').innerText = item.trieuchung || 'Không có';
