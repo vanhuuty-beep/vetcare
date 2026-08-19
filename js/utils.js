@@ -99,35 +99,33 @@ async function khoiTaoNutChatNoiHeThong() {
     try {
         if (isThucSuChuNuoi) {
             // ==========================================
-            // 1. GIAO DIỆN CHỦ NUÔI (CHỈ HIỆN PK ĐÃ ĐĂNG KÝ/THÚ CƯNG)
+            // 1. GIAO DIỆN CHỦ NUÔI (LẤY TỪ BẢNG KHACHHANG)
             // ==========================================
             if (document.getElementById('floatingChatBtn') !== null) return;
             
             const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
             const sdt = ownerData?.sodienthoai || ownerData?.sodienthoai_chunuoi || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727";
 
-            // Bước 1: Lấy toàn bộ danh sách phòng khám từ bảng chupk để có sẵn tên chuẩn
+            // Bước 1: Lấy danh sách phòng khám từ bảng chupk
             let allPK = [];
             try {
                 let resPK = await db.from('chupk').select('maphongkham, tenphongkham');
                 if (resPK.data) allPK = resPK.data;
             } catch(e){}
 
-            // Bước 2: QUY TRÌNH CHUẨN - Lấy trực tiếp maphongkham từ bảng khachhang theo số điện thoại
+            // Bước 2: Lấy maphongkham trực tiếp từ bảng khachhang theo số điện thoại
             let mapkList = [];
             try {
                 let resKH = await db.from('khachhang').select('maphongkham').eq('sodienthoai', sdt);
                 if (resKH.data) {
                     resKH.data.forEach(k => { if (k.maphongkham) mapkList.push(k.maphongkham); });
                 }
-                // Dự phòng thêm trường hợp cột số điện thoại tên là 'sdt'
                 let resKH2 = await db.from('khachhang').select('maphongkham').eq('sdt', sdt);
                 if (resKH2.data) {
                     resKH2.data.forEach(k => { if (k.maphongkham && !mapkList.includes(k.maphongkham)) mapkList.push(k.maphongkham); });
                 }
             } catch(e){}
 
-            // Lọc bỏ các giá trị trùng lặp
             let uniqueMapk = [...new Set(mapkList.filter(Boolean))];
 
             let pkOptionsHTML = '';
@@ -141,7 +139,6 @@ async function khoiTaoNutChatNoiHeThong() {
                         return cleanDB === cleanTarget;
                     });
 
-                    // Lấy tên phòng khám từ bảng chupk
                     let tenHienThi = (foundPK && foundPK.tenphongkham && foundPK.tenphongkham.trim() !== '') 
                         ? foundPK.tenphongkham.trim() 
                         : `Phòng khám ${mpk}`;
@@ -164,6 +161,7 @@ async function khoiTaoNutChatNoiHeThong() {
             if (pkOptionsHTML === '') {
                 pkOptionsHTML = '<option value="">Chưa đăng ký phòng khám nào</option>';
             }
+
             const mobileChatHTML = `
             <div id="floatingChatBtn" onclick="toggleMobileChat()" style="position: fixed; bottom: 85px; right: 20px; background: #0d9488; color: white; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 3px 8px rgba(0,0,0,0.3); cursor: pointer; z-index: 999999;">💬</div>
 
@@ -228,6 +226,10 @@ function doiPhongKhamChat(mapk) {
     taiTinNhanMobile();
 }
 
+function chuanHoaMaPK(mpk) {
+    return mpk ? mpk.toString().replace(/[_]/g, '').trim().toLowerCase() : '';
+}
+
 // --- LOGIC CHO CHỦ NUÔI ---
 function toggleMobileChat() {
     const win = document.getElementById('mobileChatWindow');
@@ -242,20 +244,21 @@ function toggleMobileChat() {
 async function taiTinNhanMobile() {
     if (typeof db === 'undefined') return;
     const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
-    const sdt = ownerData?.sodienthoai || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727"; 
+    const sdt = ownerData?.sodienthoai || ownerData?.sodienthoai_chunuoi || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727"; 
     
     const selectEl = document.getElementById('selectPhongKhamChat');
     if (selectEl && selectEl.value) {
         selectedPhongKhamChat = selectEl.value;
     }
     const mpk = selectedPhongKhamChat || "PK_617723"; 
+    const cleanMpk = chuanHoaMaPK(mpk);
 
     const { data } = await db.from('tin_nhan').select('*').eq('sodienthoai_chunuoi', sdt).order('created_at', { ascending: true });
     const box = document.getElementById('boxTinNhanMobile');
     if(box) {
         box.innerHTML = '';
         if (data && data.length > 0) {
-            const filteredData = data.filter(m => m.maphongkham === mpk || m.maphongkham?.replace('_','') === mpk?.replace('_',''));
+            const filteredData = data.filter(m => chuanHoaMaPK(m.maphongkham) === cleanMpk);
             filteredData.forEach(m => hienThiTinNhanMobileUI(m));
         }
         box.scrollTop = box.scrollHeight;
@@ -269,7 +272,7 @@ async function guiTinNhanMobile() {
     if (!noiDung) return;
     
     const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
-    const sdt = ownerData?.sodienthoai || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727"; 
+    const sdt = ownerData?.sodienthoai || ownerData?.sodienthoai_chunuoi || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727"; 
     const mpk = selectedPhongKhamChat || "PK_617723";
     const tenNguoiGui = ownerData?.hovaten || ownerData?.tentaikhoan || "Chủ nuôi";
 
@@ -289,7 +292,7 @@ async function guiAnhMobile(input) {
     if (!input.files || !input.files[0]) return;
     const file = input.files[0];
     const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
-    const sdt = ownerData?.sodienthoai || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727"; 
+    const sdt = ownerData?.sodienthoai || ownerData?.sodienthoai_chunuoi || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727"; 
     const mpk = selectedPhongKhamChat || "PK_617723";
 
     const fileName = `chat_${Date.now()}_${file.name}`;
@@ -338,13 +341,15 @@ function togglePCChat() {
 async function taiDanhSachKhachHangChat() {
     if (typeof db === 'undefined') return;
     const mapk = window.getMaPhongKham() || sessionStorage.getItem('maphongkham') || "PK_617723"; 
+    const cleanCurrentPK = chuanHoaMaPK(mapk);
     
     const { data: dsKhachHang } = await db.from('khachhang').select('*');
-    const { data: listMsg } = await db.from('tin_nhan').select('sodienthoai_chunuoi, created_at').eq('maphongkham', mapk).order('created_at', { ascending: false });
+    const { data: listMsg } = await db.from('tin_nhan').select('maphongkham, sodienthoai_chunuoi, created_at').order('created_at', { ascending: false });
     
     let dsSdtDaNhantin = [];
     if (listMsg && listMsg.length > 0) {
-        dsSdtDaNhantin = [...new Set(listMsg.map(m => m.sodienthoai_chunuoi))];
+        const filteredMsgs = listMsg.filter(m => chuanHoaMaPK(m.maphongkham) === cleanCurrentPK);
+        dsSdtDaNhantin = [...new Set(filteredMsgs.map(m => m.sodienthoai_chunuoi))];
     }
 
     const container = document.getElementById('dsKhachHangChat');
@@ -397,11 +402,16 @@ async function chonKhachHangChat(sdt, tenKhach, element) {
     if (titleEl) titleEl.innerText = `${tenKhach} (${sdt})`;
     
     const mapk = window.getMaPhongKham() || sessionStorage.getItem('maphongkham') || "PK_617723";
-    const { data } = await db.from('tin_nhan').select('*').eq('maphongkham', mapk).eq('sodienthoai_chunuoi', sdt).order('created_at', { ascending: true });
+    const cleanCurrentPK = chuanHoaMaPK(mapk);
+
+    const { data } = await db.from('tin_nhan').select('*').eq('sodienthoai_chunuoi', sdt).order('created_at', { ascending: true });
     const box = document.getElementById('boxTinNhanPK');
     if(box) {
         box.innerHTML = '';
-        data?.forEach(m => hienThiTinNhanPCUI(m));
+        if (data && data.length > 0) {
+            const filteredData = data.filter(m => chuanHoaMaPK(m.maphongkham) === cleanCurrentPK);
+            filteredData.forEach(m => hienThiTinNhanPCUI(m));
+        }
         box.scrollTop = box.scrollHeight;
     }
 }
@@ -468,9 +478,14 @@ function hienThiTinNhanPCUI(msg) {
 async function kiemTraTinNhanChuaDocBanDau() {
     if (typeof db === 'undefined' || isThucSuChuNuoi) return;
     const mapk = window.getMaPhongKham() || sessionStorage.getItem('maphongkham') || "PK_617723";
-    const { data } = await db.from('tin_nhan').select('nguoi_gui').eq('maphongkham', mapk).order('created_at', { ascending: false }).limit(1);
-    if (data && data.length > 0 && data[0].nguoi_gui === 'chunuoi') {
-        hienThiCanhBaoTinNhanMoi(true);
+    const cleanCurrentPK = chuanHoaMaPK(mapk);
+
+    const { data } = await db.from('tin_nhan').select('maphongkham, nguoi_gui').order('created_at', { ascending: false });
+    if (data && data.length > 0) {
+        const lastMsg = data.find(m => chuanHoaMaPK(m.maphongkham) === cleanCurrentPK);
+        if (lastMsg && lastMsg.nguoi_gui === 'chunuoi') {
+            hienThiCanhBaoTinNhanMoi(true);
+        }
     }
 }
 
@@ -486,32 +501,41 @@ window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         if (typeof db !== 'undefined' && db.channel) {
             const mapk = window.getMaPhongKham() || sessionStorage.getItem('maphongkham') || "PK_617723";
+            const cleanCurrentPK = chuanHoaMaPK(mapk);
             
             if (isThucSuChuNuoi) {
                 db.channel('realtime-chat-mobile-global').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tin_nhan' }, payload => {
                     const win = document.getElementById('mobileChatWindow');
-                    if (win && win.style.display === 'flex' && payload.new.maphongkham === selectedPhongKhamChat) {
+                    const mPK = chuanHoaMaPK(payload.new.maphongkham);
+                    const selectEl = document.getElementById('selectPhongKhamChat');
+                    const currentSelected = selectEl ? chuanHoaMaPK(selectEl.value) : '';
+
+                    if (win && win.style.display === 'flex' && mPK === currentSelected) {
                         hienThiTinNhanMobileUI(payload.new);
                         const box = document.getElementById('boxTinNhanMobile');
                         if (box) box.scrollTop = box.scrollHeight;
                     }
                 }).subscribe();
             } else {
-                db.channel('realtime-chat-pc-global').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tin_nhan', filter: `maphongkham=eq.${mapk}` }, payload => {
+                db.channel('realtime-chat-pc-global').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tin_nhan' }, payload => {
                     const win = document.getElementById('pcChatWindow');
-                    const isStaffSend = payload.new.nguoi_gui === 'nhanvien';
+                    const mPK = chuanHoaMaPK(payload.new.maphongkham);
+                    
+                    if (mPK === cleanCurrentPK) {
+                        const isStaffSend = payload.new.nguoi_gui === 'nhanvien';
 
-                    if (!isStaffSend) {
-                        if (!win || win.style.display !== 'flex' || sdtChuNuoiDangChon !== payload.new.sodienthoai_chunuoi) {
-                            hienThiCanhBaoTinNhanMoi(true);
+                        if (!isStaffSend) {
+                            if (!win || win.style.display !== 'flex' || sdtChuNuoiDangChon !== payload.new.sodienthoai_chunuoi) {
+                                hienThiCanhBaoTinNhanMoi(true);
+                            }
                         }
-                    }
 
-                    if (win && win.style.display === 'flex') {
-                        if (sdtChuNuoiDangChon && payload.new.sodienthoai_chunuoi === sdtChuNuoiDangChon) {
-                            hienThiTinNhanPCUI(payload.new);
+                        if (win && win.style.display === 'flex') {
+                            if (sdtChuNuoiDangChon && payload.new.sodienthoai_chunuoi === sdtChuNuoiDangChon) {
+                                hienThiTinNhanPCUI(payload.new);
+                            }
+                            taiDanhSachKhachHangChat();
                         }
-                        taiDanhSachKhachHangChat();
                     }
                 }).subscribe();
             }
