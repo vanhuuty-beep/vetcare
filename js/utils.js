@@ -99,21 +99,71 @@ async function khoiTaoNutChatNoiHeThong() {
     try {
         if (isThucSuChuNuoi) {
             // ==========================================
-            // 1. GIAO DIỆN CHỦ NUÔI (CHỌN PHÒNG KHÁM ĐỂ CHAT)
+            // 1. GIAO DIỆN CHỦ NUÔI (CHỈ HIỆN PK ĐÃ ĐĂNG KÝ/THÚ CƯNG)
             // ==========================================
             if (document.getElementById('floatingChatBtn') !== null) return;
             
             const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
-            const sdt = ownerData?.sodienthoai || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727";
+            const sdt = ownerData?.sodienthoai || ownerData?.sodienthoai_chunuoi || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727";
 
-            const { data: dsThuCung } = await db.from('thucung').select('maphongkham').eq('sodienthoai', sdt);
-            const mapkList = [...new Set(dsThuCung?.map(t => t.maphongkham) || [])];
-            
-            const { data: dsPK } = await db.from('chupk').select('maphongkham, tenphongkham').in('maphongkham', mapkList.length ? mapkList : ['PK_617723']);
-            selectedPhongKhamChat = dsPK?.[0]?.maphongkham || "PK_617723";
+            // Bước 1: Lấy toàn bộ danh sách phòng khám từ bảng chupk để có sẵn tên chuẩn
+            let allPK = [];
+            try {
+                let resPK = await db.from('chupk').select('maphongkham, tenphongkham');
+                if (resPK.data) allPK = resPK.data;
+            } catch(e){}
 
-            let pkOptionsHTML = dsPK?.map(pk => `<option value="${pk.maphongkham}" ${pk.maphongkham === selectedPhongKhamChat ? 'selected' : ''}>${pk.tenphongkham || pk.maphongkham}</option>`).join('') || '<option value="PK_617723">Phòng khám mặc định</option>';
+            // Bước 2: QUY TRÌNH CHUẨN - Lấy trực tiếp maphongkham từ bảng khachhang theo số điện thoại
+            let mapkList = [];
+            try {
+                let resKH = await db.from('khachhang').select('maphongkham').eq('sodienthoai', sdt);
+                if (resKH.data) {
+                    resKH.data.forEach(k => { if (k.maphongkham) mapkList.push(k.maphongkham); });
+                }
+                // Dự phòng thêm trường hợp cột số điện thoại tên là 'sdt'
+                let resKH2 = await db.from('khachhang').select('maphongkham').eq('sdt', sdt);
+                if (resKH2.data) {
+                    resKH2.data.forEach(k => { if (k.maphongkham && !mapkList.includes(k.maphongkham)) mapkList.push(k.maphongkham); });
+                }
+            } catch(e){}
 
+            // Lọc bỏ các giá trị trùng lặp
+            let uniqueMapk = [...new Set(mapkList.filter(Boolean))];
+
+            let pkOptionsHTML = '';
+            let uniqueMap = new Map();
+
+            if (uniqueMapk.length > 0) {
+                uniqueMapk.forEach(mpk => {
+                    let cleanTarget = mpk ? mpk.toString().replace(/[_]/g, '').trim().toLowerCase() : '';
+                    let foundPK = allPK.find(p => {
+                        let cleanDB = p.maphongkham ? p.maphongkham.toString().replace(/[_]/g, '').trim().toLowerCase() : '';
+                        return cleanDB === cleanTarget;
+                    });
+
+                    // Lấy tên phòng khám từ bảng chupk
+                    let tenHienThi = (foundPK && foundPK.tenphongkham && foundPK.tenphongkham.trim() !== '') 
+                        ? foundPK.tenphongkham.trim() 
+                        : `Phòng khám ${mpk}`;
+                    let realMaPK = foundPK ? foundPK.maphongkham : mpk;
+
+                    if (!uniqueMap.has(tenHienThi)) {
+                        uniqueMap.set(tenHienThi, { value: realMaPK, label: tenHienThi });
+                    }
+                });
+            }
+
+            let firstItem = Array.from(uniqueMap.values())[0];
+            selectedPhongKhamChat = firstItem?.value || "";
+
+            uniqueMap.forEach((item) => {
+                let isSelected = (item.value === selectedPhongKhamChat) ? 'selected' : '';
+                pkOptionsHTML += `<option value="${item.value}" ${isSelected}>${item.label}</option>`;
+            });
+
+            if (pkOptionsHTML === '') {
+                pkOptionsHTML = '<option value="">Chưa đăng ký phòng khám nào</option>';
+            }
             const mobileChatHTML = `
             <div id="floatingChatBtn" onclick="toggleMobileChat()" style="position: fixed; bottom: 85px; right: 20px; background: #0d9488; color: white; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 3px 8px rgba(0,0,0,0.3); cursor: pointer; z-index: 999999;">💬</div>
 
@@ -138,7 +188,7 @@ async function khoiTaoNutChatNoiHeThong() {
 
         } else {
             // ==========================================
-            // 2. GIAO DIỆN QUẢN LÝ PHÒNG KHÁM (DÙ TRÊN PC HAY MOBILE /mb/)
+            // 2. GIAO DIỆN QUẢN LÝ PHÒNG KHÁM (NHÂN VIÊN)
             // ==========================================
             if (document.getElementById('floatingPCChatBtn') !== null) return;
             
@@ -182,21 +232,32 @@ function doiPhongKhamChat(mapk) {
 function toggleMobileChat() {
     const win = document.getElementById('mobileChatWindow');
     if (!win) return;
-    win.style.display = (win.style.display === 'flex' ? 'none' : 'flex');
-    if (win.style.display === 'flex') taiTinNhanMobile();
+    const isOpen = win.style.display === 'flex';
+    win.style.display = (isOpen ? 'none' : 'flex');
+    if (!isOpen) {
+        setTimeout(taiTinNhanMobile, 100);
+    }
 }
 
 async function taiTinNhanMobile() {
     if (typeof db === 'undefined') return;
     const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
     const sdt = ownerData?.sodienthoai || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727"; 
+    
+    const selectEl = document.getElementById('selectPhongKhamChat');
+    if (selectEl && selectEl.value) {
+        selectedPhongKhamChat = selectEl.value;
+    }
     const mpk = selectedPhongKhamChat || "PK_617723"; 
 
-    const { data } = await db.from('tin_nhan').select('*').eq('maphongkham', mpk).eq('sodienthoai_chunuoi', sdt).order('created_at', { ascending: true });
+    const { data } = await db.from('tin_nhan').select('*').eq('sodienthoai_chunuoi', sdt).order('created_at', { ascending: true });
     const box = document.getElementById('boxTinNhanMobile');
     if(box) {
         box.innerHTML = '';
-        data?.forEach(m => hienThiTinNhanMobileUI(m));
+        if (data && data.length > 0) {
+            const filteredData = data.filter(m => m.maphongkham === mpk || m.maphongkham?.replace('_','') === mpk?.replace('_',''));
+            filteredData.forEach(m => hienThiTinNhanMobileUI(m));
+        }
         box.scrollTop = box.scrollHeight;
     }
 }
@@ -276,20 +337,54 @@ function togglePCChat() {
 
 async function taiDanhSachKhachHangChat() {
     if (typeof db === 'undefined') return;
-    const mapk = window.getMaPhongKham() || "PK_617723"; 
-    const { data: listMsg } = await db.from('tin_nhan').select('sodienthoai_chunuoi, noi_dung, created_at').eq('maphongkham', mapk).order('created_at', { ascending: false });
-    if (!listMsg) return;
-    const dsSdt = [...new Set(listMsg.map(m => m.sodienthoai_chunuoi))];
-    const { data: dsKhachHang } = await db.from('khachhang').select('*').in('sodienthoai', dsSdt);
+    const mapk = window.getMaPhongKham() || sessionStorage.getItem('maphongkham') || "PK_617723"; 
+    
+    const { data: dsKhachHang } = await db.from('khachhang').select('*');
+    const { data: listMsg } = await db.from('tin_nhan').select('sodienthoai_chunuoi, created_at').eq('maphongkham', mapk).order('created_at', { ascending: false });
+    
+    let dsSdtDaNhantin = [];
+    if (listMsg && listMsg.length > 0) {
+        dsSdtDaNhantin = [...new Set(listMsg.map(m => m.sodienthoai_chunuoi))];
+    }
+
     const container = document.getElementById('dsKhachHangChat');
-    if(!container) return;
+    if (!container) return;
     container.innerHTML = `<div style="padding: 6px 8px; font-weight: bold; background: #e2e8f0; color: #1e293b; font-size: 11px;">Khách của PK</div>`;
-    dsSdt.forEach(sdt => {
-        const khInfo = dsKhachHang?.find(k => k.sodienthoai === sdt) || {};
+
+    if (!dsKhachHang || dsKhachHang.length === 0) {
+        container.innerHTML += `<div style="padding: 8px; font-size: 10px; color: #64748b; text-align: center;">Chưa có khách hàng</div>`;
+        return;
+    }
+
+    let danhSachHienThi = [];
+    let daThemSdt = new Set();
+
+    dsSdtDaNhantin.forEach(sdt => {
+        const kh = dsKhachHang.find(k => (k.sodienthoai === sdt || k.sdt === sdt));
+        if (kh) {
+            danhSachHienThi.push(kh);
+            daThemSdt.add(sdt);
+        } else {
+            danhSachHienThi.push({ hovaten: "Chủ nuôi", sodienthoai: sdt });
+            daThemSdt.add(sdt);
+        }
+    });
+
+    dsKhachHang.forEach(kh => {
+        let sdtKH = kh.sodienthoai || kh.sdt;
+        if (sdtKH && !daThemSdt.has(sdtKH)) {
+            danhSachHienThi.push(kh);
+            daThemSdt.add(sdtKH);
+        }
+    });
+
+    danhSachHienThi.forEach(kh => {
+        const sdt = kh.sodienthoai || kh.sdt || "";
+        const ten = kh.hovaten || kh.ten || "Chủ nuôi";
         const item = document.createElement('div');
         item.style.cssText = `padding: 6px 8px; border-bottom: 1px solid #e2e8f0; cursor: pointer; transition: 0.2s;`;
-        item.innerHTML = `<div style="font-weight: bold; font-size: 11px; color: #1e293b;">👤 ${khInfo.hovaten || "Chủ nuôi"}</div><div style="font-size: 10px; color: #0d9488; margin-top: 2px;">📞 ${sdt}</div>`;
-        item.onclick = () => chonKhachHangChat(sdt, khInfo.hovaten || "Chủ nuôi", item);
+        item.innerHTML = `<div style="font-weight: bold; font-size: 11px; color: #1e293b;">👤 ${ten}</div><div style="font-size: 10px; color: #0d9488; margin-top: 2px;">📞 ${sdt}</div>`;
+        item.onclick = () => chonKhachHangChat(sdt, ten, item);
         container.appendChild(item);
     });
 }
@@ -301,7 +396,7 @@ async function chonKhachHangChat(sdt, tenKhach, element) {
     const titleEl = document.getElementById('tieuDeChatPK');
     if (titleEl) titleEl.innerText = `${tenKhach} (${sdt})`;
     
-    const mapk = window.getMaPhongKham() || "PK_617723";
+    const mapk = window.getMaPhongKham() || sessionStorage.getItem('maphongkham') || "PK_617723";
     const { data } = await db.from('tin_nhan').select('*').eq('maphongkham', mapk).eq('sodienthoai_chunuoi', sdt).order('created_at', { ascending: true });
     const box = document.getElementById('boxTinNhanPK');
     if(box) {
@@ -319,7 +414,7 @@ async function nhanVienGuiTinNhan() {
     if (!noiDung) return;
 
     const currentUsr = JSON.parse(sessionStorage.getItem('currentUser')) || {};
-    const mapk = window.getMaPhongKham() || "PK_617723"; 
+    const mapk = window.getMaPhongKham() || sessionStorage.getItem('maphongkham') || "PK_617723"; 
     const tenTaiKhoanGui = currentUsr?.tentaikhoan || currentUsr?.username || "Nhân viên";
     const vaiTroGui = currentUsr?.vaitro || "Nhân viên";
 
@@ -333,7 +428,7 @@ async function guiAnhNhanVien(input) {
     if (!input.files || !input.files[0]) return;
     const file = input.files[0];
     const currentUsr = JSON.parse(sessionStorage.getItem('currentUser')) || {};
-    const mapk = window.getMaPhongKham() || "PK_617723"; 
+    const mapk = window.getMaPhongKham() || sessionStorage.getItem('maphongkham') || "PK_617723"; 
     const tenTaiKhoanGui = currentUsr?.tentaikhoan || "Nhân viên";
     const vaiTroGui = currentUsr?.vaitro || "Nhân viên";
 
@@ -372,7 +467,7 @@ function hienThiTinNhanPCUI(msg) {
 
 async function kiemTraTinNhanChuaDocBanDau() {
     if (typeof db === 'undefined' || isThucSuChuNuoi) return;
-    const mapk = window.getMaPhongKham() || "PK_617723";
+    const mapk = window.getMaPhongKham() || sessionStorage.getItem('maphongkham') || "PK_617723";
     const { data } = await db.from('tin_nhan').select('nguoi_gui').eq('maphongkham', mapk).order('created_at', { ascending: false }).limit(1);
     if (data && data.length > 0 && data[0].nguoi_gui === 'chunuoi') {
         hienThiCanhBaoTinNhanMoi(true);
@@ -390,7 +485,7 @@ function hienThiCanhBaoTinNhanMoi(hien) {
 window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         if (typeof db !== 'undefined' && db.channel) {
-            const mapk = window.getMaPhongKham() || "PK_617723";
+            const mapk = window.getMaPhongKham() || sessionStorage.getItem('maphongkham') || "PK_617723";
             
             if (isThucSuChuNuoi) {
                 db.channel('realtime-chat-mobile-global').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tin_nhan' }, payload => {
