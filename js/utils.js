@@ -14,18 +14,16 @@ function layMaPhongKhamHienTai() {
 }
 
 function formatMaKham(id) { 
-    if (!id) return '';
-    return `KB${layMaPhongKhamHienTai()}${String(id).padStart(4, '0')}`; 
+    return `KB${layMaPhongKhamHienTai()} ${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`; 
 }
 
 function formatMaThuCung(id) { 
-    if (!id) return '';
-    return `TC${layMaPhongKhamHienTai()}${String(id).padStart(4, '0')}`; 
+    return `TC${layMaPhongKhamHienTai()} ${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`; 
 }
 
 function formatMaKhachHang(id) { 
-    if (!id) return '';
-    return `KH${layMaPhongKhamHienTai()}${String(id).padStart(4, '0')}`; 
+    return `KH${layMaPhongKhamHienTai()} ${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`; 
+}
 }
 function formatTien(value) { return (value == null ? 0 : Number(value)).toLocaleString('vi-VN') + " đ"; }
 
