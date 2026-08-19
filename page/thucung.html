@@ -943,9 +943,13 @@
 
             if (!tenthucung) { alert('Vui lòng nhập tên thú cưng!'); return; }
 
+            // Lấy mã khách hàng chính (chủ nuôi đầu tiên được chọn)
             const maKhachHangChinh = selectedOwnerIds.length > 0 ? parseInt(selectedOwnerIds[0]) : null;
+            
+            // Lấy mã phòng khám đang đăng nhập từ sessionStorage
+            const maphongkham = sessionStorage.getItem('maphongkham') || '';
 
-            const payload = {
+            let payload = {
                 tenthucung, 
                 loai, 
                 gioitinh, 
@@ -953,11 +957,17 @@
                 maulong,
                 tuoi: tuoiStr !== "" ? parseFloat(tuoiStr) : null,
                 cannang: cannangStr !== "" ? parseFloat(cannangStr) : null,
-                makhachhang: maKhachHangChinh
+                makhachhang: maKhachHangChinh,
+                maphongkham: maphongkham
             };
 
             let petId = id;
             if (id === "") {
+                // Tự sinh mã thú cưng dựa theo hàm chuẩn trong utils.js (ví dụ: TC + mã PK + ngẫu nhiên)
+                // Nếu bảng thucung của bạn có cột 'mathucung' dạng chuỗi, ta sinh trực tiếp:
+                const maThuCungTuSinh = typeof formatMaThuCung === 'function' ? formatMaThuCung() : ('TC' + Date.now());
+                payload.mathucung = maThuCungTuSinh;
+
                 const { data, error } = await db.from('thucung').insert([payload]).select().single();
                 if (error) { alert('Lỗi thêm dữ liệu: ' + error.message); return; }
                 petId = data.id;
@@ -967,8 +977,13 @@
                 await db.from('thucung_khachhang').delete().eq('thucung_id', id);
             }
 
+            // Đồng bộ bảng liên kết nhiều-nhiều thucung_khachhang
             if (selectedOwnerIds.length > 0) {
-                const payloadLienKet = selectedOwnerIds.map(maKH => ({ thucung_id: petId, makhachhang: maKH }));
+                const payloadLienKet = selectedOwnerIds.map(maKH => ({ 
+                    thucung_id: petId, 
+                    makhachhang: maKH,
+                    maphongkham: maphongkham 
+                }));
                 await db.from('thucung_khachhang').insert(payloadLienKet);
             }
 
@@ -977,16 +992,6 @@
                 window.history.pushState({}, document.title, window.location.pathname);
             }
             fetchDuLieu();
-        }
-
-        async function xoaThuCung(id) {
-            const maTC = formatMaThuCung(id);
-            if (confirm('Bạn có chắc chắn muốn xóa thú cưng mã ' + maTC + ' này không?')) {
-                await db.from('thucung_khachhang').delete().eq('thucung_id', id);
-                const { error } = await db.from('thucung').delete().eq('id', id);
-                if (error) alert('Lỗi khi xóa: ' + error.message);
-                else fetchDuLieu();
-            }
         }
 
         async function moModalNhatKy(petId) {

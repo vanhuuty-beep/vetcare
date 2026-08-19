@@ -1093,7 +1093,7 @@
             document.getElementById('hienThiTongTienChung').innerText = tongCong.toLocaleString('vi-VN') + ' đ';
         }
 
-        async function luuKhamBenh() {
+       async function luuKhamBenh() {
             const id = document.getElementById('editingId').value;
             const mathucungStr = document.getElementById('mathucung').value.trim();
             const ngaykham = document.getElementById('ngaykham').value;
@@ -1109,8 +1109,6 @@
 
             if (fileInput.files && fileInput.files[0]) {
                 const file = fileInput.files[0];
-                
-                // TÊN FILE CỰC KỲ SẠCH SẼ, CHỐNG MỌI LỖI URL HOẶC LỖI 400 TRÊN SUPABASE MỚI
                 const fileName = `kham_${Date.now()}.jpg`;
                 
                 const { data: uploadData, error: uploadError } = await db.storage
@@ -1135,6 +1133,9 @@
                 return;
             }
 
+            // Lấy mã phòng khám từ sessionStorage
+            const maphongkham = sessionStorage.getItem('maphongkham') || '';
+
             const payload = {
                 mathucung: parseInt(mathucung),
                 ngaykham: ngaykham,
@@ -1144,11 +1145,20 @@
                 dieutri: dieutri,
                 chiphi: chiphiStr !== "" ? parseFloat(chiphiStr) : null,
                 trangthai: trangthai,
-                hinhanh: hinhanhUrl
+                hinhanh: hinhanhUrl,
+                maphongkham: maphongkham
             };
 
             let maKhamId = id;
+            
             if (id === "") {
+                // Gọi hàm sinh mã tự động từ utils.js (ví dụ hàm sinh mã khám hoặc tự tạo theo chuẩn KB...)
+                // Nếu trong utils.js có hàm hỗ trợ riêng, ta gọi trực tiếp, nếu không sẽ dùng cơ chế format tương tự
+                const maKhamTuSinh = typeof formatMaKham === 'function' ? formatMaKham(Date.now()) : ('KB' + Date.now());
+                
+                // Đưa mã tự sinh vào cột makhambenh của payload
+                payload.makhambenh = maKhamTuSinh;
+
                 const { data, error } = await db.from('khambenh').insert([payload]).select();
                 if (error) {
                     alert('Lỗi thêm phiếu khám: ' + error.message);
@@ -1171,7 +1181,6 @@
             dongModal();
             fetchDuLieu();
         }
-
         async function xuLyTruKhoVaTaoHoaDonKham(maKhamBenhMoi) {
             const rows = document.querySelectorAll('#dsThuocKhamContainer tr');
             if (rows.length === 0) return;

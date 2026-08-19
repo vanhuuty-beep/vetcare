@@ -376,8 +376,22 @@
                 return;
             }
 
+            // Lấy mã phòng khám hiện tại từ sessionStorage
+            const maphongkham = sessionStorage.getItem('maphongkham') || '';
+
             if (id === "") {
-                const { error } = await db.from('khachhang').insert([{ hovaten, sodienthoai, diachi }]);
+                // Tự sinh mã khách hàng bằng hàm có sẵn trong utils.js
+                const makhachhang = formatMaKhachHang();
+
+                // Lưu trực tiếp makhachhang vào cột makhachhang
+                const { error } = await db.from('khachhang').insert([{ 
+                    makhachhang: makhachhang,
+                    hovaten: hovaten, 
+                    sodienthoai: sodienthoai, 
+                    diachi: diachi, 
+                    maphongkham: maphongkham 
+                }]);
+                
                 if (error) {
                     alert('Lỗi thêm dữ liệu: ' + error.message);
                 } else {
@@ -386,7 +400,13 @@
                     fetchKhachHang();
                 }
             } else {
-                const { error } = await db.from('khachhang').update({ hovaten, sodienthoai, diachi }).eq('id', id);
+                // Cập nhật thông tin khách hàng (giữ nguyên mã cũ)
+                const { error } = await db.from('khachhang').update({ 
+                    hovaten: hovaten, 
+                    sodienthoai: sodienthoai, 
+                    diachi: diachi 
+                }).eq('id', id);
+                
                 if (error) {
                     alert('Lỗi cập nhật dữ liệu: ' + error.message);
                 } else {
