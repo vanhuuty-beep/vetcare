@@ -8,8 +8,9 @@ function toggleSidebar() {
 
 function layMaPhongKhamHienTai() {
     try {
-        const user = JSON.parse(sessionStorage.getItem('currentUser'));
-        return user?.maphongkham ? user.maphongkham.replace('_', '') : 'PK';
+        const user = JSON.parse(sessionStorage.getItem('currentUser')) || {};
+        const mapk = user.maphongkham || sessionStorage.getItem('maphongkham') || 'PK';
+        return mapk.replace(/[_]/g, '').trim();
     } catch (e) { return 'PK'; }
 }
 
@@ -57,14 +58,25 @@ function formatTien(value) { return (value == null ? 0 : Number(value)).toLocale
             const originalFrom = db.from.bind(db);
             db.from = function(table) {
                 const queryBuilder = originalFrom(table);
-                const maphongkham = sessionStorage.getItem('maphongkham') || '';
+                let maphongkham = sessionStorage.getItem('maphongkham') || '';
+                if (!maphongkham) {
+                    try {
+                        const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
+                        maphongkham = ownerData.maphongkham || '';
+                    } catch(e) {}
+                }
                 const excludeTables = ['chupk'];
 
                 const originalSelect = queryBuilder.select.bind(queryBuilder);
                 queryBuilder.select = function(...args) {
                     const q = originalSelect(...args);
                     if (maphongkham && !excludeTables.includes(table) && table !== 'tin_nhan') {
-                        q.eq('maphongkham', maphongkham);
+                        if (table === 'khachhang') {
+                            const cleanPK = maphongkham.replace(/[_]/g, '').trim();
+                            q.or(`maphongkham.eq.${maphongkham},maphongkham.eq.PK_${cleanPK.replace('PK', '')},maphongkham.eq.PK${cleanPK.replace('PK', '')}`);
+                        } else {
+                            q.eq('maphongkham', maphongkham);
+                        }
                     }
                     return q;
                 };
@@ -87,7 +99,6 @@ function formatTien(value) { return (value == null ? 0 : Number(value)).toLocale
     });
 })();
 
-// Chỉ duy nhất URL có chữ "chunuoi" mới được tính là giao diện Chủ Nuoi thực sự.
 const isThucSuChuNuoi = window.location.href.includes('chunuoi');
 
 window.addEventListener('load', function() {
@@ -97,34 +108,23 @@ window.addEventListener('load', function() {
     }
 });
 
-
-/**
- * ==========================================
- * HỆ THỐNG CHAT NỔI (PHÂN TÁCH CHUẨN XÁC)
- * ==========================================
- */
 let selectedPhongKhamChat = null;
 let sdtChuNuoiDangChon = null;
 
 async function khoiTaoNutChatNoiHeThong() {
     try {
         if (isThucSuChuNuoi) {
-            // ==========================================
-            // 1. GIAO DIỆN CHỦ NUÔI (LẤY TỪ BẢNG KHACHHANG)
-            // ==========================================
             if (document.getElementById('floatingChatBtn') !== null) return;
             
             const ownerData = JSON.parse(sessionStorage.getItem('currentPetOwner')) || JSON.parse(sessionStorage.getItem('currentUser')) || {};
             const sdt = ownerData?.sodienthoai || ownerData?.sodienthoai_chunuoi || ownerData?.sdt || ownerData?.sodienthoaikhachhang || "0935778727";
 
-            // Bước 1: Lấy danh sách phòng khám từ bảng chupk
             let allPK = [];
             try {
                 let resPK = await db.from('chupk').select('maphongkham, tenphongkham');
                 if (resPK.data) allPK = resPK.data;
             } catch(e){}
 
-            // Bước 2: Lấy maphongkham trực tiếp từ bảng khachhang theo số điện thoại
             let mapkList = [];
             try {
                 let resKH = await db.from('khachhang').select('maphongkham').eq('sodienthoai', sdt);
@@ -196,9 +196,6 @@ async function khoiTaoNutChatNoiHeThong() {
             document.body.insertAdjacentHTML('beforeend', mobileChatHTML);
 
         } else {
-            // ==========================================
-            // 2. GIAO DIỆN QUẢN LÝ PHÒNG KHÁM (NHÂN VIÊN)
-            // ==========================================
             if (document.getElementById('floatingPCChatBtn') !== null) return;
             
             const pcChatHTML = `
@@ -241,7 +238,6 @@ function chuanHoaMaPK(mpk) {
     return mpk ? mpk.toString().replace(/[_]/g, '').trim().toLowerCase() : '';
 }
 
-// --- LOGIC CHO CHỦ NUÔI ---
 function toggleMobileChat() {
     const win = document.getElementById('mobileChatWindow');
     if (!win) return;
@@ -336,7 +332,6 @@ function hienThiTinNhanMobileUI(msg) {
     box.appendChild(div);
 }
 
-// --- LOGIC CHO QUẢN LÝ PHÒNG KHÁM (NHÂN VIÊN) ---
 function togglePCChat() {
     const win = document.getElementById('pcChatWindow');
     if (!win) return;
@@ -507,7 +502,6 @@ function hienThiCanhBaoTinNhanMoi(hien) {
     }
 }
 
-// --- LẮNG NGHE REALTIME ---
 window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         if (typeof db !== 'undefined' && db.channel) {
