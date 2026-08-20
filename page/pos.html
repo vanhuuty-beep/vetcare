@@ -15,7 +15,7 @@
     <!-- Thư viện quét mã vạch qua Camera (Html5Qrcode) -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
-     <!-- Gọi file CSS chung -->
+    <!-- Gọi file CSS chung -->
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/mobile.css">
     <link rel="stylesheet" href="../css/style1.css">
@@ -481,7 +481,7 @@
         <div class="top-navbar">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-                <h2 style="margin: 0; font-size: 14px; font-weight: bold;"> MÀN HÌNH BÁN HÀNG POS & TÍCH ĐIỂM</h2>
+                <h2 style="margin: 0; font-size: 14px; font-weight: bold;">MÀN HÌNH BÁN HÀNG POS & TÍCH ĐIỂM</h2>
             </div>
             <div style="font-size: 12px; color: #475569; font-weight: 500;">Thu ngân: Đang hoạt động</div>
         </div>
@@ -490,7 +490,7 @@
             <div class="pos-card product-section">
                 <div class="search-scan-group">
                     <div class="pos-search-box">
-                        <input type="text" id="searchInput" placeholder="Quét mã vạch hoặc gõ tên tìm nhanh..." autocomplete="off">
+                        <input type="text" id="searchInput" placeholder="Quét mã vạch hoặc gõ tên tìm nhanh sản phẩm, thuốc, dịch vụ..." autocomplete="off">
                     </div>
                     <button class="btn-scan-qr" onclick="moModalQuetMa()">📷 Quét Mã</button>
                 </div>
@@ -538,7 +538,7 @@
                         <table class="cart-table">
                             <thead>
                                 <tr>
-                                    <th>Sản phẩm</th>
+                                    <th>Sản phẩm / Dịch vụ</th>
                                     <th style="width: 35px; text-align: center;">SL</th>
                                     <th style="text-align: right;">Tổng</th>
                                     <th style="width: 25px; text-align: center;">Xóa</th>
@@ -633,7 +633,7 @@
         <table style="width: 100%; font-size: 10px; border-collapse: collapse; margin-bottom: 6px;">
             <thead>
                 <tr style="border-bottom: 1px solid #000;">
-                    <th style="text-align: left; padding-bottom: 2px; width: 45%;">Sản phẩm</th>
+                    <th style="text-align: left; padding-bottom: 2px; width: 45%;">Sản phẩm / Dịch vụ</th>
                     <th style="text-align: center; padding-bottom: 2px; width: 15%;">SL</th>
                     <th style="text-align: right; padding-bottom: 2px; width: 40%;">T.Tiền</th>
                 </tr>
@@ -667,9 +667,16 @@
         let lastScannedCode = '';
         let lastScanTime = 0;
 
+        // Bộ ảnh đại diện siêu đẹp mặc định theo từng loại (chuyên nghiệp cho thú y, thuốc và dịch vụ)
+        const DEFAULT_IMAGES = {
+            khothuoc: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format&fit=crop&q=80', // Hình thuốc / dược phẩm cao cấp
+            dichvu: 'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?w=300&auto=format&fit=crop&q=80',    // Hình chăm sóc thú cưng / dịch vụ y tế
+            sanpham: 'https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=300&auto=format&fit=crop&q=80'   // Hình phụ kiện / thức ăn chó mèo siêu xinh
+        };
+
         window.addEventListener('DOMContentLoaded', async () => {
             await Promise.all([
-                taiDanhMucSanPhamPOS(),
+                taiTatCaHangHoaVaDichVu(),
                 taiDanhSachKhachHangPOS()
             ]);
 
@@ -713,25 +720,93 @@
 
             const match = danhSachSanPhamGoc.find(x => 
                 (x.mabarcode || '').toLowerCase() === keyword ||
-                ('sp' + String(x.id)).toLowerCase() === keyword ||
+                (x.uid || '').toLowerCase() === keyword ||
                 String(x.id) === keyword
             );
 
             if (match) {
-                themVaoGioHang(match.id);
+                themVaoGioHang(match.uid);
             }
         }
 
-        async function taiDanhMucSanPhamPOS() {
-            const { data, error } = await db.from('danhmucsanpham')
-                .select('*')
-                .order('id', { ascending: false });
-            
-            if (!error && data) {
-                danhSachSanPhamGoc = data;
-                taoTabDanhMuc(data);
-                hienThiLuoiSanPham(data);
+        // --- HÀM TỔNG HỢP: LẤY SẢN PHẨM + KHO THUỐC + DỊCH VỤ VÀ GẮN ẢNH ĐẸP NẾU TRỐNG ---
+        async function taiTatCaHangHoaVaDichVu() {
+            let tongHop = [];
+
+            // 1. Tải bảng sản phẩm chính (danhmucsanpham)
+            const resSP = await db.from('danhmucsanpham').select('*');
+            if (!resSP.error && resSP.data) {
+                resSP.data.forEach(item => {
+                    let img = item.hinhanh || item.image;
+                    if (!img || img.trim() === '') img = DEFAULT_IMAGES.sanpham;
+
+                    tongHop.push({
+                        uid: 'sp_' + item.id,
+                        id: item.id,
+                        tensanpham: item.tensanpham || item.name || 'Sản phẩm',
+                        giaban: parseFloat(item.giaban || item.price || 0),
+                        soluongton: parseInt(item.soluongton || item.tonkho || 999),
+                        danhmuc: item.danhmucsanpham || item.danhmuc || item.tendanhmuc || 'Sản phẩm',
+                        hinhanh: img,
+                        mabarcode: item.mabarcode || '',
+                        loai: 'sanpham'
+                    });
+                });
             }
+
+            // 2. Tải bảng kho thuốc (khothuoc hoặc thuoc)
+            let resKho = await db.from('khothuoc').select('*');
+            if (resKho.error || !resKho.data || resKho.data.length === 0) {
+                resKho = await db.from('thuoc').select('*');
+            }
+            if (!resKho.error && resKho.data) {
+                resKho.data.forEach(item => {
+                    let tenT = item.tenthuoc || item.ten || item.tenthuocmoi || 'Thuốc / Vật tư';
+                    let giaT = parseFloat(item.giaban || item.gia || item.dongia || 0);
+                    let tonT = parseInt(item.soluong || item.tonkho || 0);
+                    let img = item.hinhanh;
+                    if (!img || img.trim() === '') img = DEFAULT_IMAGES.khothuoc;
+
+                    tongHop.push({
+                        uid: 'thuoc_' + item.id,
+                        id: item.id,
+                        tensanpham: tenT,
+                        giaban: giaT,
+                        soluongton: tonT,
+                        danhmuc: 'Kho thuốc',
+                        hinhanh: img,
+                        mabarcode: item.mabarcode || item.mathuoc || '',
+                        loai: 'khothuoc'
+                    });
+                });
+            }
+
+            // 3. Tải bảng dịch vụ (dichvu)
+            const resDV = await db.from('dichvu').select('*');
+            if (!resDV.error && resDV.data) {
+                resDV.data.forEach(item => {
+                    let tenDV = item.tendichvu || item.ten || 'Dịch vụ';
+                    let giaDV = parseFloat(item.giaban || item.gia || item.dongia || 0);
+                    let img = item.hinhanh;
+                    if (!img || img.trim() === '') img = DEFAULT_IMAGES.dichvu;
+
+                    tongHop.push({
+                        uid: 'dv_' + item.id,
+                        id: item.id,
+                        tensanpham: tenDV,
+                        giaban: giaDV,
+                        soluongton: 99999, // Dịch vụ không giới hạn tồn kho
+                        danhmuc: 'Dịch vụ',
+                        hinhanh: img,
+                        mabarcode: item.madichvu || '',
+                        loai: 'dichvu'
+                    });
+                });
+            }
+
+            danhSachSanPhamGoc = tongHop;
+            taoTabDanhMuc(tongHop);
+            hienThiLuoiSanPham(tongHop);
         }
 
         function taoTabDanhMuc(data) {
@@ -740,8 +815,9 @@
             const danhMucSet = new Set();
             
             data.forEach(item => {
-                const dm = item.danhmucsanpham || item.danhmuc || item.category || item.tendanhmuc;
-                if (dm && String(dm).trim() !== '') danhMucSet.add(String(dm).trim());
+                if (item.danhmuc && String(item.danhmuc).trim() !== '') {
+                    danhMucSet.add(String(item.danhmuc).trim());
+                }
             });
 
             let html = `<button class="category-tab-btn active" onclick="chonDanhMucTab('all', this)">Tất cả</button>`;
@@ -761,22 +837,22 @@
         function hienThiLuoiSanPham(data) {
             const grid = document.getElementById('productGrid');
             if (!data || data.length === 0) {
-                grid.innerHTML = `<div style="grid-column: span 2; text-align:center; color:#94a3b8; padding:20px; font-size:11px;">Không tìm thấy sản phẩm</div>`;
+                grid.innerHTML = `<div style="grid-column: span 2; text-align:center; color:#94a3b8; padding:20px; font-size:11px;">Không tìm thấy sản phẩm / dịch vụ</div>`;
                 return;
             }
 
             const fragment = document.createDocumentFragment();
             data.forEach(item => {
-                const img = item.hinhanh || item.image || 'https://via.placeholder.com/100?text=PetCare';
-                const gia = Number(item.giaban || item.price || 0).toLocaleString('vi-VN') + ' đ';
-                const ton = item.soluongton || item.tonkho || 0;
-                const tenSp = item.tensanpham || item.name || 'Sản phẩm';
+                const img = item.hinhanh;
+                const gia = Number(item.giaban || 0).toLocaleString('vi-VN') + ' đ';
+                const ton = item.loai === 'dichvu' ? '∞' : item.soluongton;
+                const tenSp = item.tensanpham;
 
                 const card = document.createElement('div');
                 card.className = 'product-card-pos';
-                card.onclick = () => themVaoGioHang(item.id);
+                card.onclick = () => themVaoGioHang(item.uid);
                 card.innerHTML = `
-                    <img src="${img}" loading="lazy" onerror="this.src='https://via.placeholder.com/100?text=No+Img'">
+                    <img src="${img}" loading="lazy" onerror="this.src='https://via.placeholder.com/100?text=VetCare'">
                     <div class="p-name" title="${tenSp}">${tenSp}</div>
                     <div class="p-info">
                         <span class="p-price">${gia}</span>
@@ -795,13 +871,12 @@
             const keyword = chuanHoaChuoi(keywordRaw);
 
             const filtered = danhSachSanPhamGoc.filter(item => {
-                const ten = chuanHoaChuoi(item.tensanpham || item.name || '');
+                const ten = chuanHoaChuoi(item.tensanpham || '');
                 const barcode = chuanHoaChuoi(item.mabarcode || '');
-                const ma = ('sp' + String(item.id)).toLowerCase();
-                const dm = String(item.danhmucsanpham || item.danhmuc || item.category || item.tendanhmuc || '').toLowerCase().trim();
+                const dm = String(item.danhmuc || '').toLowerCase().trim();
 
                 const matchTab = (danhMucHienTai === 'all' || dm === danhMucHienTai.toLowerCase());
-                const matchKeyword = !keyword || ten.includes(keyword) || barcode.includes(keyword) || ma.includes(keyword);
+                const matchKeyword = !keyword || ten.includes(keyword) || barcode.includes(keyword);
 
                 return matchTab && matchKeyword;
             });
@@ -843,7 +918,6 @@
             }
         }
 
-        // --- HÀM TÌM KIẾM KHÁCH HÀNG TRỰC TIẾP TRÊN DATABASE SUPABASE (HỖ TRỢ TÊN KHÔNG DẤU & SĐT) ---
         async function goYTimKiemKhachHang(tuKhoa) {
             const boxGoiY = document.getElementById('dropdownGoiYKhachHang');
             const keywordRaw = tuKhoa.trim();
@@ -854,7 +928,6 @@
                 return;
             }
 
-            // Gọi truy vấn trực tiếp bảng khachhang trong Supabase theo cột chuẩn 'hovaten' và 'sodienthoai'
             const { data, error } = await db.from('khachhang')
                 .select('*')
                 .or(`hovaten.ilike.%${keywordRaw}%,sodienthoai.ilike.%${keywordRaw}%`)
@@ -865,7 +938,6 @@
                 ketQua = data;
             }
 
-            // Nếu không thấy qua ilike trực tiếp, lọc qua mảng dự phòng
             if (ketQua.length === 0 && danhSachKhachHangGoc.length > 0) {
                 ketQua = danhSachKhachHangGoc.filter(kh => {
                     const ten = chuanHoaChuoi(kh.hovaten || '');
@@ -936,7 +1008,6 @@
             document.getElementById('khachHangModal').style.display = 'none';
         }
 
-        // --- HÀM THÊM KHÁCH HÀNG MỚI ĐÃ SỬA CHUẨN CỘT `hovaten` VÀ `sodienthoai` (TRIỆT TIÊU LỖI 'sdt') ---
         async function luuKhachHangMoiVaoDB() {
             const hovaten = document.getElementById('nhapTenKhachMoi').value.trim();
             const sodienthoai = document.getElementById('nhapSdtKhachMoi').value.trim();
@@ -966,29 +1037,31 @@
             }
         }
 
-        function themVaoGioHang(id) {
-            const sp = danhSachSanPhamGoc.find(x => x.id === id);
+        function themVaoGioHang(uid) {
+            const sp = danhSachSanPhamGoc.find(x => x.uid === uid);
             if (!sp) return;
 
-            const tonKho = sp.soluongton || sp.tonkho || 0;
-            if (tonKho <= 0) {
-                alert('Sản phẩm này đã hết hàng trong kho!');
+            const tonKho = sp.soluongton;
+            if (sp.loai !== 'dichvu' && tonKho <= 0) {
+                alert('Sản phẩm/Thuốc này đã hết hàng trong kho!');
                 return;
             }
 
-            const existing = gioHang.find(x => x.id === id);
+            const existing = gioHang.find(x => x.uid === uid);
             if (existing) {
-                if (existing.soluong < tonKho) {
+                if (sp.loai === 'dichvu' || existing.soluong < tonKho) {
                     existing.soluong++;
                 } else {
                     alert('Đã đạt giới hạn số lượng tồn kho!');
                 }
             } else {
                 gioHang.push({
+                    uid: sp.uid,
                     id: sp.id,
-                    masanpham: 'SP' + String(sp.id).padStart(4, '0'),
-                    tensanpham: sp.tensanpham || sp.name,
-                    dongia: parseFloat(sp.giaban || sp.price) || 0,
+                    loai: sp.loai,
+                    masanpham: sp.mabarcode || (sp.loai.toUpperCase() + '_' + sp.id),
+                    tensanpham: sp.tensanpham,
+                    dongia: sp.giaban,
                     soluong: 1,
                     tonkho: tonKho
                 });
@@ -996,11 +1069,11 @@
             hienThiGioHang();
         }
 
-        function doiSoLuongInput(id, val) {
-            const item = gioHang.find(x => x.id === id);
+        function doiSoLuongInput(uid, val) {
+            const item = gioHang.find(x => x.uid === uid);
             const qty = parseInt(val) || 1;
             if (item) {
-                if (qty <= item.tonkho && qty > 0) {
+                if (item.loai === 'dichvu' || (qty <= item.tonkho && qty > 0)) {
                     item.soluong = qty;
                 } else {
                     alert('Số lượng không hợp lệ hoặc vượt quá tồn kho!');
@@ -1010,8 +1083,8 @@
             }
         }
 
-        function xoaKhoiGioHang(id) {
-            gioHang = gioHang.filter(x => x.id !== id);
+        function xoaKhoiGioHang(uid) {
+            gioHang = gioHang.filter(x => x.uid !== uid);
             hienThiGioHang();
         }
 
@@ -1040,11 +1113,11 @@
                             <div style="font-size: 10px; color: #64748b;">${item.dongia.toLocaleString('vi-VN')} đ</div>
                         </td>
                         <td style="text-align: center;">
-                            <input type="number" class="qty-input" value="${item.soluong}" min="1" onchange="doiSoLuongInput(${item.id}, this.value)">
+                            <input type="number" class="qty-input" value="${item.soluong}" min="1" onchange="doiSoLuongInput('${item.uid}', this.value)">
                         </td>
                         <td style="text-align: right; font-weight: bold; color: var(--danger-color);">${thanhTien.toLocaleString('vi-VN')} đ</td>
                         <td style="text-align: center;">
-                            <button onclick="xoaKhoiGioHang(${item.id})" style="background:none; border:none; color:var(--danger-color); cursor:pointer; font-weight:bold;">&times;</button>
+                            <button onclick="xoaKhoiGioHang('${item.uid}')" style="background:none; border:none; color:var(--danger-color); cursor:pointer; font-weight:bold;">&times;</button>
                         </td>
                     </tr>
                 `;
@@ -1163,59 +1236,60 @@
         }
 
         async function thanhToanDonHang() {
-    // 1. Kiểm tra giỏ hàng
-    if (gioHang.length === 0) {
-        alert('Giỏ hàng trống!');
-        return;
-    }
+            if (gioHang.length === 0) {
+                alert('Giỏ hàng trống!');
+                return;
+            }
 
-    // 2. Xác nhận chốt đơn
-    if (!confirm('Xác nhận chốt đơn và in hóa đơn?')) return;
+            if (!confirm('Xác nhận chốt đơn và in hóa đơn?')) return;
 
-    try {
-        const { tongGoc, tienChietKhau, tongThanhToan, diemThuong } = tinhToanTongTien();
-        const tenKhach = khachHangDangChon ? khachHangDangChon.hovaten : 'Khách lẻ vãng lai';
-        const sdtKhach = khachHangDangChon ? khachHangDangChon.sodienthoai : '';
+            try {
+                const { tongGoc, tienChietKhau, tongThanhToan, diemThuong } = tinhToanTongTien();
+                const tenKhach = khachHangDangChon ? khachHangDangChon.hovaten : 'Khách lẻ vãng lai';
+                const sdtKhach = khachHangDangChon ? khachHangDangChon.sodienthoai : '';
 
-        // 3. Lưu vào DB & Cập nhật tồn kho
-        for (let item of gioHang) {
-            // Lưu vào bảng donhang
-            await db.from('donhang').insert([{
-                masanpham: item.masanpham,
-                tensanpham: item.tensanpham,
-                soluongban: item.soluong,
-                dongia: item.dongia,
-                thanhtien: item.soluong * item.dongia,
-                tenkhachhang: tenKhach,
-                sdt: sdtKhach,
-                nguoiban: 'Thu ngân POS'
-            }]);
+                for (let item of gioHang) {
+                    await db.from('donhang').insert([{
+                        masanpham: item.masanpham,
+                        tensanpham: item.tensanpham,
+                        soluongban: item.soluong,
+                        dongia: item.dongia,
+                        thanhtien: item.soluong * item.dongia,
+                        tenkhachhang: tenKhach,
+                        sdt: sdtKhach,
+                        nguoiban: 'Thu ngân POS'
+                    }]);
 
-            // Trừ tồn kho
-            let tonMoi = (item.tonkho || 0) - item.soluong;
-            await db.from('danhmucsanpham').update({ soluongton: tonMoi }).eq('id', item.id);
+                    // Trừ tồn kho tương ứng theo loại bảng nguồn
+                    if (item.loai === 'sanpham') {
+                        let tonMoi = (item.tonkho || 0) - item.soluong;
+                        await db.from('danhmucsanpham').update({ soluongton: tonMoi }).eq('id', item.id);
+                    } else if (item.loai === 'khothuoc') {
+                        let tonMoi = (item.tonkho || 0) - item.soluong;
+                        let resUp = await db.from('khothuoc').update({ soluong: tonMoi }).eq('id', item.id);
+                        if (resUp.error) {
+                            await db.from('thuoc').update({ soluong: tonMoi }).eq('id', item.id);
+                        }
+                    }
+                }
+
+                if (khachHangDangChon) {
+                    let diemMoi = (parseInt(khachHangDangChon.tichdiem) || parseInt(khachHangDangChon.diem) || 0) + diemThuong;
+                    await db.from('khachhang').update({ tichdiem: diemMoi }).eq('id', khachHangDangChon.id);
+                }
+
+                inHoaDonNhiet(tenKhach, sdtKhach, tongGoc, tienChietKhau, tongThanhToan, diemThuong);
+
+                alert('Chốt đơn thành công!');
+                lamMoiGioHang();
+                await taiTatCaHangHoaVaDichVu();
+                await taiDanhSachKhachHangPOS();
+
+            } catch (err) {
+                console.error(err);
+                alert('Có lỗi xảy ra: ' + err.message);
+            }
         }
-
-        // Cập nhật điểm cho khách (nếu có)
-        if (khachHangDangChon) {
-            let diemMoi = (parseInt(khachHangDangChon.tichdiem) || 0) + diemThuong;
-            await db.from('khachhang').update({ tichdiem: diemMoi }).eq('id', khachHangDangChon.id);
-        }
-
-        // 4. Gọi hàm in đã có sẵn trong code của bạn
-        inHoaDonNhiet(tenKhach, sdtKhach, tongGoc, tienChietKhau, tongThanhToan, diemThuong);
-
-        // 5. Làm mới lại sau khi in xong
-        alert('Chốt đơn thành công!');
-        lamMoiGioHang();
-        await taiDanhMucSanPhamPOS();
-        await taiDanhSachKhachHangPOS();
-
-    } catch (err) {
-        console.error(err);
-        alert('Có lỗi xảy ra: ' + err.message);
-    }
-}
     </script>
 </body>
 </html>
