@@ -108,6 +108,23 @@ document.addEventListener("DOMContentLoaded", function() {
             <li class="menu-item" id="menu-nhatkylamvaccine" onclick="window.location.href='nhatkylamvaccine.html'"><span><i class="fa-solid fa-clock-rotate-left"></i></span> <span class="menu-text">Nhật ký tiêm</span></li>
             <li class="menu-item" id="menu-dichvu" onclick="window.location.href='dichvu.html'"><span><i class="fa-solid fa-tags"></i></span> <span class="menu-text">Giá dịch vụ</span></li>
         </ul>
+		<li class="menu-dropdown-toggle" onclick="toggleSubmenu(this)">
+    <div class="menu-label-wrap">
+        <span class="group-icon"><i class="fa-solid fa-file-invoice-dollar"></i></span> 
+        <span class="menu-text">Công nợ</span>
+    </div> 
+    <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
+</li>
+<ul class="submenu-container">
+    <li class="menu-item" id="menu-congnokhachhang" onclick="window.location.href='congno.html'">
+        <span><i class="fa-solid fa-user-tag"></i></span> 
+        <span class="menu-text">Công nợ khách hàng</span>
+    </li>
+    <li class="menu-item" id="menu-congnonhacungcap" onclick="window.location.href='congnonhacungcap.html'">
+        <span><i class="fa-solid fa-truck-field"></i></span> 
+        <span class="menu-text">Công nợ nhà cung cấp</span>
+    </li>
+</ul>
     `;
 
     if (isTrueOwner || isBacSi || isHuuTy) {
