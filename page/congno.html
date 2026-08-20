@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Công nợ Khách hàng - VetCare Pro</title>
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+
+    <style>
+        .search-box {
+            padding: 8px 12px;
+            width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: #2563eb;
+        }
+        .card-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Thẻ thống kê tổng quan công nợ */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #fff;
+            padding: 15px 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .stat-card h4 {
+            margin: 0 0 5px 0;
+            font-size: 13px;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+        .stat-card .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1e293b;
+        }
+
+        /* Tối ưu modal và form */
+        .modal-container {
+            width: 90%;
+            max-width: 500px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-sizing: border-box;
+        }
+        .form-group-modal {
+            margin-bottom: 12px;
+            position: relative;
+        }
+        .form-group-modal label {
+            font-size: 13px;
+            margin-bottom: 4px;
+            display: block;
+            font-weight: 500;
+        }
+        .form-group-modal input, .form-group-modal textarea, .form-group-modal select {
+            width: 100%;
+            padding: 8px 10px;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        /* Khung danh sách gợi ý tìm kiếm khách hàng mượt mà */
+        #suggestions-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #cbd5e1;
+            border-radius: 0 0 6px 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 99999;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: none;
+            margin-top: 2px;
+        }
+        .suggestion-item {
+            padding: 10px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .suggestion-item:hover {
+            background-color: #f8fafc;
+            color: #2563eb;
+            font-weight: 500;
+        }
+
+        /* Tối ưu bảng dữ liệu công nợ */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            min-width: 950px;
+            border-collapse: collapse;
+            table-layout: auto;
+        }
+
+        table th, table td {
+            padding: 10px 12px;
+            vertical-align: middle;
+            font-size: 13px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        table th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: #334155;
+            white-space: nowrap;
+        }
+
+        .badge-no {
+            background-color: #fef2f2;
+            color: #dc2626;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            border: 1px solid #fecaca;
+        }
+        .badge-thadu {
+            background-color: #f0fdf4;
+            color: #16a34a;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            border: 1px solid #bbf7d0;
+        }
+
+        /* Hiệu ứng click chuột cho trạng thái */
+        .trangthai-badge {
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-block;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .trangthai-badge:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            font-size: 13px;
+        }
+        .pagination-controls {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .pagination-controls button {
+            padding: 5px 10px;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .pagination-controls button:disabled {
+            background: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+        .pagination-controls span {
+            padding: 0 8px;
+            font-weight: 600;
+            color: #334155;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+        <div id="topnav-container"></div>
+
+        <div class="content-body">
+            <!-- CÁC THẺ THỐNG KÊ TỔNG QUAN -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h4>Tổng dư nợ khách hàng</h4>
+                    <div class="stat-value" id="txtTongDuNo" style="color: #dc2626;">0 đ</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Tổng tiền thừa khách gửi</h4>
+                    <div class="stat-value" id="txtTongTienThua" style="color: #16a34a;">0 đ</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Quản lý Công nợ Khách hàng</h3>
+                    <div class="card-header-actions">
+                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm tên chủ nuôi, SĐT..." onkeyup="timKiemCongNo()">
+                        <button class="btn-primary" onclick="moModalThemCongNo()">+ Thêm ghi chú công nợ</button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã công nợ</th>
+                                <th>Chủ nuôi / Khách hàng</th>
+                                <th>Số điện thoại</th>
+                                <th>Số tiền nợ</th>
+                                <th>Số tiền thừa</th>
+                                <th>Trạng thái (Bấm để đổi)</th>
+                                <th>Ghi chú</th>
+                                <th>Ngày tạo</th>
+                                <th style="text-align: center;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table">
+                            <!-- Dữ liệu được nạp tự động -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- THANH PHÂN TRANG -->
+                <div class="pagination-container">
+                    <div id="paginationInfo" style="color: #475569;">Hiển thị 0 - 0 của 0 bản ghi</div>
+                    <div class="pagination-controls">
+                        <button id="btnPrevPage" onclick="doiTrang(-1)">Trang trước</button>
+                        <span id="pageIndicator">1 / 1</span>
+                        <button id="btnNextPage" onclick="doiTrang(1)">Trang sau</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM / SỬA CÔNG NỢ -->
+    <div class="modal-overlay" id="modalCongNo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 2000;">
+        <div class="modal-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+                <h3 id="modalTitle" style="margin: 0; font-size: 16px; color: #1e3a8a;">Ghi nhận công nợ khách hàng</h3>
+                <button onclick="dongModalCongNo()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editingId">
+
+            <div class="form-group-modal">
+                <label>Tìm kiếm khách hàng (*):</label>
+                <input type="text" id="khachhang_search" placeholder="Gõ tên khách hàng hoặc SĐT để tìm..." autocomplete="off" oninput="xuLyTimKiemKhachHang(this.value)">
+                <input type="hidden" id="makhachhang">
+                <div id="suggestions-box"></div>
+            </div>
+
+            <div class="form-group-modal">
+                <label>Số tiền nợ (VNĐ):</label>
+                <input type="number" id="sotienno" placeholder="VD: 150000" value="0">
+            </div>
+
+            <div class="form-group-modal">
+                <label>Số tiền thừa (VNĐ):</label>
+                <input type="number" id="sotienthadu" placeholder="VD: 0" value="0">
+            </div>
+
+            <div class="form-group-modal">
+                <label>Trạng thái thanh toán:</label>
+                <select id="trangthai">
+                    <option value="Chưa trả nợ">Chưa trả nợ</option>
+                    <option value="Đã trả nợ">Đã trả nợ</option>
+                </select>
+            </div>
+
+            <div class="form-group-modal">
+                <label>Ghi chú:</label>
+                <textarea id="ghichu" rows="3" placeholder="Nhập nội dung nợ hoặc ghi chú thanh toán..."></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+                <button class="btn-secondary" onclick="dongModalCongNo()" style="padding: 6px 14px; cursor: pointer;">Hủy</button>
+                <button class="btn-primary" onclick="luuCongNo()" style="padding: 6px 14px; cursor: pointer;">Lưu dữ liệu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT XỬ LÝ DỮ LIỆU CÔNG NỢ -->
+    <script>
+        let danhSachCongNoGoc = [];
+        let mapKhachHang = {};
+        let dsKhachHangChoSearch = [];
+
+        let trangHienTai = 1;
+        let soDongMoiTrang = 10;
+        let duLieuHienThiHienTai = [];
+        let maPhongKhamHienTai = '';
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            maPhongKhamHienTai = sessionStorage.getItem('maphongkham') || localStorage.getItem('maphongkham') || '';
+            
+            await taiDanhMucKhachHang();
+            await fetchDuLieuCongNo();
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.form-group-modal')) {
+                    const box = document.getElementById('suggestions-box');
+                    if (box) box.style.display = 'none';
+                }
+            });
+
+            if (typeof db !== 'undefined' && db) {
+                db.channel('realtime-congno-pc')
+                  .on('postgres_changes', { event: '*', schema: 'public', table: 'congno' }, async () => {
+                      await fetchDuLieuCongNo();
+                  })
+                  .subscribe();
+            }
+        });
+
+        async function taiDanhMucKhachHang() {
+            if (typeof db === 'undefined' || !db) return;
+            
+            let query = db.from('khachhang').select('*');
+            if (maPhongKhamHienTai) {
+                query = query.eq('maphongkham', maPhongKhamHienTai);
+            }
+
+            const { data } = await query;
+            dsKhachHangChoSearch = [];
+            if (data) {
+                data.forEach(kh => {
+                    mapKhachHang[kh.id] = kh;
+                    let sdt = kh.sodienthoai || kh.sdt || 'Chưa có SĐT';
+                    dsKhachHangChoSearch.push({
+                        id: kh.id,
+                        label: `${kh.hovaten || 'Không tên'} - SĐT: ${sdt} (ID: ${kh.id})`,
+                        hovaten: kh.hovaten || 'Không tên',
+                        sdt: sdt,
+                        value: kh.id
+                    });
+                });
+            }
+        }
+
+        function xuLyTimKiemKhachHang(tuKhoa) {
+            const box = document.getElementById('suggestions-box');
+            document.getElementById('makhachhang').value = ''; 
+            
+            if (!tuKhoa || tuKhoa.trim() === '') {
+                box.style.display = 'none';
+                return;
+            }
+
+            const keyword = tuKhoa.toLowerCase().trim();
+            const filtered = dsKhachHangChoSearch.filter(item => 
+                item.hovaten.toLowerCase().includes(keyword) || 
+                String(item.sdt).toLowerCase().includes(keyword) ||
+                String(item.id).includes(keyword)
+            );
+
+            if (filtered.length === 0) {
+                box.innerHTML = `<div class="suggestion-item" style="color: #777;">Không tìm thấy khách hàng phù hợp</div>`;
+                box.style.display = 'block';
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(item => {
+                html += `<div class="suggestion-item" onclick="chonKhachHang(${item.id}, '${item.label.replace(/'/g, "\\'")}')">
+                    <strong>${item.hovaten}</strong> - SĐT: ${item.sdt} (ID: ${item.id})
+                </div>`;
+            });
+
+            box.innerHTML = html;
+            box.style.display = 'block';
+        }
+
+        function chonKhachHang(id, label) {
+            document.getElementById('makhachhang').value = id;
+            document.getElementById('khachhang_search').value = label;
+            document.getElementById('suggestions-box').style.display = 'none';
+        }
+
+        async function fetchDuLieuCongNo() {
+            if (typeof db === 'undefined' || !db) return;
+
+            let query = db.from('congno').select('*').order('id', { ascending: false });
+            if (maPhongKhamHienTai) {
+                query = query.eq('maphongkham', maPhongKhamHienTai);
+            }
+
+            const { data, error } = await query;
+            if (error) {
+                console.error('Lỗi tải dữ liệu công nợ:', error);
+                return;
+            }
+
+            danhSachCongNoGoc = data || [];
+            tinhToanTongQuan();
+            duLieuHienThiHienTai = danhSachCongNoGoc;
+            trangHienTai = 1;
+            renderPhanTrang();
+        }
+
+        function tinhToanTongQuan() {
+            let tongNo = 0;
+            let tongThraDu = 0;
+
+            danhSachCongNoGoc.forEach(item => {
+                // Chỉ cộng dồn vào tổng dư nợ nếu trạng thái là chưa trả nợ
+                if (!item.trangthai || item.trangthai === 'Chưa trả nợ') {
+                    tongNo += Number(item.sotienno || 0);
+                }
+                tongThraDu += Number(item.sotienthadu || 0);
+            });
+
+            document.getElementById('txtTongDuNo').innerText = tongNo.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('txtTongTienThua').innerText = tongThraDu.toLocaleString('vi-VN') + ' đ';
+        }
+
+        function renderPhanTrang() {
+            const tableBody = document.getElementById('data-table');
+            tableBody.innerHTML = '';
+            
+            const tongSoBanGhi = duLieuHienThiHienTai.length;
+            if(tongSoBanGhi === 0) {
+                tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#777;">Chưa có bản ghi công nợ nào</td></tr>`;
+                document.getElementById('paginationInfo').innerText = 'Hiển thị 0 - 0 của 0 bản ghi';
+                document.getElementById('pageIndicator').innerText = '1 / 1';
+                document.getElementById('btnPrevPage').disabled = true;
+                document.getElementById('btnNextPage').disabled = true;
+                return;
+            }
+
+            const tongSoTrang = Math.ceil(tongSoBanGhi / soDongMoiTrang);
+            if (trangHienTai > tongSoTrang) trangHienTai = tongSoTrang;
+            if (trangHienTai < 1) trangHienTai = 1;
+
+            const batDau = (trangHienTai - 1) * soDongMoiTrang;
+            const ketThuc = Math.min(batDau + soDongMoiTrang, tongSoBanGhi);
+            const trangDuLieu = duLieuHienThiHienTai.slice(batDau, ketThuc);
+
+            trangDuLieu.forEach(item => {
+                const kh = mapKhachHang[item.makhachhang] || {};
+                const tenKhach = kh.hovaten || 'Khách lẻ / Không rõ';
+                const rawSdt = String(kh.sodienthoai || kh.sdt || '').trim();
+                const displaySdt = rawSdt ? (rawSdt.startsWith('0') ? rawSdt : '0' + rawSdt) : 'Chưa có SĐT';
+
+                // Tự động gắn mã phòng khám vào mã công nợ nếu có
+                const tienToPK = maPhongKhamHienTai ? `${maPhongKhamHienTai}_` : '';
+                const maCongNoHienThi = item.macongno || `${tienToPK}CN_${item.id}`;
+                const ngayTaoFormatted = item.ngaytao ? new Date(item.ngaytao).toLocaleDateString('vi-VN') : '';
+
+                const trangThai = item.trangthai || 'Chưa trả nợ';
+                let badgeBg = trangThai === 'Đã trả nợ' ? '#16a34a' : '#dc2626';
+
+                tableBody.innerHTML += `<tr>
+                    <td><strong>${maCongNoHienThi}</strong></td>
+                    <td><strong>${tenKhach}</strong></td>
+                    <td><span style="color: #0284c7;">📞 ${displaySdt}</span></td>
+                    <td><span class="badge-no">${Number(item.sotienno || 0).toLocaleString('vi-VN')} đ</span></td>
+                    <td><span class="badge-thadu">${Number(item.sotienthadu || 0).toLocaleString('vi-VN')} đ</span></td>
+                    <td style="text-align: center;">
+                        <span class="trangthai-badge" style="background-color: ${badgeBg}; color: white;" onclick="doiTrangThaiCongNo(${item.id}, '${trangThai}')" title="Bấm để chuyển đổi trạng thái">
+                            ${trangThai} 🔄
+                        </span>
+                    </td>
+                    <td>${item.ghichu || ''}</td>
+                    <td>${ngayTaoFormatted}</td>
+                    <td style="text-align: center;">
+                        <button class="btn-edit" onclick="moModalSuaCongNo(${item.id})">Sửa</button>
+                        <button class="btn-delete" onclick="xoaCongNo(${item.id})">Xóa</button>
+                    </td>
+                </tr>`;
+            });
+
+            document.getElementById('paginationInfo').innerText = `Hiển thị ${batDau + 1} - ${ketThuc} của ${tongSoBanGhi} bản ghi`;
+            document.getElementById('pageIndicator').innerText = `${trangHienTai} / ${tongSoTrang}`;
+            document.getElementById('btnPrevPage').disabled = (trangHienTai === 1);
+            document.getElementById('btnNextPage').disabled = (trangHienTai === tongSoTrang || tongSoTrang === 0);
+        }
+
+        // Hàm xử lý khi bấm trực tiếp vào huy hiệu trạng thái để đổi qua lại
+        async function doiTrangThaiCongNo(id, trangThaiHienTai) {
+            if (typeof db === 'undefined' || !db) return;
+            let trangThaiMoi = trangThaiHienTai === 'Đã trả nợ' ? 'Chưa trả nợ' : 'Đã trả nợ';
+
+            const { error } = await db
+                .from('congno')
+                .update({ trangthai: trangThaiMoi })
+                .eq('id', id);
+
+            if (error) {
+                alert('Lỗi cập nhật trạng thái: ' + error.message);
+            } else {
+                await fetchDuLieuCongNo();
+            }
+        }
+
+        function doiTrang(huong) {
+            trangHienTai += huong;
+            renderPhanTrang();
+        }
+
+        function timKiemCongNo() {
+            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+            duLieuHienThiHienTai = danhSachCongNoGoc.filter(item => {
+                const kh = mapKhachHang[item.makhachhang] || {};
+                const ten = (kh.hovaten || '').toLowerCase();
+                const sdt = String(kh.sodienthoai || kh.sdt || '').toLowerCase();
+                const tienToPK = maPhongKhamHienTai ? `${maPhongKhamHienTai.toLowerCase()}_` : '';
+                const ma = (item.macongno || `${tienToPK}cn_${item.id}`).toLowerCase();
+                const ghichu = (item.ghichu || '').toLowerCase();
+                return ten.includes(tuKhoa) || sdt.includes(tuKhoa) || ma.includes(tuKhoa) || ghichu.includes(tuKhoa);
+            });
+            trangHienTai = 1;
+            renderPhanTrang();
+        }
+
+        function moModalThemCongNo() {
+            document.getElementById('editingId').value = '';
+            document.getElementById('makhachhang').value = '';
+            document.getElementById('khachhang_search').value = '';
+            document.getElementById('suggestions-box').style.display = 'none';
+            document.getElementById('sotienno').value = '0';
+            document.getElementById('sotienthadu').value = '0';
+            document.getElementById('trangthai').value = 'Chưa trả nợ';
+            document.getElementById('ghichu').value = '';
+            document.getElementById('modalTitle').innerText = 'Thêm ghi chú công nợ mới';
+            document.getElementById('modalCongNo').style.display = 'flex';
+        }
+
+        function moModalSuaCongNo(id) {
+            const item = danhSachCongNoGoc.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('editingId').value = item.id;
+            document.getElementById('makhachhang').value = item.makhachhang || '';
+            
+            const kh = mapKhachHang[item.makhachhang];
+            if (kh) {
+                let sdt = kh.sodienthoai || kh.sdt || 'Chưa có SĐT';
+                document.getElementById('khachhang_search').value = `${kh.hovaten} - SĐT: ${sdt} (ID: ${kh.id})`;
+            } else {
+                document.getElementById('khachhang_search').value = '';
+            }
+
+            document.getElementById('suggestions-box').style.display = 'none';
+            document.getElementById('sotienno').value = item.sotienno || 0;
+            document.getElementById('sotienthadu').value = item.sotienthadu || 0;
+            document.getElementById('trangthai').value = item.trangthai || 'Chưa trả nợ';
+            document.getElementById('ghichu').value = item.ghichu || '';
+            document.getElementById('modalTitle').innerText = 'Cập nhật công nợ';
+            document.getElementById('modalCongNo').style.display = 'flex';
+        }
+
+        function dongModalCongNo() {
+            document.getElementById('modalCongNo').style.display = 'none';
+        }
+
+        async function luuCongNo() {
+            const id = document.getElementById('editingId').value;
+            const makhachhang = document.getElementById('makhachhang').value.trim();
+            const sotienno = parseFloat(document.getElementById('sotienno').value) || 0;
+            const sotienthadu = parseFloat(document.getElementById('sotienthadu').value) || 0;
+            const trangthai = document.getElementById('trangthai').value;
+            const ghichu = document.getElementById('ghichu').value.trim();
+
+            if (!makhachhang) {
+                alert('Vui lòng chọn khách hàng từ danh sách gợi ý!');
+                return;
+            }
+
+            const payload = {
+                makhachhang: parseInt(makhachhang),
+                sotienno: sotienno,
+                sotienthadu: sotienthadu,
+                trangthai: trangthai,
+                ghichu: ghichu,
+                maphongkham: maPhongKhamHienTai
+            };
+
+            let resId = id;
+
+            if (id === "") {
+                const { data, error } = await db.from('congno').insert([payload]).select().single();
+                if (error) {
+                    alert('Lỗi thêm công nợ: ' + error.message);
+                    return;
+                }
+                resId = data.id;
+                const tienToPK = maPhongKhamHienTai ? `${maPhongKhamHienTai}_` : '';
+                const macongno = `${tienToPK}CN_${resId}`;
+                await db.from('congno').update({ macongno: macongno }).eq('id', resId);
+            } else {
+                const { error } = await db.from('congno').update(payload).eq('id', id);
+                if (error) {
+                    alert('Lỗi cập nhật công nợ: ' + error.message);
+                    return;
+                }
+            }
+
+            alert('Lưu công nợ thành công!');
+            dongModalCongNo();
+            await fetchDuLieuCongNo();
+        }
+
+        async function xoaCongNo(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa bản ghi công nợ này không?')) {
+                const { error } = await db.from('congno').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa: ' + error.message);
+                } else {
+                    alert('Xóa thành công!');
+                    await fetchDuLieuCongNo();
+                }
+            }
+        }
+    </script>
+</body>
+</html>
