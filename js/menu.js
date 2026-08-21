@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <li class="menu-item" id="menu-dichvu" onclick="window.location.href='dichvu.html'"><span><i class="fa-solid fa-tags"></i></span> <span class="menu-text">Giá dịch vụ</span></li>
 			<li class="menu-item" id="menu-dichvuchidinh" onclick="window.location.href='dichvuchidinh.html'">
     <span><i class="fa-solid fa-file-medical"></i></span> 
-    <span class="menu-text">Dịch vụ chỉ định</span>
+    <span class="menu-text">Giá dịch vụ chỉ định</span>
 </li>
         </ul>
         <li class="menu-dropdown-toggle" onclick="toggleSubmenu(this)">
