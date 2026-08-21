@@ -107,24 +107,28 @@ document.addEventListener("DOMContentLoaded", function() {
             <li class="menu-item" id="menu-khovaccine" onclick="window.location.href='khovaccine.html'"><span><i class="fa-solid fa-syringe"></i></span> <span class="menu-text">Kho vắc-xin</span></li>
             <li class="menu-item" id="menu-nhatkylamvaccine" onclick="window.location.href='nhatkylamvaccine.html'"><span><i class="fa-solid fa-clock-rotate-left"></i></span> <span class="menu-text">Nhật ký tiêm</span></li>
             <li class="menu-item" id="menu-dichvu" onclick="window.location.href='dichvu.html'"><span><i class="fa-solid fa-tags"></i></span> <span class="menu-text">Giá dịch vụ</span></li>
-        </ul>
-		<li class="menu-dropdown-toggle" onclick="toggleSubmenu(this)">
-    <div class="menu-label-wrap">
-        <span class="group-icon"><i class="fa-solid fa-file-invoice-dollar"></i></span> 
-        <span class="menu-text">Công nợ</span>
-    </div> 
-    <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
+			<li class="menu-item" id="menu-dichvuchidinh" onclick="window.location.href='dichvuchidinh.html'">
+    <span><i class="fa-solid fa-file-medical"></i></span> 
+    <span class="menu-text">Dịch vụ chỉ định</span>
 </li>
-<ul class="submenu-container">
-    <li class="menu-item" id="menu-congnokhachhang" onclick="window.location.href='congno.html'">
-        <span><i class="fa-solid fa-user-tag"></i></span> 
-        <span class="menu-text">Công nợ khách hàng</span>
-    </li>
-    <li class="menu-item" id="menu-congnonhacungcap" onclick="window.location.href='congnonhacungcap.html'">
-        <span><i class="fa-solid fa-truck-field"></i></span> 
-        <span class="menu-text">Công nợ nhà cung cấp</span>
-    </li>
-</ul>
+        </ul>
+        <li class="menu-dropdown-toggle" onclick="toggleSubmenu(this)">
+            <div class="menu-label-wrap">
+                <span class="group-icon"><i class="fa-solid fa-file-invoice-dollar"></i></span> 
+                <span class="menu-text">Công nợ</span>
+            </div> 
+            <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
+        </li>
+        <ul class="submenu-container">
+            <li class="menu-item" id="menu-congnokhachhang" onclick="window.location.href='congno.html'">
+                <span><i class="fa-solid fa-user-tag"></i></span> 
+                <span class="menu-text">Công nợ khách hàng</span>
+            </li>
+            <li class="menu-item" id="menu-congnonhacungcap" onclick="window.location.href='congnonhacungcap.html'">
+                <span><i class="fa-solid fa-truck-field"></i></span> 
+                <span class="menu-text">Công nợ nhà cung cấp</span>
+            </li>
+        </ul>
     `;
 
     if (isTrueOwner || isBacSi || isHuuTy) {
@@ -167,28 +171,15 @@ document.addEventListener("DOMContentLoaded", function() {
 
     dynamicMenuContent += heThongMenuHtml;
 
-    const savedTheme = localStorage.getItem('sidebarThemeStyle') || '#058786';
-    const savedThemeClass = localStorage.getItem('sidebarThemeClass') || '';
+    // Cố định chuẩn mã màu Xanh Navy (#1e3a8a) giống trên ảnh chụp màn hình của bạn
+    const mainThemeColor = '#1e3a8a';
 
     const menuHTML = `
-    <div class="sidebar ${isExpired && !isHuuTy ? 'sidebar-frozen' : ''} ${savedThemeClass}" id="sidebar" style="background: ${savedTheme};">
+    <div class="sidebar ${isExpired && !isHuuTy ? 'sidebar-frozen' : ''}" id="sidebar" style="background: ${mainThemeColor};">
         <div class="sidebar-header" style="flex-direction: column; align-items: flex-start; gap: 4px;">
             <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
                 <div style="display: flex; align-items: center;">
                     <span style="font-size: 20px; margin-right: 8px;"><i class="fa-solid fa-paw" style="color: #60a5fa;"></i></span> <span class="menu-text">VetCare Pro</span>
-                </div>
-                <div class="theme-picker-wrapper" title="Đổi màu giao diện menu & header" style="position: relative; cursor: pointer;">
-                    <span style="font-size: 14px; padding: 5px 8px; background: rgba(255,255,255,0.2); border-radius: 6px;"><i class="fa-solid fa-palette"></i></span>
-                    <div class="theme-dropdown-palette">
-                        <div onclick="changeSidebarTheme('#058786', '')" style="background: #058786;" title="Xanh cổ vịt (#058786)"></div>
-                        <div onclick="changeSidebarTheme('linear-gradient(180deg, #1e3a8a 0%, #1e293b 100%)', '')" style="background: linear-gradient(180deg, #1e3a8a, #1e293b);" title="Xanh Navy"></div>
-                        <div onclick="changeSidebarTheme('linear-gradient(180deg, #0f172a 0%, #334155 100%)', '')" style="background: linear-gradient(180deg, #0f172a, #334155);" title="Đen Xám Khói"></div>
-                        <div onclick="changeSidebarTheme('linear-gradient(180deg, #1e3a8a 0%, #064e3b 100%)', '')" style="background: linear-gradient(180deg, #065f46, #064e3b);" title="Xanh Ngọc Sẫm"></div>
-                        <div onclick="changeSidebarTheme('linear-gradient(180deg, #dc2626 0%, #991b1b 100%)', '')" style="background: linear-gradient(180deg, #dc2626, #991b1b);" title="Đỏ nổi bật"></div>
-                        <div onclick="changeSidebarTheme('linear-gradient(180deg, #38bdf8 0%, #0284c7 100%)', 'theme-sang-xanh')" style="background: linear-gradient(180deg, #38bdf8, #0284c7);" title="Xanh da trời sáng"></div>
-                        <div onclick="changeSidebarTheme('#64748b', 'theme-xam-nhe')" style="background: #64748b;" title="Xám nhẹ"></div>
-                        <div onclick="changeSidebarTheme('rgba(255, 255, 255, 0.18)', 'theme-trang-mo')" style="background: rgba(255, 255, 255, 0.4); border: 1px solid #cbd5e1;" title="Trắng mờ (Kính mờ)"></div>
-                    </div>
                 </div>
             </div>
             <div id="sidebar-date" style="font-size: 11px; font-weight: normal; color: rgba(255, 255, 255, 0.85); padding-left: 28px;">
@@ -222,68 +213,6 @@ document.addEventListener("DOMContentLoaded", function() {
             overflow-y: auto;
             z-index: 1000;
             font-family: 'Inter', 'Segoe UI', sans-serif;
-        }
-
-        .sidebar.theme-trang-mo {
-            background: rgba(255, 255, 255, 0.18) !important;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-right: 1px solid rgba(255, 255, 255, 0.3);
-            color: #1e293b !important;
-        }
-        .sidebar.theme-trang-mo .menu-item,
-        .sidebar.theme-trang-mo .menu-dropdown-toggle,
-        .sidebar.theme-trang-mo .menu-category,
-        .sidebar.theme-trang-mo .sidebar-header .menu-text,
-        .sidebar.theme-trang-mo #sidebar-date {
-            color: #0f172a !important;
-        }
-        .sidebar.theme-trang-mo .menu-item:hover,
-        .sidebar.theme-trang-mo .menu-dropdown-toggle:hover {
-            background: rgba(255, 255, 255, 0.3) !important;
-        }
-
-        .sidebar.theme-sang-xanh {
-            color: #0f172a !important;
-        }
-        .sidebar.theme-sang-xanh .menu-item,
-        .sidebar.theme-sang-xanh .menu-dropdown-toggle,
-        .sidebar.theme-sang-xanh .menu-category,
-        .sidebar.theme-sang-xanh .sidebar-header .menu-text,
-        .sidebar.theme-sang-xanh #sidebar-date {
-            color: #ffffff !important;
-        }
-        .sidebar.theme-sang-xanh .menu-item:hover,
-        .sidebar.theme-sang-xanh .menu-dropdown-toggle:hover {
-            background: rgba(255, 255, 255, 0.2) !important;
-        }
-
-        .theme-picker-wrapper:hover .theme-dropdown-palette {
-            display: flex;
-        }
-        .theme-dropdown-palette {
-            display: none;
-            position: absolute;
-            top: 30px;
-            right: 0;
-            background: #ffffff;
-            padding: 6px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            gap: 6px;
-            z-index: 1001;
-        }
-        .theme-dropdown-palette div {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 2px solid white;
-            box-shadow: 0 0 2px rgba(0,0,0,0.3);
-            transition: transform 0.2s;
-        }
-        .theme-dropdown-palette div:hover {
-            transform: scale(1.2);
         }
 
         .sidebar::-webkit-scrollbar { width: 5px; }
@@ -415,11 +344,9 @@ document.addEventListener("DOMContentLoaded", function() {
         body.sidebar-collapsed .sidebar .menu-category,
         body.sidebar-collapsed .sidebar .arrow,
         body.sidebar-collapsed .sidebar .pos-badge,
-        body.sidebar-collapsed .sidebar #sidebar-date,
-        body.sidebar-collapsed .sidebar .theme-picker-wrapper { display: none !important; }
+        body.sidebar-collapsed .sidebar #sidebar-date { display: none !important; }
         body.sidebar-collapsed .submenu-container.open { display: none !important; }
 
-        /* KHẮC PHỤC TRIỆT ĐỂ LỖI TRÀN KHUNG CỦA LỊCH SỬ THÔNG BÁO */
         #pcNotificationDropdown {
             display: none;
             position: fixed !important;
@@ -444,7 +371,6 @@ document.addEventListener("DOMContentLoaded", function() {
             white-space: normal !important;
         }
 
-        /* CHỐNG TRÀN CHO KHUNG BONG BÓNG THÔNG BÁO (TOAST) GÓC MÀN HÌNH */
         #notification-center-pc {
             position: fixed !important;
             bottom: 20px !important;
@@ -517,10 +443,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const topnavContainer = document.getElementById('topnav-container');
     if (topnavContainer) {
-        const currentHeaderBg = localStorage.getItem('sidebarThemeStyle') || '#058786';
-
         topnavContainer.innerHTML = `
-            <div class="top-navbar" id="topNavbarHeader" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 25px; background: ${currentHeaderBg}; border-bottom: 1px solid rgba(255,255,255,0.15); height: 55px; box-sizing: border-box; position: relative; color: white; transition: background 0.3s ease;">
+            <div class="top-navbar" id="topNavbarHeader" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 25px; background: ${mainThemeColor}; border-bottom: 1px solid rgba(255,255,255,0.15); height: 55px; box-sizing: border-box; position: relative; color: white;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: rgba(255,255,255,0.15); border: none; font-size: 16px; color: white; width: 32px; height: 32px; border-radius: 6px;"><i class="fa-solid fa-bars"></i></button>
                     <h2 style="margin: 0; font-size: 14px; font-weight: bold; color: white;">HỆ THỐNG QUẢN LÝ PHÒNG KHÁM THÚ Y</h2>
@@ -609,26 +533,6 @@ document.addEventListener("DOMContentLoaded", function() {
         document.body.classList.add('sidebar-collapsed');
     }
 });
-
-// --- HÀM ĐỔI MÀU GIAO DIỆN ĐỒNG BỘ CẢ MENU & HEADER ---
-function changeSidebarTheme(colorValue, className) {
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) {
-        sidebar.className = sidebar.className.replace(/theme-\S+/g, '').trim();
-        sidebar.style.background = colorValue;
-        if (className) {
-            sidebar.classList.add(className);
-        }
-    }
-
-    const topNavbar = document.getElementById('topNavbarHeader');
-    if (topNavbar) {
-        topNavbar.style.background = colorValue;
-    }
-
-    localStorage.setItem('sidebarThemeStyle', colorValue);
-    localStorage.setItem('sidebarThemeClass', className || '');
-}
 
 function toggleSidebar() {
     const body = document.body;
