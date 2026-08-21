@@ -48,7 +48,7 @@
         }
         .form-group-modal {
             margin-bottom: 10px;
-            position: relative; /* Giúp neo hộp gợi ý tìm kiếm */
+            position: relative;
         }
         .form-group-modal label {
             font-size: 13px;
@@ -65,7 +65,6 @@
             box-sizing: border-box;
         }
         
-        /* Hộp gợi ý tìm kiếm thông minh cho mã khám bệnh */
         #suggestions-box-kb {
             position: absolute;
             top: 100%;
@@ -152,7 +151,6 @@
             border-radius: 4px;
         }
 
-        /* Giao diện phân trang */
         .pagination-container {
             display: flex;
             justify-content: space-between;
@@ -234,9 +232,7 @@
                 <!-- PHÂN TRANG -->
                 <div class="pagination-container">
                     <div id="pageInfo">Hiển thị 0 - 0 của 0 bản ghi</div>
-                    <div class="pagination-buttons" id="paginationControls">
-                        <!-- Nút phân trang tạo tự động -->
-                    </div>
+                    <div class="pagination-buttons" id="paginationControls"></div>
                 </div>
             </div>
         </div>
@@ -253,7 +249,6 @@
             <input type="hidden" id="editingId">
             <input type="hidden" id="editingHinhanhOld">
             
-            <!-- Ô hiển thị Mã phiếu chỉ định tự động -->
             <div class="form-group-modal">
                 <label>Mã phiếu chỉ định (Tự động):</label>
                 <input type="text" id="maphieuchidinh" readonly style="background-color: #f1f5f9; font-weight: bold; color: #0284c7;">
@@ -264,7 +259,6 @@
                     <label>Tìm kiếm & Chọn mã khám bệnh (makhambenh) (*):</label>
                     <input type="text" id="makhambenh_search" placeholder="Gõ mã khám, tên thú cưng hoặc chủ..." autocomplete="off" oninput="xuLyTimKiemMaKham(this.value)">
                     <input type="hidden" id="makhambenh">
-                    <!-- Hộp gợi ý tìm kiếm thông minh -->
                     <div id="suggestions-box-kb"></div>
                 </div>
                 <div class="form-group-modal" style="flex: 1;">
@@ -324,13 +318,11 @@
 
     <!-- KHUNG IN PHIẾU CHỈ ĐỊNH -->
     <div id="printArea" style="display: none;">
-            <div class="print-header"></div>
-        
+        <div class="print-header"></div>
         <div class="print-title">
             <h3>PHIẾU CHỈ ĐỊNH CẬN LÂM SÀNG</h3>
             <p id="p-maphieu">Mã phiếu: PCD0001</p>
         </div>
-        
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 10px; margin-bottom: 10px; border-radius: 4px; font-size: 11px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                 <div><strong>Mã khám bệnh:</strong> <span id="p-makhambenh"></span></div>
@@ -338,7 +330,6 @@
             </div>
             <div><strong>Trạng thái:</strong> <span id="p-trangthai" style="color: #0284c7; font-weight: bold;"></span></div>
         </div>
-
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px;">
             <thead>
                 <tr style="background: #f1f5f9;">
@@ -347,52 +338,29 @@
                     <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: right;">Thành tiền</th>
                 </tr>
             </thead>
-            <tbody id="p-table-body">
-                <!-- Dữ liệu in -->
-            </tbody>
+            <tbody id="p-table-body"></tbody>
         </table>
-
         <div style="text-align: right; font-size: 12px; font-weight: bold; margin-bottom: 15px;">
             Tổng cộng: <span id="p-tongtien" style="color: #dc2626; font-size: 13px;">0 đ</span>
         </div>
-
         <div style="margin-bottom: 10px; font-size: 11px;">
             <strong>Kết luận:</strong>
             <div id="p-ketluan" style="border: 1px solid #e2e8f0; padding: 5px; min-height: 25px; margin-top: 3px; border-radius: 3px;"></div>
         </div>
-
         <div id="p-image-container" style="display: none; margin-bottom: 15px; text-align: center;">
             <div style="font-size: 11px; font-weight: bold; margin-bottom: 4px; text-align: left;">Hình ảnh kết quả:</div>
             <img id="p-hinhanh" src="" alt="Hình ảnh chỉ định">
-        </div>
-
-        <div style="display: flex; justify-content: space-between; text-align: center; font-size: 11px; margin-top: 20px;">
-            <div>
-                <p><strong>Khách hàng / Chủ vật nuôi</strong></p>
-                <p style="font-size: 10px; color: #666; font-style: italic;">(Ký và ghi rõ họ tên)</p>
-            </div>
-            <div>
-                <p><strong>Bác sĩ chỉ định</strong></p>
-                <p style="font-size: 10px; color: #666; font-style: italic;">(Ký và ghi rõ họ tên)</p>
-            </div>
         </div>
     </div>
 
     <style>
     @media print {
-        body * {
-            visibility: hidden !important;
-        }
-        
-        #printArea, #printArea * {
-            visibility: visible !important;
-        }
-        
+        body * { visibility: hidden !important; }
+        #printArea, #printArea * { visibility: visible !important; }
         #printArea {
             display: block !important;
             position: absolute;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             width: 100%;
             font-family: 'Arial', sans-serif;
             color: #111;
@@ -400,30 +368,10 @@
             padding: 15px;
             box-sizing: border-box;
         }
-
-        #menu-container,
-        #topnav-container,
-        .main-content,
-        .card,
-        .modal-overlay {
+        #menu-container, #topnav-container, .main-content, .card, .modal-overlay {
             display: none !important;
             visibility: hidden !important;
         }
-
-        .print-header {
-            text-align: center;
-            border-bottom: 2px solid #0284c7;
-            padding-bottom: 6px;
-            margin-bottom: 10px;
-        }
-        .print-header h2 { font-size: 15px; margin: 0; color: #0284c7; font-weight: bold; }
-        .print-header p { font-size: 10px; margin: 2px 0; color: #555; }
-        .print-title {
-            text-align: center;
-            margin-bottom: 12px;
-        }
-        .print-title h3 { font-size: 13px; margin: 0; text-transform: uppercase; color: #1e293b; font-weight: bold; }
-        .print-title p { font-size: 10px; margin: 2px 0; color: #64748b; }
     }
     </style>
 
@@ -433,11 +381,8 @@
         let mapKhamBenh = {}; 
         let mapThuCung = {};    
         let mapKhachHang = {}; 
-        
-        // Biến cho tìm kiếm thông minh mã khám
         let dsMaKhamChoSearch = [];
 
-        // Biến phục vụ phân trang
         let currentPage = 1;
         let rowsPerPage = 10;
         let filteredDataCache = [];
@@ -450,7 +395,6 @@
             }
             await fetchDuLieuBanDau();
 
-            // Đóng hộp gợi ý tìm kiếm khi click ra ngoài
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.form-group-modal')) {
                     const box = document.getElementById('suggestions-box-kb');
@@ -458,7 +402,6 @@
                 }
             });
 
-            // Đăng ký Realtime tự động cập nhật bảng khi có thay đổi từ thiết bị khác
             if (typeof db !== 'undefined' && db) {
                 db.channel('realtime-phieuchidinh-pc')
                   .on('postgres_changes', { event: '*', schema: 'public', table: 'phieuchidinh' }, async () => {
@@ -472,7 +415,6 @@
             }
         });
 
-        // Hàm lấy chính xác mã phòng khám hiện tại (tránh lặp chữ PK)
         function layMaPhongKhamChuan() {
             try {
                 const userStr = sessionStorage.getItem('currentUser');
@@ -520,7 +462,8 @@
                 });
             }
 
-            const { data: dvData, error: dvErr } = await db.from('dichvu').select('*');
+            // Thay đổi lấy dữ liệu từ bảng dichvuchidinh thay vì dichvu
+            const { data: dvData, error: dvErr } = await db.from('dichvuchidinh').select('*');
             if (!dvErr && dvData) {
                 danhSachDichVuGoc = dvData;
             }
@@ -530,11 +473,10 @@
                 console.error('Lỗi tải phiếu chỉ định:', error);
             } else {
                 danhSachPhieuGoc = data;
-                timKiemPhiếuChỉĐịnh(); // Khởi tạo phân trang và lọc dữ liệu
+                timKiemPhiếuChỉĐịnh();
             }
         }
 
-        // Xử lý tìm kiếm thông minh cho mã khám bệnh trong modal
         function xuLyTimKiemMaKham(tuKhoa) {
             const box = document.getElementById('suggestions-box-kb');
             document.getElementById('makhambenh').value = ''; 
@@ -574,7 +516,7 @@
             const container = document.getElementById('dsDichVuContainer');
             const rowId = 'row_' + Date.now() + Math.random().toString(36).substring(2, 5);
             
-            let optionsHtml = `<option value="">-- Chọn dịch vụ --</option>`;
+            let optionsHtml = `<option value="">-- Chọn dịch vụ chỉ định --</option>`;
             danhSachDichVuGoc.forEach(dv => {
                 const selected = (chiTietData.tendichvu === dv.tendichvu) ? 'selected' : '';
                 optionsHtml += `<option value="${dv.tendichvu}" data-gia="${dv.dongia || 0}" ${selected}>${dv.tendichvu} (${Number(dv.dongia || 0).toLocaleString('vi-VN')}đ)</option>`;
@@ -640,7 +582,6 @@
             document.getElementById('tongTienHienThi').innerText = tong.toLocaleString('vi-VN') + ' đ';
         }
 
-        // HÀM HIỂN THỊ BẢNG KÈM PHÂN TRANG
         function hienThiBang(data) {
             filteredDataCache = data;
             const totalRows = data.length;
@@ -735,7 +676,6 @@
 
             if (total === 0) return;
 
-            // Nút Trước
             const btnPrev = document.createElement('button');
             btnPrev.className = 'btn-page';
             btnPrev.innerText = '‹ Trước';
@@ -743,7 +683,6 @@
             btnPrev.onclick = () => { if (currentPage > 1) { currentPage--; hienThiBang(filteredDataCache); } };
             controls.appendChild(btnPrev);
 
-            // Các nút số trang
             for (let i = 1; i <= totalPages; i++) {
                 if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
                     const btn = document.createElement('button');
@@ -764,7 +703,6 @@
                 }
             }
 
-            // Nút Sau
             const btnNext = document.createElement('button');
             btnNext.className = 'btn-page';
             btnNext.innerText = 'Sau ›';
@@ -789,7 +727,7 @@
         }
 
         function timKiemPhiếuChỉĐịnh() {
-            currentPage = 1; // Reset về trang 1 khi tìm kiếm
+            currentPage = 1;
             const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
             const ketQuaLoc = danhSachPhieuGoc.filter(item => {
                 const maPCD = (item.maphieuchidinh || ('pckpk' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'))).toLowerCase();
@@ -804,7 +742,6 @@
             document.getElementById('editingId').value = '';
             document.getElementById('editingHinhanhOld').value = '';
             
-            // Tự động sinh mã phiếu chỉ định chuẩn phòng khám kèm 4 chữ số ngẫu nhiên
             const maPK = layMaPhongKhamChuan();
             const randomNum = Math.floor(1000 + Math.random() * 9000);
             document.getElementById('maphieuchidinh').value = 'PCKPK' + maPK + randomNum;
@@ -932,8 +869,6 @@
 
             if (fileInput.files && fileInput.files[0]) {
                 const file = fileInput.files[0];
-                
-                // ĐẶT TÊN FILE SẠCH SẼ CHỐNG LỖI KÝ TỰ ĐẶC BIỆT HOẶC LỖI 400 TRÊN SUPABASE
                 const fileName = `phieuchidinh_${Date.now()}.jpg`;
                 
                 const { error: uploadError } = await db.storage

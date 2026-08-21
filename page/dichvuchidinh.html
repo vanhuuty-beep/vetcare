@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Dịch Vụ Chỉ Định - VetCare Pro</title>
+    
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Cấu hình và kết nối hệ thống -->
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+
+    <!-- Font & Icon -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CSS chung của hệ thống -->
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #1e293b; margin: 0; }
+        .main-content { margin-left: 275px; padding: 75px 25px 25px 25px; transition: all 0.3s ease; box-sizing: border-box; }
+        body.sidebar-collapsed .main-content { margin-left: 70px !important; }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: #ffffff;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .page-title { font-size: 18px; font-weight: 700; color: #1e3a8a; display: flex; align-items: center; gap: 8px; }
+        
+        .btn-primary-custom {
+            background: #1e3a8a;
+            color: white;
+            border: none;
+            padding: 9px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 6px rgba(30,58,138,0.2);
+            transition: all 0.2s;
+        }
+        .btn-primary-custom:hover { background: #1d4ed8; }
+
+        .card-table-container {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        .table-toolbar {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        .search-box-custom {
+            position: relative;
+            width: 300px;
+        }
+        .search-box-custom input {
+            width: 100%;
+            padding: 8px 12px 8px 34px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            background: white;
+            box-sizing: border-box;
+        }
+        .search-box-custom i {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        th { background: #f8fafc; color: #475569; font-weight: 700; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
+        tr:hover { background: #f8fafc; }
+
+        .badge-maphieu { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 11px; }
+        .text-money { font-weight: 700; color: #059669; }
+
+        .action-btns { display: flex; gap: 6px; }
+        .btn-action {
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        .btn-edit { background: #fef3c7; color: #d97706; }
+        .btn-delete { background: #fee2e2; color: #dc2626; }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
+            display: none; justify-content: center; align-items: center; z-index: 9999;
+        }
+        .modal-box {
+            background: white; width: 100%; max-width: 480px;
+            border-radius: 12px; padding: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            box-sizing: border-box;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
+        .modal-title { font-size: 16px; font-weight: 700; color: #1e3a8a; }
+        
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1;
+            border-radius: 8px; font-size: 13px; outline: none; box-sizing: border-box;
+        }
+        .form-group input:focus, .form-group textarea:focus { border-color: #1e3a8a; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+        .btn-secondary { background: #94a3b8; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR & TOPNAV CONTAINER -->
+    <div id="menu-container"></div>
+    <div id="topnav-container" style="position: fixed; top: 0; left: 275px; right: 0; z-index: 999;"></div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="page-header">
+            <div class="page-title"><i class="fa-solid fa-file-medical"></i> Quản Lý Dịch Vụ Chỉ Định</div>
+            <button class="btn-primary-custom" onclick="moModalThem()"><i class="fa-solid fa-plus"></i> Thêm chỉ định mới</button>
+        </div>
+
+        <div class="card-table-container">
+            <div class="table-toolbar">
+                <div class="search-box-custom">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="inputTimKiem" placeholder="Tìm kiếm theo mã phiếu, tên dịch vụ..." onkeyup="timKiemChiDinh()">
+                </div>
+                <div id="totalCountLabel" style="font-size: 12px; color: #64748b; font-weight: 600;">Tổng số: 0 bản ghi</div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mã Phiếu Chỉ Định</th>
+                        <th>Tên Dịch Vụ</th>
+                        <th>Số Lượng</th>
+                        <th>Đơn Giá</th>
+                        <th>Thành Tiền</th>
+                        <th>Ghi Chú</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBodyDichVuChiDinh">
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 30px; color: #64748b;">Đang tải dữ liệu...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM / SỬA -->
+    <div id="modalChiDinh" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Thêm Mới Dịch Vụ Chỉ Định</div>
+                <button type="button" onclick="dongModal()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="formChiDinh" onsubmit="luuThongTinChiDinh(event)">
+                <input type="hidden" id="chiDinhId">
+                <div class="form-group">
+                    <label>Mã Phiếu Chỉ Định (Tự động):</label>
+                    <input type="text" id="maphieuchidinh" readonly style="background: #f1f5f9; font-weight: bold; color: #0284c7;">
+                </div>
+                <div class="form-group">
+                    <label>Tên Dịch Vụ (*):</label>
+                    <input type="text" id="tendichvu" placeholder="Ví dụ: Xét nghiệm máu tổng quát..." required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label>Số Lượng:</label>
+                        <input type="number" id="soluong" value="1" min="1" step="any" oninput="tinhThanhTien()" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Đơn Giá (đ):</label>
+                        <input type="number" id="dongia" value="0" min="0" step="any" oninput="tinhThanhTien()" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Thành Tiền (đ):</label>
+                    <input type="number" id="thanhtien" value="0" readonly style="background: #f1f5f9; font-weight: bold; color: #059669;">
+                </div>
+                <div class="form-group">
+                    <label>Ghi chú:</label>
+                    <textarea id="ghichu" rows="2" placeholder="Ghi chú thêm..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="dongModal()">Hủy</button>
+                    <button type="submit" class="btn-primary-custom" id="btnSave">💾 Lưu thông tin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Gọi file menu.js để khởi tạo Sidebar và Topnav -->
+    <script src="../js/menu.js"></script>
+
+    <script>
+        let danhSachChiDinhGoc = [];
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            await taiDanhSachChiDinh();
+        });
+
+        // Hàm lấy chính xác mã phòng khám từ hệ thống
+        function layMaPhongKhamChuan() {
+            try {
+                const userStr = sessionStorage.getItem('currentUser');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    if (user?.maphongkham) return user.maphongkham.replace('PK_', '').replace('PK', '').replace('_', '');
+                }
+                const sessionMpk = sessionStorage.getItem('maphongkham');
+                if (sessionMpk) return sessionMpk.replace('PK_', '').replace('PK', '').replace('_', '');
+            } catch (e) {}
+            return '617723';
+        }
+
+        async function taiDanhSachChiDinh() {
+            if (typeof db === 'undefined' || !db) {
+                console.error('Chưa kết nối được cơ sở dữ liệu Supabase!');
+                return;
+            }
+
+            const { data, error } = await db.from('dichvuchidinh').select('*').order('id', { ascending: false });
+            if (error) {
+                console.error('Lỗi tải dữ liệu:', error.message);
+                document.getElementById('tableBodyDichVuChiDinh').innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Lỗi tải dữ liệu: ${error.message}</td></tr>`;
+                return;
+            }
+
+            danhSachChiDinhGoc = data || [];
+            hienThiBangChiDinh(danhSachChiDinhGoc);
+        }
+
+        function hienThiBangChiDinh(dataList) {
+            const tbody = document.getElementById('tableBodyDichVuChiDinh');
+            document.getElementById('totalCountLabel').innerText = `Tổng số: ${dataList.length} bản ghi`;
+            tbody.innerHTML = '';
+
+            if (dataList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 30px; color: #64748b;">Chưa có dữ liệu dịch vụ chỉ định nào.</td></tr>`;
+                return;
+            }
+
+            dataList.forEach(item => {
+                const maPhieuFormatted = item.maphieuchidinh || ('PCKPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
+                const tenDV = item.tendichvu || '---';
+                const soLuong = Number(item.soluong || 0);
+                const donGia = Number(item.dongia || 0);
+                const thanhTien = Number(item.thanhtien || (soLuong * donGia));
+                const ghiChu = item.ghichu || '---';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="badge-maphieu">${maPhieuFormatted}</span></td>
+                        <td style="font-weight: 600; color: #1e293b;">${tenDV}</td>
+                        <td>${soLuong}</td>
+                        <td>${donGia.toLocaleString()} đ</td>
+                        <td class="text-money">${thanhTien.toLocaleString()} đ</td>
+                        <td>${ghiChu}</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-action btn-edit" onclick="moModalSua(${item.id})" title="Sửa"><i class="fa-solid fa-pen"></i></button>
+                                <button class="btn-action btn-delete" onclick="xoaChiDinh(${item.id})" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function timKiemChiDinh() {
+            const keyword = document.getElementById('inputTimKiem').value.toLowerCase().trim();
+            const filtered = danhSachChiDinhGoc.filter(item => {
+                const maPhieu = (item.maphieuchidinh || '').toLowerCase();
+                const tendv = (item.tendichvu || '').toLowerCase();
+                return maPhieu.includes(keyword) || tendv.includes(keyword);
+            });
+            hienThiBangChiDinh(filtered);
+        }
+
+        function moModalThem() {
+            document.getElementById('modalTitle').innerText = 'Thêm Mới Dịch Vụ Chỉ Định';
+            document.getElementById('formChiDinh').reset();
+            document.getElementById('chiDinhId').value = '';
+            
+            // Tự động sinh mã phiếu chỉ định
+            const maPK = layMaPhongKhamChuan();
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('maphieuchidinh').value = 'PCKPK' + maPK + randomNum;
+
+            document.getElementById('soluong').value = 1;
+            document.getElementById('dongia').value = 0;
+            document.getElementById('thanhtien').value = 0;
+            document.getElementById('modalChiDinh').style.display = 'flex';
+        }
+
+        function moModalSua(id) {
+            const item = danhSachChiDinhGoc.find(x => x.id == id);
+            if (!item) return;
+
+            const maPhieuFormatted = item.maphieuchidinh || ('PCKPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
+
+            document.getElementById('modalTitle').innerText = 'Chỉnh Sửa Dịch Vụ Chỉ Định';
+            document.getElementById('chiDinhId').value = item.id;
+            document.getElementById('maphieuchidinh').value = maPhieuFormatted;
+            document.getElementById('tendichvu').value = item.tendichvu || '';
+            document.getElementById('soluong').value = item.soluong || 1;
+            document.getElementById('dongia').value = item.dongia || 0;
+            document.getElementById('thanhtien').value = item.thanhtien || 0;
+            document.getElementById('ghichu').value = item.ghichu || '';
+            
+            document.getElementById('modalChiDinh').style.display = 'flex';
+        }
+
+        function dongModal() {
+            document.getElementById('modalChiDinh').style.display = 'none';
+        }
+
+        function tinhThanhTien() {
+            const sl = parseFloat(document.getElementById('soluong').value) || 0;
+            const dg = parseFloat(document.getElementById('dongia').value) || 0;
+            document.getElementById('thanhtien').value = sl * dg;
+        }
+
+        async function luuThongTinChiDinh(event) {
+            event.preventDefault();
+            const id = document.getElementById('chiDinhId').value;
+            const maphieuchidinh = document.getElementById('maphieuchidinh').value.trim();
+            const tendichvu = document.getElementById('tendichvu').value.trim();
+            const soluong = parseFloat(document.getElementById('soluong').value) || 0;
+            const dongia = parseFloat(document.getElementById('dongia').value) || 0;
+            const thanhtien = soluong * dongia;
+            const ghichu = document.getElementById('ghichu').value.trim();
+
+            const payload = { maphieuchidinh, tendichvu, soluong, dongia, thanhtien, ghichu };
+            const btnSave = document.getElementById('btnSave');
+            btnSave.disabled = true;
+            btnSave.innerText = 'Đang lưu...';
+
+            let error;
+            if (id) {
+                const res = await db.from('dichvuchidinh').update(payload).eq('id', id);
+                error = res.error;
+            } else {
+                const res = await db.from('dichvuchidinh').insert([payload]);
+                error = res.error;
+            }
+
+            btnSave.disabled = false;
+            btnSave.innerText = '💾 Lưu thông tin';
+
+            if (error) {
+                alert('Lỗi lưu dữ liệu: ' + error.message);
+                return;
+            }
+
+            alert('✅ Lưu thông tin dịch vụ chỉ định thành công!');
+            dongModal();
+            await taiDanhSachChiDinh();
+        }
+
+        async function xoaChiDinh(id) {
+            if (!confirm('Bạn có chắc chắn muốn xóa dịch vụ chỉ định này không?')) return;
+
+            const { error } = await db.from('dichvuchidinh').delete().eq('id', id);
+            if (error) {
+                alert('Lỗi khi xóa: ' + error.message);
+                return;
+            }
+
+            alert('🗑️ Đã xóa bản ghi thành công!');
+            await taiDanhSachChiDinh();
+        }
+    </script>
+</body>
+</html>
