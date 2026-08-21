@@ -431,7 +431,8 @@
             });
         }
 
-        const { data: dvData } = await db.from('dichvu').select('*');
+        // Lấy dữ liệu dịch vụ từ bảng dichvuchidinh thay vì dichvu
+        const { data: dvData } = await db.from('dichvuchidinh').select('*');
         if (dvData) danhSachDichVuGoc = dvData;
 
         const { data, error } = await db.from('phieuchidinh').select('*').order('id', { ascending: false });
@@ -441,7 +442,6 @@
         }
     }
 
-    // --- HÀM NÉN VÀ UPLOAD ẢNH CHỈ ĐỊNH DÙNG CHUNG BUCKET 'images' ---
     async function xuLyChonFileAnhChiDinh(input) {
         if (!input.files || input.files.length === 0) return;
         const file = input.files[0];
@@ -467,7 +467,7 @@
                     const fileName = `pcd_${Date.now()}.jpg`;
 
                     let { data, error } = await db.storage
-                        .from('images') // Đồng bộ sang dùng chung bucket 'images'
+                        .from('images')
                         .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
 
                     if (error) {
@@ -479,7 +479,7 @@
                         .from('images')
                         .getPublicUrl(fileName);
 
-                    const publicUrl = publicURLData.publicUrl; // Lấy chuẩn thuộc tính publicUrl
+                    const publicUrl = publicURLData.publicUrl;
 
                     document.getElementById('hinhanhUrlHidden').value = publicUrl;
                     const preview = document.getElementById('pcd_imgPreview');
