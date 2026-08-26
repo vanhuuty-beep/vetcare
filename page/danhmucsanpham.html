@@ -2,9 +2,12 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Danh Mục Sản Phẩm & Hàng Hóa - VetCare Pro</title>
-    <!-- Thư viện Supabase JS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh mục sản phẩm - VetCare Pro</title>
+
+    <!-- SUPABASE -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script src="../js/env.js"></script>
     <script src="../js/config.js"></script>
     <script src="../js/supabase.js"></script>
@@ -12,266 +15,1598 @@
     <script src="../js/menu.js"></script>
     <script src="../js/smart-search.js"></script>
 
-    <!-- Gọi file CSS chung -->
+    <!-- CSS CHUNG -->
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/mobile.css">
     <link rel="stylesheet" href="../css/style1.css">
     <link rel="stylesheet" href="../css/smart-search.css">
 
-    <style>
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .stat-card {
-            background: #ffffff;
-            padding: 15px 20px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-left: 4px solid #2563eb;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .stat-card:nth-child(2) { border-left-color: #059669; }
-        .stat-card:nth-child(3) { border-left-color: #d97706; }
-        .stat-card:nth-child(4) { border-left-color: #0284c7; }
-        
-        .stat-title {
-            font-size: 11px;
-            text-transform: uppercase;
-            color: #64748b;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .stat-value {
-            font-size: 20px;
-            font-weight: bold;
-            color: #1e293b;
-        }
-        .stat-icon {
-            font-size: 24px;
-            opacity: 0.8;
-        }
+    <!-- BARCODE -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
-        .search-box {
-            padding: 9px 12px;
-            width: 320px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 13px;
-            outline: none;
-        }
-        .search-box:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-        }
-        
-        .card-header-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            width: 100%;
-            justify-content: space-between;
-            flex-wrap: wrap;
-        }
+<style>
 
-        .modal-container {
-            width: 750px;
-            padding: 20px 24px;
-        }
-        .modal-header {
-            margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .form-group-modal {
-            margin-bottom: 12px;
-        }
-        .form-group-modal label {
-            font-size: 13px;
-            margin-bottom: 4px;
-            display: block;
-            font-weight: 500;
-        }
-        .form-group-modal input, .form-group-modal select, .form-group-modal textarea {
-            width: 100%;
-            padding: 8px 10px;
-            font-size: 13px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .form-row {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 12px;
-        }
-        .form-row .form-group-modal {
-            flex: 1;
-            margin-bottom: 0;
-        }
-        .modal-footer {
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .product-img {
-            width: 40px;
-            height: 40px;
-            object-fit: cover;
-            border-radius: 4px;
-            border: 1px solid #cbd5e1;
-        }
+/* =========================================================
+   VETCARE PRO - DANH MỤC SẢN PHẨM
+   GIAO DIỆN CARD GIỐNG THÚ CƯNG
+========================================================= */
 
-        /* Phân trang */
-        .pagination-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 6px;
-            margin: 20px 0 10px 0;
-            flex-wrap: wrap;
-        }
-        .page-btn {
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            color: #1e293b;
-            padding: 6px 12px;
-            font-size: 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        .page-btn.active {
-            background: #2563eb;
-            color: #ffffff;
-            border-color: #2563eb;
-        }
-        .page-btn:disabled {
-            background: #f1f5f9;
-            color: #94a3b8;
-            cursor: not-allowed;
-        }
-    </style>
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --cyan: #0891b2;
+    --green: #059669;
+    --orange: #d97706;
+    --red: #dc2626;
+    --purple: #7c3aed;
+
+    --text: #172033;
+    --muted: #64748b;
+    --light: #f5f7fb;
+    --border: #e5eaf1;
+    --white: #ffffff;
+}
+
+/* ================= BODY ================= */
+
+.content-body {
+    background: #f4f7fb !important;
+    padding: 16px !important;
+}
+
+/* ================= PAGE ================= */
+
+.product-page {
+    width: 100%;
+    max-width: 1500px;
+    margin: 0 auto;
+}
+
+/* ================= HEADER ================= */
+
+.product-header {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    padding: 17px 20px;
+    margin-bottom: 12px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+
+    box-shadow: 0 5px 20px rgba(15,23,42,.04);
+}
+
+.product-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.product-title-icon {
+    width: 44px;
+    height: 44px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 12px;
+
+    color: #2563eb;
+
+    background: linear-gradient(
+        135deg,
+        #eff6ff,
+        #dbeafe
+    );
+
+    font-size: 19px;
+}
+
+.product-title h2 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.product-title p {
+    margin: 4px 0 0;
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+/* ================= BUTTON ================= */
+
+.btn-add-product {
+    height: 40px;
+    padding: 0 16px;
+
+    border: 0;
+    border-radius: 9px;
+
+    color: #fff;
+
+    background: linear-gradient(
+        135deg,
+        #3b82f6,
+        #2563eb
+    );
+
+    font-size: 12px;
+    font-weight: 750;
+
+    cursor: pointer;
+
+    box-shadow: 0 6px 15px rgba(37,99,235,.20);
+
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.btn-add-product:hover {
+    transform: translateY(-1px);
+}
+
+/* ================= STATS ================= */
+
+.product-stats {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.product-stat {
+    background: #fff;
+
+    min-height: 70px;
+
+    padding: 11px 13px;
+
+    border-radius: 12px;
+
+    border: 1px solid var(--border);
+
+    display: flex;
+    align-items: center;
+    gap: 11px;
+
+    box-shadow: 0 3px 12px rgba(15,23,42,.025);
+}
+
+.product-stat-icon {
+    width: 38px;
+    height: 38px;
+
+    border-radius: 10px;
+
+    display: grid;
+    place-items: center;
+
+    background: #eff6ff;
+    color: #2563eb;
+
+    font-size: 16px;
+}
+
+.product-stat:nth-child(2) .product-stat-icon {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.product-stat:nth-child(3) .product-stat-icon {
+    background: #fff7ed;
+    color: #d97706;
+}
+
+.product-stat:nth-child(4) .product-stat-icon {
+    background: #f5f3ff;
+    color: #7c3aed;
+}
+
+.product-stat-number {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.product-stat-label {
+    margin-top: 2px;
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+/* ================= TOOLBAR ================= */
+
+.product-toolbar {
+    background: #fff;
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    padding: 11px 13px;
+
+    margin-bottom: 12px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    flex-wrap: wrap;
+}
+
+.product-search {
+    position: relative;
+    flex: 1;
+    min-width: 240px;
+}
+
+.product-search i {
+    position: absolute;
+
+    left: 12px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.product-search input {
+    width: 100%;
+    height: 38px;
+
+    padding: 0 12px 0 34px;
+
+    border: 1px solid #dce3ed;
+
+    border-radius: 9px;
+
+    outline: none;
+
+    background: #f9fafc;
+
+    font-size: 12px;
+
+    color: var(--text);
+}
+
+.product-search input:focus {
+    background: #fff;
+
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(37,99,235,.08);
+}
+
+/* ================= FILTER BUTTON ================= */
+
+.filter-btn {
+    height: 36px;
+
+    padding: 0 12px;
+
+    border-radius: 8px;
+
+    border: 1px solid #e1e7ef;
+
+    background: #fff;
+
+    color: #64748b;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    display: inline-flex;
+    align-items: center;
+
+    gap: 5px;
+}
+
+.filter-btn:hover {
+    background: #f8fafc;
+}
+
+.filter-btn.active {
+    color: #fff;
+
+    background: #2563eb;
+
+    border-color: #2563eb;
+}
+
+/* ================= CATEGORY ================= */
+
+.category-select {
+    height: 36px;
+
+    border: 1px solid #e1e7ef;
+
+    border-radius: 8px;
+
+    background: #fff;
+
+    padding: 0 10px;
+
+    color: #475569;
+
+    font-size: 10px;
+
+    outline: none;
+
+    cursor: pointer;
+}
+
+/* ================= RESULT ================= */
+
+.product-result {
+    margin-left: auto;
+
+    color: #64748b;
+
+    font-size: 10px;
+
+    white-space: nowrap;
+}
+
+/* ================= PRODUCT GRID ================= */
+
+.product-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0,1fr));
+
+    gap: 14px;
+}
+
+/* ================= PRODUCT CARD ================= */
+
+.product-card {
+
+    background: #fff;
+
+    border: 1px solid #e4e9f0;
+
+    border-radius: 14px;
+
+    padding: 11px;
+
+    min-width: 0;
+
+    box-shadow:
+        0 4px 15px
+        rgba(15,23,42,.035);
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        border-color .18s ease;
+
+    position: relative;
+}
+
+.product-card:hover {
+
+    transform: translateY(-2px);
+
+    border-color: #cdd8ea;
+
+    box-shadow:
+        0 10px 25px
+        rgba(15,23,42,.08);
+}
+
+/* ================= CARD TOP ================= */
+
+.product-card-top {
+
+    display: flex;
+
+    gap: 10px;
+
+    align-items: flex-start;
+}
+
+/* ================= PRODUCT IMAGE ================= */
+
+.product-image-box {
+
+    width: 74px;
+    height: 74px;
+
+    flex: 0 0 74px;
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            135deg,
+            #eff6ff,
+            #f8fafc
+        );
+
+    border: 1px solid #e4eaf2;
+
+    display: grid;
+
+    place-items: center;
+}
+
+.product-image-box img {
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.product-image-empty {
+
+    color: #93c5fd;
+
+    font-size: 24px;
+}
+
+/* ================= PRODUCT INFO ================= */
+
+.product-main-info {
+
+    min-width: 0;
+
+    flex: 1;
+}
+
+.product-category {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    padding: 4px 7px;
+
+    border-radius: 6px;
+
+    background: #eff6ff;
+
+    color: #2563eb;
+
+    font-size: 8px;
+
+    font-weight: 750;
+
+    max-width: 100%;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+.product-name {
+
+    margin-top: 6px;
+
+    font-size: 13px;
+
+    line-height: 1.3;
+
+    font-weight: 800;
+
+    color: #172033;
+
+    display: -webkit-box;
+
+    -webkit-line-clamp: 2;
+
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+}
+
+.product-code {
+
+    margin-top: 4px;
+
+    color: #94a3b8;
+
+    font-size: 8px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+/* ================= PRICE ================= */
+
+.product-price-row {
+
+    margin-top: 9px;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 5px;
+}
+
+.product-price {
+
+    color: #dc2626;
+
+    font-size: 14px;
+
+    font-weight: 850;
+
+    white-space: nowrap;
+}
+
+.product-unit {
+
+    color: #94a3b8;
+
+    font-size: 8px;
+}
+
+/* ================= STOCK ================= */
+
+.product-stock {
+
+    margin-top: 9px;
+
+    padding: 8px;
+
+    border-radius: 8px;
+
+    background: #f8fafc;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 5px;
+}
+
+.stock-label {
+
+    color: #94a3b8;
+
+    font-size: 8px;
+}
+
+.stock-value {
+
+    font-size: 10px;
+
+    font-weight: 800;
+}
+
+.stock-good {
+    color: #059669;
+}
+
+.stock-low {
+    color: #d97706;
+}
+
+.stock-empty {
+    color: #dc2626;
+}
+
+/* ================= COST ================= */
+
+.product-cost {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    padding: 7px 2px 0;
+
+    color: #94a3b8;
+
+    font-size: 8px;
+}
+
+.product-cost strong {
+
+    color: #475569;
+
+    font-size: 9px;
+}
+
+/* ================= BARCODE ================= */
+
+.product-barcode {
+
+    margin-top: 7px;
+
+    height: 38px;
+
+    border-top: 1px dashed #e2e8f0;
+
+    padding-top: 5px;
+
+    overflow: hidden;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+}
+
+.product-barcode svg {
+
+    max-width: 100%;
+
+    height: 32px;
+}
+
+/* ================= CARD FOOTER ================= */
+
+.product-card-footer {
+
+    margin-top: 8px;
+
+    padding-top: 8px;
+
+    border-top: 1px solid #edf1f5;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 6px;
+}
+
+/* ================= STOCK BADGE ================= */
+
+.stock-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 4px;
+
+    padding: 5px 7px;
+
+    border-radius: 6px;
+
+    font-size: 8px;
+
+    font-weight: 750;
+}
+
+.stock-badge.good {
+
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.stock-badge.low {
+
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.stock-badge.empty {
+
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+/* ================= ACTION ================= */
+
+.product-actions {
+
+    display: flex;
+
+    gap: 4px;
+}
+
+.product-action {
+
+    width: 30px;
+    height: 28px;
+
+    border: 0;
+
+    border-radius: 7px;
+
+    cursor: pointer;
+
+    display: grid;
+
+    place-items: center;
+
+    font-size: 10px;
+}
+
+.product-action.edit {
+
+    color: #d97706;
+
+    background: #fff3df;
+}
+
+.product-action.delete {
+
+    color: #dc2626;
+
+    background: #fee2e2;
+}
+
+.product-action:hover {
+
+    filter: brightness(.96);
+
+    transform: translateY(-1px);
+}
+
+/* ================= EMPTY ================= */
+
+.product-empty {
+
+    grid-column: 1 / -1;
+
+    background: #fff;
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    padding: 60px 20px;
+
+    text-align: center;
+
+    color: #94a3b8;
+}
+
+.product-empty i {
+
+    font-size: 34px;
+
+    display: block;
+
+    margin-bottom: 10px;
+
+    color: #cbd5e1;
+}
+
+.product-empty strong {
+
+    display: block;
+
+    color: #64748b;
+
+    margin-bottom: 4px;
+
+    font-size: 13px;
+}
+
+/* ================= PAGINATION ================= */
+
+.pagination-container {
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: 5px;
+
+    margin: 16px 0 5px;
+
+    flex-wrap: wrap;
+}
+
+.page-btn {
+
+    min-width: 30px;
+
+    height: 30px;
+
+    border-radius: 7px;
+
+    border: 1px solid #e1e7ef;
+
+    background: #fff;
+
+    color: #64748b;
+
+    font-size: 9px;
+
+    cursor: pointer;
+}
+
+.page-btn:hover {
+
+    background: #f8fafc;
+}
+
+.page-btn.active {
+
+    background: #2563eb;
+
+    border-color: #2563eb;
+
+    color: #fff;
+}
+
+.page-btn:disabled {
+
+    opacity: .45;
+
+    cursor: not-allowed;
+}
+
+/* ================= MODAL ================= */
+
+.modal-overlay {
+
+    display: none;
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 9999;
+
+    background:
+        rgba(15,23,42,.48);
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 20px;
+}
+
+.product-modal {
+
+    width: 100%;
+
+    max-width: 760px;
+
+    max-height: 92vh;
+
+    overflow-y: auto;
+
+    background: #fff;
+
+    border-radius: 16px;
+
+    box-shadow:
+        0 25px 70px
+        rgba(15,23,42,.25);
+}
+
+.modal-header-new {
+
+    padding: 17px 20px;
+
+    border-bottom: 1px solid #edf1f5;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+}
+
+.modal-header-new h3 {
+
+    margin: 0;
+
+    font-size: 16px;
+
+    color: #172033;
+}
+
+.modal-close {
+
+    width: 32px;
+    height: 32px;
+
+    border: 0;
+
+    border-radius: 8px;
+
+    background: #f1f5f9;
+
+    color: #64748b;
+
+    font-size: 20px;
+
+    cursor: pointer;
+}
+
+.modal-body-new {
+
+    padding: 18px 20px;
+}
+
+.form-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0,1fr));
+
+    gap: 12px;
+}
+
+.form-group-new {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+.form-group-new.full {
+
+    grid-column: 1 / -1;
+}
+
+.form-group-new label {
+
+    color: #475569;
+
+    font-size: 10px;
+
+    font-weight: 750;
+}
+
+.form-group-new input,
+.form-group-new select,
+.form-group-new textarea {
+
+    width: 100%;
+
+    min-height: 38px;
+
+    padding: 8px 10px;
+
+    border-radius: 8px;
+
+    border: 1px solid #dce3ed;
+
+    outline: none;
+
+    background: #f9fafc;
+
+    color: #334155;
+
+    font-size: 11px;
+
+    box-sizing: border-box;
+}
+
+.form-group-new input:focus,
+.form-group-new select:focus,
+.form-group-new textarea:focus {
+
+    background: #fff;
+
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(37,99,235,.07);
+}
+
+.form-group-new textarea {
+
+    resize: vertical;
+
+    min-height: 75px;
+}
+
+/* IMAGE PREVIEW */
+
+.image-upload-box {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 10px;
+
+    border: 1px dashed #cbd5e1;
+
+    border-radius: 9px;
+
+    background: #f8fafc;
+}
+
+.image-preview {
+
+    width: 65px;
+    height: 65px;
+
+    border-radius: 9px;
+
+    object-fit: cover;
+
+    border: 1px solid #dce3ed;
+
+    display: none;
+}
+
+.image-preview-placeholder {
+
+    width: 65px;
+    height: 65px;
+
+    border-radius: 9px;
+
+    background: #eff6ff;
+
+    color: #60a5fa;
+
+    display: grid;
+
+    place-items: center;
+
+    font-size: 22px;
+}
+
+/* MODAL FOOTER */
+
+.modal-footer-new {
+
+    padding: 13px 20px;
+
+    border-top: 1px solid #edf1f5;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 10px;
+}
+
+.modal-footer-right {
+
+    display: flex;
+
+    gap: 7px;
+}
+
+.btn-modal {
+
+    height: 36px;
+
+    padding: 0 14px;
+
+    border: 0;
+
+    border-radius: 8px;
+
+    font-size: 10px;
+
+    font-weight: 750;
+
+    cursor: pointer;
+}
+
+.btn-cancel {
+
+    background: #f1f5f9;
+
+    color: #475569;
+}
+
+.btn-save {
+
+    color: #fff;
+
+    background: #2563eb;
+}
+
+.btn-delete-modal {
+
+    color: #fff;
+
+    background: #dc2626;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:1200px) {
+
+    .product-grid {
+
+        grid-template-columns:
+            repeat(3, minmax(0,1fr));
+    }
+
+}
+
+@media(max-width:900px) {
+
+    .product-stats {
+
+        grid-template-columns:
+            repeat(2,1fr);
+    }
+
+    .product-grid {
+
+        grid-template-columns:
+            repeat(2, minmax(0,1fr));
+    }
+
+    .product-header {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    .btn-add-product {
+
+        width: 100%;
+
+        justify-content: center;
+    }
+
+}
+
+@media(max-width:600px) {
+
+    .content-body {
+
+        padding: 8px !important;
+    }
+
+    .product-stats {
+
+        grid-template-columns: 1fr;
+    }
+
+    .product-grid {
+
+        grid-template-columns: 1fr;
+    }
+
+    .product-toolbar {
+
+        align-items: stretch;
+
+        flex-direction: column;
+    }
+
+    .product-search {
+
+        width: 100%;
+    }
+
+    .filter-btn,
+    .category-select {
+
+        width: 100%;
+
+        justify-content: center;
+    }
+
+    .product-result {
+
+        margin-left: 0;
+    }
+
+    .form-grid {
+
+        grid-template-columns: 1fr;
+    }
+
+    .form-group-new.full {
+
+        grid-column: auto;
+    }
+
+    .modal-footer-new {
+
+        flex-direction: column;
+
+        align-items: stretch;
+    }
+
+    .modal-footer-right {
+
+        width: 100%;
+    }
+
+    .modal-footer-right .btn-modal {
+
+        flex: 1;
+    }
+
+}
+
+</style>
 </head>
+
 <body>
 
-    <!-- THANH MENU BÊN TRÁI -->
-    <div id="menu-container"></div>
+<!-- MENU -->
+<div id="menu-container"></div>
 
-    <!-- NỘI DUNG CHÍNH -->
-    <div class="main-content">
-       <div id="topnav-container"></div>
+<!-- MAIN -->
+<div class="main-content">
 
-        <div class="content-body">
-            <!-- 4 KHỐI THỐNG KÊ PHÍA TRÊN -->
-            <div class="stats-container">
-                <div class="stat-card">
-                    <div>
-                        <div class="stat-title">Số lượng mặt hàng</div>
-                        <div class="stat-value" id="statSoMatHang">0</div>
+    <div id="topnav-container"></div>
+
+    <div class="content-body">
+
+        <div class="product-page">
+
+            <!-- ================= HEADER ================= -->
+
+            <div class="product-header">
+
+                <div class="product-title">
+
+                    <div class="product-title-icon">
+                        <i class="fa-solid fa-box-open"></i>
                     </div>
-                    <div class="stat-icon">📦</div>
-                </div>
-                <div class="stat-card">
+
                     <div>
-                        <div class="stat-title">Tổng sản phẩm tồn kho</div>
-                        <div class="stat-value" id="statTongTon">0</div>
+                        <h2>Danh mục sản phẩm</h2>
+
+                        <p>
+                            Quản lý hàng hóa, giá bán và tồn kho
+                        </p>
                     </div>
-                    <div class="stat-icon">📊</div>
+
                 </div>
-                <div class="stat-card">
-                    <div>
-                        <div class="stat-title">Ước tính giá trị kho</div>
-                        <div class="stat-value" id="statGiaTriKho" style="color: #2563eb;">0 đ</div>
-                    </div>
-                    <div class="stat-icon">💰</div>
-                </div>
-                <div class="stat-card">
-                    <div>
-                        <div class="stat-title">Lợi nhuận dự kiến (Lời/Lỗ)</div>
-                        <div class="stat-value" id="statLoiNhuan" style="color: #059669;">0 đ</div>
-                    </div>
-                    <div class="stat-icon">📈</div>
-                </div>
+
+                <button
+                    class="btn-add-product"
+                    onclick="moModalThem()">
+
+                    <i class="fa-solid fa-plus"></i>
+
+                    Thêm sản phẩm
+
+                </button>
+
             </div>
 
-            <!-- BẢNG DANH MỤC SẢN PHẨM -->
-            <div class="card">
-                <div class="card-header" style="flex-direction: column; align-items: flex-start; gap: 15px;">
-                    <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
-                        <span>📦</span> Danh Mục Sản Phẩm & Hàng Hóa
-                    </h3>
-                    <div class="card-header-actions">
-                        <input type="text" id="searchInput" class="search-box" placeholder="Nhập tên sản phẩm hoặc mã Barcode để tìm kiếm..." onkeyup="timKiemSanPham()">
-                        <button class="btn-primary" onclick="moModalThem()" style="background-color: #0284c7; padding: 9px 16px;">+ Thêm Hàng</button>
+
+            <!-- ================= THỐNG KÊ ================= -->
+
+            <div class="product-stats">
+
+                <div class="product-stat">
+
+                    <div class="product-stat-icon">
+                        <i class="fa-solid fa-boxes-stacked"></i>
                     </div>
-                </div>
-                
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr style="background: #1e3a8a; color: #ffffff;">
-                                <th style="padding: 10px;">Ảnh</th>
-                                <th style="padding: 10px;">Mã SP</th>
-                                <th style="padding: 10px;">Tên Sản Phẩm</th>
-                                <th style="padding: 10px;">Giá Niêm Yết</th>
-                                <th style="padding: 10px;">Giá Nhập</th>
-                                <th style="padding: 10px;">ĐVT</th>
-                                <th style="padding: 10px;">Tồn Kho</th>
-                                <th style="padding: 10px;">Mã Vạch</th>
-                                <th style="padding: 10px;">Nhóm Hàng</th>
-                                <th style="padding: 10px;">Mô Tả SP</th>
-                                <th style="padding: 10px; text-align: center;">Thao Tác</th>
-                            </tr>
-                        </thead>
-                        <tbody id="data-table">
-                            <!-- Dữ liệu được nạp tự động từ Supabase -->
-                        </tbody>
-                    </table>
+
+                    <div>
+
+                        <div
+                            class="product-stat-number"
+                            id="statSoMatHang">
+                            0
+                        </div>
+
+                        <div class="product-stat-label">
+                            Mặt hàng
+                        </div>
+
+                    </div>
+
                 </div>
 
-                <!-- Khu vực phân trang -->
-                <div id="paginationContainer" class="pagination-container"></div>
+
+                <div class="product-stat">
+
+                    <div class="product-stat-icon">
+                        <i class="fa-solid fa-cubes"></i>
+                    </div>
+
+                    <div>
+
+                        <div
+                            class="product-stat-number"
+                            id="statTongTon">
+                            0
+                        </div>
+
+                        <div class="product-stat-label">
+                            Sản phẩm tồn
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="product-stat">
+
+                    <div class="product-stat-icon">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+
+                    <div>
+
+                        <div
+                            class="product-stat-number"
+                            id="statGiaTriKho">
+                            0 đ
+                        </div>
+
+                        <div class="product-stat-label">
+                            Giá trị kho
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="product-stat">
+
+                    <div class="product-stat-icon">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+
+                    <div>
+
+                        <div
+                            class="product-stat-number"
+                            id="statLoiNhuan">
+                            0 đ
+                        </div>
+
+                        <div class="product-stat-label">
+                            Lợi nhuận dự kiến
+                        </div>
+
+                    </div>
+
+                </div>
+
             </div>
+
+
+            <!-- ================= TOOLBAR ================= -->
+
+            <div class="product-toolbar">
+
+                <div class="product-search">
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Tìm tên sản phẩm, mã SP, barcode..."
+                        oninput="timKiemSanPham()">
+
+                </div>
+
+
+                <button
+                    class="filter-btn active"
+                    id="filterAll"
+                    onclick="chonTrangThai('all',this)">
+
+                    <i class="fa-solid fa-layer-group"></i>
+
+                    Tất cả
+
+                </button>
+
+
+                <button
+                    class="filter-btn"
+                    onclick="chonTrangThai('good',this)">
+
+                    <i class="fa-solid fa-circle-check"></i>
+
+                    Còn hàng
+
+                </button>
+
+
+                <button
+                    class="filter-btn"
+                    onclick="chonTrangThai('low',this)">
+
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+
+                    Sắp hết
+
+                </button>
+
+
+                <button
+                    class="filter-btn"
+                    onclick="chonTrangThai('empty',this)">
+
+                    <i class="fa-solid fa-circle-xmark"></i>
+
+                    Hết hàng
+
+                </button>
+
+
+                <select
+                    id="categoryFilter"
+                    class="category-select"
+                    onchange="locTheoNhom()">
+
+                    <option value="">
+                        Tất cả nhóm
+                    </option>
+
+                </select>
+
+
+                <div
+                    class="product-result"
+                    id="productResult">
+
+                    0 sản phẩm
+
+                </div>
+
+            </div>
+
+
+            <!-- ================= PRODUCT GRID ================= -->
+
+            <div
+                id="productGrid"
+                class="product-grid">
+
+            </div>
+
+
+            <!-- ================= PAGINATION ================= -->
+
+            <div
+                id="paginationContainer"
+                class="pagination-container">
+
+            </div>
+
         </div>
+
     </div>
 
-    <!-- POPUP FORM THÊM / SỬA SẢN PHẨM -->
-    <div class="modal-overlay" id="sanPhamModal">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3 id="modalTitle" style="margin:0; font-size: 16px;">Thêm hàng hóa mới</h3>
-                <button class="close-modal" onclick="dongModal()" style="background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
-            </div>
-            
-            <input type="hidden" id="editingId">
-            
-            <div class="form-row">
-                <div class="form-group-modal" style="flex: 2;">
-                    <label>Tên sản phẩm (*):</label>
-                    <input type="text" id="tensanpham" placeholder="Nhập tên sản phẩm, thức ăn, phụ kiện...">
-                </div>
-                <div class="form-group-modal" style="flex: 1;">
-                    <label>Mã vạch (mabarcode):</label>
-                    <input type="text" id="mabarcode" placeholder="Tự sinh đầu 86..." readonly style="background: #f1f5f9; font-weight: bold; color: #2563eb;">
-                </div>
-            </div>
+</div>
 
-            <div class="form-row">
-                <div class="form-group-modal">
-                    <label>Nhóm hàng (Chọn sẵn hoặc gõ trực tiếp tên nhóm mới):</label>
-                    <input type="text" id="nhomsanpham" list="danhSachNhomGoiY" placeholder="Chọn hoặc tự gõ nhóm hàng mới...">
+
+<!-- =========================================================
+     MODAL THÊM / SỬA
+========================================================= -->
+
+<div
+    class="modal-overlay"
+    id="sanPhamModal">
+
+    <div class="product-modal">
+
+        <!-- HEADER -->
+
+        <div class="modal-header-new">
+
+            <h3 id="modalTitle">
+                Thêm sản phẩm mới
+            </h3>
+
+            <button
+                class="modal-close"
+                onclick="dongModal()">
+
+                &times;
+
+            </button>
+
+        </div>
+
+
+        <!-- BODY -->
+
+        <div class="modal-body-new">
+
+            <input
+                type="hidden"
+                id="editingId">
+
+
+            <div class="form-grid">
+
+
+                <!-- TÊN -->
+
+                <div class="form-group-new">
+
+                    <label>
+                        Tên sản phẩm *
+                    </label>
+
+                    <input
+                        type="text"
+                        id="tensanpham"
+                        placeholder="VD: Royal Canin Mini Adult">
+
+                </div>
+
+
+                <!-- BARCODE -->
+
+                <div class="form-group-new">
+
+                    <label>
+                        Mã barcode
+                    </label>
+
+                    <input
+                        type="text"
+                        id="mabarcode"
+                        readonly
+                        style="
+                        background:#f1f5f9;
+                        color:#2563eb;
+                        font-weight:700;
+                        ">
+
+                </div>
+
+
+                <!-- NHÓM -->
+
+                <div class="form-group-new">
+
+                    <label>
+                        Nhóm sản phẩm
+                    </label>
+
+                    <input
+                        type="text"
+                        id="nhomsanpham"
+                        list="danhSachNhomGoiY"
+                        placeholder="Chọn hoặc nhập nhóm mới">
+
                     <datalist id="danhSachNhomGoiY">
+
                         <option value="Thức ăn">
                         <option value="Thức ăn hạt">
                         <option value="Thức ăn ướt">
@@ -279,451 +1614,2186 @@
                         <option value="Sữa tắm - Vệ sinh">
                         <option value="Thực phẩm chức năng">
                         <option value="Khác">
+
                     </datalist>
+
                 </div>
-                <div class="form-group-modal">
-                    <label>Đơn vị tính (donvi):</label>
-                    <input type="text" id="donvi" placeholder="VD: Cái, Gói, Hộp, Chai, Kg...">
+
+
+                <!-- ĐƠN VỊ -->
+
+                <div class="form-group-new">
+
+                    <label>
+                        Đơn vị tính
+                    </label>
+
+                    <input
+                        type="text"
+                        id="donvi"
+                        placeholder="Cái, Gói, Hộp, Chai...">
+
                 </div>
+
+
+                <!-- GIÁ NHẬP -->
+
+                <div class="form-group-new">
+
+                    <label>
+                        Giá nhập
+                    </label>
+
+                    <input
+                        type="number"
+                        id="gianhap"
+                        min="0"
+                        placeholder="0">
+
+                </div>
+
+
+                <!-- GIÁ BÁN -->
+
+                <div class="form-group-new">
+
+                    <label>
+                        Giá bán *
+                    </label>
+
+                    <input
+                        type="number"
+                        id="giaban"
+                        min="0"
+                        placeholder="0">
+
+                </div>
+
+
+                <!-- TỒN -->
+
+                <div class="form-group-new">
+
+                    <label>
+                        Số lượng tồn
+                    </label>
+
+                    <input
+                        type="number"
+                        id="soluongton"
+                        min="0"
+                        value="0">
+
+                </div>
+
+
+                <!-- ẢNH -->
+
+                <div class="form-group-new">
+
+                    <label>
+                        Hình ảnh sản phẩm
+                    </label>
+
+                    <div class="image-upload-box">
+
+                        <div
+                            id="imagePlaceholder"
+                            class="image-preview-placeholder">
+
+                            <i class="fa-solid fa-image"></i>
+
+                        </div>
+
+                        <img
+                            id="sp_imgPreview"
+                            class="image-preview"
+                            src=""
+                            alt="Ảnh sản phẩm">
+
+                        <input
+                            type="file"
+                            id="fileHinhanh"
+                            accept="image/*"
+                            onchange="xuLyChonFileAnhSanPham(this)">
+
+                    </div>
+
+                    <input
+                        type="hidden"
+                        id="hinhanh">
+
+                </div>
+
+
+                <!-- MÔ TẢ -->
+
+                <div class="form-group-new full">
+
+                    <label>
+                        Mô tả sản phẩm
+                    </label>
+
+                    <textarea
+                        id="mota"
+                        placeholder="Thông tin sản phẩm..."></textarea>
+
+                </div>
+
             </div>
 
-            <div class="form-row">
-                <div class="form-group-modal">
-                    <label>Giá nhập (gianhap - VNĐ):</label>
-                    <input type="number" id="gianhap" placeholder="0">
-                </div>
-                <div class="form-group-modal">
-                    <label>Giá niêm yết / Bán (giaban) (*):</label>
-                    <input type="number" id="giaban" placeholder="0">
-                </div>
-                <div class="form-group-modal">
-                    <label>Tồn kho (soluongton):</label>
-                    <input type="number" id="soluongton" value="0">
-                </div>
-            </div>
-
-            <!-- CHỤP / TẢI ẢNH AN TOÀN TRỰC TIẾP LÊN SUPABASE STORAGE -->
-            <div class="form-group-modal">
-                <label>Hình ảnh sản phẩm (Tải lên file):</label>
-                <input type="file" id="fileHinhanh" accept="image/*" onchange="xuLyChonFileAnhSanPham(this)" style="padding: 6px; font-size: 13px;">
-                <input type="hidden" id="hinhanh">
-                <div style="display: flex; align-items: center; gap: 10px; margin-top: 6px;">
-                    <img id="sp_imgPreview" src="" alt="Ảnh sản phẩm" style="width: 50px; height: 50px; border-radius: 6px; border: 2px dashed #cbd5e1; object-fit: cover; background: #f8fafc; display: none;">
-                    <span style="font-size: 12px; color: #64748b;">Chọn file ảnh để tải lên hệ thống Cloud Storage.</span>
-                </div>
-            </div>
-
-            <div class="form-group-modal">
-                <label>Mô tả sản phẩm (mota):</label>
-                <textarea id="mota" rows="2" placeholder="Thông tin chi tiết về sản phẩm..."></textarea>
-            </div>
-
-            <div class="modal-footer">
-                <div>
-                    <button type="button" id="btnXoaModal" class="btn-delete" style="display: none; background-color: #dc2626; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;" onclick="xoaSanPhamTuModal()">Xóa sản phẩm này</button>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <button type="button" class="btn-secondary" onclick="dongModal()">Hủy</button>
-                    <button type="button" class="btn-primary" onclick="luuSanPham()">Lưu sản phẩm</button>
-                </div>
-            </div>
         </div>
+
+
+        <!-- FOOTER -->
+
+        <div class="modal-footer-new">
+
+            <button
+                type="button"
+                id="btnXoaModal"
+                class="btn-modal btn-delete-modal"
+                style="display:none"
+                onclick="xoaSanPhamTuModal()">
+
+                <i class="fa-solid fa-trash"></i>
+
+                Xóa sản phẩm
+
+            </button>
+
+
+            <div class="modal-footer-right">
+
+                <button
+                    class="btn-modal btn-cancel"
+                    onclick="dongModal()">
+
+                    Hủy
+
+                </button>
+
+                <button
+                    class="btn-modal btn-save"
+                    onclick="luuSanPham()">
+
+                    <i class="fa-solid fa-check"></i>
+
+                    Lưu sản phẩm
+
+                </button>
+
+            </div>
+
+        </div>
+
     </div>
 
-    <!-- Thư viện JsBarcode hỗ trợ mã vạch -->
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+</div>
 
-    <script>
-        let danhSachSanPhamGoc = [];
-        let danhSachDangLoc = [];
 
-        // Cấu hình phân trang
-        let trangThaiPhanTrang = {
-            trangHienTai: 1,
-            soDongMoiTrang: 10
-        };
+<script>
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            await taiDanhSachSanPham();
+/* =========================================================
+   DATA
+========================================================= */
+
+let danhSachSanPhamGoc = [];
+
+let danhSachDangLoc = [];
+
+let trangThaiLoc = 'all';
+
+let nhomDangLoc = '';
+
+let trangThaiPhanTrang = {
+
+    trangHienTai: 1,
+
+    soDongMoiTrang: 12
+
+};
+
+
+/* =========================================================
+   INIT
+========================================================= */
+
+window.addEventListener(
+    'DOMContentLoaded',
+    async () => {
+
+        await taiDanhSachSanPham();
+
+    }
+);
+
+
+/* =========================================================
+   MÃ PHÒNG KHÁM
+========================================================= */
+
+function layMaPhongKhamClean() {
+
+    let mpk =
+        sessionStorage.getItem(
+            'maphongkham'
+        ) || 'PK';
+
+    return mpk
+        .replace(/_/g,'')
+        .trim();
+
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHtml(value) {
+
+    return String(value ?? '')
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#039;');
+
+}
+
+
+/* =========================================================
+   TẢI SẢN PHẨM
+========================================================= */
+
+async function taiDanhSachSanPham() {
+
+    const {
+        data,
+        error
+    } = await db
+        .from('danhmucsanpham')
+        .select('*')
+        .order('id',{
+            ascending:false
         });
 
-        // Lấy mã phòng khám chuẩn dạng bỏ dấu gạch dưới (Ví dụ: PK617723)
-        function layMaPhongKhamClean() {
-            let mpk = sessionStorage.getItem('maphongkham') || 'PK';
-            return mpk.replace('_', '');
+
+    if(error) {
+
+        console.error(
+            'Lỗi tải sản phẩm:',
+            error
+        );
+
+        alert(
+            'Không thể tải danh mục sản phẩm!'
+        );
+
+        return;
+
+    }
+
+
+    danhSachSanPhamGoc = data || [];
+
+    capNhatDanhSachNhom();
+
+    tinhToanThongKe(
+        danhSachSanPhamGoc
+    );
+
+    apDungBoLoc();
+
+}
+
+
+/* =========================================================
+   CẬP NHẬT NHÓM
+========================================================= */
+
+function capNhatDanhSachNhom() {
+
+    const select =
+        document.getElementById(
+            'categoryFilter'
+        );
+
+    const datalist =
+        document.getElementById(
+            'danhSachNhomGoiY'
+        );
+
+
+    const nhomSet =
+        new Set([
+            'Thức ăn',
+            'Thức ăn hạt',
+            'Thức ăn ướt',
+            'Phụ kiện - Đồ chơi',
+            'Sữa tắm - Vệ sinh',
+            'Thực phẩm chức năng',
+            'Khác'
+        ]);
+
+
+    danhSachSanPhamGoc.forEach(item => {
+
+        if(item.nhomsanpham) {
+
+            nhomSet.add(
+                item.nhomsanpham.trim()
+            );
+
         }
 
-        async function taiDanhSachSanPham() {
-            const { data, error } = await db.from('danhmucsanpham').select('*').order('id', { ascending: false });
-            if (error) {
-                console.error('Lỗi tải danh mục sản phẩm:', error);
-                alert('Không thể tải dữ liệu sản phẩm từ Supabase!');
-            } else {
-                danhSachSanPhamGoc = data || [];
-                danhSachDangLoc = danhSachSanPhamGoc;
-                tinhToanThongKe(danhSachSanPhamGoc);
-                capNhatDatalistNhomHang(danhSachSanPhamGoc);
-                trangThaiPhanTrang.trangHienTai = 1;
-                hienThiBangVaPhanTrang();
+    });
+
+
+    /* SELECT */
+
+    select.innerHTML =
+        `<option value="">
+            Tất cả nhóm
+        </option>`;
+
+
+    [...nhomSet]
+        .sort((a,b) =>
+            a.localeCompare(
+                b,
+                'vi'
+            )
+        )
+        .forEach(nhom => {
+
+            const option =
+                document.createElement(
+                    'option'
+                );
+
+            option.value = nhom;
+
+            option.textContent = nhom;
+
+            select.appendChild(
+                option
+            );
+
+        });
+
+
+    /* DATALIST */
+
+    datalist.innerHTML = '';
+
+    [...nhomSet].forEach(nhom => {
+
+        datalist.innerHTML +=
+            `<option value="${escapeHtml(nhom)}">`;
+
+    });
+
+}
+
+
+/* =========================================================
+   THỐNG KÊ
+========================================================= */
+
+function tinhToanThongKe(data) {
+
+    let tongTon = 0;
+
+    let giaTriKho = 0;
+
+    let loiNhuan = 0;
+
+
+    data.forEach(item => {
+
+        const ton =
+            parseInt(
+                item.soluongton
+            ) || 0;
+
+        const giaNhap =
+            parseFloat(
+                item.gianhap
+            ) || 0;
+
+        const giaBan =
+            parseFloat(
+                item.giaban
+            ) || 0;
+
+
+        tongTon += ton;
+
+        giaTriKho +=
+            ton * giaNhap;
+
+        loiNhuan +=
+            (giaBan - giaNhap)
+            * ton;
+
+    });
+
+
+    document.getElementById(
+        'statSoMatHang'
+    ).textContent =
+        data.length.toLocaleString(
+            'vi-VN'
+        );
+
+
+    document.getElementById(
+        'statTongTon'
+    ).textContent =
+        tongTon.toLocaleString(
+            'vi-VN'
+        );
+
+
+    document.getElementById(
+        'statGiaTriKho'
+    ).textContent =
+        giaTriKho.toLocaleString(
+            'vi-VN'
+        ) + ' đ';
+
+
+    document.getElementById(
+        'statLoiNhuan'
+    ).textContent =
+        loiNhuan.toLocaleString(
+            'vi-VN'
+        ) + ' đ';
+
+}
+
+
+/* =========================================================
+   TRẠNG THÁI TỒN
+========================================================= */
+
+function layTrangThaiTon(ton) {
+
+    ton = Number(ton) || 0;
+
+
+    if(ton <= 0) {
+
+        return {
+            type:'empty',
+            text:'Hết hàng'
+        };
+
+    }
+
+
+    if(ton <= 5) {
+
+        return {
+            type:'low',
+            text:'Sắp hết'
+        };
+
+    }
+
+
+    return {
+        type:'good',
+        text:'Còn hàng'
+    };
+
+}
+
+
+/* =========================================================
+   LỌC
+========================================================= */
+
+function apDungBoLoc() {
+
+    const keyword =
+        document.getElementById(
+            'searchInput'
+        ).value
+        .toLowerCase()
+        .trim();
+
+
+    danhSachDangLoc =
+        danhSachSanPhamGoc.filter(item => {
+
+            const ten =
+                String(
+                    item.tensanpham || ''
+                ).toLowerCase();
+
+            const barcode =
+                String(
+                    item.mabarcode || ''
+                ).toLowerCase();
+
+            const nhom =
+                String(
+                    item.nhomsanpham || ''
+                ).toLowerCase();
+
+
+            const maSP =
+                String(
+                    item.masanpham ||
+                    (
+                        'SP' +
+                        layMaPhongKhamClean() +
+                        String(item.id)
+                    )
+                ).toLowerCase();
+
+
+            const matchKeyword =
+
+                !keyword ||
+
+                ten.includes(keyword) ||
+
+                barcode.includes(keyword) ||
+
+                nhom.includes(keyword) ||
+
+                maSP.includes(keyword);
+
+
+            const trangThai =
+                layTrangThaiTon(
+                    item.soluongton
+                );
+
+
+            const matchStatus =
+
+                trangThaiLoc === 'all' ||
+
+                trangThai.type === trangThaiLoc;
+
+
+            const matchNhom =
+
+                !nhomDangLoc ||
+
+                String(
+                    item.nhomsanpham || ''
+                ) === nhomDangLoc;
+
+
+            return (
+
+                matchKeyword &&
+
+                matchStatus &&
+
+                matchNhom
+
+            );
+
+        });
+
+
+    trangThaiPhanTrang.trangHienTai = 1;
+
+    hienThiSanPham();
+
+}
+
+
+/* =========================================================
+   TÌM KIẾM
+========================================================= */
+
+let searchTimeout = null;
+
+function timKiemSanPham() {
+
+    clearTimeout(searchTimeout);
+
+    searchTimeout =
+        setTimeout(
+            apDungBoLoc,
+            120
+        );
+
+}
+
+
+/* =========================================================
+   LỌC TRẠNG THÁI
+========================================================= */
+
+function chonTrangThai(
+    status,
+    button
+) {
+
+    trangThaiLoc = status;
+
+
+    document
+        .querySelectorAll(
+            '.filter-btn'
+        )
+        .forEach(btn => {
+
+            btn.classList.remove(
+                'active'
+            );
+
+        });
+
+
+    button.classList.add(
+        'active'
+    );
+
+
+    apDungBoLoc();
+
+}
+
+
+/* =========================================================
+   LỌC NHÓM
+========================================================= */
+
+function locTheoNhom() {
+
+    nhomDangLoc =
+        document.getElementById(
+            'categoryFilter'
+        ).value;
+
+
+    apDungBoLoc();
+
+}
+
+
+/* =========================================================
+   HIỂN THỊ CARD
+========================================================= */
+
+function hienThiSanPham() {
+
+    const grid =
+        document.getElementById(
+            'productGrid'
+        );
+
+
+    grid.innerHTML = '';
+
+
+    const result =
+        document.getElementById(
+            'productResult'
+        );
+
+
+    result.textContent =
+        `${danhSachDangLoc.length.toLocaleString('vi-VN')} sản phẩm`;
+
+
+    if(
+        danhSachDangLoc.length === 0
+    ) {
+
+        grid.innerHTML = `
+
+            <div class="product-empty">
+
+                <i class="fa-solid fa-box-open"></i>
+
+                <strong>
+                    Không tìm thấy sản phẩm
+                </strong>
+
+                <span>
+                    Thử thay đổi từ khóa hoặc bộ lọc
+                </span>
+
+            </div>
+
+        `;
+
+
+        document.getElementById(
+            'paginationContainer'
+        ).innerHTML = '';
+
+
+        return;
+
+    }
+
+
+    const {
+        trangHienTai,
+        soDongMoiTrang
+    } =
+        trangThaiPhanTrang;
+
+
+    const tongSoTrang =
+        Math.ceil(
+            danhSachDangLoc.length /
+            soDongMoiTrang
+        );
+
+
+    const start =
+        (trangHienTai - 1) *
+        soDongMoiTrang;
+
+
+    const end =
+        start +
+        soDongMoiTrang;
+
+
+    const data =
+        danhSachDangLoc.slice(
+            start,
+            end
+        );
+
+
+    data.forEach(item => {
+
+        grid.innerHTML +=
+            taoProductCard(item);
+
+    });
+
+
+    veNutPhanTrang(
+        tongSoTrang
+    );
+
+
+    /* BARCODE */
+
+    setTimeout(() => {
+
+        document
+            .querySelectorAll(
+                '.product-barcode-svg'
+            )
+            .forEach(svg => {
+
+                const code =
+                    svg.dataset.code;
+
+
+                try {
+
+                    JsBarcode(
+                        svg,
+                        code,
+                        {
+
+                            format:'CODE128',
+
+                            width:1.15,
+
+                            height:28,
+
+                            displayValue:true,
+
+                            fontSize:8,
+
+                            margin:0
+
+                        }
+                    );
+
+                }
+                catch(e) {
+
+                    svg.outerHTML =
+                        `<span style="
+                            font-size:8px;
+                            color:#64748b;
+                        ">
+                            ${escapeHtml(code)}
+                        </span>`;
+
+                }
+
+            });
+
+    },50);
+
+}
+
+
+/* =========================================================
+   TẠO CARD
+========================================================= */
+
+function taoProductCard(item) {
+
+    const ton =
+        Number(
+            item.soluongton
+        ) || 0;
+
+
+    const giaBan =
+        Number(
+            item.giaban
+        ) || 0;
+
+
+    const giaNhap =
+        Number(
+            item.gianhap
+        ) || 0;
+
+
+    const maSP =
+        item.masanpham ||
+        (
+            'SP' +
+            layMaPhongKhamClean() +
+            String(item.id)
+                .padStart(3,'0')
+        );
+
+
+    const barcode =
+        item.mabarcode ||
+        (
+            '86' +
+            String(item.id)
+                .padStart(8,'0')
+        );
+
+
+    const trangThai =
+        layTrangThaiTon(ton);
+
+
+    let imageHtml;
+
+
+    if(
+        item.hinhanh &&
+        String(item.hinhanh).trim()
+    ) {
+
+        imageHtml = `
+
+            <img
+                src="${escapeHtml(item.hinhanh)}"
+                alt="${escapeHtml(item.tensanpham)}"
+                onerror="
+                    this.style.display='none';
+                    this.nextElementSibling.style.display='grid';
+                "
+            >
+
+            <div
+                class="product-image-empty"
+                style="display:none">
+
+                <i class="fa-solid fa-box"></i>
+
+            </div>
+
+        `;
+
+    }
+    else {
+
+        imageHtml = `
+
+            <div class="product-image-empty">
+
+                <i class="fa-solid fa-box"></i>
+
+            </div>
+
+        `;
+
+    }
+
+
+    return `
+
+        <div class="product-card">
+
+            <div class="product-card-top">
+
+                <div class="product-image-box">
+
+                    ${imageHtml}
+
+                </div>
+
+
+                <div class="product-main-info">
+
+                    <span class="product-category">
+
+                        <i class="fa-solid fa-tag"></i>
+
+                        ${escapeHtml(
+                            item.nhomsanpham ||
+                            'Khác'
+                        )}
+
+                    </span>
+
+
+                    <div class="product-name">
+
+                        ${escapeHtml(
+                            item.tensanpham ||
+                            'Chưa có tên'
+                        )}
+
+                    </div>
+
+
+                    <div class="product-code">
+
+                        ${escapeHtml(maSP)}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="product-price-row">
+
+                <div class="product-price">
+
+                    ${giaBan.toLocaleString('vi-VN')} đ
+
+                </div>
+
+
+                <div class="product-unit">
+
+                    / ${escapeHtml(
+                        item.donvi || 'ĐVT'
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <div class="product-stock">
+
+                <span class="stock-label">
+
+                    Tồn kho
+
+                </span>
+
+
+                <span
+                    class="stock-value stock-${trangThai.type}">
+
+                    ${ton.toLocaleString('vi-VN')}
+
+                    ${escapeHtml(
+                        item.donvi || ''
+                    )}
+
+                </span>
+
+            </div>
+
+
+            <div class="product-cost">
+
+                <span>
+                    Giá nhập
+                </span>
+
+                <strong>
+
+                    ${giaNhap.toLocaleString('vi-VN')} đ
+
+                </strong>
+
+            </div>
+
+
+            <div
+                class="product-barcode"
+                title="Barcode: ${escapeHtml(barcode)}">
+
+                <svg
+                    class="product-barcode-svg"
+                    data-code="${escapeHtml(barcode)}">
+                </svg>
+
+            </div>
+
+
+            <div class="product-card-footer">
+
+
+                <span
+                    class="stock-badge ${trangThai.type}">
+
+                    <i class="fa-solid ${
+                        trangThai.type === 'good'
+                        ? 'fa-circle-check'
+                        : trangThai.type === 'low'
+                        ? 'fa-triangle-exclamation'
+                        : 'fa-circle-xmark'
+                    }"></i>
+
+                    ${trangThai.text}
+
+                </span>
+
+
+                <div class="product-actions">
+
+                    <button
+                        class="product-action edit"
+                        title="Sửa sản phẩm"
+                        onclick="moModalSua(${item.id})">
+
+                        <i class="fa-solid fa-pen"></i>
+
+                    </button>
+
+
+                    <button
+                        class="product-action delete"
+                        title="Xóa sản phẩm"
+                        onclick="xoaSanPham(${item.id})">
+
+                        <i class="fa-solid fa-trash"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+   PHÂN TRANG
+========================================================= */
+
+function veNutPhanTrang(
+    tongSoTrang
+) {
+
+    const container =
+        document.getElementById(
+            'paginationContainer'
+        );
+
+
+    container.innerHTML = '';
+
+
+    if(tongSoTrang <= 1) {
+
+        return;
+
+    }
+
+
+    const current =
+        trangThaiPhanTrang.trangHienTai;
+
+
+    container.innerHTML += `
+
+        <button
+            class="page-btn"
+            ${current === 1 ? 'disabled' : ''}
+            onclick="chuyenTrang(${current - 1})">
+
+            <i class="fa-solid fa-chevron-left"></i>
+
+        </button>
+
+    `;
+
+
+    for(
+        let i=1;
+        i<=tongSoTrang;
+        i++
+    ) {
+
+        if(
+
+            i === 1 ||
+
+            i === tongSoTrang ||
+
+            (
+                i >= current - 1 &&
+                i <= current + 1
+            )
+
+        ) {
+
+            container.innerHTML += `
+
+                <button
+                    class="page-btn ${
+                        i === current
+                        ? 'active'
+                        : ''
+                    }"
+                    onclick="chuyenTrang(${i})">
+
+                    ${i}
+
+                </button>
+
+            `;
+
+        }
+        else if(
+
+            i === current - 2 ||
+
+            i === current + 2
+
+        ) {
+
+            container.innerHTML +=
+                `<span style="
+                    color:#94a3b8;
+                    font-size:10px;
+                ">...</span>`;
+
+        }
+
+    }
+
+
+    container.innerHTML += `
+
+        <button
+            class="page-btn"
+            ${
+                current === tongSoTrang
+                ? 'disabled'
+                : ''
             }
+            onclick="chuyenTrang(${current + 1})">
+
+            <i class="fa-solid fa-chevron-right"></i>
+
+        </button>
+
+    `;
+
+}
+
+
+function chuyenTrang(trangMoi) {
+
+    trangThaiPhanTrang.trangHienTai =
+        trangMoi;
+
+    hienThiSanPham();
+
+    window.scrollTo({
+        top:0,
+        behavior:'smooth'
+    });
+
+}
+
+
+/* =========================================================
+   BARCODE TỰ ĐỘNG
+========================================================= */
+
+function sinhMaBarcodeTuDong() {
+
+    const randomPart =
+        Math.floor(
+            10000000 +
+            Math.random() *
+            90000000
+        );
+
+    return '86' + randomPart;
+
+}
+
+
+/* =========================================================
+   MODAL THÊM
+========================================================= */
+
+function moModalThem() {
+
+    document.getElementById(
+        'editingId'
+    ).value = '';
+
+
+    document.getElementById(
+        'tensanpham'
+    ).value = '';
+
+
+    document.getElementById(
+        'mabarcode'
+    ).value =
+        sinhMaBarcodeTuDong();
+
+
+    document.getElementById(
+        'nhomsanpham'
+    ).value = '';
+
+
+    document.getElementById(
+        'donvi'
+    ).value = '';
+
+
+    document.getElementById(
+        'gianhap'
+    ).value = '';
+
+
+    document.getElementById(
+        'giaban'
+    ).value = '';
+
+
+    document.getElementById(
+        'soluongton'
+    ).value = '0';
+
+
+    document.getElementById(
+        'mota'
+    ).value = '';
+
+
+    document.getElementById(
+        'hinhanh'
+    ).value = '';
+
+
+    document.getElementById(
+        'fileHinhanh'
+    ).value = '';
+
+
+    resetPreview();
+
+
+    document.getElementById(
+        'btnXoaModal'
+    ).style.display = 'none';
+
+
+    document.getElementById(
+        'modalTitle'
+    ).innerText =
+        'Thêm sản phẩm mới';
+
+
+    document.getElementById(
+        'sanPhamModal'
+    ).style.display = 'flex';
+
+}
+
+
+/* =========================================================
+   MODAL SỬA
+========================================================= */
+
+function moModalSua(id) {
+
+    const item =
+        danhSachSanPhamGoc.find(
+            x => x.id === id
+        );
+
+
+    if(!item) {
+
+        return;
+
+    }
+
+
+    const maSP =
+        item.masanpham ||
+        (
+            'SP' +
+            layMaPhongKhamClean() +
+            String(id).padStart(3,'0')
+        );
+
+
+    document.getElementById(
+        'editingId'
+    ).value = item.id;
+
+
+    document.getElementById(
+        'tensanpham'
+    ).value =
+        item.tensanpham || '';
+
+
+    document.getElementById(
+        'mabarcode'
+    ).value =
+        item.mabarcode ||
+        sinhMaBarcodeTuDong();
+
+
+    document.getElementById(
+        'nhomsanpham'
+    ).value =
+        item.nhomsanpham || '';
+
+
+    document.getElementById(
+        'donvi'
+    ).value =
+        item.donvi || '';
+
+
+    document.getElementById(
+        'gianhap'
+    ).value =
+        item.gianhap || '';
+
+
+    document.getElementById(
+        'giaban'
+    ).value =
+        item.giaban || '';
+
+
+    document.getElementById(
+        'soluongton'
+    ).value =
+        item.soluongton || 0;
+
+
+    document.getElementById(
+        'mota'
+    ).value =
+        item.mota || '';
+
+
+    document.getElementById(
+        'hinhanh'
+    ).value =
+        item.hinhanh || '';
+
+
+    document.getElementById(
+        'fileHinhanh'
+    ).value = '';
+
+
+    hienThiPreview(
+        item.hinhanh || ''
+    );
+
+
+    document.getElementById(
+        'btnXoaModal'
+    ).style.display = 'inline-flex';
+
+
+    document.getElementById(
+        'modalTitle'
+    ).innerText =
+        'Cập nhật sản phẩm - ' + maSP;
+
+
+    document.getElementById(
+        'sanPhamModal'
+    ).style.display = 'flex';
+
+}
+
+
+/* =========================================================
+   ĐÓNG MODAL
+========================================================= */
+
+function dongModal() {
+
+    document.getElementById(
+        'sanPhamModal'
+    ).style.display = 'none';
+
+}
+
+
+/* CLICK NGOÀI MODAL
+========================================================= */
+
+document.getElementById(
+    'sanPhamModal'
+).addEventListener(
+    'click',
+    function(e) {
+
+        if(
+            e.target === this
+        ) {
+
+            dongModal();
+
         }
 
-        // Tự động bổ sung các nhóm hàng mới xuất hiện vào datalist gợi ý
-        function capNhatDatalistNhomHang(data) {
-            const datalist = document.getElementById('danhSachNhomGoiY');
-            let nhomSet = new Set(["Thức ăn", "Thức ăn hạt", "Thức ăn ướt", "Phụ kiện - Đồ chơi", "Sữa tắm - Vệ sinh", "Thực phẩm chức năng", "Khác"]);
-            
-            data.forEach(item => {
-                if (item.nhomsanpham) nhomSet.add(item.nhomsanpham.trim());
-            });
+    }
+);
 
-            datalist.innerHTML = '';
-            nhomSet.forEach(nhom => {
-                datalist.innerHTML += `<option value="${nhom}">`;
-            });
+
+/* ESC
+========================================================= */
+
+document.addEventListener(
+    'keydown',
+    function(e) {
+
+        if(
+            e.key === 'Escape'
+        ) {
+
+            dongModal();
+
         }
 
-        function tinhToanThongKe(data) {
-            const soMatHang = data.length;
-            let tongTon = 0;
-            let giaTriKho = 0;
-            let loiNhuanDuKien = 0;
+    }
+);
 
-            data.forEach(item => {
-                const ton = parseInt(item.soluongton) || 0;
-                const giaNhap = parseFloat(item.gianhap) || 0;
-                const giaBan = parseFloat(item.giaban) || 0;
-                
-                tongTon += ton;
-                giaTriKho += (ton * giaNhap);
-                loiNhuanDuKien += (giaBan - giaNhap) * ton;
-            });
 
-            document.getElementById('statSoMatHang').innerText = soMatHang;
-            document.getElementById('statTongTon').innerText = tongTon;
-            document.getElementById('statGiaTriKho').innerText = giaTriKho.toLocaleString('vi-VN') + ' đ';
-            document.getElementById('statLoiNhuan').innerText = loiNhuanDuKien.toLocaleString('vi-VN') + ' đ';
-        }
+/* =========================================================
+   PREVIEW
+========================================================= */
 
-        function hienThiBangVaPhanTrang() {
-            const tableBody = document.getElementById('data-table');
-            tableBody.innerHTML = '';
-            
-            if(danhSachDangLoc.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:#777; padding: 20px;">Chưa có sản phẩm nào trong hệ thống</td></tr>`;
-                document.getElementById('paginationContainer').innerHTML = '';
-                return;
-            }
+function resetPreview() {
 
-            // Xử lý cắt dữ liệu phân trang
-            const { trangHienTai, soDongMoiTrang } = trangThaiPhanTrang;
-            const tongSoTrang = Math.ceil(danhSachDangLoc.length / soDongMoiTrang);
-            const viTriBatDau = (trangHienTai - 1) * soDongMoiTrang;
-            const viTriKetThuc = viTriBatDau + soDongMoiTrang;
-            const duLieuTrangNay = danhSachDangLoc.slice(viTriBatDau, viTriKetThuc);
+    const img =
+        document.getElementById(
+            'sp_imgPreview'
+        );
 
-            duLieuTrangNay.forEach((item) => {
-                let pkClean = layMaPhongKhamClean();
-                const maSP = item.masanpham || ('SP' + pkClean + String(item.id).padStart(3, '0'));
-                
-                // ĐÃ LOẠI BỎ HOÀN TOÀN VIA.PLACEHOLDER.COM, DÙNG KHỐI DIV AN TOÀN
-                const imgTag = item.hinhanh && item.hinhanh.trim() !== ''
-                    ? `<img src="${item.hinhanh}" class="product-img" onerror="this.outerHTML='<div class=\'product-img\' style=\'display:flex;align-items:center;justify-content:center;background:#e2e8f0;font-size:9px;color:#64748b;\'>No Img</div>'">`
-                    : `<div class="product-img" style="display:flex;align-items:center;justify-content:center;background:#e2e8f0;font-size:9px;color:#64748b;">No Img</div>`;
+    const placeholder =
+        document.getElementById(
+            'imagePlaceholder'
+        );
 
-                const barcodeVal = item.mabarcode || ('86' + String(item.id).padStart(8, '0'));
-                
-                tableBody.innerHTML += `<tr style="border-bottom: 1px solid #e2e8f0;">
-                    <td style="padding: 8px;">${imgTag}</td>
-                    <td style="padding: 8px; font-weight: bold; color: #1e3a8a;">${maSP}</td>
-                    <td style="padding: 8px; font-weight: 500; color: #0f172a;">${item.tensanpham || ''}</td>
-                    <td style="padding: 8px; color: #dc2626; font-weight: bold;">${Number(item.giaban || 0).toLocaleString('vi-VN')} đ</td>
-                    <td style="padding: 8px; color: #334155;">${Number(item.gianhap || 0).toLocaleString('vi-VN')} đ</td>
-                    <td style="padding: 8px;">${item.donvi || '---'}</td>
-                    <td style="padding: 8px; font-weight: bold; color: ${item.soluongton > 0 ? '#0284c7' : '#dc2626'}">${item.soluongton || 0}</td>
-                    <td style="padding: 8px;">
-                        <svg class="barcode-elem" data-code="${barcodeVal}"></svg>
-                    </td>
-                    <td style="padding: 8px;"><span style="background: #f1f5f9; padding: 3px 6px; border-radius: 4px; font-size: 12px; border: 1px solid #e2e8f0;">${item.nhomsanpham || '---'}</span></td>
-                    <td style="padding: 8px; font-size: 12px; color: #64748b; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${item.mota || ''}">${item.mota || '---'}</td>
-                    <td style="padding: 8px; text-align: center; white-space: nowrap;">
-                        <button class="btn-edit" onclick="moModalSua(${item.id})" style="background: #0284c7; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; margin-right: 4px;">Sửa</button>
-                        <button class="btn-delete" onclick="xoaSanPham(${item.id})" style="background: #dc2626; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Xóa</button>
-                    </td>
-                </tr>`;
-            });
 
-            veNutPhanTrang(tongSoTrang);
+    img.src = '';
 
-            setTimeout(() => {
-                document.querySelectorAll('.barcode-elem').forEach(svg => {
-                    const code = svg.getAttribute('data-code');
-                    try {
-                        JsBarcode(svg, code, {
-                            format: "CODE128",
-                            width: 1.2,
-                            height: 25,
-                            displayValue: true,
-                            fontSize: 10,
-                            margin: 0
-                        });
-                    } catch(e) {
-                        svg.outerHTML = `<span style="font-size:11px;">${code}</span>`;
+    img.style.display = 'none';
+
+    placeholder.style.display =
+        'grid';
+
+}
+
+
+function hienThiPreview(url) {
+
+    const img =
+        document.getElementById(
+            'sp_imgPreview'
+        );
+
+    const placeholder =
+        document.getElementById(
+            'imagePlaceholder'
+        );
+
+
+    if(url) {
+
+        img.src = url;
+
+        img.style.display =
+            'block';
+
+        placeholder.style.display =
+            'none';
+
+    }
+    else {
+
+        resetPreview();
+
+    }
+
+}
+
+
+/* =========================================================
+   UPLOAD ẢNH SUPABASE STORAGE
+========================================================= */
+
+async function xuLyChonFileAnhSanPham(
+    input
+) {
+
+    if(
+        !input.files ||
+        !input.files.length
+    ) {
+
+        return;
+
+    }
+
+
+    const file =
+        input.files[0];
+
+
+    if(
+        !file.type.startsWith(
+            'image/'
+        )
+    ) {
+
+        alert(
+            'Vui lòng chọn file hình ảnh!'
+        );
+
+        return;
+
+    }
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload =
+        function(event) {
+
+            hienThiPreview(
+                event.target.result
+            );
+
+        };
+
+
+    reader.readAsDataURL(file);
+
+
+    try {
+
+        const compressedBlob =
+            await nenAnh(file);
+
+
+        const fileName =
+            'sp_' +
+            Date.now() +
+            '_' +
+            Math.random()
+                .toString(36)
+                .substring(2,8) +
+            '.jpg';
+
+
+        const {
+            error
+        } =
+            await db.storage
+                .from('images')
+                .upload(
+                    fileName,
+                    compressedBlob,
+                    {
+                        contentType:
+                            'image/jpeg',
+
+                        upsert:false
                     }
-                });
-            }, 50);
+                );
+
+
+        if(error) {
+
+            console.error(
+                error
+            );
+
+            alert(
+                'Không thể tải ảnh: ' +
+                error.message
+            );
+
+            return;
+
         }
 
-        function veNutPhanTrang(tongSoTrang) {
-            const container = document.getElementById('paginationContainer');
-            container.innerHTML = '';
-            if (tongSoTrang <= 1) return;
 
-            const { trangHienTai } = trangThaiPhanTrang;
-            container.innerHTML += `<button class="page-btn" ${trangHienTai === 1 ? 'disabled' : ''} onclick="chuyenTrang(${trangHienTai - 1})">◀ Trước</button>`;
+        const {
+            data
+        } =
+            db.storage
+                .from('images')
+                .getPublicUrl(
+                    fileName
+                );
 
-            for (let i = 1; i <= tongSoTrang; i++) {
-                if (i === 1 || i === tongSoTrang || (i >= trangHienTai - 1 && i <= trangHienTai + 1)) {
-                    container.innerHTML += `<button class="page-btn ${i === trangHienTai ? 'active' : ''}" onclick="chuyenTrang(${i})">${i}</button>`;
-                } else if (i === trangHienTai - 2 || i === trangHienTai + 2) {
-                    container.innerHTML += `<span style="color: #64748b; font-size: 12px; padding: 0 2px;">...</span>`;
-                }
-            }
 
-            container.innerHTML += `<button class="page-btn" ${trangHienTai === tongSoTrang ? 'disabled' : ''} onclick="chuyenTrang(${trangHienTai + 1})">Sau ▶</button>`;
-        }
+        const publicUrl =
+            data.publicUrl;
 
-        function chuyenTrang(trangMoi) {
-            trangThaiPhanTrang.trangHienTai = trangMoi;
-            hienThiBangVaPhanTrang();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
 
-        function sinhMaBarcodeTuDong() {
-            let randomPart = Math.floor(10000000 + Math.random() * 90000000);
-            return '86' + randomPart;
-        }
+        document.getElementById(
+            'hinhanh'
+        ).value =
+            publicUrl;
 
-        let timeoutTimKiem = null;
 
-        function timKiemSanPham() {
-            clearTimeout(timeoutTimKiem);
-            timeoutTimKiem = setTimeout(() => {
-                const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
-                if (!tuKhoa) {
-                    danhSachDangLoc = danhSachSanPhamGoc;
-                } else {
-                    let pkClean = layMaPhongKhamClean();
-                    danhSachDangLoc = danhSachSanPhamGoc.filter(item => {
-                        const maSP = ('sp' + pkClean + String(item.id)).toLowerCase();
-                        const tenSP = (item.tensanpham || '').toLowerCase();
-                        const barcode = (item.mabarcode || '').toLowerCase();
-                        const nhom = (item.nhomsanpham || '').toLowerCase();
-                        
-                        return barcode.includes(tuKhoa) || maSP.includes(tuKhoa) || tenSP.includes(tuKhoa) || nhom.includes(tuKhoa);
-                    });
-                }
-                trangThaiPhanTrang.trangHienTai = 1;
-                hienThiBangVaPhanTrang();
-            }, 150);
-        }
+        hienThiPreview(
+            publicUrl
+        );
 
-        // --- HÀM NÉN VÀ TẢI ẢNH AN TOÀN TRỰC TIẾP LÊN SUPABASE STORAGE (BUCKET: images) ---
-        async function xuLyChonFileAnhSanPham(input) {
-            if (!input.files || input.files.length === 0) return;
-            const file = input.files[0];
 
-            alert('⏳ Đang nén và tải ảnh sản phẩm lên Cloud Storage...');
+    }
+    catch(error) {
 
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (event) => {
-                const img = new Image();
-                img.src = event.target.result;
-                img.onload = async () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800; 
-                    const scaleSize = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
+        console.error(
+            error
+        );
 
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        alert(
+            'Lỗi xử lý ảnh!'
+        );
 
-                    canvas.toBlob(async (blob) => {
-                        // TÊN FILE CỰC KỲ SẠCH SẼ, CHỐNG MỌI LỖI KÝ TỰ %0D%0A HOẶC LỖI 400
-                        const fileName = 'sp_' + Date.now() + '.jpg';
+    }
 
-                        let { data, error } = await db.storage
-                            .from('images')
-                            .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
+}
 
-                        if (error) {
-                            alert('❌ Lỗi tải ảnh: ' + error.message);
-                            return;
-                        }
 
-                        const { data: publicURLData } = db.storage
-                            .from('images')
-                            .getPublicUrl(fileName);
+/* =========================================================
+   NÉN ẢNH
+========================================================= */
 
-                        const publicUrl = publicURLData.publicUrl;
+function nenAnh(file) {
 
-                        document.getElementById('hinhanh').value = publicUrl;
-                        const preview = document.getElementById('sp_imgPreview');
-                        if (preview) {
-                            preview.src = publicUrl;
-                            preview.style.display = 'block';
-                        }
-                        
-                        alert('✅ Tải ảnh thành công!');
-                    }, 'image/jpeg', 0.7);
+    return new Promise(
+        (resolve,reject) => {
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                event => {
+
+                    const img =
+                        new Image();
+
+
+                    img.onload =
+                        () => {
+
+                            const MAX =
+                                900;
+
+
+                            let width =
+                                img.width;
+
+                            let height =
+                                img.height;
+
+
+                            if(
+                                width > MAX
+                            ) {
+
+                                const ratio =
+                                    MAX /
+                                    width;
+
+                                width =
+                                    MAX;
+
+                                height *=
+                                    ratio;
+
+                            }
+
+
+                            const canvas =
+                                document.createElement(
+                                    'canvas'
+                                );
+
+
+                            canvas.width =
+                                width;
+
+                            canvas.height =
+                                height;
+
+
+                            const ctx =
+                                canvas.getContext(
+                                    '2d'
+                                );
+
+
+                            ctx.drawImage(
+                                img,
+                                0,
+                                0,
+                                width,
+                                height
+                            );
+
+
+                            canvas.toBlob(
+                                blob => {
+
+                                    if(blob)
+                                        resolve(blob);
+
+                                    else
+                                        reject(
+                                            new Error(
+                                                'Không tạo được ảnh'
+                                            )
+                                        );
+
+                                },
+                                'image/jpeg',
+                                .78
+                            );
+
+                        };
+
+
+                    img.onerror =
+                        reject;
+
+                    img.src =
+                        event.target.result;
+
                 };
-            };
+
+
+            reader.onerror =
+                reject;
+
+            reader.readAsDataURL(
+                file
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   LƯU SẢN PHẨM
+========================================================= */
+
+async function luuSanPham() {
+
+    const id =
+        document.getElementById(
+            'editingId'
+        ).value;
+
+
+    const tensanpham =
+        document.getElementById(
+            'tensanpham'
+        ).value.trim();
+
+
+    const mabarcode =
+        document.getElementById(
+            'mabarcode'
+        ).value.trim();
+
+
+    const nhomsanpham =
+        document.getElementById(
+            'nhomsanpham'
+        ).value.trim();
+
+
+    const donvi =
+        document.getElementById(
+            'donvi'
+        ).value.trim();
+
+
+    const gianhap =
+        parseFloat(
+            document.getElementById(
+                'gianhap'
+            ).value
+        ) || 0;
+
+
+    const giaban =
+        parseFloat(
+            document.getElementById(
+                'giaban'
+            ).value
+        ) || 0;
+
+
+    const soluongton =
+        parseInt(
+            document.getElementById(
+                'soluongton'
+            ).value
+        ) || 0;
+
+
+    const hinhanh =
+        document.getElementById(
+            'hinhanh'
+        ).value.trim();
+
+
+    const mota =
+        document.getElementById(
+            'mota'
+        ).value.trim();
+
+
+    if(!tensanpham) {
+
+        alert(
+            'Vui lòng nhập tên sản phẩm!'
+        );
+
+        return;
+
+    }
+
+
+    if(giaban <= 0) {
+
+        alert(
+            'Vui lòng nhập giá bán!'
+        );
+
+        return;
+
+    }
+
+
+    const payload = {
+
+        tensanpham,
+
+        mabarcode,
+
+        nhomsanpham:
+            nhomsanpham || 'Khác',
+
+        donvi,
+
+        gianhap,
+
+        giaban,
+
+        soluongton,
+
+        hinhanh,
+
+        mota
+
+    };
+
+
+    /* THÊM */
+
+    if(id === '') {
+
+        const {
+            data,
+            error
+        } =
+            await db
+                .from(
+                    'danhmucsanpham'
+                )
+                .insert([
+                    payload
+                ])
+                .select();
+
+
+        if(error) {
+
+            alert(
+                'Lỗi thêm sản phẩm: ' +
+                error.message
+            );
+
+            return;
+
         }
 
-        function moModalThem() {
-            document.getElementById('editingId').value = '';
-            document.getElementById('tensanpham').value = '';
-            document.getElementById('mabarcode').value = sinhMaBarcodeTuDong();
-            document.getElementById('nhomsanpham').value = '';
-            document.getElementById('donvi').value = '';
-            document.getElementById('gianhap').value = '';
-            document.getElementById('giaban').value = '';
-            document.getElementById('soluongton').value = '0';
-            document.getElementById('fileHinhanh').value = '';
-            document.getElementById('hinhanh').value = '';
-            document.getElementById('mota').value = '';
-            
-            const preview = document.getElementById('sp_imgPreview');
-            if (preview) {
-                preview.src = '';
-                preview.style.display = 'none';
-            }
-            
-            document.getElementById('btnXoaModal').style.display = 'none';
-            document.getElementById('modalTitle').innerText = 'Thêm hàng hóa mới';
-            document.getElementById('sanPhamModal').style.display = 'flex';
+
+        /* Sinh mã SP nếu cần */
+
+        if(
+            data &&
+            data.length
+        ) {
+
+            const newId =
+                data[0].id;
+
+
+            const maSP =
+                'SP' +
+                layMaPhongKhamClean() +
+                String(newId)
+                    .padStart(3,'0');
+
+
+            await db
+                .from(
+                    'danhmucsanpham'
+                )
+                .update({
+                    masanpham: maSP
+                })
+                .eq(
+                    'id',
+                    newId
+                );
+
         }
 
-        function moModalSua(id) {
-            const item = danhSachSanPhamGoc.find(x => x.id === id);
-            if (!item) return;
 
-            let pkClean = layMaPhongKhamClean();
-            let displayMaSP = item.masanpham || ('SP' + pkClean + String(id).padStart(3, '0'));
+        alert(
+            'Đã thêm sản phẩm thành công!'
+        );
 
-            document.getElementById('editingId').value = item.id;
-            document.getElementById('tensanpham').value = item.tensanpham || '';
-            document.getElementById('mabarcode').value = item.mabarcode || sinhMaBarcodeTuDong();
-            document.getElementById('nhomsanpham').value = item.nhomsanpham || '';
-            document.getElementById('donvi').value = item.donvi || '';
-            document.getElementById('gianhap').value = item.gianhap || '';
-            document.getElementById('giaban').value = item.giaban || '';
-            document.getElementById('soluongton').value = item.soluongton || 0;
-            document.getElementById('fileHinhanh').value = '';
-            
-            const hinhanh = item.hinhanh || '';
-            document.getElementById('hinhanh').value = hinhanh;
-            const preview = document.getElementById('sp_imgPreview');
-            if (preview) {
-                if (hinhanh && hinhanh.trim() !== '') {
-                    preview.src = hinhanh;
-                    preview.style.display = 'block';
-                } else {
-                    preview.src = '';
-                    preview.style.display = 'none';
-                }
-            }
+    }
 
-            document.getElementById('mota').value = item.mota || '';
+    /* SỬA */
 
-            document.getElementById('btnXoaModal').style.display = 'block';
-            document.getElementById('modalTitle').innerText = 'Cập nhật hàng hóa (Mã: ' + displayMaSP + ')';
-            document.getElementById('sanPhamModal').style.display = 'flex';
+    else {
+
+        const {
+            error
+        } =
+            await db
+                .from(
+                    'danhmucsanpham'
+                )
+                .update(
+                    payload
+                )
+                .eq(
+                    'id',
+                    id
+                );
+
+
+        if(error) {
+
+            alert(
+                'Lỗi cập nhật: ' +
+                error.message
+            );
+
+            return;
+
         }
 
-        function dongModal() {
-            document.getElementById('sanPhamModal').style.display = 'none';
-        }
 
-        async function luuSanPham() {
-            const id = document.getElementById('editingId').value;
-            const tensanpham = document.getElementById('tensanpham').value.trim();
-            const mabarcode = document.getElementById('mabarcode').value.trim();
-            const nhomsanpham = document.getElementById('nhomsanpham').value.trim();
-            const donvi = document.getElementById('donvi').value.trim();
-            const gianhap = parseFloat(document.getElementById('gianhap').value) || 0;
-            const giaban = parseFloat(document.getElementById('giaban').value) || 0;
-            const soluongton = parseInt(document.getElementById('soluongton').value) || 0;
-            const mota = document.getElementById('mota').value.trim();
-            const hinhanh = document.getElementById('hinhanh').value.trim();
+        alert(
+            'Đã cập nhật sản phẩm!'
+        );
 
-            if (!tensanpham || !giaban) {
-                alert('Vui lòng nhập Tên sản phẩm và Giá niêm yết (giá bán)!');
-                return;
-            }
+    }
 
-            const payload = {
-                tensanpham,
-                mabarcode,
-                nhomsanpham: nhomsanpham || 'Khác',
-                donvi,
-                gianhap,
-                giaban,
-                soluongton,
-                hinhanh,
-                mota
-            };
 
-            if (id === "") {
-                const { error } = await db.from('danhmucsanpham').insert([payload]);
-                if (error) {
-                    alert('Lỗi thêm sản phẩm: ' + error.message);
-                } else {
-                    alert('Thêm hàng hóa thành công!');
-                    dongModal();
-                    taiDanhSachSanPham();
-                }
-            } else {
-                const { error } = await db.from('danhmucsanpham').update(payload).eq('id', id);
-                if (error) {
-                    alert('Lỗi cập nhật sản phẩm: ' + error.message);
-                } else {
-                    alert('Cập nhật thành công!');
-                    dongModal();
-                    taiDanhSachSanPham();
-                }
-            }
-        }
+    dongModal();
 
-        async function xoaSanPham(id) {
-            if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi hệ thống không?')) {
-                const { error } = await db.from('danhmucsanpham').delete().eq('id', id);
-                if (error) {
-                    alert('Lỗi khi xóa: ' + error.message);
-                } else {
-                    alert('Xóa sản phẩm thành công!');
-                    taiDanhSachSanPham();
-                }
-            }
-        }
+    await taiDanhSachSanPham();
 
-        async function xoaSanPhamTuModal() {
-            const id = document.getElementById('editingId').value;
-            if (!id) return;
+}
 
-            if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi hệ thống không?')) {
-                const { error } = await db.from('danhmucsanpham').delete().eq('id', id);
-                if (error) {
-                    alert('Lỗi khi xóa: ' + error.message);
-                } else {
-                    alert('Xóa sản phẩm thành công!');
-                    dongModal();
-                    taiDanhSachSanPham();
-                }
-            }
-        }
-    </script>
+
+/* =========================================================
+   XÓA
+========================================================= */
+
+async function xoaSanPham(id) {
+
+    const item =
+        danhSachSanPhamGoc.find(
+            x => x.id === id
+        );
+
+
+    const ten =
+        item?.tensanpham ||
+        'sản phẩm này';
+
+
+    if(
+        !confirm(
+            `Bạn có chắc muốn xóa "${ten}" không?`
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    const {
+        error
+    } =
+        await db
+            .from(
+                'danhmucsanpham'
+            )
+            .delete()
+            .eq(
+                'id',
+                id
+            );
+
+
+    if(error) {
+
+        alert(
+            'Lỗi khi xóa: ' +
+            error.message
+        );
+
+        return;
+
+    }
+
+
+    alert(
+        'Đã xóa sản phẩm!'
+    );
+
+
+    await taiDanhSachSanPham();
+
+}
+
+
+/* =========================================================
+   XÓA TỪ MODAL
+========================================================= */
+
+async function xoaSanPhamTuModal() {
+
+    const id =
+        document.getElementById(
+            'editingId'
+        ).value;
+
+
+    if(!id) {
+
+        return;
+
+    }
+
+
+    if(
+        !confirm(
+            'Bạn có chắc chắn muốn xóa sản phẩm này?'
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    const {
+        error
+    } =
+        await db
+            .from(
+                'danhmucsanpham'
+            )
+            .delete()
+            .eq(
+                'id',
+                id
+            );
+
+
+    if(error) {
+
+        alert(
+            'Lỗi khi xóa: ' +
+            error.message
+        );
+
+        return;
+
+    }
+
+
+    alert(
+        'Đã xóa sản phẩm!'
+    );
+
+
+    dongModal();
+
+    await taiDanhSachSanPham();
+
+}
+
+</script>
+
 </body>
 </html>

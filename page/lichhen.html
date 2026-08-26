@@ -1,397 +1,1207 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <title>Quản Lý Lịch Hẹn - VetCare Pro</title>
-    <!-- Thư viện Supabase JS -->
-   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-	<script src="../js/env.js"></script>
-    <script src="../js/config.js"></script>
-    <script src="../js/supabase.js"></script>
-    <script src="../js/utils.js"></script>
-    <script src="../js/menu.js"></script>
-	<script src="../js/smart-search.js"></script>
-    <!-- Gọi file CSS chung -->
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/mobile.css">
-    <link rel="stylesheet" href="../css/style1.css">
-	<link rel="stylesheet" href="../css/smart-search.css">
-	
-    <style>
-        .search-box {
-            padding: 8px 12px;
-            width: 250px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-            outline: none;
-        }
-        .search-box:focus {
-            border-color: #2563eb;
-        }
-        .card-header-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
+<meta charset="UTF-8">
+<title>Quản Lý Lịch Hẹn - VetCare Pro</title>
 
-        .modal-container {
-            width: 650px;
-            padding: 20px 24px;
-        }
-        .modal-header {
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-        }
-        .form-group-modal {
-            margin-bottom: 10px;
-        }
-        .form-group-modal label {
-            font-size: 13px;
-            margin-bottom: 3px;
-            display: block;
-            font-weight: 500;
-        }
-        .form-group-modal input, .form-group-modal select, .form-group-modal textarea {
-            width: 100%;
-            padding: 7px 10px;
-            font-size: 13px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .form-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .form-row .form-group-modal {
-            flex: 1;
-            margin-bottom: 0;
-        }
-        .modal-footer {
-            margin-top: 15px;
-            padding-top: 10px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        table th:last-child, table td:last-child {
-            white-space: nowrap;
-            width: 160px;
-        }
-    </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/env.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/menu.js"></script>
+<script src="../js/smart-search.js"></script>
+
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/mobile.css">
+<link rel="stylesheet" href="../css/style1.css">
+<link rel="stylesheet" href="../css/smart-search.css">
+
+<style>
+:root{
+    --lh-blue:#2563eb;
+    --lh-blue2:#1d4ed8;
+    --lh-text:#172033;
+    --lh-muted:#64748b;
+    --lh-border:#e5eaf1;
+    --lh-bg:#f3f6fb;
+    --lh-green:#059669;
+    --lh-orange:#d97706;
+    --lh-red:#dc2626;
+}
+
+*{box-sizing:border-box}
+
+.content-body{
+    background:var(--lh-bg)!important;
+    padding:16px!important;
+    min-height:calc(100vh - 55px);
+}
+
+.lichhen-page{
+    width:100%;
+}
+
+/* HEADER */
+.lh-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    margin-bottom:12px;
+}
+
+.lh-title{
+    display:flex;
+    align-items:center;
+    gap:11px;
+}
+
+.lh-title-icon{
+    width:43px;
+    height:43px;
+    display:grid;
+    place-items:center;
+    border-radius:12px;
+    color:#fff;
+    background:linear-gradient(135deg,#3b82f6,#2563eb);
+    box-shadow:0 7px 18px rgba(37,99,235,.20);
+    font-size:18px;
+}
+
+.lh-title h2{
+    margin:0;
+    color:var(--lh-text);
+    font-size:19px;
+    font-weight:800;
+}
+
+.lh-title p{
+    margin:4px 0 0;
+    color:#94a3b8;
+    font-size:11px;
+}
+
+/* SEARCH + ADD */
+.lh-tools{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.lh-search{
+    position:relative;
+}
+
+.lh-search i{
+    position:absolute;
+    left:12px;
+    top:50%;
+    transform:translateY(-50%);
+    color:#94a3b8;
+}
+
+.lh-search input{
+    width:285px;
+    height:40px;
+    border:1px solid #dce3ed;
+    border-radius:10px;
+    outline:none;
+    background:#fff;
+    padding:0 12px 0 35px;
+    font-size:12px;
+}
+
+.lh-search input:focus{
+    border-color:var(--lh-blue);
+    box-shadow:0 0 0 3px rgba(37,99,235,.08);
+}
+
+.lh-add{
+    height:40px;
+    border:0;
+    border-radius:10px;
+    padding:0 15px;
+    color:#fff;
+    background:linear-gradient(135deg,#3b82f6,#2563eb);
+    font-size:12px;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow:0 7px 16px rgba(37,99,235,.18);
+}
+
+.lh-add:hover{transform:translateY(-1px)}
+
+/* STATS */
+.lh-stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-bottom:12px;
+}
+
+.lh-stat{
+    background:#fff;
+    border:1px solid var(--lh-border);
+    border-radius:12px;
+    min-height:70px;
+    padding:11px 13px;
+    display:flex;
+    align-items:center;
+    gap:11px;
+}
+
+.lh-stat-icon{
+    width:37px;
+    height:37px;
+    border-radius:10px;
+    display:grid;
+    place-items:center;
+    color:var(--lh-blue);
+    background:#eff6ff;
+}
+
+.lh-stat-number{
+    color:var(--lh-text);
+    font-size:18px;
+    font-weight:800;
+}
+
+.lh-stat-label{
+    color:#94a3b8;
+    font-size:10px;
+    margin-top:2px;
+}
+
+/* FILTER */
+.lh-filterbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:12px;
+}
+
+.lh-filters{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+}
+
+.lh-filter{
+    height:34px;
+    border:1px solid #dce3ed;
+    border-radius:9px;
+    background:#fff;
+    color:#64748b;
+    padding:0 12px;
+    font-size:10px;
+    font-weight:750;
+    cursor:pointer;
+}
+
+.lh-filter:hover{
+    border-color:#bfdbfe;
+    color:var(--lh-blue);
+}
+
+.lh-filter.active{
+    background:var(--lh-blue);
+    color:#fff;
+    border-color:var(--lh-blue);
+    box-shadow:0 5px 12px rgba(37,99,235,.16);
+}
+
+.lh-count{
+    color:#64748b;
+    font-size:10px;
+}
+
+/* CARD GRID */
+.lh-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:12px;
+}
+
+.lh-card{
+    background:#fff;
+    border:1px solid #e4e9f0;
+    border-radius:14px;
+    padding:12px;
+    min-width:0;
+    box-shadow:0 3px 14px rgba(15,23,42,.035);
+    transition:.18s ease;
+}
+
+.lh-card:hover{
+    transform:translateY(-2px);
+    box-shadow:0 10px 25px rgba(15,23,42,.08);
+    border-color:#d8e3f2;
+}
+
+.lh-card-top{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    min-width:0;
+}
+
+.lh-avatar{
+    width:43px;
+    height:43px;
+    flex:0 0 43px;
+    border-radius:12px;
+    display:grid;
+    place-items:center;
+    color:#fff;
+    font-size:14px;
+    font-weight:850;
+}
+
+.lh-avatar.blue{background:linear-gradient(135deg,#3b82f6,#2563eb)}
+.lh-avatar.cyan{background:linear-gradient(135deg,#06b6d4,#0891b2)}
+.lh-avatar.green{background:linear-gradient(135deg,#10b981,#059669)}
+.lh-avatar.purple{background:linear-gradient(135deg,#8b5cf6,#7c3aed)}
+.lh-avatar.orange{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.lh-avatar.pink{background:linear-gradient(135deg,#ec4899,#db2777)}
+
+.lh-owner{
+    flex:1;
+    min-width:0;
+}
+
+.lh-owner-name{
+    color:var(--lh-text);
+    font-size:13px;
+    font-weight:850;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.lh-phone{
+    margin-top:3px;
+    font-size:9px;
+}
+
+.lh-phone a{
+    color:#2563eb;
+    text-decoration:none;
+    font-weight:750;
+}
+
+.lh-id{
+    display:inline-block;
+    margin-top:3px;
+    padding:3px 6px;
+    border-radius:5px;
+    background:#f1f5f9;
+    color:#64748b;
+    font-size:7px;
+    font-weight:700;
+}
+
+.lh-status{
+    flex:0 0 auto;
+    padding:5px 7px;
+    border-radius:7px;
+    font-size:8px;
+    font-weight:800;
+    cursor:pointer;
+    white-space:nowrap;
+}
+
+.lh-status.wait{
+    color:#b45309;
+    background:#fef3c7;
+}
+
+.lh-status.done{
+    color:#047857;
+    background:#d1fae5;
+}
+
+.lh-status.cancel{
+    color:#b91c1c;
+    background:#fee2e2;
+}
+
+/* DATE */
+.lh-date-box{
+    margin-top:11px;
+    padding:9px 10px;
+    border-radius:9px;
+    background:#f8fafc;
+    border:1px solid #edf1f5;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+}
+
+.lh-date-left{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    min-width:0;
+}
+
+.lh-date-icon{
+    width:29px;
+    height:29px;
+    border-radius:8px;
+    display:grid;
+    place-items:center;
+    color:#2563eb;
+    background:#eff6ff;
+}
+
+.lh-date-label{
+    color:#94a3b8;
+    font-size:8px;
+}
+
+.lh-date{
+    margin-top:2px;
+    color:#1e3a8a;
+    font-size:11px;
+    font-weight:850;
+}
+
+.lh-today{
+    padding:4px 6px;
+    color:#059669;
+    background:#dcfce7;
+    border-radius:6px;
+    font-size:7px;
+    font-weight:800;
+}
+
+/* CONTENT */
+.lh-content{
+    margin-top:10px;
+    padding-bottom:8px;
+    border-bottom:1px solid #edf1f5;
+}
+
+.lh-content-label{
+    color:#94a3b8;
+    font-size:8px;
+    margin-bottom:4px;
+}
+
+.lh-content-text{
+    color:#334155;
+    font-size:10px;
+    line-height:1.5;
+    min-height:30px;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+}
+
+/* INFO */
+.lh-info-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+    margin-top:9px;
+}
+
+.lh-info{
+    min-width:0;
+    padding:8px;
+    border:1px solid #e9edf3;
+    border-radius:8px;
+    background:#fbfcfe;
+}
+
+.lh-info-label{
+    color:#94a3b8;
+    font-size:7px;
+}
+
+.lh-info-value{
+    margin-top:3px;
+    color:#172033;
+    font-size:9px;
+    font-weight:800;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+/* FOOTER */
+.lh-card-footer{
+    margin-top:9px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:5px;
+}
+
+.lh-footer-actions{
+    display:flex;
+    gap:4px;
+}
+
+.lh-action{
+    width:29px;
+    height:27px;
+    border:0;
+    border-radius:7px;
+    display:grid;
+    place-items:center;
+    cursor:pointer;
+    font-size:10px;
+    transition:.15s;
+}
+
+.lh-action:hover{transform:translateY(-1px)}
+
+.lh-edit{
+    color:#b45309;
+    background:#fef3c7;
+}
+
+.lh-delete{
+    color:#dc2626;
+    background:#fee2e2;
+}
+
+.lh-call{
+    color:#047857;
+    background:#d1fae5;
+}
+
+.lh-empty{
+    grid-column:1/-1;
+    text-align:center;
+    background:#fff;
+    border:1px solid var(--lh-border);
+    border-radius:14px;
+    padding:55px 20px;
+    color:#94a3b8;
+}
+
+.lh-empty i{
+    display:block;
+    font-size:30px;
+    margin-bottom:10px;
+}
+
+/* MODAL */
+.modal-overlay{z-index:9999}
+
+.modal-container{
+    width:650px!important;
+    max-width:calc(100vw - 30px);
+    border-radius:14px!important;
+    box-shadow:0 20px 60px rgba(15,23,42,.2)!important;
+}
+
+.form-group-modal input,
+.form-group-modal select,
+.form-group-modal textarea{
+    border-radius:8px!important;
+    border:1px solid #dce3ed!important;
+}
+
+.form-row{
+    display:flex;
+    gap:10px;
+}
+
+.form-row .form-group-modal{
+    flex:1;
+}
+
+/* RESPONSIVE */
+@media(max-width:1200px){
+    .lh-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+@media(max-width:950px){
+    .lh-header{
+        flex-direction:column;
+        align-items:stretch;
+    }
+    .lh-tools{width:100%}
+    .lh-search{flex:1}
+    .lh-search input{width:100%}
+    .lh-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .lh-stats{grid-template-columns:repeat(2,1fr)}
+}
+
+@media(max-width:620px){
+    .content-body{padding:8px!important}
+    .lh-title h2{font-size:17px}
+    .lh-tools{flex-wrap:wrap}
+    .lh-search{width:100%}
+    .lh-add{width:100%}
+    .lh-stats{grid-template-columns:1fr}
+    .lh-grid{grid-template-columns:1fr}
+    .lh-filterbar{align-items:flex-start;flex-direction:column}
+    .form-row{flex-direction:column;gap:0}
+}
+</style>
 </head>
+
 <body>
+<div id="menu-container"></div>
 
-    <!-- THANH MENU BÊN TRÁI -->
-    <div id="menu-container"></div>
+<div class="main-content">
+    <div id="topnav-container"></div>
 
-    <!-- NỘI DUNG CHÍNH -->
-    <div class="main-content">
-        <div id="topnav-container"></div>
+    <div class="content-body">
+        <div class="lichhen-page">
 
-        <div class="content-body">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Danh sách lịch hẹn</h3>
-                    <div class="card-header-actions">
-                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm tên chủ nuôi, SĐT, nội dung..." onkeyup="timKiemLichHen()">
-                        <button class="btn-primary" onclick="moModalThem()">+ Thêm lịch hẹn mới</button>
+            <div class="lh-header">
+                <div class="lh-title">
+                    <div class="lh-title-icon">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                    <div>
+                        <h2>Danh sách lịch hẹn</h2>
+                        <p>Quản lý lịch hẹn, khách hàng và nội dung khám</p>
                     </div>
                 </div>
-                
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Ngày hẹn</th>
-                                <th>Chủ nuôi & SĐT</th>
-                                <th>Địa chỉ</th>
-                                <th>Nội dung hẹn</th>
-                                <th style="text-align: center;">Trạng thái</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody id="data-table">
-                            <!-- Dữ liệu được nạp tự động -->
-                        </tbody>
-                    </table>
+
+                <div class="lh-tools">
+                    <div class="lh-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text"
+                               id="searchInput"
+                               placeholder="Tìm chủ nuôi, SĐT, nội dung..."
+                               onkeyup="timKiemLichHen()">
+                    </div>
+
+                    <button class="lh-add" onclick="moModalThem()">
+                        <i class="fa-solid fa-plus"></i>
+                        Thêm lịch hẹn
+                    </button>
                 </div>
             </div>
+
+            <div class="lh-stats">
+                <div class="lh-stat">
+                    <div class="lh-stat-icon"><i class="fa-solid fa-calendar-days"></i></div>
+                    <div>
+                        <div class="lh-stat-number" id="statTong">0</div>
+                        <div class="lh-stat-label">Tổng lịch hẹn</div>
+                    </div>
+                </div>
+
+                <div class="lh-stat">
+                    <div class="lh-stat-icon"><i class="fa-solid fa-clock"></i></div>
+                    <div>
+                        <div class="lh-stat-number" id="statChoKham">0</div>
+                        <div class="lh-stat-label">Chờ khám</div>
+                    </div>
+                </div>
+
+                <div class="lh-stat">
+                    <div class="lh-stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+                    <div>
+                        <div class="lh-stat-number" id="statHoanThanh">0</div>
+                        <div class="lh-stat-label">Đã hoàn thành</div>
+                    </div>
+                </div>
+
+                <div class="lh-stat">
+                    <div class="lh-stat-icon"><i class="fa-solid fa-calendar-day"></i></div>
+                    <div>
+                        <div class="lh-stat-number" id="statHomNay">0</div>
+                        <div class="lh-stat-label">Lịch hôm nay</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lh-filterbar">
+                <div class="lh-filters">
+                    <button class="lh-filter active" data-filter="all" onclick="chonBoLoc('all',this)">
+                        <i class="fa-solid fa-layer-group"></i> Tất cả
+                    </button>
+                    <button class="lh-filter" data-filter="Chờ khám" onclick="chonBoLoc('Chờ khám',this)">
+                        <i class="fa-solid fa-clock"></i> Chờ khám
+                    </button>
+                    <button class="lh-filter" data-filter="Đã hoàn thành" onclick="chonBoLoc('Đã hoàn thành',this)">
+                        <i class="fa-solid fa-check"></i> Hoàn thành
+                    </button>
+                    <button class="lh-filter" data-filter="Đã hủy" onclick="chonBoLoc('Đã hủy',this)">
+                        <i class="fa-solid fa-ban"></i> Đã hủy
+                    </button>
+                </div>
+
+                <div class="lh-count" id="lichHenCount">Hiển thị 0 lịch hẹn</div>
+            </div>
+
+            <div class="lh-grid" id="data-table"></div>
+
         </div>
     </div>
+</div>
 
-    <!-- POPUP FORM THÊM / SỬA LỊCH HẸN -->
-    <div class="modal-overlay" id="lichHenModal">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3 id="modalTitle">Tạo lịch hẹn mới</h3>
-                <button class="close-modal" onclick="dongModal()">&times;</button>
-            </div>
-            
-            <input type="hidden" id="editingId">
-            
-            <div class="form-row">
-                <div class="form-group-modal">
-                    <label>Tên chủ nuôi (tenchunuoi) (*):</label>
-                    <input type="text" id="tenchunuoi" placeholder="Nhập tên chủ nuôi...">
-                </div>
-                <div class="form-group-modal">
-                    <label>Số điện thoại (sdt):</label>
-                    <input type="text" id="sdt" placeholder="Nhập số điện thoại...">
-                </div>
-            </div>
+<!-- MODAL -->
+<div class="modal-overlay" id="lichHenModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3 id="modalTitle">Tạo lịch hẹn mới</h3>
+            <button class="close-modal" onclick="dongModal()">&times;</button>
+        </div>
 
-            <div class="form-row">
-                <div class="form-group-modal">
-                    <label>Ngày hẹn (ngayhen) (*):</label>
-                    <!-- Đã thay đổi từ datetime-local thành date để bỏ hẳn phần giờ -->
-                    <input type="date" id="ngayhen">
-                </div>
-                <div class="form-group-modal">
-                    <label>Trạng thái (trangthai):</label>
-                    <select id="trangthai">
-                        <option value="Chờ khám">Chờ khám</option>
-                        <option value="Đã hoàn thành">Đã hoàn thành</option>
-                        <option value="Đã hủy">Đã hủy</option>
-                    </select>
-                </div>
+        <input type="hidden" id="editingId">
+
+        <div class="form-row">
+            <div class="form-group-modal">
+                <label>Tên chủ nuôi (*):</label>
+                <input type="text" id="tenchunuoi" placeholder="Nhập tên chủ nuôi...">
             </div>
 
             <div class="form-group-modal">
-                <label>Địa chỉ (diachi):</label>
-                <input type="text" id="diachi" placeholder="Nhập địa chỉ khách hàng...">
+                <label>Số điện thoại:</label>
+                <input type="text" id="sdt" placeholder="Nhập số điện thoại...">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group-modal">
+                <label>Ngày hẹn (*):</label>
+                <input type="date" id="ngayhen">
             </div>
 
             <div class="form-group-modal">
-                <label>Nội dung hẹn (noidung):</label>
-                <textarea id="noidung" rows="3" placeholder="Nhập nội dung khám, tiêm phòng, spa..."></textarea>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="dongModal()">Hủy</button>
-                <button class="btn-primary" onclick="luuLichHen()">Lưu dữ liệu</button>
+                <label>Trạng thái:</label>
+                <select id="trangthai">
+                    <option value="Chờ khám">Chờ khám</option>
+                    <option value="Đã hoàn thành">Đã hoàn thành</option>
+                    <option value="Đã hủy">Đã hủy</option>
+                </select>
             </div>
         </div>
+
+        <div class="form-group-modal">
+            <label>Địa chỉ:</label>
+            <input type="text" id="diachi" placeholder="Nhập địa chỉ khách hàng...">
+        </div>
+
+        <div class="form-group-modal">
+            <label>Nội dung hẹn:</label>
+            <textarea id="noidung" rows="3" placeholder="Nhập nội dung khám, tiêm phòng, spa..."></textarea>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="dongModal()">Hủy</button>
+            <button class="btn-primary" onclick="luuLichHen()">Lưu dữ liệu</button>
+        </div>
     </div>
+</div>
 
-    <script>
-        let danhSachLichHenGoc = [];
+<script>
+let danhSachLichHenGoc = [];
+let boLocHienTai = 'all';
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            await taiDanhSachLichHen();
+window.addEventListener('DOMContentLoaded', async () => {
+    await taiDanhSachLichHen();
 
-            // Đăng ký Realtime tự động cập nhật bảng khi có thay đổi từ thiết bị khác
-            if (typeof db !== 'undefined' && db) {
-                db.channel('realtime-lichhen-pc')
-                  .on('postgres_changes', { event: '*', schema: 'public', table: 'lichhen' }, async () => {
-                      await taiDanhSachLichHen();
-                  })
-                  .subscribe();
-            }
-        });
+    if (typeof db !== 'undefined' && db) {
+        db.channel('realtime-lichhen-card')
+          .on(
+              'postgres_changes',
+              { event:'*', schema:'public', table:'lichhen' },
+              async () => {
+                  await taiDanhSachLichHen();
+              }
+          )
+          .subscribe();
+    }
+});
 
-        async function taiDanhSachLichHen() {
-            const { data, error } = await db.from('lichhen').select('*').order('ngayhen', { ascending: true });
-            if (error) {
-                console.error('Lỗi tải lịch hẹn:', error);
-            } else {
-                danhSachLichHenGoc = data || [];
-                hienThiBang(danhSachLichHenGoc);
-            }
-        }
+async function taiDanhSachLichHen() {
+    const { data, error } = await db
+        .from('lichhen')
+        .select('*')
+        .order('ngayhen', { ascending:true });
 
-        function hienThiBang(data) {
-            const tableBody = document.getElementById('data-table');
-            tableBody.innerHTML = '';
-            
-            if(data.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#777;">Chưa có lịch hẹn nào</td></tr>`;
-                return;
-            }
+    if (error) {
+        console.error('Lỗi tải lịch hẹn:', error);
+        return;
+    }
 
-            data.forEach(item => {
-                // Xử lý hiển thị ngày dạng DD/MM/YYYY thuần túy (bỏ qua giờ)
-                let ngayHenFormatted = '---';
-                if (item.ngayhen) {
-                    const parts = item.ngayhen.split('T')[0].split('-');
-                    if (parts.length === 3) {
-                        ngayHenFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
-                    } else {
-                        ngayHenFormatted = item.ngayhen;
-                    }
-                }
-                
-                // Xử lý huy hiệu trạng thái dạng bấm đổi trực tiếp trên bảng PC
-                const trangThaiHienTai = item.trangthai || 'Chờ khám';
-                let badgeColor = '#d97706'; // Cam: Chờ khám
-                let bgBadge = '#fef3c7';
-                let nextStatus = 'Đã hoàn thành';
+    danhSachLichHenGoc = data || [];
+    capNhatThongKe();
+    apDungBoLoc();
+}
 
-                if(trangThaiHienTai === 'Đã hoàn thành') {
-                    badgeColor = '#059669'; // Xanh lá: Đã hoàn thành
-                    bgBadge = '#d1fae5';
-                    nextStatus = 'Đã hủy';
-                } else if(trangThaiHienTai === 'Đã hủy') {
-                    badgeColor = '#dc2626'; // Đỏ: Đã hủy
-                    bgBadge = '#fee2e2';
-                    nextStatus = 'Chờ khám';
-                }
+function layNgay(value) {
+    if (!value) return '';
+    return String(value).split('T')[0];
+}
 
-                // Tự động thêm số 0 ở đầu nếu SĐT bị thiếu số 0
-                let rawSdt = String(item.sdt || '').trim();
-                let displaySdt = rawSdt ? (rawSdt.startsWith('0') ? rawSdt : '0' + rawSdt) : '';
+function formatNgay(value) {
+    const ngay = layNgay(value);
+    if (!ngay) return '---';
 
-                tableBody.innerHTML += `<tr>
-                    <td><strong>#${item.id}</strong></td>
-                    <td style="font-weight: 600; color: #1e3a8a;">📅 ${ngayHenFormatted}</td>
-                    <td>
-                        <b>${item.tenchunuoi || '---'}</b><br>
-                        <span style="font-size: 12px;">
-                            ${displaySdt ? `<a href="tel:${displaySdt}" style="color: #0284c7; text-decoration: none; font-weight: bold;" title="Bấm để gọi điện">📞 ${displaySdt}</a>` : 'Không có SĐT'}
-                        </span>
-                    </td>
-                    <td>${item.diachi || '---'}</td>
-                    <td style="font-size: 12px; max-width: 250px; word-break: break-word;">${item.noidung || '---'}</td>
-                    <td style="text-align: center;">
-                        <span onclick="capNhatTrangThaiLichHenPC(${item.id}, '${nextStatus}')" 
-                            style="padding: 4px 10px; border-radius: 12px; font-size: 11px; background: ${bgBadge}; color: ${badgeColor}; font-weight: bold; cursor: pointer; display: inline-block; white-space: nowrap;" 
-                            title="Bấm để đổi trạng thái">
-                            ${trangThaiHienTai} 🔄
-                        </span>
-                    </td>
-                    <td>
-                        <div style="display: flex; gap: 6px; align-items: center;">
-                            <button class="btn-edit" style="padding: 5px 10px; font-size: 11px; border-radius: 4px;" onclick="moModalSua(${item.id})">Sửa</button>
-                            <button class="btn-delete" style="padding: 5px 10px; font-size: 11px; border-radius: 4px;" onclick="xoaLichHen(${item.id})">Xóa</button>
+    const parts = ngay.split('-');
+    if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    return ngay;
+}
+
+function laHomNay(value) {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth()+1).padStart(2,'0');
+    const dd = String(today.getDate()).padStart(2,'0');
+
+    return layNgay(value) === `${yyyy}-${mm}-${dd}`;
+}
+
+function layChuCaiDau(ten) {
+    const s = String(ten || 'KH').trim();
+
+    if (!s) return 'KH';
+
+    const words = s.split(/\s+/).filter(Boolean);
+
+    if (words.length === 1) {
+        return words[0].substring(0,2).toUpperCase();
+    }
+
+    return (words[0][0] + words[words.length-1][0]).toUpperCase();
+}
+
+function mauAvatar(id) {
+    const colors = ['blue','cyan','green','purple','orange','pink'];
+    return colors[Math.abs(Number(id) || 0) % colors.length];
+}
+
+function taoTrangThai(item) {
+    const current = item.trangthai || 'Chờ khám';
+
+    if (current === 'Đã hoàn thành') {
+        return {
+            cls:'done',
+            next:'Đã hủy',
+            icon:'fa-circle-check'
+        };
+    }
+
+    if (current === 'Đã hủy') {
+        return {
+            cls:'cancel',
+            next:'Chờ khám',
+            icon:'fa-ban'
+        };
+    }
+
+    return {
+        cls:'wait',
+        next:'Đã hoàn thành',
+        icon:'fa-clock'
+    };
+}
+
+function hienThiBang(data) {
+    const container = document.getElementById('data-table');
+    const countEl = document.getElementById('lichHenCount');
+
+    container.innerHTML = '';
+
+    if (countEl) {
+        countEl.textContent = `Hiển thị ${data.length.toLocaleString('vi-VN')} lịch hẹn`;
+    }
+
+    if (!data.length) {
+        container.innerHTML = `
+            <div class="lh-empty">
+                <i class="fa-solid fa-calendar-xmark"></i>
+                <strong>Chưa có lịch hẹn</strong>
+                <div style="margin-top:5px;font-size:10px">
+                    Không tìm thấy lịch hẹn phù hợp.
+                </div>
+            </div>`;
+        return;
+    }
+
+    data.forEach(item => {
+        const ten = item.tenchunuoi || 'Chưa có tên';
+        const sdtRaw = String(item.sdt || '').trim();
+        const sdt = sdtRaw
+            ? (sdtRaw.startsWith('0') ? sdtRaw : '0' + sdtRaw)
+            : '';
+
+        const status = taoTrangThai(item);
+        const ngay = formatNgay(item.ngayhen);
+        const today = laHomNay(item.ngayhen);
+
+        const avatar = layChuCaiDau(ten);
+        const avatarClass = mauAvatar(item.id);
+
+        const safeNoiDung = item.noidung || 'Chưa có nội dung hẹn';
+        const diaChi = item.diachi || 'Chưa có địa chỉ';
+
+        container.innerHTML += `
+            <div class="lh-card">
+
+                <div class="lh-card-top">
+
+                    <div class="lh-avatar ${avatarClass}">
+                        ${avatar}
+                    </div>
+
+                    <div class="lh-owner">
+                        <div class="lh-owner-name" title="${escapeHtml(ten)}">
+                            ${escapeHtml(ten)}
                         </div>
-                    </td>
-                </tr>`;
-            });
+
+                        <div class="lh-phone">
+                            ${
+                                sdt
+                                ? `<a href="tel:${sdt}">
+                                    <i class="fa-solid fa-phone"></i> ${escapeHtml(sdt)}
+                                   </a>`
+                                : `<span style="color:#94a3b8">Không có SĐT</span>`
+                            }
+                        </div>
+
+                        <span class="lh-id">LH#${item.id}</span>
+                    </div>
+
+                    <span class="lh-status ${status.cls}"
+                          onclick="capNhatTrangThaiLichHenPC(${item.id}, '${status.next}')"
+                          title="Bấm để đổi trạng thái">
+                        <i class="fa-solid ${status.icon}"></i>
+                        ${escapeHtml(item.trangthai || 'Chờ khám')}
+                    </span>
+
+                </div>
+
+                <div class="lh-date-box">
+                    <div class="lh-date-left">
+                        <div class="lh-date-icon">
+                            <i class="fa-solid fa-calendar-day"></i>
+                        </div>
+
+                        <div>
+                            <div class="lh-date-label">NGÀY HẸN</div>
+                            <div class="lh-date">${ngay}</div>
+                        </div>
+                    </div>
+
+                    ${
+                        today
+                        ? `<span class="lh-today">
+                            <i class="fa-solid fa-bell"></i> Hôm nay
+                           </span>`
+                        : ''
+                    }
+                </div>
+
+                <div class="lh-content">
+                    <div class="lh-content-label">
+                        <i class="fa-solid fa-note-sticky"></i> NỘI DUNG HẸN
+                    </div>
+
+                    <div class="lh-content-text" title="${escapeHtml(safeNoiDung)}">
+                        ${escapeHtml(safeNoiDung)}
+                    </div>
+                </div>
+
+                <div class="lh-info-grid">
+
+                    <div class="lh-info">
+                        <div class="lh-info-label">ĐỊA CHỈ</div>
+                        <div class="lh-info-value" title="${escapeHtml(diaChi)}">
+                            <i class="fa-solid fa-location-dot" style="color:#94a3b8"></i>
+                            ${escapeHtml(diaChi)}
+                        </div>
+                    </div>
+
+                    <div class="lh-info">
+                        <div class="lh-info-label">TRẠNG THÁI</div>
+                        <div class="lh-info-value">
+                            ${escapeHtml(item.trangthai || 'Chờ khám')}
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="lh-card-footer">
+
+                    <div>
+                        ${
+                            today
+                            ? `<span style="
+                                display:inline-flex;
+                                align-items:center;
+                                gap:4px;
+                                padding:5px 7px;
+                                border-radius:6px;
+                                color:#047857;
+                                background:#d1fae5;
+                                font-size:8px;
+                                font-weight:800;">
+                                <i class="fa-solid fa-calendar-check"></i>
+                                Lịch hôm nay
+                              </span>`
+                            : `<span style="
+                                color:#94a3b8;
+                                font-size:8px;">
+                                <i class="fa-solid fa-hashtag"></i>
+                                Lịch hẹn #${item.id}
+                              </span>`
+                        }
+                    </div>
+
+                    <div class="lh-footer-actions">
+
+                        ${
+                            sdt
+                            ? `<button class="lh-action lh-call"
+                                onclick="window.location.href='tel:${sdt}'"
+                                title="Gọi điện">
+                                <i class="fa-solid fa-phone"></i>
+                               </button>`
+                            : ''
+                        }
+
+                        <button class="lh-action lh-edit"
+                            onclick="moModalSua(${item.id})"
+                            title="Sửa">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+
+                        <button class="lh-action lh-delete"
+                            onclick="xoaLichHen(${item.id})"
+                            title="Xóa">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+
+                    </div>
+                </div>
+
+            </div>`;
+    });
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#039;');
+}
+
+function capNhatThongKe() {
+    const total = danhSachLichHenGoc.length;
+
+    const choKham = danhSachLichHenGoc.filter(
+        x => (x.trangthai || 'Chờ khám') === 'Chờ khám'
+    ).length;
+
+    const hoanThanh = danhSachLichHenGoc.filter(
+        x => x.trangthai === 'Đã hoàn thành'
+    ).length;
+
+    const homNay = danhSachLichHenGoc.filter(
+        x => laHomNay(x.ngayhen)
+    ).length;
+
+    document.getElementById('statTong').textContent = total.toLocaleString('vi-VN');
+    document.getElementById('statChoKham').textContent = choKham.toLocaleString('vi-VN');
+    document.getElementById('statHoanThanh').textContent = hoanThanh.toLocaleString('vi-VN');
+    document.getElementById('statHomNay').textContent = homNay.toLocaleString('vi-VN');
+}
+
+function chonBoLoc(filter, button) {
+    boLocHienTai = filter;
+
+    document.querySelectorAll('.lh-filter').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    if (button) {
+        button.classList.add('active');
+    }
+
+    apDungBoLoc();
+}
+
+function apDungBoLoc() {
+    const keyword = document.getElementById('searchInput').value
+        .toLowerCase()
+        .trim();
+
+    let result = danhSachLichHenGoc.filter(item => {
+
+        const status = item.trangthai || 'Chờ khám';
+
+        const matchFilter =
+            boLocHienTai === 'all' ||
+            status === boLocHienTai;
+
+        const ten = String(item.tenchunuoi || '').toLowerCase();
+        const sdt = String(item.sdt || '').toLowerCase();
+        const noidung = String(item.noidung || '').toLowerCase();
+        const diachi = String(item.diachi || '').toLowerCase();
+
+        const matchSearch =
+            !keyword ||
+            ten.includes(keyword) ||
+            sdt.includes(keyword) ||
+            noidung.includes(keyword) ||
+            diachi.includes(keyword);
+
+        return matchFilter && matchSearch;
+    });
+
+    hienThiBang(result);
+}
+
+function timKiemLichHen() {
+    apDungBoLoc();
+}
+
+async function capNhatTrangThaiLichHenPC(id, trangThaiMoi) {
+    if (typeof db === 'undefined' || !db) return;
+
+    const { error } = await db
+        .from('lichhen')
+        .update({ trangthai: trangThaiMoi })
+        .eq('id', id);
+
+    if (error) {
+        alert('Lỗi cập nhật trạng thái: ' + error.message);
+        return;
+    }
+
+    await taiDanhSachLichHen();
+}
+
+function moModalThem() {
+    document.getElementById('editingId').value = '';
+    document.getElementById('tenchunuoi').value = '';
+    document.getElementById('sdt').value = '';
+    document.getElementById('diachi').value = '';
+    document.getElementById('noidung').value = '';
+    document.getElementById('trangthai').value = 'Chờ khám';
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth()+1).padStart(2,'0');
+    const dd = String(today.getDate()).padStart(2,'0');
+
+    document.getElementById('ngayhen').value = `${yyyy}-${mm}-${dd}`;
+
+    document.getElementById('modalTitle').innerText = 'Tạo lịch hẹn mới';
+    document.getElementById('lichHenModal').style.display = 'flex';
+}
+
+function moModalSua(id) {
+    const item = danhSachLichHenGoc.find(x => x.id === id);
+    if (!item) return;
+
+    document.getElementById('editingId').value = item.id;
+    document.getElementById('tenchunuoi').value = item.tenchunuoi || '';
+    document.getElementById('sdt').value = item.sdt || '';
+    document.getElementById('diachi').value = item.diachi || '';
+    document.getElementById('noidung').value = item.noidung || '';
+    document.getElementById('trangthai').value = item.trangthai || 'Chờ khám';
+    document.getElementById('ngayhen').value = item.ngayhen
+        ? item.ngayhen.split('T')[0]
+        : '';
+
+    document.getElementById('modalTitle').innerText =
+        'Cập nhật lịch hẹn (ID: ' + id + ')';
+
+    document.getElementById('lichHenModal').style.display = 'flex';
+}
+
+function dongModal() {
+    document.getElementById('lichHenModal').style.display = 'none';
+}
+
+async function luuLichHen() {
+    const id = document.getElementById('editingId').value;
+
+    const tenchunuoi = document.getElementById('tenchunuoi').value.trim();
+    const sdt = document.getElementById('sdt').value.trim();
+    const ngayhen = document.getElementById('ngayhen').value;
+    const diachi = document.getElementById('diachi').value.trim();
+    const noidung = document.getElementById('noidung').value.trim();
+    const trangthai = document.getElementById('trangthai').value;
+
+    if (!tenchunuoi || !ngayhen) {
+        alert('Vui lòng nhập Tên chủ nuôi và Ngày hẹn!');
+        return;
+    }
+
+    const payload = {
+        tenchunuoi,
+        sdt,
+        ngayhen,
+        diachi,
+        noidung,
+        trangthai
+    };
+
+    if (id === '') {
+
+        const { error } = await db
+            .from('lichhen')
+            .insert([payload]);
+
+        if (error) {
+            alert('Lỗi tạo lịch hẹn: ' + error.message);
+            return;
         }
 
-        // Hàm gọi Database cập nhật trạng thái trực tiếp trên bảng PC
-        async function capNhatTrangThaiLichHenPC(id, trangThaiMoi) {
-            if (typeof db === 'undefined' || !db) return;
+        alert('Tạo lịch hẹn thành công!');
 
-            const { error } = await db
-                .from('lichhen')
-                .update({ trangthai: trangThaiMoi })
-                .eq('id', id);
+    } else {
 
-            if (error) {
-                alert('Lỗi cập nhật trạng thái: ' + error.message);
-            } else {
-                await taiDanhSachLichHen();
-            }
+        const { error } = await db
+            .from('lichhen')
+            .update(payload)
+            .eq('id', id);
+
+        if (error) {
+            alert('Lỗi cập nhật lịch hẹn: ' + error.message);
+            return;
         }
 
-        function timKiemLichHen() {
-            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
-            const ketQuaLoc = danhSachLichHenGoc.filter(item => {
-                const ten = (item.tenchunuoi || '').toLowerCase();
-                const sdt = (item.sdt || '').toLowerCase();
-                const noidung = (item.noidung || '').toLowerCase();
-                return ten.includes(tuKhoa) || sdt.includes(tuKhoa) || noidung.includes(tuKhoa);
-            });
-            hienThiBang(ketQuaLoc);
-        }
+        alert('Cập nhật lịch hẹn thành công!');
+    }
 
-        function moModalThem() {
-            document.getElementById('editingId').value = '';
-            document.getElementById('tenchunuoi').value = '';
-            document.getElementById('sdt').value = '';
-            document.getElementById('diachi').value = '';
-            document.getElementById('noidung').value = '';
-            document.getElementById('trangthai').value = 'Chờ khám';
-            
-            // Lấy ngày hiện tại định dạng YYYY-MM-DD
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('ngayhen').value = today;
-            
-            document.getElementById('modalTitle').innerText = 'Tạo lịch hẹn mới';
-            document.getElementById('lichHenModal').style.display = 'flex';
-        }
+    dongModal();
+    await taiDanhSachLichHen();
+}
 
-        function moModalSua(id) {
-            const item = danhSachLichHenGoc.find(x => x.id === id);
-            if (!item) return;
+async function xoaLichHen(id) {
+    if (!confirm('Bạn có chắc chắn muốn xóa lịch hẹn này không?')) {
+        return;
+    }
 
-            document.getElementById('editingId').value = item.id;
-            document.getElementById('tenchunuoi').value = item.tenchunuoi || '';
-            document.getElementById('sdt').value = item.sdt || '';
-            document.getElementById('diachi').value = item.diachi || '';
-            document.getElementById('noidung').value = item.noidung || '';
-            document.getElementById('trangthai').value = item.trangthai || 'Chờ khám';
-            
-            // Lấy đúng định dạng YYYY-MM-DD bỏ phần giờ
-            document.getElementById('ngayhen').value = item.ngayhen ? item.ngayhen.split('T')[0] : '';
+    const { error } = await db
+        .from('lichhen')
+        .delete()
+        .eq('id', id);
 
-            document.getElementById('modalTitle').innerText = 'Cập nhật lịch hẹn (ID: ' + id + ')';
-            document.getElementById('lichHenModal').style.display = 'flex';
-        }
+    if (error) {
+        alert('Lỗi khi xóa: ' + error.message);
+        return;
+    }
 
-        function dongModal() {
-            document.getElementById('lichHenModal').style.display = 'none';
-        }
+    alert('Xóa lịch hẹn thành công!');
+    await taiDanhSachLichHen();
+}
+</script>
 
-        async function luuLichHen() {
-            const id = document.getElementById('editingId').value;
-            const tenchunuoi = document.getElementById('tenchunuoi').value.trim();
-            const sdt = document.getElementById('sdt').value.trim();
-            const ngayhen = document.getElementById('ngayhen').value; // Chuỗi 'YYYY-MM-DD'
-            const diachi = document.getElementById('diachi').value.trim();
-            const noidung = document.getElementById('noidung').value.trim();
-            const trangthai = document.getElementById('trangthai').value;
-
-            if (!tenchunuoi || !ngayhen) {
-                alert('Vui lòng nhập Tên chủ nuôi và Ngày hẹn!');
-                return;
-            }
-
-            const payload = {
-                tenchunuoi: tenchunuoi,
-                sdt: sdt,
-                ngayhen: ngayhen, // Lưu trực tiếp chuỗi ngày thuần túy lên cơ sở dữ liệu
-                diachi: diachi,
-                noidung: noidung,
-                trangthai: trangthai
-            };
-
-            if (id === "") {
-                const { error } = await db.from('lichhen').insert([payload]);
-                if (error) {
-                    alert('Lỗi tạo lịch hẹn: ' + error.message);
-                } else {
-                    alert('Tạo lịch hẹn thành công!');
-                    dongModal();
-                    await taiDanhSachLichHen();
-                }
-            } else {
-                const { error } = await db.from('lichhen').update(payload).eq('id', id);
-                if (error) {
-                    alert('Lỗi cập nhật lịch hẹn: ' + error.message);
-                } else {
-                    alert('Cập nhật lịch hẹn thành công!');
-                    dongModal();
-                    await taiDanhSachLichHen();
-                }
-            }
-        }
-
-        async function xoaLichHen(id) {
-            if (confirm('Bạn có chắc chắn muốn xóa lịch hẹn này không?')) {
-                const { error } = await db.from('lichhen').delete().eq('id', id);
-                if (error) {
-                    alert('Lỗi khi xóa: ' + error.message);
-                } else {
-                    alert('Xóa lịch hẹn thành công!');
-                    await taiDanhSachLichHen();
-                }
-            }
-        }
-    </script>
 </body>
 </html>

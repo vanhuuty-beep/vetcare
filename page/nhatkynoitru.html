@@ -18,181 +18,8 @@
     <link rel="stylesheet" href="../css/smart-search.css">
 
     <style>
-        .search-box {
-            padding: 8px 12px;
-            width: 250px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-            outline: none;
-        }
-        .search-box:focus {
-            border-color: #2563eb;
-        }
-        .card-header-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .modal-container {
-            width: 700px;
-            max-width: 100%;
-            padding: 20px 24px;
-            box-sizing: border-box;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        .modal-header {
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-        }
-        .form-group-modal {
-            margin-bottom: 10px;
-            position: relative;
-        }
-        .form-group-modal label {
-            font-size: 13px;
-            margin-bottom: 3px;
-            display: block;
-            font-weight: 500;
-        }
-        .form-group-modal input, .form-group-modal select, .form-group-modal textarea {
-            width: 100%;
-            padding: 7px 10px;
-            font-size: 13px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .form-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .form-row .form-group-modal {
-            flex: 1;
-            margin-bottom: 0;
-        }
-        .modal-footer {
-            margin-top: 15px;
-            padding-top: 10px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        table th:last-child, table td:last-child {
-            white-space: nowrap;
-            width: 180px;
-        }
-
-        /* --- CSS PHÂN TRANG --- */
-        .pagination-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            background-color: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            font-size: 13px;
-            color: #475569;
-        }
-        .pagination-buttons {
-            display: flex;
-            gap: 6px;
-        }
-        .btn-page {
-            padding: 6px 12px;
-            border: 1px solid #cbd5e1;
-            background-color: #fff;
-            color: #1e293b;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-        }
-        .btn-page:hover:not(:disabled) {
-            background-color: #f1f5f9;
-            border-color: #94a3b8;
-        }
-        .btn-page:disabled {
-            background-color: #f1f5f9;
-            color: #94a3b8;
-            cursor: not-allowed;
-        }
-        .btn-page.active {
-            background-color: #2563eb;
-            color: #fff;
-            border-color: #2563eb;
-        }
-
-        /* --- CẤU HÌNH IN CHUẨN KHÔNG BỊ DÍNH MENU & TRÀN LỀ --- */
-       @media print {
-            @page {
-                size: A4 portrait;
-                margin: 15mm 10mm;
-            }
-
-            body, body * {
-                visibility: hidden !important;
-            }
-
-            #menu-container,
-            #topnav-container,
-            .main-content,
-            .card,
-            .modal-overlay {
-                display: none !important;
-                visibility: hidden !important;
-            }
-
-            #hoaDonModal {
-                display: block !important;
-                position: static !important;
-                background: none !important;
-            }
-
-            .modal-container {
-                display: block !important;
-                position: static !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                box-shadow: none !important;
-                border: none !important;
-                background: none !important;
-            }
-
-            #printArea, #printArea * {
-                visibility: visible !important;
-            }
-
-            #printArea {
-                position: absolute !important;
-                left: 0 !important;
-                top: 0 !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                margin: 0 !important;
-                padding: 5px !important;
-                background: #fff !important;
-                color: #000 !important;
-                box-sizing: border-box !important;
-                overflow: hidden !important;
-            }
-
-            #printArea table {
-                width: 100% !important;
-                table-layout: fixed;
-                word-wrap: break-word;
-            }
-
-            .modal-header, .modal-footer, .close-modal, button {
-                display: none !important;
-            }
-        }
-    </style>
+:root{--p:#2563eb;--pd:#1d4ed8;--soft:#eff6ff;--g:#10b981;--o:#f59e0b;--r:#ef4444;--t:#172554;--m:#64748b;--b:#e5eaf2;--bg:#f4f7fb}
+*{box-sizing:border-box}body{background:var(--bg);color:#334155}.content-body{padding:22px 24px 40px}.noitru-page{max-width:1550px;margin:auto}.noitru-card{background:#fff;border:1px solid var(--b);border-radius:18px;box-shadow:0 10px 35px rgba(15,23,42,.055);overflow:hidden}.noitru-header{padding:23px 26px 18px;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}.page-title-wrap h1{margin:0;font-size:23px;font-weight:800;color:var(--t)}.page-title-wrap p{margin:7px 0 0;color:var(--m);font-size:13px}.header-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.search-modern{position:relative;width:290px}.search-modern input{width:100%;height:42px;border:1px solid #dbe3ef;border-radius:11px;padding:0 40px 0 14px;outline:none}.search-modern input:focus{border-color:#7aa7ff;box-shadow:0 0 0 4px rgba(37,99,235,.08)}.search-modern span{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:#64748b;font-size:17px}.btn-add-commercial{height:42px;border:0;border-radius:11px;padding:0 18px;color:#fff;background:linear-gradient(135deg,#2563eb,#1677ff);font-weight:750;cursor:pointer;box-shadow:0 7px 16px rgba(37,99,235,.2)}.noitru-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;padding:0 26px 22px}.kpi{min-height:112px;border:1px solid var(--b);border-radius:15px;padding:18px;background:#fff;display:flex;align-items:center;gap:14px}.kpi-icon{width:48px;height:48px;flex:0 0 48px;border-radius:50%;display:grid;place-items:center;font-size:21px;font-weight:800}.kpi-blue .kpi-icon{background:#eff6ff;color:#2563eb}.kpi-orange .kpi-icon{background:#fff7ed;color:#ea580c}.kpi-green .kpi-icon{background:#ecfdf5;color:#059669}.kpi-red .kpi-icon{background:#fef2f2;color:#dc2626}.kpi-label{color:#64748b;font-size:12px;margin-bottom:5px}.kpi-value{color:#0f172a;font-size:23px;line-height:1;font-weight:850}.kpi-sub{color:#94a3b8;font-size:11px;margin-top:7px}.noitru-table-wrap{margin:0 26px;border:1px solid var(--b);border-radius:13px;overflow:auto}.noitru-table{width:100%;min-width:1180px;border-collapse:separate;border-spacing:0}.noitru-table th{height:51px;padding:0 14px;background:#f8fafc;color:#334155;border-bottom:1px solid var(--b);font-size:12px;font-weight:800;text-align:left;white-space:nowrap}.noitru-table td{padding:14px;border-bottom:1px solid #edf1f6;font-size:12px;color:#334155;vertical-align:middle}.noitru-table tbody tr:hover{background:#f8fbff}.noitru-table tbody tr:last-child td{border-bottom:0}.nknt-code{color:#172554;font-weight:800;white-space:nowrap}.pet-code{color:#2563eb;font-weight:800}.pet-name{color:#1e293b;font-size:13px;font-weight:750}.owner-name{color:#64748b;font-size:11px;margin-top:3px}.room-name{color:#0284c7;font-weight:700}.cage-name{color:#d97706;font-weight:750;margin-top:4px}.date-line{line-height:1.7;white-space:nowrap}.date-line span{color:#64748b}.doctor{font-weight:650}.money-box{line-height:1.7;white-space:nowrap}.money-total{font-weight:750}.money-paid{color:#059669}.money-due{color:#dc2626;font-weight:800}.status-badge{display:inline-flex;align-items:center;min-height:27px;padding:0 10px;border-radius:999px;font-size:10px;font-weight:800;white-space:nowrap;cursor:pointer}.status-in{color:#b45309;background:#fff7ed;border:1px solid #fed7aa}.status-wait{color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe}.status-out{color:#059669;background:#ecfdf5;border:1px solid #a7f3d0}.action-group{display:flex;gap:6px;white-space:nowrap}.action-btn{height:32px;border:0;border-radius:8px;padding:0 10px;color:#fff;font-size:11px;font-weight:750;cursor:pointer}.action-invoice{background:#10b981}.action-edit{background:#f59e0b}.action-delete{background:#ef4444}.pagination-container{padding:17px 26px 20px;background:#fff;border-top:1px solid #eef2f7;display:flex;justify-content:space-between;align-items:center;gap:15px;font-size:12px;color:#64748b}.pagination-buttons{display:flex;gap:6px}.btn-page{min-width:36px;height:36px;padding:0 10px;border:1px solid #dbe3ef;background:#fff;color:#475569;border-radius:9px;cursor:pointer;font-size:12px;font-weight:650}.btn-page.active{background:#2563eb;color:#fff;border-color:#2563eb}.btn-page:disabled{opacity:.42}.modal-overlay{position:fixed!important;inset:0!important;background:rgba(15,23,42,.5)!important;backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:9999;padding:18px}.modal-container{width:min(760px,100%)!important;max-height:calc(100vh - 36px);overflow-y:auto;padding:24px!important;background:#fff;border-radius:18px!important;box-shadow:0 25px 80px rgba(15,23,42,.22)}.modal-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:16px!important;margin-bottom:18px!important;border-bottom:1px solid #eef2f7}.modal-header h3{margin:0;color:#172554;font-size:19px;font-weight:800}.close-modal{width:35px;height:35px;border:0;border-radius:9px;background:#f1f5f9;color:#64748b;font-size:22px;cursor:pointer}.form-group-modal{margin-bottom:14px!important;position:relative}.form-group-modal label{display:block;color:#334155;font-size:12px!important;font-weight:750!important;margin-bottom:6px!important}.form-group-modal input,.form-group-modal select,.form-group-modal textarea{width:100%;min-height:42px;padding:9px 12px!important;border:1px solid #dbe3ef!important;border-radius:9px!important;outline:none;font-size:13px!important;color:#1e293b}.form-group-modal textarea{min-height:76px}.form-group-modal input:focus,.form-group-modal select:focus,.form-group-modal textarea:focus{border-color:#7aa7ff!important;box-shadow:0 0 0 4px rgba(37,99,235,.08)}.form-row{display:flex;gap:12px;margin-bottom:0!important}.form-row .form-group-modal{flex:1}.stay-summary{background:linear-gradient(135deg,#eff6ff,#f8fbff)!important;border:1px solid #bfdbfe!important;border-radius:12px!important;padding:12px 15px!important;display:flex;justify-content:space-between;align-items:center;margin:4px 0 14px!important}.stay-summary-label{color:#475569;font-size:12px;font-weight:700}.stay-summary-value{color:#2563eb;font-size:17px;font-weight:850}.modal-footer{margin-top:20px!important;padding-top:17px!important;border-top:1px solid #eef2f7;display:flex;justify-content:flex-end;gap:9px}.modal-footer button{min-height:40px;padding:0 17px;border:0;border-radius:9px;cursor:pointer;font-weight:750}.btn-secondary{background:#f1f5f9!important;color:#475569!important}.btn-primary{background:#2563eb!important;color:#fff!important}#thucung_dropdown{border:1px solid #dbe3ef!important;border-radius:10px!important;box-shadow:0 12px 30px rgba(15,23,42,.12)!important;overflow:hidden!important}@media(max-width:1150px){.noitru-stats{grid-template-columns:repeat(2,1fr)}}@media(max-width:700px){.content-body{padding:12px}.noitru-header{padding:18px 16px 14px}.noitru-stats{grid-template-columns:1fr;padding:0 16px 16px}.noitru-table-wrap{margin:0 16px}.pagination-container{padding:15px 16px;flex-direction:column;align-items:flex-start}.search-modern{width:100%}.header-actions{width:100%}.btn-add-commercial{flex:1}.form-row{flex-direction:column;gap:0}}@media print{@page{size:A4 portrait;margin:15mm 10mm}body,body *{visibility:hidden!important}#menu-container,#topnav-container,.main-content,.noitru-card,.modal-overlay{display:none!important}#hoaDonModal{display:block!important;position:static!important;background:none!important}#hoaDonModal .modal-container{display:block!important;position:static!important;width:100%!important;max-width:100%!important;margin:0!important;padding:0!important;box-shadow:none!important;border:none!important;background:none!important}#printArea,#printArea *{visibility:visible!important}#printArea{position:absolute!important;left:0!important;top:0!important;width:100%!important;padding:5px!important;background:#fff!important;color:#000!important;box-sizing:border-box!important;overflow:hidden!important}.modal-header,.modal-footer,.close-modal,button{display:none!important}}</style>
 </head>
 <body>
 
@@ -203,46 +30,7 @@
     <div class="main-content">
        <div id="topnav-container"></div>
 
-        <div class="content-body">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Nhật ký Nội trú</h3>
-                    <div class="card-header-actions">
-                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm mã khám, lồng, bác sĩ..." onkeyup="timKiemNhatKyNoiTru()">
-                        <button class="btn-primary" onclick="moModalThem()">+ Thêm ca nội trú mới</button>
-                    </div>
-                </div>
-                
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Mã NKNT</th>
-                                <th>Khám bệnh & Thú cưng</th>
-                                <th>Lồng / Phòng</th>
-                                <th>Thời gian (Vào - Ra)</th>
-                                <th>Bác sĩ</th>
-                                <th>Chi phí & Thanh toán</th>
-                                <th style="text-align: center;">Trạng thái</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody id="data-table">
-                            <!-- Dữ liệu được nạp tự động -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-                <div id="paginationContainer" class="pagination-container">
-                    <div id="paginationInfo">Hiển thị 0 - 0 của 0 bản ghi</div>
-                    <div id="paginationButtons" class="pagination-buttons"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- POPUP FORM THÊM / SỬA NHẬT KÝ NỘI TRÚ -->
+        <div class="content-body"><div class="noitru-page"><div class="noitru-card"><div class="noitru-header"><div class="page-title-wrap"><h1>Nhật ký nội trú</h1><p>Quản lý ca lưu trú, phòng/lồng, viện phí và xuất viện</p></div><div class="header-actions"><div class="search-modern"><input type="text" id="searchInput" placeholder="Tìm mã khám, thú cưng, bác sĩ..." onkeyup="timKiemNhatKyNoiTru()"><span>⌕</span></div><button class="btn-add-commercial" onclick="moModalThem()">＋ Thêm ca nội trú</button></div></div><div class="noitru-stats"><div class="kpi kpi-blue"><div class="kpi-icon">▣</div><div><div class="kpi-label">Tổng hồ sơ</div><div class="kpi-value" id="kpiTong">0</div><div class="kpi-sub">Tất cả ca nội trú</div></div></div><div class="kpi kpi-orange"><div class="kpi-icon">⌂</div><div><div class="kpi-label">Đang nằm viện</div><div class="kpi-value" id="kpiDangNam">0</div><div class="kpi-sub">Đang sử dụng phòng/lồng</div></div></div><div class="kpi kpi-green"><div class="kpi-icon">✓</div><div><div class="kpi-label">Đã xuất viện</div><div class="kpi-value" id="kpiDaXuat">0</div><div class="kpi-sub">Đã hoàn tất lưu trú</div></div></div><div class="kpi kpi-red"><div class="kpi-icon">₫</div><div><div class="kpi-label">Còn phải thu</div><div class="kpi-value" id="kpiConThu">0 đ</div><div class="kpi-sub">Tổng tiền chưa thanh toán</div></div></div></div><div class="noitru-table-wrap"><table class="noitru-table"><thead><tr><th>Mã NKNT</th><th>Khám bệnh & Thú cưng</th><th>Lồng / Phòng</th><th>Thời gian lưu trú</th><th>Bác sĩ</th><th>Chi phí & Thanh toán</th><th style="text-align:center">Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="data-table"></tbody></table></div><div id="paginationContainer" class="pagination-container"><div id="paginationInfo">Hiển thị 0 - 0 của 0 bản ghi</div><div id="paginationButtons" class="pagination-buttons"></div></div></div></div></div></div><!-- POPUP FORM THÊM / SỬA NHẬT KÝ NỘI TRÚ -->
     <div class="modal-overlay" id="nhatKyNoiTruModal">
         <div class="modal-container">
             <div class="modal-header">
@@ -297,12 +85,12 @@
             </div>
 
             <!-- DÒNG HIỂN THỊ SỐ NGÀY LƯU TRÚ / NẰM VIỆN -->
-            <div class="form-row" style="background: #f8fafc; padding: 8px 12px; border-radius: 4px; border: 1px solid #e2e8f0; align-items: center; margin-bottom: 10px;">
+            <div class="stay-summary">
                 <div class="form-group-modal" style="margin-bottom: 0;">
-                    <span style="font-size: 13px; font-weight: bold; color: #334155;">⏳ Tổng số ngày lưu trú / nằm viện:</span>
+                    <span class="stay-summary-label">⏳ Tổng số ngày lưu trú / nằm viện</span>
                 </div>
                 <div class="form-group-modal" style="margin-bottom: 0; text-align: right;">
-                    <span id="hienThiSoNgayModal" style="font-size: 15px; font-weight: bold; color: #0284c7;">1 ngày</span>
+                    <span id="hienThiSoNgayModal" class="stay-summary-value">1 ngày</span>
                 </div>
             </div>
 
@@ -521,6 +309,7 @@
             } else {
                 danhSachNhatKyGoc = data || [];
                 ketQuaLocTamThoi = danhSachNhatKyGoc;
+                capNhatThongKeNoiTru();
                 hienThiBang(ketQuaLocTamThoi);
             }
         }
@@ -613,6 +402,8 @@
             document.getElementById('thanhtien').value = tongchiphi - tamung;
         }
 
+        function capNhatThongKeNoiTru(){const d=danhSachNhatKyGoc||[];const tong=d.length;const dang=d.filter(x=>(x.trangthai||'Đang nằm viện')==='Đang nằm viện').length;const da=d.filter(x=>x.trangthai==='Đã xuất viện').length;const no=d.reduce((a,x)=>a+Math.max(0,Number(x.thanhtien||0)),0);document.getElementById('kpiTong').innerText=tong.toLocaleString('vi-VN');document.getElementById('kpiDangNam').innerText=dang.toLocaleString('vi-VN');document.getElementById('kpiDaXuat').innerText=da.toLocaleString('vi-VN');document.getElementById('kpiConThu').innerText=no.toLocaleString('vi-VN')+' đ';}
+
         // --- HÀM HIỂN THỊ BẢNG KÈM PHÂN TRANG ---
         function hienThiBang(data) {
             const tableBody = document.getElementById('data-table');
@@ -667,42 +458,7 @@
                     nextStatus = 'Đang nằm viện';
                 }
 
-                tableBody.innerHTML += `<tr>
-                    <td><strong>${maNKNT}</strong></td>
-                    <td>
-                        <span style="color: #2563eb; font-weight: bold;">${maKBText}</span><br>
-                        <span>Pet: <b>${infoPet.tenthucung}</b></span><br>
-                        <span style="color: #555; font-size: 11px;">Chủ: ${infoPet.tenchu}</span>
-                    </td>
-                    <td>
-                        <span style="color: #0284c7;">${infoLong.phong}</span><br>
-                        <span style="color: #d97706; font-weight: 600;">${infoLong.long}</span>
-                    </td>
-                    <td style="font-size: 12px;">
-                        Vào: ${ngayVao}<br>
-                        Ra: ${ngayRa}
-                    </td>
-                    <td>${item.bacsiphutrach || ''}</td>
-                    <td style="font-size: 12px;">
-                        Tổng: <b>${Number(item.tongchiphi || 0).toLocaleString('vi-VN')} đ</b><br>
-                        T.Ứng: ${Number(item.tamung || 0).toLocaleString('vi-VN')} đ<br>
-                        <span style="color: #dc2626;">Còn: <b>${Number(item.thanhtien || 0).toLocaleString('vi-VN')} đ</b></span>
-                    </td>
-                    <td style="text-align: center;">
-                        <span onclick="capNhatTrangThaiPC(${item.id}, '${nextStatus}', ${item.malong})" 
-                            style="padding: 4px 10px; border-radius: 12px; font-size: 11px; background: ${bgBadge}; color: ${badgeColor}; font-weight: bold; cursor: pointer; display: inline-block; white-space: nowrap;" 
-                            title="Bấm để đổi trạng thái">
-                            ${trangThaiHienTai} 🔄
-                        </span>
-                    </td>
-                    <td style="white-space: nowrap;">
-                        <div style="display: flex; gap: 6px; align-items: center;">
-                            <button class="btn-primary" style="background-color: #059669; padding: 5px 10px; font-size: 11px; border-radius: 4px; border: none; cursor: pointer;" onclick="moModalHoaDon(${item.id})">Hóa đơn</button>
-                            <button class="btn-edit" style="padding: 5px 10px; font-size: 11px; border-radius: 4px;" onclick="moModalSua(${item.id})">Sửa</button>
-                            <button class="btn-delete" style="padding: 5px 10px; font-size: 11px; border-radius: 4px;" onclick="xoaNhatKyNoiTru(${item.id})">Xóa</button>
-                        </div>
-                    </td>
-                </tr>`;
+                const statusClass = trangThaiHienTai === 'Đã xuất viện' ? 'status-out' : trangThaiHienTai === 'Chờ xuất viện' ? 'status-wait' : 'status-in'; tableBody.innerHTML += `<tr><td><span class="nknt-code">${maNKNT}</span></td><td><span class="pet-code">${maKBText}</span><br><span class="pet-name">${infoPet.tenthucung}</span><div class="owner-name">Chủ: ${infoPet.tenchu}</div></td><td><div class="room-name">${infoLong.phong}</div><div class="cage-name">${infoLong.long}</div></td><td><div class="date-line"><span>Vào:</span> ${ngayVao}<br><span>Ra:</span> ${ngayRa}</div></td><td><span class="doctor">${item.bacsiphutrach || '—'}</span></td><td><div class="money-box"><div class="money-total">Tổng: ${Number(item.tongchiphi || 0).toLocaleString('vi-VN')} đ</div><div class="money-paid">T.ứng: ${Number(item.tamung || 0).toLocaleString('vi-VN')} đ</div><div class="money-due">Còn: ${Number(item.thanhtien || 0).toLocaleString('vi-VN')} đ</div></div></td><td style="text-align:center"><span class="status-badge ${statusClass}" onclick="capNhatTrangThaiPC(${item.id}, '${nextStatus}', ${item.malong})" title="Bấm để đổi trạng thái">${trangThaiHienTai} ↻</span></td><td><div class="action-group"><button class="action-btn action-invoice" onclick="moModalHoaDon(${item.id})">Hóa đơn</button><button class="action-btn action-edit" onclick="moModalSua(${item.id})">Sửa</button><button class="action-btn action-delete" onclick="xoaNhatKyNoiTru(${item.id})">Xóa</button></div></td></tr>`;
             });
 
             capNhatThanhPhanTrang(tongSoBanGhi, viTriBatDau, duLieuTrangHienTai.length, tongSoTrang);
