@@ -129,6 +129,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 <span class="menu-text">Công nợ nhà cung cấp</span>
             </li>
         </ul>
+		<li class="menu-item" id="menu-thuchi" onclick="window.location.href='thuchi.html'">
+    <span><i class="fa-solid fa-wallet"></i></span> 
+    <span class="menu-text">Thu chi phòng khám</span>
+</li>
     `;
 
     if (isTrueOwner || isBacSi || isHuuTy) {
