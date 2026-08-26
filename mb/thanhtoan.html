@@ -163,7 +163,7 @@
         .qr-image-wrap-m {
             background: #ffffff; border: 1px solid #cbd5e1; padding: 8px; border-radius: 10px; display: inline-block; margin-bottom: 10px;
         }
-        .qr-image-wrap-m img { width: 180px; height: 180px; display: block; margin: 0 auto; }
+        .qr-image-wrap-m img { width: 180px; height: 180px; display: block; margin: 0 auto; object-fit: contain; }
 
         .bank-info-box-m {
             background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; text-align: left; font-size: 11px; color: #334155; margin-bottom: 10px;
@@ -209,11 +209,10 @@
 
         <div style="margin-bottom: 8px;">
             <h3 style="font-size: 13px; font-weight: 700; color: #1e3a8a;"><i class="fa-solid fa-gem"></i> Chọn Gói Gia Hạn Bản Quyền</h3>
-            <p style="font-size: 10px; color: #64748b;">Chuyển khoản thành công, hệ thống tự động cộng nối tiếp thời hạn.</p>
+            <p style="font-size: 10px; color: #64748b;">Quét mã QR SePay để hệ thống tự động kích hoạt liền mạch.</p>
         </div>
 
         <div class="packages-list-mobile">
-            
             <!-- GÓI THÁNG -->
             <div class="pkg-card-mobile">
                 <div class="pkg-title-m">Gói Tháng</div>
@@ -250,7 +249,6 @@
                 </ul>
                 <button class="btn-select-pkg-m" onclick="moModalThanhToan('Gói 2 Năm', 2000000)">Thanh Toán Ngay</button>
             </div>
-
         </div>
 
         <div style="margin-top: 14px;">
@@ -265,36 +263,37 @@
 
     </div>
 
+    <!-- POPUP QR SEPAY TỰ ĐỘNG -->
     <div class="modal-overlay-mobile" id="qrModal">
         <div class="modal-box-mobile">
             <div class="modal-header-m">
-                <h3>📲 Quét Mã QR VietQR</h3>
+                <h3>📲 Quét Mã QR SePay Tự Động</h3>
                 <button class="close-m-btn" onclick="dongModalQR()"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <div class="modal-body-m">
-                <p style="font-size: 11px; color: #64748b; margin-bottom: 8px;">Mở App ngân hàng quét mã dưới đây để thanh toán tự động:</p>
+                <p style="font-size: 11px; color: #64748b; margin-bottom: 8px;">Mở App ngân hàng quét mã dưới đây. Hệ thống sẽ tự động mở bản quyền ngay khi tiền về:</p>
 
                 <div class="qr-image-wrap-m">
-                    <img id="qrImage" src="" alt="Mã QR VietQR">
+                    <img id="qrImage" src="" alt="Mã QR SePay">
                 </div>
 
                 <div class="bank-info-box-m">
-                    <div><span>Ngân hàng:</span> <strong id="lblNganHang">Techcombank</strong></div>
-                    <div><span>Số tài khoản:</span> <strong><span id="lblSTK">3757231999</span> <button class="copy-btn-m" onclick="saoChepText('lblSTK')">📋 Chép</button></strong></div>
+                    <div><span>Ngân hàng:</span> <strong id="lblNganHang">MB Bank</strong></div>
+                    <div><span>Số tài khoản:</span> <strong><span id="lblSTK">0935778727</span> <button class="copy-btn-m" onclick="saoChepText('lblSTK')">📋 Chép</button></strong></div>
                     <div><span>Chủ tài khoản:</span> <strong id="lblTenChTK">VAN HUU TY</strong></div>
                     <div><span>Số tiền:</span> <strong id="lblSoTien" style="color: #dc2626; font-size: 13px;">0 đ</strong></div>
                     <div><span>Nội dung CK:</span> <strong id="lblNoiDungCK" style="color: #0284c7;">GH PK_......</strong> <button class="copy-btn-m" onclick="saoChepText('lblNoiDungCK')">📋 Chép</button></div>
                 </div>
 
-                <div style="font-size: 10px; color: #d97706; background: #fffbe3; padding: 6px; border-radius: 6px; border: 1px solid #fef08a; text-align: left;">
-                    ⚠️ <b>Lưu ý:</b> Giữ nguyên <b>Nội dung CK</b> để hệ thống tự động duyệt hạn dùng.
+                <!-- THANH TRẠNG THÁI CHỜ TỰ ĐỘNG -->
+                <div id="trangThaiChoTien" style="font-size: 11px; color: #d97706; background: #fffbe3; padding: 8px; border-radius: 6px; border: 1px solid #fef08a; font-weight: bold; text-align: center; margin-bottom: 5px;">
+                    ⏳ Đang chờ giao dịch chuyển khoản... (Tự động kích hoạt)
                 </div>
             </div>
 
             <div class="modal-footer-m">
-                <button class="btn-m-cancel" onclick="dongModalQR()" style="flex: 1; padding: 8px; background: #e2e8f0; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Đóng lại</button>
-                <button class="btn-m-save" onclick="xacNhanDaChuyenKhoan()" style="flex: 1; padding: 8px; background: #059669; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">✅ Đã Chuyển Khoản</button>
+                <button class="btn-m-cancel" onclick="dongModalQR()" style="width: 100%; padding: 8px; background: #e2e8f0; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Đóng lại / Hủy</button>
             </div>
         </div>
     </div>
@@ -326,9 +325,9 @@
 
 <script>
     const CAU_HINH_NH = {
-        BANK_ID: "970407",
-        TEN_NGAN_HANG: "Techcombank",
-        STK: "3757231999",
+        BANK: "MB",               // Mã ngân hàng trên SePay
+        TEN_NGAN_HANG: "MB Bank",
+        STK: "0935778727",
         TEN_CHU_TK: "VAN HUU TY"
     };
 
@@ -336,6 +335,7 @@
     let selectedGoi = null;
     let selectedAmount = 0;
     let currentMaGD = "";
+    let realtimeGiaHanChannel = null;
 
     window.addEventListener('DOMContentLoaded', async () => {
         await taiThongTinPhongKham();
@@ -390,7 +390,8 @@
         const noiDungCK = `GH ${maPKClean}`;
         currentMaGD = 'GD' + Date.now().toString().slice(-6);
 
-        const qrUrl = `https://img.vietqr.io/image/${CAU_HINH_NH.BANK_ID}-${CAU_HINH_NH.STK}-compact2.png?amount=${soTien}&addInfo=${encodeURIComponent(noiDungCK)}&accountName=${encodeURIComponent(CAU_HINH_NH.TEN_CHU_TK)}`;
+        // Link QR động của SePay kèm cú pháp số tiền và nội dung
+        const qrUrl = `https://qr.sepay.vn/img?bank=${CAU_HINH_NH.BANK}&acc=${CAU_HINH_NH.STK}&template=compact&amount=${soTien}&des=${encodeURIComponent(noiDungCK)}`;
 
         document.getElementById('qrImage').src = qrUrl;
         document.getElementById('lblNganHang').innerText = CAU_HINH_NH.TEN_NGAN_HANG;
@@ -399,35 +400,96 @@
         document.getElementById('lblSoTien').innerText = soTien.toLocaleString('vi-VN') + ' đ';
         document.getElementById('lblNoiDungCK').innerText = noiDungCK;
 
+        // Reset trạng thái hiển thị chờ trên modal
+        const statusBox = document.getElementById('trangThaiChoTien');
+        statusBox.style.background = '#fffbe3';
+        statusBox.style.color = '#d97706';
+        statusBox.innerHTML = '⏳ Đang chờ giao dịch chuyển khoản... (Tự động kích hoạt)';
+
         document.getElementById('qrModal').style.display = 'flex';
+
+        // Tạo bản ghi chờ duyệt và kích hoạt lắng nghe realtime
+        await taoGiaoDichChoDuyet(noiDungCK);
     }
 
-    function dongModalQR() {
-        document.getElementById('qrModal').style.display = 'none';
-    }
-
-    async function xacNhanDaChuyenKhoan() {
-        if (!currentChuPK) return;
-
+    async function taoGiaoDichChoDuyet(noiDungCK) {
         const payload = {
             maphongkham: currentChuPK.maphongkham,
             tenphongkham: currentChuPK.tenphongkham || '',
             magiaodich: currentMaGD,
             goidichvu: selectedGoi,
             sotien: selectedAmount,
-            phuongthuc: 'Chuyển khoản VietQR',
+            phuongthuc: 'SePay Tự Động',
             trangthai: 'Chờ duyệt'
         };
 
-        const { error } = await db.from('lichsuthanhtoan').insert([payload]);
+        await db.from('lichsuthanhtoan').insert([payload]);
+        taiLichSuThanhToan();
+        
+        // Lắng nghe tín hiệu tự động từ SePay qua Realtime
+        langNgheTrangThaiThanhToan(currentMaGD);
+    }
 
-        if (error) {
-            alert('Lỗi tạo lịch sử giao dịch: ' + error.message);
-        } else {
-            alert('✅ Yêu cầu gia hạn đã được gửi đi! Admin sẽ kiểm tra và kích hoạt hạn dùng cho bạn.');
-            dongModalQR();
-            taiLichSuThanhToan();
+    function dongModalQR() {
+        document.getElementById('qrModal').style.display = 'none';
+        if (realtimeGiaHanChannel && typeof db !== 'undefined') {
+            db.removeChannel(realtimeGiaHanChannel);
         }
+    }
+
+    function langNgheTrangThaiThanhToan(maGD) {
+        if (typeof db === 'undefined' || !db) return;
+
+        if (realtimeGiaHanChannel) {
+            db.removeChannel(realtimeGiaHanChannel);
+        }
+
+        realtimeGiaHanChannel = db.channel('public:lichsuthanhtoan:sepay-tu-dong-mobile')
+            .on('postgres_changes', { 
+                event: 'UPDATE', 
+                schema: 'public', 
+                table: 'lichsuthanhtoan',
+                filter: `magiaodich=eq.${maGD}` 
+            }, async payload => {
+                const itemMoi = payload.new;
+                if (itemMoi.trangthai === 'Thành công' || itemMoi.trangthai === 'Đã duyệt') {
+                    
+                    const statusBox = document.getElementById('trangThaiChoTien');
+                    statusBox.style.background = '#d1fae5';
+                    statusBox.style.color = '#059669';
+                    statusBox.innerHTML = '✅ Thanh toán thành công! Đang mở bản quyền...';
+
+                    // Tự động cộng hạn dùng vào bảng chupk
+                    await tuDongCongHanDung(itemMoi.goidichvu);
+
+                    setTimeout(() => {
+                        dongModalQR();
+                        alert('🎉 Chúc mừng bạn! Bản quyền đã được kích hoạt tự động thành công.');
+                        location.reload(); 
+                    }, 1500);
+                }
+            })
+            .subscribe();
+    }
+
+    async function tuDongCongHanDung(goiDichVu) {
+        if (!currentChuPK) return;
+
+        let soThangThem = 1;
+        if (goiDichVu.includes('6 Tháng')) soThangThem = 7; 
+        else if (goiDichVu.includes('2 Năm') || goiDichVu.includes('24 Tháng')) soThangThem = 24;
+
+        let baseDate = new Date();
+        if (currentChuPK.ngayhethan && new Date(currentChuPK.ngayhethan) > baseDate) {
+            baseDate = new Date(currentChuPK.ngayhethan);
+        }
+
+        baseDate.setMonth(baseDate.getMonth() + soThangThem);
+        const ngayHetHanMoi = baseDate.toISOString();
+
+        await db.from('chupk')
+            .update({ ngayhethan: ngayHetHanMoi })
+            .eq('maphongkham', currentChuPK.maphongkham);
     }
 
     async function taiLichSuThanhToan() {
