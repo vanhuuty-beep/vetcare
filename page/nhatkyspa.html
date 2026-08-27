@@ -18,284 +18,390 @@
     <link rel="stylesheet" href="../css/style1.css">
 
     <style>
-        :root {
-            --primary-color: #1e3a8a;
-            --success-color: #059669;
-            --danger-color: #dc2626;
-            --warning-color: #d97706;
-            --bg-body: #f8fafc;
-        }
+:root{
+    --primary:#4f46e5;
+    --primary-dark:#3730a3;
+    --blue:#2563eb;
+    --success:#10b981;
+    --warning:#f59e0b;
+    --danger:#ef4444;
+    --text:#172554;
+    --muted:#64748b;
+    --line:#e8edf5;
+    --bg:#f5f7fb;
+    --card:#ffffff;
+    --shadow:0 8px 28px rgba(30,41,59,.06);
+}
+*{box-sizing:border-box}
+body{
+    margin:0;
+    background:linear-gradient(135deg,#f7f9ff 0%,#f5f7fb 55%,#f8fbff 100%);
+    color:var(--text);
+    font-family:'Segoe UI',Tahoma,Arial,sans-serif;
+    overflow-x:hidden;
+}
+.main-content{
+    width:100%;
+    padding:16px 22px 28px;
+}
+#topnav-container{margin-bottom:14px}
 
-        body {
-            background-color: var(--bg-body);
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow-x: hidden;
-        }
+/* Khu vực tiêu đề */
+.page-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:18px;
+    margin:4px 0 18px;
+}
+.page-title h2{
+    margin:0 0 5px;
+    font-size:22px;
+    line-height:1.25;
+    color:#1e2f6f;
+    font-weight:750;
+}
+.page-title p{
+    margin:0;
+    color:#7a8799;
+    font-size:13px;
+}
+.head-actions{
+    display:flex;
+    gap:10px;
+    align-items:center;
+}
+.search-box{
+    width:270px;
+    height:40px;
+    border:1px solid #dbe3ef;
+    border-radius:11px;
+    background:#fff;
+    padding:0 13px 0 38px;
+    font-size:13px;
+    outline:none;
+    box-shadow:0 2px 8px rgba(15,23,42,.03);
+}
+.search-wrap{position:relative}
+.search-wrap .search-icon{
+    position:absolute;
+    left:13px;
+    top:11px;
+    color:#94a3b8;
+    font-size:15px;
+}
+.search-box:focus{
+    border-color:#8b8cf8;
+    box-shadow:0 0 0 3px rgba(79,70,229,.09);
+}
+.btn-primary{
+    height:40px;
+    border:0;
+    border-radius:11px;
+    padding:0 16px;
+    color:#fff;
+    background:linear-gradient(135deg,#4f46e5,#6366f1);
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+    box-shadow:0 7px 18px rgba(79,70,229,.20);
+    transition:.18s ease;
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 9px 22px rgba(79,70,229,.27)}
 
-        .main-content {
-            padding: 15px;
-            box-sizing: border-box;
-            width: 100%;
-        }
+/* Thẻ thống kê */
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:14px;
+    margin-bottom:17px;
+}
+.stat-card{
+    min-height:108px;
+    border:1px solid var(--line);
+    border-radius:15px;
+    background:#fff;
+    padding:16px;
+    display:flex;
+    align-items:center;
+    gap:13px;
+    box-shadow:var(--shadow);
+    position:relative;
+    overflow:hidden;
+}
+.stat-card:after{
+    content:"";
+    position:absolute;
+    width:70px;height:70px;
+    border-radius:50%;
+    right:-28px;bottom:-35px;
+    background:rgba(99,102,241,.05);
+}
+.stat-icon{
+    width:45px;height:45px;
+    border-radius:13px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px;
+    flex:0 0 45px;
+}
+.stat-card.purple .stat-icon{background:#eeedff;color:#5b54e8}
+.stat-card.blue .stat-icon{background:#e9f4ff;color:#2583dc}
+.stat-card.green .stat-icon{background:#e9fbf4;color:#0da879}
+.stat-card.orange .stat-icon{background:#fff5e5;color:#e99000}
+.stat-card.red .stat-icon{background:#fff0f1;color:#ef5350}
+.stat-label{font-size:12px;color:#718096;margin-bottom:5px}
+.stat-value{font-size:21px;font-weight:800;color:#1e293b}
+.stat-sub{font-size:11px;color:#94a3b8;margin-top:3px}
 
-        .card-header-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
+/* Card danh sách */
+.spa-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:17px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+}
+.filter-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+    padding:13px 16px;
+    border-bottom:1px solid var(--line);
+    background:#fff;
+}
+.status-tabs{display:flex;gap:5px;align-items:center}
+.status-tab{
+    height:35px;
+    padding:0 13px;
+    border:1px solid transparent;
+    border-radius:9px;
+    background:transparent;
+    color:#64748b;
+    font-size:12px;
+    font-weight:650;
+    cursor:pointer;
+}
+.status-tab:hover{background:#f6f7ff;color:#4f46e5}
+.status-tab.active{
+    background:#efefff;
+    border-color:#d8d6ff;
+    color:#4f46e5;
+}
+.filter-actions{display:flex;gap:8px}
+.btn-filter{
+    height:35px;
+    padding:0 12px;
+    border:1px solid #dce3ee;
+    background:#fff;
+    color:#475569;
+    border-radius:9px;
+    font-size:12px;
+    cursor:pointer;
+}
+.btn-filter:hover{border-color:#aeb8cc;background:#fafbff}
 
-        .search-box {
-            padding: 7px 12px;
-            width: 250px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 13px;
-            outline: none;
-        }
-        .search-box:focus {
-            border-color: var(--primary-color);
-        }
+.table-responsive{width:100%;overflow:auto}
+.spa-table{
+    width:100%;
+    min-width:850px;
+    border-collapse:separate;
+    border-spacing:0;
+    font-size:12px;
+}
+.spa-table th{
+    background:#f8fafc;
+    color:#667085;
+    padding:12px 14px;
+    text-align:left;
+    font-size:11px;
+    font-weight:750;
+    border-bottom:1px solid var(--line);
+}
+.spa-table td{
+    padding:12px 14px;
+    border-bottom:1px solid #eef2f7;
+    vertical-align:middle;
+    color:#334155;
+}
+.spa-table tbody tr:hover{background:#fafbff}
+.spa-table tbody tr:last-child td{border-bottom:0}
 
-        /* Tối ưu Modal */
-        .modal-container {
-            width: 92%;
-            max-width: 650px;
-            padding: 20px 24px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-sizing: border-box;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 8px;
-        }
-        .modal-header h3 {
-            margin: 0;
-            font-size: 16px;
-            color: #1e3a8a;
-        }
+/* Empty state */
+.empty-state{
+    min-height:355px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:35px 20px;
+}
+.empty-icon{
+    width:88px;height:88px;
+    margin:0 auto 12px;
+    border-radius:26px;
+    background:linear-gradient(135deg,#eef2ff,#f5f3ff);
+    display:flex;align-items:center;justify-content:center;
+    font-size:45px;
+    box-shadow:inset 0 0 0 1px #e0e7ff;
+}
+.empty-state h3{
+    margin:0 0 7px;
+    font-size:18px;
+    color:#27366f;
+}
+.empty-state p{
+    margin:0 0 17px;
+    font-size:12px;
+    color:#94a3b8;
+}
+.empty-state .btn-primary{min-width:185px}
 
-        .form-group-spa {
-            margin-bottom: 12px;
-            position: relative;
-        }
-        .form-group-spa label {
-            font-size: 13px;
-            font-weight: 600;
-            display: block;
-            margin-bottom: 4px;
-            color: #1e293b;
-        }
-        .form-group-spa select, .form-group-spa input, .form-group-spa textarea {
-            width: 100%;
-            padding: 8px 10px;
-            font-size: 13px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            box-sizing: border-box;
-            outline: none;
-            background: #fff;
-        }
-        .form-group-spa select:focus, .form-group-spa input:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(30,58,138,0.1);
-        }
+/* Phân trang */
+.pagination-container{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 16px;
+    background:#fbfcfe;
+    border-top:1px solid var(--line);
+    color:#7b8797;
+    font-size:11px;
+}
+.pagination-buttons{display:flex;gap:5px;align-items:center}
+.btn-page{
+    min-width:31px;height:30px;
+    border:1px solid #dbe2ec;
+    background:#fff;
+    color:#475569;
+    padding:0 9px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:11px;
+}
+.btn-page:hover:not(:disabled){border-color:#9fa8ff;color:#4f46e5}
+.btn-page.active{background:#4f46e5;color:#fff;border-color:#4f46e5}
+.btn-page:disabled{opacity:.45;cursor:not-allowed}
 
-        /* Style hộp gợi ý tìm kiếm khách hàng & thú cưng */
-        .autocomplete-items {
-            position: absolute;
-            border: 1px solid #cbd5e1;
-            z-index: 999;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: #fff;
-            max-height: 180px;
-            overflow-y: auto;
-            border-radius: 0 0 6px 6px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .autocomplete-items div {
-            padding: 8px 10px;
-            cursor: pointer;
-            background: #fff;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 12px;
-        }
-        .autocomplete-items div:hover {
-            background: #f1f5f9;
-        }
+/* Modal */
+.modal-overlay{
+    position:fixed!important;
+    inset:0;
+    z-index:5000;
+    background:rgba(15,23,42,.48);
+    backdrop-filter:blur(5px);
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+.modal-container{
+    width:min(680px,96vw);
+    max-height:92vh;
+    overflow-y:auto;
+    background:#fff;
+    border-radius:18px;
+    padding:22px;
+    box-shadow:0 28px 70px rgba(15,23,42,.22);
+}
+.modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:18px;
+    padding-bottom:13px;
+    border-bottom:1px solid var(--line);
+}
+.modal-header h3{margin:0;color:#24356f;font-size:17px}
+.close-modal{
+    width:34px;height:34px;border:0;border-radius:9px;
+    background:#f1f5f9;color:#64748b;font-size:23px;cursor:pointer;
+}
+.close-modal:hover{background:#fee2e2;color:#ef4444}
+.form-group-spa{margin-bottom:14px;position:relative}
+.form-group-spa label{
+    display:block;margin-bottom:6px;color:#334155;
+    font-size:12px;font-weight:700;
+}
+.form-group-spa input,.form-group-spa select,.form-group-spa textarea{
+    width:100%;height:40px;
+    border:1px solid #dbe3ef;border-radius:10px;
+    padding:0 11px;font-size:13px;outline:none;background:#fff;
+}
+.form-group-spa textarea{height:auto;padding:10px}
+.form-group-spa input:focus,.form-group-spa select:focus,.form-group-spa textarea:focus{
+    border-color:#8b8cf8;box-shadow:0 0 0 3px rgba(79,70,229,.08)
+}
+.service-checkbox-list{
+    max-height:190px;overflow-y:auto;
+    border:1px solid #dbe3ef;border-radius:11px;
+    padding:6px;background:#f8fafc;
+}
+.service-item-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px;border-radius:8px;font-size:12px;
+}
+.service-item-row:hover{background:#fff}
+.service-item-row label{margin:0;display:flex;align-items:center;gap:9px;font-weight:500}
+.autocomplete-items{
+    position:absolute;left:0;right:0;top:100%;z-index:5100;
+    border:1px solid #dbe3ef;background:#fff;
+    max-height:190px;overflow-y:auto;border-radius:0 0 10px 10px;
+    box-shadow:0 12px 25px rgba(15,23,42,.12);
+}
+.autocomplete-items div{padding:10px 12px;border-bottom:1px solid #eef2f7;font-size:12px;cursor:pointer}
+.autocomplete-items div:hover{background:#f5f7ff}
 
-        .service-checkbox-list {
-            max-height: 150px;
-            overflow-y: auto;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            padding: 6px 8px;
-            background: #f8fafc;
-        }
-        .service-item-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px 8px;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 13px;
-        }
-        .service-item-row:last-child {
-            border-bottom: none;
-        }
-        .service-item-row label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            margin-bottom: 0;
-            font-weight: normal;
-        }
+/* Nút thao tác bảng */
+.action-btn{
+    border:0;border-radius:7px;padding:6px 9px;
+    cursor:pointer;font-size:11px;font-weight:650;margin:1px;
+}
+.action-edit{background:#fff4df;color:#b96c00}
+.action-print{background:#eaf2ff;color:#2563eb}
+.action-delete{background:#fff0f1;color:#dc2626}
 
-        .spa-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-            white-space: nowrap;
-        }
-        .spa-table th {
-            background: #1e3a8a;
-            color: white;
-            padding: 9px 8px;
-            text-align: left;
-        }
-        .spa-table td {
-            padding: 9px 8px;
-            border-bottom: 1px solid #e2e8f0;
-            vertical-align: middle;
-        }
-
-        /* Giao diện phân trang */
-        .pagination-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            font-size: 13px;
-            color: #475569;
-        }
-        .pagination-buttons {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
-        .btn-page {
-            background: #fff;
-            border: 1px solid #cbd5e1;
-            color: #334155;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        .btn-page:hover:not(:disabled) {
-            background: #f1f5f9;
-            border-color: #94a3b8;
-        }
-        .btn-page:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .btn-page.active {
-            background: #2563eb;
-            color: #fff;
-            border-color: #2563eb;
-        }
-
-        /* --- CẤU HÌNH IN HÓA ĐƠN NHIỆT KHỔ 80MM --- */
-        #printInvoiceArea {
-            display: none;
-        }
-
-        @media print {
-            @page {
-                size: 80mm auto;
-                margin: 0;
-            }
-
-            body * {
-                display: none !important;
-            }
-
-            #printInvoiceArea, #printInvoiceArea * {
-                display: block !important;
-                visibility: visible !important;
-                box-sizing: border-box !important;
-            }
-
-            #printInvoiceArea {
-                position: absolute;
-                left: 50% !important;
-                transform: translateX(-50%) !important;
-                top: 0;
-                width: 76mm !important;
-                padding: 4mm 2mm !important;
-                font-family: 'Courier New', Courier, monospace;
-                color: #000;
-                background: #fff;
-                text-align: left;
-            }
-
-            .print-divider {
-                border-bottom: 1px dashed #000 !important;
-                margin: 6px 0 !important;
-            }
-            .print-divider-thick {
-                border-bottom: 2px solid #000 !important;
-                margin: 8px 0 12px 0 !important;
-            }
-
-            /* Ép các dòng thông tin khách hàng nằm liền mạch trên một dòng */
-            #printInvoiceArea div {
-                display: block;
-                width: 100%;
-                word-break: break-word;
-            }
-
-            #printInvoiceArea table {
-                width: 100% !important;
-                border-collapse: collapse !important;
-                border: none !important;
-                margin: 0 auto !important;
-            }
-
-            #printInvoiceArea tr {
-                display: table-row !important;
-            }
-            
-            #printInvoiceArea td {
-                display: table-cell !important;
-                border: none !important;
-                background: transparent !important;
-                font-size: 12px !important;
-                color: #000 !important;
-                vertical-align: top !important;
-                padding: 6px 0 !important;
-            }
-
-            #printInvoiceArea td:nth-child(1) { text-align: left !important; width: 12% !important; }
-            #printInvoiceArea td:nth-child(2) { text-align: left !important; width: 58% !important; padding: 6px 4px !important; word-break: break-word !important; }
-            #printInvoiceArea td:nth-child(3) { text-align: right !important; width: 30% !important; white-space: nowrap !important; }
-        }
-    </style>
+/* In bill 80mm */
+#printInvoiceArea{display:none}
+@media print{
+    @page{size:80mm auto;margin:0}
+    body *{display:none!important}
+    #printInvoiceArea,#printInvoiceArea *{display:block!important;visibility:visible!important;box-sizing:border-box!important}
+    #printInvoiceArea{
+        position:absolute;left:50%!important;transform:translateX(-50%)!important;top:0;
+        width:76mm!important;padding:4mm 2mm!important;
+        font-family:'Courier New',Courier,monospace;color:#000;background:#fff;text-align:left
+    }
+    .print-divider{border-bottom:1px dashed #000!important;margin:6px 0!important}
+    .print-divider-thick{border-bottom:2px solid #000!important;margin:8px 0 12px!important}
+    #printInvoiceArea div{display:block;width:100%;word-break:break-word}
+    #printInvoiceArea table{width:100%!important;border-collapse:collapse!important;border:none!important;margin:0 auto!important}
+    #printInvoiceArea tr{display:table-row!important}
+    #printInvoiceArea td{display:table-cell!important;border:none!important;background:transparent!important;font-size:12px!important;color:#000!important;vertical-align:top!important;padding:6px 0!important}
+    #printInvoiceArea td:nth-child(1){text-align:left!important;width:12%!important}
+    #printInvoiceArea td:nth-child(2){text-align:left!important;width:58%!important;padding:6px 4px!important;word-break:break-word!important}
+    #printInvoiceArea td:nth-child(3){text-align:right!important;width:30%!important;white-space:nowrap!important}
+}
+@media(max-width:1100px){
+    .stats-grid{grid-template-columns:repeat(3,1fr)}
+    .page-head{align-items:stretch;flex-direction:column}
+    .head-actions{justify-content:space-between}
+}
+@media(max-width:720px){
+    .main-content{padding:10px}
+    .stats-grid{grid-template-columns:repeat(2,1fr);gap:9px}
+    .stat-card{min-height:90px;padding:12px}
+    .stat-icon{width:38px;height:38px;flex-basis:38px}
+    .stat-value{font-size:18px}
+    .filter-bar{align-items:flex-start;flex-direction:column}
+    .status-tabs,.filter-actions{width:100%;overflow:auto}
+    .head-actions{flex-direction:column}
+    .search-wrap,.search-box,.head-actions .btn-primary{width:100%}
+    .pagination-container{gap:10px;flex-direction:column;align-items:flex-start}
+}
+@media(max-width:460px){
+    .stats-grid{grid-template-columns:1fr}
+}
+</style>
 </head>
 <body>
 
@@ -304,45 +410,119 @@
 
     <!-- NỘI DUNG CHÍNH -->
     <div class="main-content">
-       <div id="topnav-container"></div>
+    <div id="topnav-container"></div>
 
-        <div class="card">
-            <div class="card-header">
-                <h3>Danh Sách Nhật Ký Spa & Grooming</h3>
-                <div class="card-header-actions">
-                    <input type="text" id="searchInput" class="search-box" placeholder="Tìm theo chủ nuôi, thú cưng..." onkeyup="timKiemSpa()">
-                    <button class="btn-primary" onclick="moModalThem()">+ Thêm Lượt Spa Mới</button>
-                </div>
+    <div class="page-head">
+        <div class="page-title">
+            <h2>Danh Sách Nhật Ký Spa & Grooming</h2>
+            <p>Quản lý lịch sử dịch vụ chăm sóc, tắm và grooming cho thú cưng</p>
+        </div>
+        <div class="head-actions">
+            <div class="search-wrap">
+                <span class="search-icon">⌕</span>
+                <input type="text" id="searchInput" class="search-box"
+                       placeholder="Tìm theo chủ nuôi, thú cưng..."
+                       onkeyup="timKiemSpa()">
             </div>
-            
-            <div class="table-responsive">
-                <table class="spa-table">
-                    <thead>
-                        <tr>
-                            <th>Thời gian</th>
-                            <th>Chủ nuôi</th>
-                            <th>Thú cưng</th>
-                            <th>Dịch vụ sử dụng</th>
-                            <th style="text-align: center;">Trạng thái</th>
-                            <th style="text-align: right;">Tổng tiền</th>
-                            <th style="text-align: center;">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableNhatKySpa">
-                        <tr><td colspan="7" style="text-align: center; color: #777; padding: 20px;">Đang tải dữ liệu...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+            <button class="btn-primary" onclick="moModalThem()">＋ Thêm Lượt Spa Mới</button>
+        </div>
+    </div>
 
-            <!-- PHÂN TRANG -->
-            <div class="pagination-container">
-                <div id="pageInfo">Hiển thị 0 - 0 của 0 bản ghi</div>
-                <div class="pagination-buttons" id="paginationControls"></div>
+    <div class="stats-grid">
+        <div class="stat-card purple">
+            <div class="stat-icon">▣</div>
+            <div>
+                <div class="stat-label">Hôm nay</div>
+                <div class="stat-value" id="statToday">0</div>
+                <div class="stat-sub">Lượt spa</div>
+            </div>
+        </div>
+        <div class="stat-card blue">
+            <div class="stat-icon">☷</div>
+            <div>
+                <div class="stat-label">Đang xử lý</div>
+                <div class="stat-value" id="statProcessing">0</div>
+                <div class="stat-sub">Lượt spa</div>
+            </div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-icon">✓</div>
+            <div>
+                <div class="stat-label">Hoàn thành</div>
+                <div class="stat-value" id="statCompleted">0</div>
+                <div class="stat-sub">Lượt spa</div>
+            </div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-icon">₫</div>
+            <div>
+                <div class="stat-label">Tổng doanh thu</div>
+                <div class="stat-value" id="statRevenue">0 đ</div>
+                <div class="stat-sub">Hôm nay</div>
+            </div>
+        </div>
+        <div class="stat-card red">
+            <div class="stat-icon">★</div>
+            <div>
+                <div class="stat-label">Đánh giá TB</div>
+                <div class="stat-value">0.0</div>
+                <div class="stat-sub">☆☆☆☆☆</div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL FORM NHẬP / SỬA NHẬT KÝ SPA -->
+    <div class="spa-card">
+        <div class="filter-bar">
+            <div class="status-tabs">
+                <button class="status-tab active" type="button" onclick="locTrangThaiSpa(this,'all')">☷ &nbsp;Tất cả</button>
+                <button class="status-tab" type="button" onclick="locTrangThaiSpa(this,'processing')">◷ &nbsp;Đang xử lý</button>
+                <button class="status-tab" type="button" onclick="locTrangThaiSpa(this,'completed')">✓ &nbsp;Hoàn thành</button>
+                <button class="status-tab" type="button" onclick="locTrangThaiSpa(this,'cancelled')">⊗ &nbsp;Đã hủy</button>
+            </div>
+            <div class="filter-actions">
+                <button class="btn-filter" type="button">▣ &nbsp; Chọn khoảng thời gian</button>
+                <button class="btn-filter" type="button">⚱ &nbsp; Bộ lọc</button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="spa-table">
+                <thead>
+                    <tr>
+                        <th>THỜI GIAN</th>
+                        <th>CHỦ NUÔI</th>
+                        <th>THÚ CƯNG</th>
+                        <th>DỊCH VỤ SỬ DỤNG</th>
+                        <th style="text-align:center;">TRẠNG THÁI</th>
+                        <th style="text-align:right;">TỔNG TIỀN</th>
+                        <th style="text-align:center;">THAO TÁC</th>
+                    </tr>
+                </thead>
+                <tbody id="tableNhatKySpa">
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <div>
+                                    <div class="empty-icon">🐶🛁</div>
+                                    <h3>Chưa có dữ liệu Spa & Grooming</h3>
+                                    <p>Hãy thêm lượt spa đầu tiên để bắt đầu quản lý</p>
+                                    <button class="btn-primary" onclick="moModalThem()">＋ Thêm Lượt Spa Mới</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination-container">
+            <div id="pageInfo">Hiển thị 0 - 0 của 0 bản ghi</div>
+            <div class="pagination-buttons" id="paginationControls"></div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL FORM NHẬP / SỬA NHẬT KÝ SPA -->
     <div class="modal-overlay" id="spaModal" style="display: none;">
         <div class="modal-container">
             <div class="modal-header">
@@ -712,8 +892,40 @@
                 console.error('Lỗi tải nhật ký spa:', error);
             } else {
                 danhSachNhatKyGoc = data || [];
+                capNhatThongKeSpa();
                 timKiemSpa();
             }
+        }
+
+        function capNhatThongKeSpa() {
+            const now = new Date();
+            const homNay = danhSachNhatKyGoc.filter(item => {
+                if (!item.created_at) return false;
+                const d = new Date(item.created_at);
+                return d.toDateString() === now.toDateString();
+            });
+            const dangXuLy = homNay.filter(x => (x.trangthai || 'Chưa hoàn thành') === 'Chưa hoàn thành').length;
+            const hoanThanh = homNay.filter(x => (x.trangthai || '') === 'Đã hoàn thành' || (x.trangthai || '') === 'Đã trả khách').length;
+            const doanhThu = homNay.reduce((sum, x) => sum + Number(x.tongtien || 0), 0);
+
+            const elToday = document.getElementById('statToday');
+            const elProcessing = document.getElementById('statProcessing');
+            const elCompleted = document.getElementById('statCompleted');
+            const elRevenue = document.getElementById('statRevenue');
+            if (elToday) elToday.innerText = homNay.length;
+            if (elProcessing) elProcessing.innerText = dangXuLy;
+            if (elCompleted) elCompleted.innerText = hoanThanh;
+            if (elRevenue) elRevenue.innerText = doanhThu.toLocaleString('vi-VN') + ' đ';
+        }
+
+        let trangThaiLocHienTai = 'all';
+
+        function locTrangThaiSpa(button, status) {
+            document.querySelectorAll('.status-tab').forEach(b => b.classList.remove('active'));
+            button.classList.add('active');
+            trangThaiLocHienTai = status;
+            currentPage = 1;
+            timKiemSpa();
         }
 
         function timKiemSpa() {
@@ -723,7 +935,15 @@
                 const tenKH = (item.chunuoi || item.tenkhachhang || '').toLowerCase();
                 const tenTC = (item.thucung || item.tenthucung || '').toLowerCase();
                 const sdt = (item.sdt || '').toLowerCase();
-                return tenKH.includes(tuKhoa) || tenTC.includes(tuKhoa) || sdt.includes(tuKhoa);
+                const keywordMatch = tenKH.includes(tuKhoa) || tenTC.includes(tuKhoa) || sdt.includes(tuKhoa);
+
+                const tt = item.trangthai || 'Chưa hoàn thành';
+                let statusMatch = true;
+                if (trangThaiLocHienTai === 'processing') statusMatch = tt === 'Chưa hoàn thành';
+                if (trangThaiLocHienTai === 'completed') statusMatch = tt === 'Đã hoàn thành' || tt === 'Đã trả khách';
+                if (trangThaiLocHienTai === 'cancelled') statusMatch = tt === 'Đã hủy';
+
+                return keywordMatch && statusMatch;
             });
             hienThiBangNhatKy(filteredDataCache);
         }
@@ -785,9 +1005,9 @@
                         </td>
                         <td style="text-align: right; font-weight: bold; color: var(--danger-color);">${Number(item.tongtien || 0).toLocaleString('vi-VN')} đ</td>
                         <td style="text-align: center; white-space: nowrap;">
-                            <button onclick="chuanBiSuaNhatKy(${item.id})" style="background:var(--warning-color); color:white; border:none; padding:3px 6px; border-radius:4px; cursor:pointer; margin-right:2px;" title="Sửa">Sửa</button>
-                            <button onclick="inLaiHoaDon(${item.id})" style="background:var(--primary-color); color:white; border:none; padding:3px 6px; border-radius:4px; cursor:pointer; margin-right:2px;" title="In lại hóa đơn">In HĐ</button>
-                            <button onclick="xoaNhatKy(${item.id})" style="background:var(--danger-color); color:white; border:none; padding:3px 6px; border-radius:4px; cursor:pointer;" title="Xóa">Xóa</button>
+                            <button onclick="chuanBiSuaNhatKy(${item.id})" class="action-btn action-edit" title="Sửa">Sửa</button>
+                            <button onclick="inLaiHoaDon(${item.id})" class="action-btn action-print" title="In lại hóa đơn">In HĐ</button>
+                            <button onclick="xoaNhatKy(${item.id})" class="action-btn action-delete" title="Xóa">Xóa</button>
                         </td>
                     </tr>
                 `;
