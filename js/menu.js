@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", function() {
         <li class="menu-dropdown-toggle" onclick="toggleSubmenu(this)">
             <div class="menu-label-wrap">
                 <span class="group-icon"><i class="fa-solid fa-file-invoice-dollar"></i></span> 
-                <span class="menu-text">Công nợ</span>
+                <span class="menu-text">Công nợ- Thu chi</span>
             </div> 
             <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
         </li>
@@ -128,11 +128,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 <span><i class="fa-solid fa-truck-field"></i></span> 
                 <span class="menu-text">Công nợ nhà cung cấp</span>
             </li>
-        </ul>
-		<li class="menu-item" id="menu-thuchi" onclick="window.location.href='thuchi.html'">
+				<li class="menu-item" id="menu-thuchi" onclick="window.location.href='thuchi.html'">
     <span><i class="fa-solid fa-wallet"></i></span> 
     <span class="menu-text">Thu chi phòng khám</span>
 </li>
+        </ul>
+	
     `;
 
     if (isTrueOwner || isBacSi || isHuuTy) {
