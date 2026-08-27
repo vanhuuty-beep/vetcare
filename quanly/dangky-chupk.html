@@ -872,18 +872,18 @@
                 const hashedPassword = CryptoJS.MD5(matkhauRaw).toString();
 
                 const payload = {
-                    maphongkham: autoMaPK,
-                    tenphongkham: tenphongkham,
-                    hovaten: hovaten,
-                    sodienthoai: sodienthoai,
-                    matkhau: hashedPassword,
-                    logo: logoUrl,
-                    diachi: diachi,
-                    vaitro: 'Chủ phòng khám',
-                    trangthai: 'Hoạt động',
-                    ngaytao: ngayHienTai.toISOString(),
-                    ngayhethan: ngayHetHanMacDinh.toISOString()
-                };
+    maphongkham: autoMaPK,
+    tenphongkham: tenphongkham,
+    chuphongkham: hovaten, // Đổi 'hovaten' thành 'chuphongkham' để khớp với DB
+    sodienthoai: sodienthoai,
+    matkhau: hashedPassword,
+    logo: logoUrl,
+    diachi: diachi,
+    vaitro: 'Chủ phòng khám',
+    trangthai: 'Hoạt động',
+    ngaytao: ngayHienTai.toISOString(),
+    ngayhethan: ngayHetHanMacDinh.toISOString()
+};
 
                 let { error } = await db.from('chupk').insert([payload]);
 
