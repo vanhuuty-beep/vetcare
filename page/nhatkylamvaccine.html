@@ -107,6 +107,173 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+    
+/* ===== VetCare Pro Modern UI - Nhật ký Tiêm Vắc-xin ===== */
+:root{
+  --vc-primary:#2563eb;
+  --vc-primary-2:#4f46e5;
+  --vc-success:#10b981;
+  --vc-warning:#f59e0b;
+  --vc-danger:#ef4444;
+  --vc-text:#172554;
+  --vc-muted:#64748b;
+  --vc-border:#e5e7eb;
+  --vc-bg:#f5f8fc;
+}
+body{background:var(--vc-bg)!important;color:#172033;}
+.main-content{background:var(--vc-bg)!important;}
+.content-body{padding:20px 22px 40px!important;}
+.card{
+  background:#fff!important;border:1px solid #e8edf5!important;
+  border-radius:16px!important;box-shadow:0 6px 24px rgba(30,64,175,.07)!important;
+  overflow:hidden;
+}
+.card-header{
+  padding:22px 22px 18px!important;border-bottom:1px solid #eef2f7!important;
+  background:linear-gradient(180deg,#fff 0%,#fbfdff 100%)!important;
+}
+.card-header h3{
+  color:#173b82!important;font-size:19px!important;font-weight:750!important;
+  letter-spacing:-.2px;margin:0!important;
+}
+.card-header h3:before{content:"💉";margin-right:9px;font-size:18px;}
+.card-header-actions{gap:10px!important;}
+.search-box{
+  width:280px!important;height:40px!important;padding:0 14px 0 40px!important;
+  border:1px solid #dbe3ef!important;border-radius:10px!important;
+  background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%2364778b' stroke-width='2' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-4-4'/%3E%3C/svg%3E") 14px center/17px no-repeat!important;
+  box-shadow:0 2px 8px rgba(15,23,42,.03)!important;
+}
+.search-box:focus{border-color:#7aa2ff!important;box-shadow:0 0 0 3px rgba(37,99,235,.10)!important;}
+.btn-primary{
+  border:0!important;border-radius:10px!important;height:40px!important;
+  padding:0 18px!important;font-weight:700!important;
+  background:linear-gradient(135deg,#10b981,#059669)!important;
+  box-shadow:0 5px 12px rgba(16,185,129,.20)!important;
+}
+.btn-primary:hover{transform:translateY(-1px);filter:brightness(1.02);}
+
+/* KPI */
+.vc-vaccine-kpis{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;
+  padding:18px 22px 4px;background:#fff;
+}
+.vc-kpi{
+  min-height:104px;border:1px solid #e8edf5;border-radius:13px;padding:15px 16px;
+  display:flex;align-items:center;gap:13px;position:relative;overflow:hidden;
+}
+.vc-kpi:after{content:"";position:absolute;width:70px;height:70px;border-radius:50%;right:-25px;top:-25px;background:rgba(255,255,255,.45);}
+.vc-kpi-icon{
+  width:46px;height:46px;border-radius:13px;display:grid;place-items:center;
+  font-size:22px;flex:none;background:#eaf1ff;color:#2563eb;
+}
+.vc-kpi:nth-child(2){background:#f0fdf9}.vc-kpi:nth-child(2) .vc-kpi-icon{background:#d8f8ed;color:#059669}
+.vc-kpi:nth-child(3){background:#fffaf0}.vc-kpi:nth-child(3) .vc-kpi-icon{background:#fff0cf;color:#d97706}
+.vc-kpi:nth-child(4){background:#f8f5ff}.vc-kpi:nth-child(4) .vc-kpi-icon{background:#eee5ff;color:#7c3aed}
+.vc-kpi:nth-child(5){background:#fff5f5}.vc-kpi:nth-child(5) .vc-kpi-icon{background:#ffe1e1;color:#dc2626}
+.vc-kpi-label{font-size:12px;color:#64748b;font-weight:650;margin-bottom:5px}
+.vc-kpi-value{font-size:24px;line-height:1;font-weight:800;color:#172554}
+.vc-kpi-note{font-size:11px;color:#7b8798;margin-top:6px}
+
+/* Bộ lọc */
+.vc-toolbar{
+  margin:14px 22px 0;padding:10px;border:1px solid #e7edf5;border-radius:12px;
+  display:flex;align-items:center;gap:8px;background:#fbfdff;
+}
+.vc-filter{
+  height:36px;padding:0 13px;border:1px solid transparent;background:transparent;
+  border-radius:9px;color:#64748b;font-weight:650;cursor:pointer;
+}
+.vc-filter:hover{background:#f0f5ff;color:#2563eb}
+.vc-filter.active{background:#eaf1ff;color:#2563eb;border-color:#d7e4ff}
+.vc-toolbar-spacer{flex:1}
+.vc-filter-select{height:36px;border:1px solid #dbe3ef;border-radius:9px;padding:0 10px;background:#fff;color:#475569;outline:none}
+
+/* Table */
+.table-responsive{margin:14px 22px 0;border:1px solid #e6ebf2;border-radius:12px;overflow:auto;}
+.table-responsive table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;}
+.table-responsive thead th{
+  background:#f7f9fc!important;color:#526078!important;border-bottom:1px solid #e2e8f0!important;
+  padding:14px 12px!important;font-size:12px!important;text-transform:none!important;
+  white-space:nowrap;
+}
+.table-responsive tbody td{
+  padding:15px 12px!important;border-bottom:1px solid #edf1f6!important;
+  font-size:13px!important;color:#334155!important;vertical-align:middle;
+}
+.table-responsive tbody tr{transition:.18s ease;}
+.table-responsive tbody tr:hover{background:#f8fbff!important;}
+.table-responsive tbody tr:last-child td{border-bottom:0!important;}
+.vc-code{font-weight:800;color:#172554;white-space:nowrap;}
+.vc-blue{color:#2563eb;font-weight:750;}
+.vc-vaccine-code{color:#0284c7;font-weight:750;}
+.vc-reminder{color:#d97706;font-weight:750;}
+.vc-status{
+  display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;
+  background:#eaf4ff;color:#1769aa;font-size:11px;font-weight:750;white-space:nowrap;
+}
+.vc-status:before{content:"";width:6px;height:6px;border-radius:50%;background:#3b82f6;}
+.vc-actions{display:flex;gap:6px;white-space:nowrap;}
+.btn-edit,.btn-delete{
+  border-radius:7px!important;padding:7px 10px!important;border:0!important;font-weight:700!important;
+  cursor:pointer;
+}
+.btn-edit{background:#fff4db!important;color:#d97706!important;border:1px solid #ffd77a!important;}
+.btn-delete{background:#feecec!important;color:#dc2626!important;border:1px solid #fecaca!important;}
+.btn-edit:hover,.btn-delete:hover{transform:translateY(-1px);filter:brightness(.98);}
+
+/* Pagination */
+.pagination-container{
+  margin:0 22px 18px!important;border:1px solid #e6ebf2!important;border-top:0!important;
+  border-radius:0 0 12px 12px!important;background:#fbfdff!important;
+  padding:12px 15px!important;color:#64748b!important;
+}
+.pagination-buttons button{border-radius:8px!important;padding:7px 12px!important;border-color:#dbe3ef!important;}
+.pagination-buttons button:not(:disabled):hover{background:#eaf1ff!important;color:#2563eb!important;border-color:#c9dcff!important;}
+#pageIndicator{background:#2563eb;color:#fff;border-radius:8px;font-weight:700;min-width:34px;text-align:center;}
+
+/* Empty state */
+.vc-empty{padding:52px 20px!important;text-align:center;color:#64748b;}
+.vc-empty-icon{font-size:46px;margin-bottom:10px;}
+.vc-empty-title{font-size:17px;font-weight:800;color:#334155;margin-bottom:5px;}
+.vc-empty-text{font-size:13px;color:#94a3b8;}
+
+/* Modal */
+#nhatKyModal{backdrop-filter:blur(4px);background:rgba(15,23,42,.42)!important;}
+.modal-container{
+  width:min(680px,calc(100vw - 28px))!important;padding:0!important;border:0!important;
+  border-radius:18px!important;overflow:hidden!important;box-shadow:0 25px 70px rgba(15,23,42,.25)!important;
+}
+.modal-header{
+  margin:0!important;padding:18px 22px!important;background:linear-gradient(135deg,#eff6ff,#fff)!important;
+  border-bottom:1px solid #e7edf5!important;display:flex;align-items:center;justify-content:space-between;
+}
+.modal-header h3{color:#173b82!important;font-size:18px!important;}
+.close-modal{border:0!important;background:#eef2f7!important;border-radius:50%!important;width:34px;height:34px;cursor:pointer;}
+.modal-container>input[type="hidden"]~.form-group-modal,
+.modal-container>input[type="hidden"]~.form-row{margin-left:22px;margin-right:22px;}
+.modal-container>input[type="hidden"]~.form-group-modal:first-of-type input{
+  background:#f1f5ff!important;border-color:#d9e5ff!important;color:#2563eb!important;border-radius:9px!important;
+}
+.form-group-modal input,.form-group-modal select,.form-group-modal textarea{
+  height:39px!important;border:1px solid #dbe3ef!important;border-radius:9px!important;
+}
+.form-group-modal input:focus,.form-group-modal select:focus,.form-group-modal textarea:focus{
+  border-color:#7aa2ff!important;box-shadow:0 0 0 3px rgba(37,99,235,.09)!important;outline:none;
+}
+.modal-footer{margin-top:15px!important;padding:15px 22px!important;background:#f8fafc!important;border-top:1px solid #e7edf5!important;}
+.btn-secondary{border-radius:9px!important;border:1px solid #dbe3ef!important;background:#fff!important;padding:9px 16px!important;}
+
+/* Responsive */
+@media(max-width:1100px){.vc-vaccine-kpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){
+  .content-body{padding:10px!important}.card-header{padding:15px!important}
+  .card-header-actions{flex-direction:column;align-items:stretch!important}
+  .search-box{width:100%!important}.vc-vaccine-kpis{grid-template-columns:1fr 1fr;padding:12px}
+  .vc-toolbar{margin:10px 12px 0;overflow:auto}.table-responsive{margin:10px 12px 0}
+  .pagination-container{margin:0 12px 12px!important}.form-row{flex-direction:column}
+}
+
     </style>
 </head>
 <body>
@@ -128,6 +295,43 @@
                     </div>
                 </div>
                 
+                <div class="vc-vaccine-kpis">
+                    <div class="vc-kpi">
+                        <div class="vc-kpi-icon">💉</div>
+                        <div><div class="vc-kpi-label">Tổng mũi tiêm</div><div class="vc-kpi-value" id="kpiTotal">0</div><div class="vc-kpi-note">Tất cả thời gian</div></div>
+                    </div>
+                    <div class="vc-kpi">
+                        <div class="vc-kpi-icon">🛡️</div>
+                        <div><div class="vc-kpi-label">Tiêm hôm nay</div><div class="vc-kpi-value" id="kpiToday">0</div><div class="vc-kpi-note" id="kpiTodayNote">Hôm nay</div></div>
+                    </div>
+                    <div class="vc-kpi">
+                        <div class="vc-kpi-icon">📅</div>
+                        <div><div class="vc-kpi-label">Sắp đến hạn</div><div class="vc-kpi-value" id="kpiDue">0</div><div class="vc-kpi-note">Trong 7 ngày tới</div></div>
+                    </div>
+                    <div class="vc-kpi">
+                        <div class="vc-kpi-icon">🧴</div>
+                        <div><div class="vc-kpi-label">Vắc-xin sử dụng</div><div class="vc-kpi-value" id="kpiVaccine">0</div><div class="vc-kpi-note">Loại vắc-xin</div></div>
+                    </div>
+                    <div class="vc-kpi">
+                        <div class="vc-kpi-icon">✓</div>
+                        <div><div class="vc-kpi-label">Đã hoàn thành</div><div class="vc-kpi-value" id="kpiDone">0</div><div class="vc-kpi-note" id="kpiDoneNote">Đã tiêm</div></div>
+                    </div>
+                </div>
+
+                <div class="vc-toolbar">
+                    <button class="vc-filter active" onclick="locTrangThai('')">☷ &nbsp;Tất cả</button>
+                    <button class="vc-filter" onclick="locTrangThai('Đã tiêm')">✓ &nbsp;Đã tiêm</button>
+                    <button class="vc-filter" onclick="locTrangThai('Chờ nhắc lịch')">◷ &nbsp;Chờ nhắc lịch</button>
+                    <button class="vc-filter" onclick="locTrangThai('Đã hủy')">⊗ &nbsp;Đã hủy</button>
+                    <div class="vc-toolbar-spacer"></div>
+                    <select id="vaccineStatusFilter" class="vc-filter-select" onchange="locTrangThai(this.value)">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Đã tiêm">Đã tiêm</option>
+                        <option value="Chờ nhắc lịch">Chờ nhắc lịch</option>
+                        <option value="Đã hủy">Đã hủy</option>
+                    </select>
+                </div>
+
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -303,6 +507,7 @@
             } else {
                 danhSachNhatKyGoc = data || [];
                 danhSachLoc = [...danhSachNhatKyGoc];
+                capNhatKPI();
                 trangHienTai = 1;
                 hienThiPhanTrang();
             }
@@ -312,12 +517,67 @@
             // Xử lý tự động nếu cần lấy thông tin thêm
         }
 
+
+        let trangThaiDangLoc = '';
+
+        function capNhatKPI() {
+            const data = danhSachNhatKyGoc || [];
+            const today = new Date();
+            const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            const end7 = new Date(start);
+            end7.setDate(end7.getDate() + 7);
+
+            const todayStr = start.toISOString().split('T')[0];
+            const total = data.length;
+            const todayCount = data.filter(x => x.ngaytiem === todayStr).length;
+            const dueCount = data.filter(x => {
+                if (!x.ngaynhaclai) return false;
+                const d = new Date(x.ngaynhaclai);
+                return d >= start && d <= end7 && x.trangthai !== 'Đã hủy';
+            }).length;
+            const vaccineCount = new Set(data.map(x => x.tenvaccine).filter(Boolean)).size;
+            const done = data.filter(x => x.trangthai === 'Đã tiêm').length;
+
+            const set = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+            set('kpiTotal', total);
+            set('kpiToday', todayCount);
+            set('kpiDue', dueCount);
+            set('kpiVaccine', vaccineCount);
+            set('kpiDone', done);
+            set('kpiDoneNote', total ? Math.round(done / total * 100) + '% tổng số' : 'Đã tiêm');
+            set('kpiTodayNote', today.toLocaleDateString('vi-VN'));
+        }
+
+        function locTrangThai(status) {
+            trangThaiDangLoc = status || '';
+            document.querySelectorAll('.vc-filter').forEach(btn => btn.classList.remove('active'));
+            const buttons = [...document.querySelectorAll('.vc-filter')];
+            const matched = buttons.find(btn => (btn.textContent || '').includes(status || 'Tất cả'));
+            if (matched) matched.classList.add('active');
+            const select = document.getElementById('vaccineStatusFilter');
+            if (select) select.value = trangThaiDangLoc;
+
+            const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+            danhSachLoc = danhSachNhatKyGoc.filter(item => {
+                const text = [
+                    item.tenvaccine, item.mavaccine, item.bacsi, item.manhatky,
+                    mapThuCung[item.mathucung]?.tenthucung,
+                    mapThuCung[item.mathucung]?.tenchu
+                ].filter(Boolean).join(' ').toLowerCase();
+                const matchKeyword = !keyword || text.includes(keyword);
+                const matchStatus = !trangThaiDangLoc || item.trangthai === trangThaiDangLoc;
+                return matchKeyword && matchStatus;
+            });
+            trangHienTai = 1;
+            hienThiPhanTrang();
+        }
+
         function hienThiPhanTrang() {
             const tableBody = document.getElementById('data-table');
             tableBody.innerHTML = '';
             
             if(danhSachLoc.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#777;">Chưa có lịch sử tiêm vắc-xin nào</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="8"><div class="vc-empty"><div class="vc-empty-icon">💉</div><div class="vc-empty-title">Chưa có dữ liệu tiêm vắc-xin</div><div class="vc-empty-text">Hãy thêm mũi tiêm đầu tiên để bắt đầu quản lý lịch sử tiêm.</div></div></td></tr>`;
                 document.getElementById('pagination-info').innerText = 'Hiển thị 0 - 0 của 0 bản ghi';
                 document.getElementById('pageIndicator').innerText = 'Trang 1 / 1';
                 document.getElementById('prevBtn').disabled = true;
@@ -341,24 +601,24 @@
                 const ngayNhacLaiFormatted = item.ngaynhaclai ? new Date(item.ngaynhaclai).toLocaleDateString('vi-VN') : 'Không có';
 
                 tableBody.innerHTML += `<tr>
-                    <td><strong>${maNKFormatted}</strong></td>
+                    <td><span class="vc-code">${maNKFormatted}</span></td>
                     <td>
-                        <span style="color: #2563eb; font-weight: bold;">${maKBText}</span><br>
+                        <span class="vc-blue">${maKBText}</span><br>
                         <span>Pet: <b>${infoPet.tenthucung}</b></span><br>
                         <span style="color: #555; font-size: 11px;">Chủ: ${infoPet.tenchu}</span>
                     </td>
                     <td>
-                        <span style="color: #0284c7; font-weight: bold;">${item.mavaccine || ''}</span><br>
+                        <span class="vc-vaccine-code">${item.mavaccine || ''}</span><br>
                         <strong>${item.tenvaccine || ''}</strong>
                     </td>
                     <td>${ngayTiemFormatted}</td>
                     <td>${item.bacsi || ''}</td>
-                    <td><span style="color: #d97706; font-weight: 600;">${ngayNhacLaiFormatted}</span></td>
-                    <td><span style="padding: 3px 8px; border-radius: 4px; font-size: 12px; background: #e0f2fe; color: #0369a1;">${item.trangthai || ''}</span></td>
-                    <td>
-                        <button class="btn-edit" onclick="moModalSua(${item.id})">Sửa</button>
-                        <button class="btn-delete" onclick="xoaNhatKy(${item.id})">Xóa</button>
-                    </td>
+                    <td><span class="vc-reminder">${ngayNhacLaiFormatted}</span></td>
+                    <td><span class="vc-status">${item.trangthai || ''}</span></td>
+                    <td><div class="vc-actions">
+                        <button class="btn-edit" onclick="moModalSua(${item.id})">✎ Sửa</button>
+                        <button class="btn-delete" onclick="xoaNhatKy(${item.id})">🗑 Xóa</button>
+                    </div></td>
                 </tr>`;
             });
 
@@ -380,7 +640,11 @@
                 const maVC = (item.mavaccine || '').toLowerCase();
                 const bacSi = (item.bacsi || '').toLowerCase();
                 const maNK = (item.manhatky || ('nkpk' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'))).toLowerCase();
-                return tenVC.includes(tuKhoa) || maVC.includes(tuKhoa) || bacSi.includes(tuKhoa) || maNK.includes(tuKhoa);
+                const pet = (mapThuCung[item.mathucung]?.tenthucung || '').toLowerCase();
+                const chu = (mapThuCung[item.mathucung]?.tenchu || '').toLowerCase();
+                const matchKeyword = !tuKhoa || [tenVC, maVC, bacSi, maNK, pet, chu].some(v => v.includes(tuKhoa));
+                const matchStatus = !trangThaiDangLoc || item.trangthai === trangThaiDangLoc;
+                return matchKeyword && matchStatus;
             });
             trangHienTai = 1;
             hienThiPhanTrang();
