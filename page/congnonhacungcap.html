@@ -16,159 +16,60 @@
     <link rel="stylesheet" href="../css/style1.css">
 
     <style>
-        .search-box {
-            padding: 8px 12px;
-            width: 250px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-            outline: none;
-        }
-        .search-box:focus {
-            border-color: #2563eb;
-        }
-        .card-header-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        /* Thẻ thống kê tổng quan công nợ */
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .stat-card {
-            background: #fff;
-            padding: 15px 20px;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .stat-card h4 {
-            margin: 0 0 5px 0;
-            font-size: 13px;
-            color: #64748b;
-            text-transform: uppercase;
-        }
-        .stat-card .stat-value {
-            font-size: 20px;
-            font-weight: bold;
-            color: #1e293b;
-        }
-
-        /* Tối ưu modal và form */
-        .modal-container {
-            width: 90%;
-            max-width: 500px;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            box-sizing: border-box;
-        }
-        .form-group-modal {
-            margin-bottom: 12px;
-            position: relative;
-        }
-        .form-group-modal label {
-            font-size: 13px;
-            margin-bottom: 4px;
-            display: block;
-            font-weight: 500;
-        }
-        .form-group-modal input, .form-group-modal textarea, .form-group-modal select {
-            width: 100%;
-            padding: 8px 10px;
-            font-size: 13px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        /* Tối ưu bảng dữ liệu công nợ */
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto !important;
-            -webkit-overflow-scrolling: touch;
-            margin-bottom: 10px;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-        }
-
-        table {
-            width: 100%;
-            min-width: 1050px;
-            border-collapse: collapse;
-            table-layout: auto;
-        }
-
-        table th, table td {
-            padding: 10px 12px;
-            vertical-align: middle;
-            font-size: 13px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        table th {
-            background-color: #f8fafc;
-            font-weight: 600;
-            color: #334155;
-            white-space: nowrap;
-        }
-
-        .badge-no {
-            background-color: #fef2f2;
-            color: #dc2626;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            border: 1px solid #fecaca;
-        }
-        .badge-hetno {
-            background-color: #f0fdf4;
-            color: #16a34a;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            border: 1px solid #bbf7d0;
-        }
-
-        .pagination-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            font-size: 13px;
-        }
-        .pagination-controls {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-        .pagination-controls button {
-            padding: 5px 10px;
-            border: 1px solid #cbd5e1;
-            background: #fff;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        .pagination-controls button:disabled {
-            background: #f1f5f9;
-            color: #94a3b8;
-            cursor: not-allowed;
-        }
-        .pagination-controls span {
-            padding: 0 8px;
-            font-weight: 600;
-            color: #334155;
-        }
+    /* CHỈ THIẾT KẾ PHẦN NỘI DUNG - KHÔNG CAN THIỆP TOPBAR / MENU */
+    .content-body{background:#f4f7fb;padding:18px 20px 32px}
+    .content-body .stats-container{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}
+    .content-body .stat-card{position:relative;min-height:94px;display:flex;align-items:center;gap:13px;padding:15px 17px;background:#fff;border:1px solid #e5eaf2;border-radius:14px;box-shadow:0 4px 16px rgba(15,23,42,.045);overflow:hidden}
+    .content-body .stat-icon{width:44px;height:44px;min-width:44px;display:grid;place-items:center;border-radius:12px;font-size:20px;background:#eff6ff;color:#2563eb}
+    .content-body .stat-card:nth-child(2) .stat-icon{background:#fff1f2;color:#ef4444}
+    .content-body .stat-card:nth-child(3) .stat-icon{background:#ecfdf5;color:#059669}
+    .content-body .stat-card:nth-child(4) .stat-icon{background:#fff7ed;color:#ea580c}
+    .content-body .stat-card h4{margin:0 0 5px;font-size:11px;font-weight:750;color:#64748b;text-transform:uppercase;letter-spacing:.2px}
+    .content-body .stat-card .stat-value{font-size:23px;line-height:1;font-weight:800;color:#172554}
+    .content-body .stat-note{margin-top:5px;color:#94a3b8;font-size:10px}
+    .content-body>.card{background:#fff;border:1px solid #e5eaf2;border-radius:15px;box-shadow:0 5px 20px rgba(15,23,42,.055);overflow:hidden}
+    .content-body .card-header{min-height:76px;padding:15px 18px;background:#fff;border-bottom:1px solid #edf1f6;display:flex;align-items:center;justify-content:space-between;gap:15px}
+    .content-body .card-header h3{margin:0;color:#173b82;font-size:18px;font-weight:800}
+    .content-body .card-header h3:after{content:"";display:block;width:42px;height:3px;margin-top:7px;border-radius:99px;background:#2563eb}
+    .content-body .card-header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .content-body .search-box{width:260px;height:39px;padding:0 12px;border:1px solid #d8e0eb;border-radius:9px;background:#fff;color:#334155;font-size:12px;outline:none}
+    .content-body .search-box:focus{border-color:#7aa2ff;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+    .content-body .btn-primary{height:39px;padding:0 15px;border:0;border-radius:9px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:750;font-size:12px;box-shadow:0 4px 10px rgba(16,185,129,.16);cursor:pointer}
+    .content-body .table-toolbar{margin:14px 18px 0;padding:8px 10px;min-height:42px;display:flex;align-items:center;gap:7px;border:1px solid #e7edf5;border-radius:10px;background:#f8fafc}
+    .content-body .toolbar-label{color:#64748b;font-size:11px;font-weight:700}.content-body .toolbar-spacer{flex:1}
+    .content-body .debt-filter{height:30px;padding:0 10px;border:1px solid #dbe3ee;border-radius:7px;background:#fff;color:#475569;font-size:11px;outline:none}
+    .content-body .table-responsive{width:calc(100% - 36px);margin:12px 18px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #e2e8f0;border-radius:11px;background:#fff}
+    .content-body table{width:100%;min-width:1080px;border-collapse:separate;border-spacing:0}
+    .content-body table th{height:44px;padding:0 11px;background:#f8fafc;color:#526078;border-bottom:1px solid #dfe6ef;font-size:10.5px;font-weight:800;white-space:nowrap;text-align:left}
+    .content-body table td{padding:11px;vertical-align:middle;font-size:11.5px;color:#334155;border-bottom:1px solid #edf1f5;white-space:nowrap}
+    .content-body table tbody tr:hover{background:#f8fbff}.content-body table tbody tr:last-child td{border-bottom:0}
+    .content-body .row-number{width:34px;color:#94a3b8;font-weight:700;text-align:center}
+    .content-body .receipt-code{color:#2563eb;font-weight:800;cursor:pointer}.content-body .supplier-name{color:#172033;font-weight:750}
+    .content-body .phone{color:#2563eb;font-weight:650}.content-body .money{font-variant-numeric:tabular-nums;font-weight:650}
+    .content-body .paid-money{color:#059669}.content-body .debt-money{color:#ef4444;font-weight:800}
+    .content-body .date-overdue{color:#ef4444;font-weight:750}.content-body .date-soon{color:#ea580c;font-weight:750}
+    .content-body .status-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:750;white-space:nowrap}
+    .content-body .status-badge:before{content:"";width:6px;height:6px;border-radius:50%}
+    .content-body .status-overdue{background:#fff1f2;color:#dc2626;border:1px solid #fecdd3}.content-body .status-overdue:before{background:#ef4444}
+    .content-body .status-soon{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}.content-body .status-soon:before{background:#f97316}
+    .content-body .status-due{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}.content-body .status-due:before{background:#3b82f6}
+    .content-body .status-paid{background:#ecfdf5;color:#059669;border:1px solid #bbf7d0}.content-body .status-paid:before{background:#10b981}
+    .content-body .action-wrap{display:flex;gap:5px;align-items:center}.content-body .action-btn{height:29px;padding:0 8px;border-radius:7px;font-size:10.5px;font-weight:750;border:1px solid;background:#fff}
+    .content-body .pay-btn{color:#059669;border-color:#a7f3d0;background:#ecfdf5}.content-body .edit-btn{color:#b45309;border-color:#fde68a;background:#fffbeb}
+    .content-body .pagination-container{margin:12px 18px 16px;padding:10px 12px;min-height:45px;display:flex;justify-content:space-between;align-items:center;gap:12px;background:#f8fafc;border:1px solid #e4eaf2;border-radius:10px;font-size:11px}
+    .content-body .pagination-controls{display:flex;align-items:center;gap:5px}.content-body .pagination-controls button{height:30px;padding:0 10px;border:1px solid #dbe3ee;background:#fff;border-radius:7px;color:#475569;font-size:10.5px;cursor:pointer}
+    .content-body .pagination-controls button:disabled{opacity:.45;cursor:not-allowed}.content-body #pageIndicator{min-width:31px;height:30px;display:grid;place-items:center;padding:0 8px;border-radius:7px;background:#2563eb;color:#fff;font-weight:800}
+    .content-body .bottom-info{display:grid;grid-template-columns:1fr 1.3fr;gap:12px;margin:0 18px 18px}.content-body .info-card{min-height:76px;padding:12px 14px;border:1px solid #e5eaf2;border-radius:11px;background:#f8fafc}
+    .content-body .info-title{color:#173b82;font-size:11px;font-weight:800;margin-bottom:8px}.content-body .info-text{color:#64748b;font-size:10.5px;line-height:1.55}
+    .content-body .legend{display:flex;flex-wrap:wrap;gap:12px}.content-body .legend-item{display:flex;align-items:center;gap:5px;color:#64748b;font-size:10.5px}.content-body .legend-dot{width:7px;height:7px;border-radius:50%}
+    .content-body .dot-red{background:#ef4444}.content-body .dot-orange{background:#f97316}.content-body .dot-blue{background:#3b82f6}.content-body .dot-green{background:#10b981}
+    #modalNCC .modal-container{width:min(620px,calc(100vw - 28px));max-width:620px;padding:0;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 25px 70px rgba(15,23,42,.25)}
+    #modalNCC .modal-head-modern{padding:16px 19px;background:#f8fbff;border-bottom:1px solid #e7edf5}#modalNCC .modal-head-modern h3{margin:0;color:#173b82;font-size:17px;font-weight:800}
+    #modalNCC .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}#modalNCC .form-group-modal{margin-bottom:11px}
+    #modalNCC .form-group-modal label{color:#475569;font-size:11px;font-weight:700;margin-bottom:4px}#modalNCC .form-group-modal input{height:38px;padding:0 10px;border:1px solid #dbe3ee;border-radius:8px;outline:none}
+    #modalNCC .form-group-modal input:focus{border-color:#7aa2ff;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+    @media(max-width:1100px){.content-body .stats-container{grid-template-columns:repeat(2,minmax(0,1fr))}.content-body .bottom-info{grid-template-columns:1fr}}
+    @media(max-width:700px){.content-body{padding:10px}.content-body .card-header{align-items:stretch;flex-direction:column}.content-body .card-header-actions{width:100%}.content-body .search-box{width:100%;flex:1}.content-body .stats-container{grid-template-columns:1fr 1fr;gap:9px}.content-body .stat-card{min-height:82px;padding:10px}.content-body .stat-icon{width:36px;height:36px;min-width:36px;font-size:17px}.content-body .stat-card .stat-value{font-size:19px}.content-body .table-responsive{width:calc(100% - 20px);margin:10px}.content-body .pagination-container{margin:10px}.content-body .bottom-info{margin:0 10px 12px}#modalNCC .form-grid{grid-template-columns:1fr}}
     </style>
 </head>
 <body>
@@ -183,16 +84,11 @@
         <div class="content-body">
             <!-- CÁC THẺ THỐNG KÊ TỔNG QUAN -->
             <div class="stats-container">
-                <div class="stat-card">
-                    <h4>Tổng NCC còn nợ</h4>
-                    <div class="stat-value" id="txtTongNCCNo">0</div>
-                </div>
-                <div class="stat-card">
-                    <h4>Tổng dư nợ phải trả</h4>
-                    <div class="stat-value" id="txtTongDuNoNCC" style="color: #dc2626;">0 đ</div>
-                </div>
+                <div class="stat-card"><div class="stat-icon">🏢</div><div><h4>Tổng NCC còn nợ</h4><div class="stat-value" id="txtTongNCCNo">0</div><div class="stat-note">Nhà cung cấp</div></div></div>
+                <div class="stat-card"><div class="stat-icon">💳</div><div><h4>Tổng dư nợ phải trả</h4><div class="stat-value" id="txtTongDuNoNCC" style="color:#ef4444;">0 đ</div><div class="stat-note">Tổng số tiền còn nợ</div></div></div>
+                <div class="stat-card"><div class="stat-icon">✓</div><div><h4>Đã thanh toán</h4><div class="stat-value" id="txtTongDaThanhToan" style="color:#059669;">0 đ</div><div class="stat-note">Tổng tiền đã trả</div></div></div>
+                <div class="stat-card"><div class="stat-icon">📅</div><div><h4>Sắp đến hạn</h4><div class="stat-value" id="txtSapDenHan" style="color:#ea580c;">0</div><div class="stat-note">Trong 3 ngày tới</div></div></div>
             </div>
-
             <div class="card">
                 <div class="card-header">
                     <h3>Quản lý Công nợ Nhà cung cấp</h3>
@@ -201,22 +97,27 @@
                         <button class="btn-primary" onclick="moModalThemNCC()">+ Thêm nhà cung cấp / Công nợ</button>
                     </div>
                 </div>
-                
+
+                <div class="table-toolbar">
+                    <span class="toolbar-label">📋 Danh sách công nợ phải trả</span>
+                    <span class="toolbar-spacer"></span>
+                    <select id="debtFilter" class="debt-filter" onchange="locBoLocNo()">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="overdue">Quá hạn</option>
+                        <option value="soon">Sắp đến hạn</option>
+                        <option value="due">Còn nợ</option>
+                        <option value="paid">Đã thanh toán</option>
+                    </select>
+                </div>
+
                 <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
-                                <th>Mã phiếu nhập</th>
-                                <th>Tên nhà cung cấp</th>
-                                <th>Số điện thoại</th>
-                                <th>Địa chỉ</th>
-                                <th>Ngày nhập</th>
-                                <th>Tổng tiền hàng</th>
-                                <th>Đã thanh toán</th>
-                                <th>Còn nợ (Phải trả)</th>
-                                <th>Ngày đến hạn</th>
-                                <th style="text-align: center;">Trạng thái</th>
-                                <th style="text-align: center;">Thao tác</th>
+                                <th style="width:38px;text-align:center;">#</th>
+                                <th>Mã phiếu nhập</th><th>Nhà cung cấp</th><th>SĐT</th><th>Địa chỉ</th>
+                                <th>Ngày nhập</th><th>Tổng tiền hàng</th><th>Đã thanh toán</th><th>Còn nợ (Phải trả)</th>
+                                <th>Ngày đến hạn</th><th style="text-align:center;">Trạng thái</th><th style="text-align:center;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="data-table">
@@ -234,6 +135,22 @@
                         <button id="btnNextPage" onclick="doiTrang(1)">Trang sau</button>
                     </div>
                 </div>
+
+                <div class="bottom-info">
+                    <div class="info-card">
+                        <div class="info-title">💡 Ghi chú</div>
+                        <div class="info-text">Danh sách công nợ phải trả cho nhà cung cấp.<br>Nhấn vào mã phiếu để xem chi tiết.</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-title">Trạng thái công nợ</div>
+                        <div class="legend">
+                            <span class="legend-item"><i class="legend-dot dot-red"></i> Quá hạn</span>
+                            <span class="legend-item"><i class="legend-dot dot-orange"></i> Sắp đến hạn</span>
+                            <span class="legend-item"><i class="legend-dot dot-blue"></i> Còn nợ</span>
+                            <span class="legend-item"><i class="legend-dot dot-green"></i> Đã thanh toán</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -241,56 +158,58 @@
     <!-- MODAL THÊM / SỬA NHÀ CUNG CẤP & CÔNG NỢ -->
     <div class="modal-overlay" id="modalNCC" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 2000;">
         <div class="modal-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; padding-left: 19px; padding-right: 19px; padding-top: 16px;">
                 <h3 id="modalTitle" style="margin: 0; font-size: 16px; color: #1e3a8a;">Thêm nhà cung cấp mới</h3>
                 <button onclick="dongModalNCC()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">&times;</button>
             </div>
             
-            <input type="hidden" id="editingId">
+            <div style="padding: 0 19px 16px 19px;">
+                <input type="hidden" id="editingId">
 
-            <div class="form-group-modal">
-                <label>Mã phiếu nhập:</label>
-                <input type="text" id="maphieunhap" placeholder="Ví dụ: PN_PK01_1234...">
-            </div>
+                <div class="form-group-modal">
+                    <label>Mã phiếu nhập:</label>
+                    <input type="text" id="maphieunhap" placeholder="Ví dụ: PN6177233525..." style="width: 100%;">
+                </div>
 
-            <div class="form-group-modal">
-                <label>Tên nhà cung cấp (*):</label>
-                <input type="text" id="tennhacungcap" placeholder="Nhập tên nhà cung cấp...">
-            </div>
+                <div class="form-group-modal">
+                    <label>Tên nhà cung cấp (*):</label>
+                    <input type="text" id="tennhacungcap" placeholder="Nhập tên nhà cung cấp..." style="width: 100%;">
+                </div>
 
-            <div class="form-group-modal">
-                <label>Số điện thoại:</label>
-                <input type="text" id="sodienthoai" placeholder="Nhập số điện thoại...">
-            </div>
+                <div class="form-group-modal">
+                    <label>Số điện thoại:</label>
+                    <input type="text" id="sodienthoai" placeholder="Nhập số điện thoại..." style="width: 100%;">
+                </div>
 
-            <div class="form-group-modal">
-                <label>Địa chỉ:</label>
-                <input type="text" id="diachi" placeholder="Nhập địa chỉ nhà cung cấp...">
-            </div>
+                <div class="form-group-modal">
+                    <label>Địa chỉ:</label>
+                    <input type="text" id="diachi" placeholder="Nhập địa chỉ nhà cung cấp..." style="width: 100%;">
+                </div>
 
-            <div class="form-group-modal">
-                <label>Ngày nhập hàng:</label>
-                <input type="date" id="ngaynhap">
-            </div>
+                <div class="form-group-modal">
+                    <label>Ngày nhập hàng:</label>
+                    <input type="date" id="ngaynhap" style="width: 100%;">
+                </div>
 
-            <div class="form-group-modal">
-                <label>Tổng tiền hàng (VNĐ):</label>
-                <input type="number" id="tongtienhang" placeholder="0" value="0">
-            </div>
+                <div class="form-group-modal">
+                    <label>Tổng tiền hàng (VNĐ):</label>
+                    <input type="number" id="tongtienhang" placeholder="0" value="0" style="width: 100%;">
+                </div>
 
-            <div class="form-group-modal">
-                <label>Đã thanh toán (VNĐ):</label>
-                <input type="number" id="dathanhtoan" placeholder="0" value="0">
-            </div>
+                <div class="form-group-modal">
+                    <label>Đã thanh toán (VNĐ):</label>
+                    <input type="number" id="dathanhtoan" placeholder="0" value="0" style="width: 100%;">
+                </div>
 
-            <div class="form-group-modal">
-                <label>Ngày đến hạn:</label>
-                <input type="date" id="ngaydenhan">
-            </div>
+                <div class="form-group-modal">
+                    <label>Ngày đến hạn:</label>
+                    <input type="date" id="ngaydenhan" style="width: 100%;">
+                </div>
 
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
-                <button class="btn-secondary" onclick="dongModalNCC()" style="padding: 6px 14px; cursor: pointer;">Hủy</button>
-                <button class="btn-primary" onclick="luuNCC()" style="padding: 6px 14px; cursor: pointer;">Lưu dữ liệu</button>
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+                    <button class="btn-secondary" onclick="dongModalNCC()" style="padding: 6px 14px; cursor: pointer; border: 1px solid #dbe3ee; background: #fff; border-radius: 8px;">Hủy</button>
+                    <button class="btn-primary" onclick="luuNCC()" style="padding: 6px 14px; cursor: pointer;">Lưu dữ liệu</button>
+                </div>
             </div>
         </div>
     </div>
@@ -358,27 +277,31 @@
         }
 
         function tinhToanTongQuanNCC() {
-            let tongNCCNo = 0;
-            let tongSoDuNo = 0;
+            let tongNCCNo = 0, tongSoDuNo = 0, tongDaThanhToan = 0, sapDenHan = 0;
+            const today = new Date(); today.setHours(0,0,0,0);
+            const in3Days = new Date(today); in3Days.setDate(in3Days.getDate()+3);
 
             danhSachNCCGoc.forEach(item => {
-                if (item.conno > 0) {
-                    tongNCCNo++;
-                    tongSoDuNo += item.conno;
+                if (item.conno > 0) { tongNCCNo++; tongSoDuNo += item.conno; }
+                tongDaThanhToan += Number(item.dathanhtoan || 0);
+                if (item.conno > 0 && item.ngaydenhan) {
+                    const due = new Date(item.ngaydenhan); due.setHours(0,0,0,0);
+                    if (due >= today && due <= in3Days) sapDenHan++;
                 }
             });
-
             document.getElementById('txtTongNCCNo').innerText = tongNCCNo;
             document.getElementById('txtTongDuNoNCC').innerText = tongSoDuNo.toLocaleString('vi-VN') + ' đ';
+            const paid = document.getElementById('txtTongDaThanhToan'); if (paid) paid.innerText = tongDaThanhToan.toLocaleString('vi-VN') + ' đ';
+            const soon = document.getElementById('txtSapDenHan'); if (soon) soon.innerText = sapDenHan;
         }
 
         function renderPhanTrang() {
             const tableBody = document.getElementById('data-table');
             tableBody.innerHTML = '';
-            
             const tongSoBanGhi = duLieuHienThiHienTai.length;
-            if(tongSoBanGhi === 0) {
-                tableBody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:#777;">Không có dữ liệu nhà cung cấp</td></tr>`;
+
+            if (tongSoBanGhi === 0) {
+                tableBody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:42px 15px;color:#94a3b8;"><div style="font-size:32px;">📋</div><strong style="display:block;color:#475569;font-size:13px;margin-top:6px;">Không có dữ liệu công nợ</strong><span style="font-size:11px;">Chưa có nhà cung cấp phù hợp.</span></td></tr>`;
                 document.getElementById('paginationInfo').innerText = 'Hiển thị 0 - 0 của 0 bản ghi';
                 document.getElementById('pageIndicator').innerText = '1 / 1';
                 document.getElementById('btnPrevPage').disabled = true;
@@ -394,35 +317,46 @@
             const ketThuc = Math.min(batDau + soDongMoiTrang, tongSoBanGhi);
             const trangDuLieu = duLieuHienThiHienTai.slice(batDau, ketThuc);
 
-            trangDuLieu.forEach(item => {
-                let badgeHtml = item.conno > 0 
-                    ? `<span class="badge-no">Phải trả: ${item.conno.toLocaleString('vi-VN')} đ</span>` 
-                    : `<span class="badge-hetno">Đã thanh toán đủ</span>`;
+            const today = new Date(); today.setHours(0,0,0,0);
+            const in3Days = new Date(today); in3Days.setDate(in3Days.getDate()+3);
+
+            trangDuLieu.forEach((item,index) => {
+                let statusText = 'Đã thanh toán', statusClass = 'status-paid', dateClass = '';
+                if (item.conno > 0) {
+                    if (item.ngaydenhan) {
+                        const due = new Date(item.ngaydenhan); due.setHours(0,0,0,0);
+                        if (due < today) { statusText='Quá hạn'; statusClass='status-overdue'; dateClass='date-overdue'; }
+                        else if (due <= in3Days) { statusText='Sắp đến hạn'; statusClass='status-soon'; dateClass='date-soon'; }
+                        else { statusText='Còn nợ'; statusClass='status-due'; }
+                    } else { statusText='Còn nợ'; statusClass='status-due'; }
+                }
 
                 let rawSdt = String(item.sodienthoai || '').trim();
                 let displaySdt = rawSdt ? (rawSdt.startsWith('0') ? rawSdt : '0' + rawSdt) : 'Chưa có';
                 let ngayNhapFormatted = item.ngaynhap ? new Date(item.ngaynhap).toLocaleDateString('vi-VN') : '<span style="color:#94a3b8;">Chưa có</span>';
                 let ngayDenHanFormatted = item.ngaydenhan ? new Date(item.ngaydenhan).toLocaleDateString('vi-VN') : '<span style="color:#94a3b8;">Chưa có</span>';
 
+                const actionHtml = item.conno > 0
+                    ? `<div class="action-wrap"><button class="action-btn pay-btn" onclick="thanhToanNCC(${item.id}, ${item.conno})">Trả tiền</button><button class="action-btn edit-btn" onclick="moModalSuaNCC(${item.id})">Sửa</button></div>`
+                    : `<div class="action-wrap"><button class="action-btn edit-btn" onclick="moModalSuaNCC(${item.id})">Sửa</button></div>`;
+
                 tableBody.innerHTML += `<tr>
-                    <td><strong style="color: #2563eb;">${item.maphieunhap}</strong></td>
-                    <td><strong>${item.tennhacungcap}</strong></td>
-                    <td><span style="color: #0284c7;">📞 ${displaySdt}</span></td>
+                    <td class="row-number">${batDau+index+1}</td>
+                    <td><span class="receipt-code" title="Nhấn để xem chi tiết">${item.maphieunhap}</span></td>
+                    <td><span class="supplier-name">${item.tennhacungcap}</span></td>
+                    <td><span class="phone">☎ ${displaySdt}</span></td>
                     <td>${item.diachi}</td>
                     <td>${ngayNhapFormatted}</td>
-                    <td>${item.tongtienhang.toLocaleString('vi-VN')} đ</td>
-                    <td>${item.dathanhtoan.toLocaleString('vi-VN')} đ</td>
-                    <td><strong style="color: #dc2626;">${item.conno.toLocaleString('vi-VN')} đ</strong></td>
-                    <td>${ngayDenHanFormatted}</td>
-                    <td style="text-align: center;">${badgeHtml}</td>
-                    <td style="text-align: center;">
-                        <button class="btn-primary" style="padding: 4px 8px; font-size: 11px; background-color: #059669;" onclick="thanhToanNCC(${item.id}, ${item.conno})">Trả tiền</button>
-                        <button class="btn-edit" style="padding: 4px 8px; font-size: 11px; margin-left: 3px;" onclick="moModalSuaNCC(${item.id})">Sửa</button>
-                    </td>
+                    <td class="money">${item.tongtienhang.toLocaleString('vi-VN')} đ</td>
+                    <td class="money paid-money">${item.dathanhtoan.toLocaleString('vi-VN')} đ</td>
+                    <td class="money debt-money">${item.conno.toLocaleString('vi-VN')} đ</td>
+                    <td class="${dateClass}">${ngayDenHanFormatted}</td>
+                    <td style="text-align:center;"><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>${actionHtml}</td>
                 </tr>`;
             });
 
-            document.getElementById('paginationInfo').innerText = `Hiển thị ${batDau + 1} - ${ketThuc} của ${tongSoBanGhi} bản ghi`;
+            document.getElementById('paginationInfo').innerText = `Hiển thị ${batDau+1} - ${ketThuc} của ${tongSoBanGhi} bản ghi`;
             document.getElementById('pageIndicator').innerText = `${trangHienTai} / ${tongSoTrang}`;
             document.getElementById('btnPrevPage').disabled = (trangHienTai === 1);
             document.getElementById('btnNextPage').disabled = (trangHienTai === tongSoTrang || tongSoTrang === 0);
@@ -445,35 +379,50 @@
             renderPhanTrang();
         }
 
-        function taoSoNgauNhiên4ChuSo() {
-            return Math.floor(1000 + Math.random() * 9000);
+        function locBoLocNo() {
+            const filter = document.getElementById('debtFilter').value;
+            const today = new Date(); today.setHours(0,0,0,0);
+            const in3Days = new Date(today); in3Days.setDate(in3Days.getDate()+3);
+
+            if (!filter) duLieuHienThiHienTai = [...danhSachNCCGoc];
+            else duLieuHienThiHienTai = danhSachNCCGoc.filter(item => {
+                if (filter === 'paid') return item.conno <= 0;
+                if (item.conno <= 0) return false;
+                if (!item.ngaydenhan) return filter === 'due';
+                const due = new Date(item.ngaydenhan); due.setHours(0,0,0,0);
+                if (filter === 'overdue') return due < today;
+                if (filter === 'soon') return due >= today && due <= in3Days;
+                if (filter === 'due') return due > in3Days;
+                return true;
+            });
+            trangHienTai = 1;
+            renderPhanTrang();
         }
 
-      function moModalThemNCC() {
-    document.getElementById('editingId').value = '';
-    
-    // Lấy mã phòng khám, ví dụ: '617723' và bỏ dấu gạch dưới, gộp liền mạch giống mã vắc-xin
-    const maPK = (maPhongKhamHienTai || 'VET').replace(/_/g, '');
-    const soNgauNhiên = Math.floor(1000 + Math.random() * 9000);
-    
-    // Kết quả sẽ ra dạng: PN6177233525 (không còn dấu gạch dưới ở giữa phòng khám và số)
-    const maPhieuTuSinh = `PN${maPK}${soNgauNhiên}`;
-    
-    document.getElementById('maphieunhap').value = maPhieuTuSinh;
-    document.getElementById('tennhacungcap').value = '';
-    document.getElementById('sodienthoai').value = '';
-    document.getElementById('diachi').value = '';
-    
-    // Mặc định ngày nhập là ngày hôm nay
-    const ngayHienTai = new Date().toISOString().split('T')[0];
-    document.getElementById('ngaynhap').value = ngayHienTai;
+        function moModalThemNCC() {
+            document.getElementById('editingId').value = '';
+            
+            // Xóa sạch các dấu gạch dưới và gộp mã liền mạch giống mã vắc-xin
+            const maPK = (maPhongKhamHienTai || 'VET').replace(/_/g, '');
+            const soNgauNhiên = Math.floor(1000 + Math.random() * 9000);
+            
+            // Kết quả sinh ra dạng: PN6177233525
+            const maPhieuTuSinh = `PN${maPK}${soNgauNhiên}`;
+            
+            document.getElementById('maphieunhap').value = maPhieuTuSinh;
+            document.getElementById('tennhacungcap').value = '';
+            document.getElementById('sodienthoai').value = '';
+            document.getElementById('diachi').value = '';
+            
+            const ngayHienTai = new Date().toISOString().split('T')[0];
+            document.getElementById('ngaynhap').value = ngayHienTai;
 
-    document.getElementById('tongtienhang').value = '0';
-    document.getElementById('dathanhtoan').value = '0';
-    document.getElementById('ngaydenhan').value = '';
-    document.getElementById('modalTitle').innerText = 'Thêm nhà cung cấp mới';
-    document.getElementById('modalNCC').style.display = 'flex';
-}
+            document.getElementById('tongtienhang').value = '0';
+            document.getElementById('dathanhtoan').value = '0';
+            document.getElementById('ngaydenhan').value = '';
+            document.getElementById('modalTitle').innerText = 'Thêm nhà cung cấp mới';
+            document.getElementById('modalNCC').style.display = 'flex';
+        }
 
         function moModalSuaNCC(id) {
             const item = danhSachNCCGoc.find(x => x.id === id);
@@ -488,7 +437,7 @@
             document.getElementById('tongtienhang').value = item.tongtienhang || 0;
             document.getElementById('dathanhtoan').value = item.dathanhtoan || 0;
             document.getElementById('ngaydenhan').value = item.ngaydenhan || '';
-            document.getElementById('modalTitle').innerText = 'Cập nhật thông tin NCC';
+            document.getElementById('modalTitle').innerText = 'Sửa thông tin / Công nợ NCC';
             document.getElementById('modalNCC').style.display = 'flex';
         }
 
@@ -502,12 +451,10 @@
             const tennhacungcap = document.getElementById('tennhacungcap').value.trim();
             const sodienthoai = document.getElementById('sodienthoai').value.trim();
             const diachi = document.getElementById('diachi').value.trim();
-            const ngaynhap = document.getElementById('ngaynhap').value || null;
-            const tongtienhang = parseFloat(document.getElementById('tongtienhang').value) || 0;
-            const dathanhtoan = parseFloat(document.getElementById('dathanhtoan').value) || 0;
-            const ngaydenhan = document.getElementById('ngaydenhan').value || null;
-            let conno = tongtienhang - dathanhtoan;
-            if (conno < 0) conno = 0;
+            const ngaynhap = document.getElementById('ngaynhap').value;
+            const tongtienhang = Number(document.getElementById('tongtienhang').value) || 0;
+            const dathanhtoan = Number(document.getElementById('dathanhtoan').value) || 0;
+            const ngaydenhan = document.getElementById('ngaydenhan').value;
 
             if (!tennhacungcap) {
                 alert('Vui lòng nhập tên nhà cung cấp!');
@@ -515,71 +462,58 @@
             }
 
             const payload = {
-                maphieunhap: maphieunhap,
-                tennhacungcap: tennhacungcap,
-                sodienthoai: sodienthoai,
-                diachi: diachi,
-                ngaynhap: ngaynhap,
-                tongtienhang: tongtienhang,
-                dathanhtoan: dathanhtoan,
-                conno: conno,
-                ngaydenhan: ngaydenhan,
-                maphongkham: maPhongKhamHienTai
+                maphieunhap: maphieunhap || '---',
+                tennhacungcap,
+                sodienthoai,
+                diachi,
+                ngaynhap: ngaynhap || null,
+                tongtienhang,
+                dathanhtoan,
+                ngaydenhan: ngaydenhan || null,
+                maphk: maPhongKhamHienTai || null
             };
 
-            if (id === "") {
-                const { error } = await db.from('nhacungcap').insert([payload]);
-                if (error) {
-                    alert('Lỗi thêm nhà cung cấp: ' + error.message);
-                    return;
-                }
+            if (typeof db === 'undefined' || !db) {
+                alert('Chưa kết nối cơ sở dữ liệu!');
+                return;
+            }
+
+            let error;
+            if (id) {
+                const res = await db.from('nhacungcap').update(payload).eq('id', id);
+                error = res.error;
             } else {
-                const { error } = await db.from('nhacungcap').update(payload).eq('id', id);
-                if (error) {
-                    alert('Lỗi cập nhật nhà cung cấp: ' + error.message);
-                    return;
-                }
+                const res = await db.from('nhacungcap').insert([payload]);
+                error = res.error;
             }
-
-            alert('Lưu thông tin nhà cung cấp thành công!');
-            dongModalNCC();
-            await fetchDuLieuNCC();
-        }
-
-        async function thanhToanNCC(nccId, noHienTai) {
-            if (noHienTai <= 0) {
-                alert('Nhà cung cấp này hiện không còn khoản nợ cần thanh toán!');
-                return;
-            }
-
-            let soTienTra = prompt(`Nhập số tiền thanh toán cho nhà cung cấp (Dư nợ hiện tại: ${noHienTai.toLocaleString('vi-VN')} đ):`, noHienTai);
-            if (soTienTra === null) return;
-
-            soTienTra = parseFloat(soTienTra);
-            if (isNaN(soTienTra) || soTienTra <= 0) {
-                alert('Số tiền nhập không hợp lệ!');
-                return;
-            }
-
-            const ncc = danhSachNCCGoc.find(x => x.id === nccId);
-            if (!ncc) return;
-
-            let conNoMoi = ncc.conno - soTienTra;
-            if (conNoMoi < 0) conNoMoi = 0;
-            let daThanhToanMoi = ncc.dathanhtoan + soTienTra;
-
-            const { error } = await db
-                .from('nhacungcap')
-                .update({ 
-                    dathanhtoan: daThanhToanMoi,
-                    conno: conNoMoi 
-                })
-                .eq('id', nccId);
 
             if (error) {
-                alert('Lỗi cập nhật thanh toán công nợ NCC: ' + error.message);
+                console.error('Lỗi lưu dữ liệu:', error);
+                alert('Lưu dữ liệu thất bại: ' + error.message);
             } else {
-                alert('Ghi nhận thanh toán nhà cung cấp thành công!');
+                dongModalNCC();
+                await fetchDuLieuNCC();
+            }
+        }
+
+        async function thanhToanNCC(id, connoHienTai) {
+            const soTienTra = prompt('Nhập số tiền thanh toán thêm (VNĐ):', connoHienTai);
+            if (soTienTra === null) return;
+            const tienTraThem = Number(soTienTra);
+            if (isNaN(tienTraThem) || tienTraThem <= 0) {
+                alert('Số tiền không hợp lệ!');
+                return;
+            }
+
+            const item = danhSachNCCGoc.find(x => x.id === id);
+            if (!item) return;
+
+            const moiDaThanhToan = item.dathanhtoan + tienTraThem;
+
+            const { error } = await db.from('nhacungcap').update({ dathanhtoan: moiDaThanhToan }).eq('id', id);
+            if (error) {
+                alert('Thanh toán thất bại: ' + error.message);
+            } else {
                 await fetchDuLieuNCC();
             }
         }
