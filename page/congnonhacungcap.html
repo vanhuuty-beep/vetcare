@@ -250,7 +250,7 @@
 
             <div class="form-group-modal">
                 <label>Mã phiếu nhập:</label>
-                <input type="text" id="maphieunhap" placeholder="Ví dụ: PN_617723_03...">
+                <input type="text" id="maphieunhap" placeholder="Ví dụ: PN_PK01_1234...">
             </div>
 
             <div class="form-group-modal">
@@ -445,19 +445,35 @@
             renderPhanTrang();
         }
 
-        function moModalThemNCC() {
-            document.getElementById('editingId').value = '';
-            document.getElementById('maphieunhap').value = '';
-            document.getElementById('tennhacungcap').value = '';
-            document.getElementById('sodienthoai').value = '';
-            document.getElementById('diachi').value = '';
-            document.getElementById('ngaynhap').value = '';
-            document.getElementById('tongtienhang').value = '0';
-            document.getElementById('dathanhtoan').value = '0';
-            document.getElementById('ngaydenhan').value = '';
-            document.getElementById('modalTitle').innerText = 'Thêm nhà cung cấp mới';
-            document.getElementById('modalNCC').style.display = 'flex';
+        function taoSoNgauNhiên4ChuSo() {
+            return Math.floor(1000 + Math.random() * 9000);
         }
+
+      function moModalThemNCC() {
+    document.getElementById('editingId').value = '';
+    
+    // Lấy mã phòng khám, ví dụ: '617723' và bỏ dấu gạch dưới, gộp liền mạch giống mã vắc-xin
+    const maPK = (maPhongKhamHienTai || 'VET').replace(/_/g, '');
+    const soNgauNhiên = Math.floor(1000 + Math.random() * 9000);
+    
+    // Kết quả sẽ ra dạng: PN6177233525 (không còn dấu gạch dưới ở giữa phòng khám và số)
+    const maPhieuTuSinh = `PN${maPK}${soNgauNhiên}`;
+    
+    document.getElementById('maphieunhap').value = maPhieuTuSinh;
+    document.getElementById('tennhacungcap').value = '';
+    document.getElementById('sodienthoai').value = '';
+    document.getElementById('diachi').value = '';
+    
+    // Mặc định ngày nhập là ngày hôm nay
+    const ngayHienTai = new Date().toISOString().split('T')[0];
+    document.getElementById('ngaynhap').value = ngayHienTai;
+
+    document.getElementById('tongtienhang').value = '0';
+    document.getElementById('dathanhtoan').value = '0';
+    document.getElementById('ngaydenhan').value = '';
+    document.getElementById('modalTitle').innerText = 'Thêm nhà cung cấp mới';
+    document.getElementById('modalNCC').style.display = 'flex';
+}
 
         function moModalSuaNCC(id) {
             const item = danhSachNCCGoc.find(x => x.id === id);
