@@ -204,13 +204,12 @@
 
         .table-thuoc-scroll-wrapper {
             max-height: 250px;
-            overflow-y: visible !important; /* Cho phép khung gợi ý hiển thị tràn ra ngoài */
+            overflow-y: auto;
             overflow-x: auto;
             border: 1px solid #cbd5e1;
             border-radius: 4px;
             margin-top: 6px;
             width: 100%;
-            padding-bottom: 25px; /* Tạo khoảng trống để không bị vướng nút Thêm thuốc */
         }
         .table-thuoc-modal {
             width: 100%;
@@ -226,7 +225,7 @@
             vertical-align: top;
             box-sizing: border-box;
             background: #fff;
-            overflow: visible !important;
+            overflow: visible;
         }
         .table-thuoc-modal th {
             background-color: #f8fafc;
@@ -244,23 +243,6 @@
             border: 1px solid #cbd5e1 !important;
             border-radius: 3px !important;
             outline: none;
-        }
-        
-        /* Tinh chỉnh khung gợi ý thuốc hiển thị nổi bật */
-        .thuoc-suggestions-box {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: #fff;
-            border: 1px solid #cbd5e1;
-            border-radius: 0 0 6px 6px;
-            max-height: 180px;
-            overflow-y: auto;
-            z-index: 999999;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-            display: none;
-            margin-top: 1px;
         }
     </style>
 
@@ -626,6 +608,14 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
                 </div>
             </div>
 
+            <!-- Bổ sung trường Hẹn tái khám -->
+            <div class="form-row">
+                <div class="form-group-modal">
+                    <label>Ngày hẹn tái khám:</label>
+                    <input type="date" id="ngaytaikham">
+                </div>
+            </div>
+
             <div class="form-group-modal">
                 <label>Triệu chứng:</label>
                 <textarea id="trieuchung" rows="2" placeholder="Nhập mô tả triệu chứng bệnh..."></textarea>
@@ -715,6 +705,9 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
             </div>
             <div class="print-row-grid">
                 <div style="width: 48%;"><strong>Trạng thái:</strong> <span id="p-trangthai" style="color: #0284c7; font-weight: bold;"></span></div>
+                <div style="width: 48%;"><strong>Hẹn tái khám:</strong> <span id="p-ngaytaikham" style="color: #d97706; font-weight: bold;"></span></div>
+            </div>
+            <div class="print-row-grid">
                 <div style="width: 48%;"><strong>Chi phí dịch vụ:</strong> <span id="p-chiphi" style="color: #dc2626; font-weight: bold;"></span></div>
             </div>
         </div>
@@ -942,48 +935,44 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
         });
 
         async function taiDuLieuDanhMucVaKho() {
-    if (typeof db === 'undefined' || !db) return;
+            if (typeof db === 'undefined' || !db) return;
 
-    const { data: khData } = await db.from('khachhang').select('*');
-    let mapKH = {};
-    if (khData) {
-        khData.forEach(kh => {
-            mapKH[kh.id] = kh.hovaten;
-        });
-    }
+            const { data: khData } = await db.from('khachhang').select('*');
+            let mapKH = {};
+            if (khData) {
+                khData.forEach(kh => {
+                    mapKH[kh.id] = kh.hovaten;
+                });
+            }
 
-    const { data: tcData } = await db.from('thucung').select('*');
-    dsThuCungChoSearch = [];
-    if (tcData) {
-        tcData.forEach(tc => {
-            mapThuCung[tc.id] = tc.tenthucung;
-            let maKH = tc.makhachhang || tc.makh || tc.khachhang_id || tc.id_khachhang;
-            let tenChu = (maKH && mapKH[maKH]) ? mapKH[maKH] : 'Chưa rõ';
-            mapKhachHang[tc.id] = tenChu;
+            const { data: tcData } = await db.from('thucung').select('*');
+            dsThuCungChoSearch = [];
+            if (tcData) {
+                tcData.forEach(tc => {
+                    mapThuCung[tc.id] = tc.tenthucung;
+                    let maKH = tc.makhachhang || tc.makh || tc.khachhang_id || tc.id_khachhang;
+                    let tenChu = (maKH && mapKH[maKH]) ? mapKH[maKH] : 'Chưa rõ';
+                    mapKhachHang[tc.id] = tenChu;
 
-            dsThuCungChoSearch.push({
-                id: tc.id,
-                label: `${tc.tenthucung} (Chủ: ${tenChu}) - ID: ${tc.id}`,
-                tenthucung: tc.tenthucung,
-                tenchu: tenChu,
-                value: tc.id
-            });
-        });
-    }
+                    dsThuCungChoSearch.push({
+                        id: tc.id,
+                        label: `${tc.tenthucung} (Chủ: ${tenChu}) - ID: ${tc.id}`,
+                        tenthucung: tc.tenthucung,
+                        tenchu: tenChu,
+                        value: tc.id
+                    });
+                });
+            }
 
-    try {
-        // Trỏ chính xác vào bảng 'khothuoc' của bạn
-        let res = await db.from('khothuoc').select('*');
-        if (res.data && res.data.length > 0) {
-            danhSachKhoThuocToanCuc = res.data;
-            console.log("Đã tải thành công kho thuốc từ bảng 'khothuoc':", danhSachKhoThuocToanCuc);
-        } else {
-            console.warn("Bảng 'khothuoc' trống hoặc không có dữ liệu.");
+            try {
+                let res = await db.from('khothuoc').select('*');
+                if (res.data && res.data.length > 0) {
+                    danhSachKhoThuocToanCuc = res.data;
+                }
+            } catch (err) {
+                console.error("Lỗi tải kho thuốc:", err);
+            }
         }
-    } catch (err) {
-        console.error("Lỗi tải kho thuốc:", err);
-    }
-}
 
         function xuLyTimKiemThuCung(tuKhoa) {
             const box = document.getElementById('suggestions-box');
@@ -1101,6 +1090,7 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
                 const chiPhi = Number(item.chiphi) || 0;
                 const chiPhiText = chiPhi.toLocaleString('vi-VN') + ' đ';
                 const ngayKham = item.ngaykham ? new Date(item.ngaykham + 'T00:00:00').toLocaleDateString('vi-VN') : '---';
+                const ngayTaiKham = item.ngaytaikham ? new Date(item.ngaytaikham + 'T00:00:00').toLocaleDateString('vi-VN') : 'Chưa có lịch';
                 const nhietDo = item.nhietdo !== null && item.nhietdo !== undefined && item.nhietdo !== '' ? `${item.nhietdo} °C` : '---';
                 const trangThai = item.trangthai || 'Đang điều trị';
 
@@ -1140,6 +1130,11 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
                         <div class="kb-date">
                             <i class="fa-regular fa-calendar"></i>
                             Ngày khám <strong style="color:#334155;">${ngayKham}</strong>
+                        </div>
+
+                        <div class="kb-date" style="background:#fffbeb; margin-top:4px;">
+                            <i class="fa-solid fa-calendar-check" style="color:#d97706;"></i>
+                            Hẹn tái khám <strong style="color:#d97706;">${ngayTaiKham}</strong>
                         </div>
 
                         <div class="kb-section">
@@ -1264,6 +1259,7 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
             
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('ngaykham').value = today;
+            document.getElementById('ngaytaikham').value = '';
 
             document.getElementById('nhietdo').value = '';
             document.getElementById('trangthai').value = 'Đang điều trị';
@@ -1298,6 +1294,7 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
             }
 
             document.getElementById('ngaykham').value = item.ngaykham || '';
+            document.getElementById('ngaytaikham').value = item.ngaytaikham || '';
             document.getElementById('nhietdo').value = item.nhietdo || '';
             document.getElementById('trangthai').value = item.trangthai || 'Đang điều trị';
             document.getElementById('trieuchung').value = item.trieuchung || '';
@@ -1453,6 +1450,7 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
             const id = document.getElementById('editingId').value;
             const mathucungStr = document.getElementById('mathucung').value.trim();
             const ngaykham = document.getElementById('ngaykham').value;
+            const ngaytaikham = document.getElementById('ngaytaikham').value;
             const nhietdoStr = document.getElementById('nhietdo').value.trim();
             const trieuchung = document.getElementById('trieuchung').value.trim();
             const chandoan = document.getElementById('chandoan').value.trim();
@@ -1494,6 +1492,7 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
             const payload = {
                 mathucung: parseInt(mathucung),
                 ngaykham: ngaykham,
+                ngaytaikham: ngaytaikham !== "" ? ngaytaikham : null,
                 nhietdo: nhietdoStr !== "" ? parseFloat(nhietdoStr) : null,
                 trieuchung: trieuchung,
                 chandoan: chandoan,
@@ -1599,6 +1598,7 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
             const tenChuSoHuu = (item.mathucung && mapKhachHang[item.mathucung]) ? mapKhachHang[item.mathucung] : 'Không rõ';
             const maPhieu = item.makhambenh || formatMaKham(item.id);
             const ngayKham = item.ngaykham ? new Date(item.ngaykham + 'T00:00:00').toLocaleDateString('vi-VN') : '---';
+            const ngayTaiKham = item.ngaytaikham ? new Date(item.ngaytaikham + 'T00:00:00').toLocaleDateString('vi-VN') : 'Không có lịch hẹn';
 
             let htmlThuoc = '';
             let tongTienThuocIn = 0;
@@ -1705,6 +1705,9 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
                         </div>
                         <div class="print-row-grid">
                             <div style="width: 48%;"><strong>Trạng thái:</strong> <span style="color: #0284c7; font-weight: bold;">${item.trangthai || ''}</span></div>
+                            <div style="width: 48%;"><strong>Hẹn tái khám:</strong> <span style="color: #d97706; font-weight: bold;">${ngayTaiKham}</span></div>
+                        </div>
+                        <div class="print-row-grid">
                             <div style="width: 48%;"><strong>Chi phí dịch vụ:</strong> <span style="color: #dc2626; font-weight: bold;">${item.chiphi ? Number(item.chiphi).toLocaleString('vi-VN') + ' đ' : '0 đ'}</span></div>
                         </div>
                     </div>
