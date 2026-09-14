@@ -84,8 +84,8 @@
             gap: 10px;
         }
 
-        /* Khung danh sách gợi ý tìm kiếm thú cưng tự chế mượt mà */
-        #suggestions-box {
+        /* Khung danh sách gợi ý tìm kiếm thú cưng & thuốc tự chế mượt mà */
+        #suggestions-box, .thuoc-suggestions-box {
             position: absolute;
             top: 100%;
             left: 0;
@@ -100,13 +100,13 @@
             display: none;
             margin-top: 2px;
         }
-        .suggestion-item {
+        .suggestion-item, .thuoc-suggestion-item {
             padding: 10px 12px;
             font-size: 13px;
             cursor: pointer;
             border-bottom: 1px solid #f1f5f9;
         }
-        .suggestion-item:hover {
+        .suggestion-item:hover, .thuoc-suggestion-item:hover {
             background-color: #f8fafc;
             color: #2563eb;
             font-weight: 500;
@@ -203,13 +203,14 @@
         }
 
         .table-thuoc-scroll-wrapper {
-            max-height: 220px;
-            overflow-y: auto;
+            max-height: 250px;
+            overflow-y: visible !important; /* Cho phép khung gợi ý hiển thị tràn ra ngoài */
             overflow-x: auto;
             border: 1px solid #cbd5e1;
             border-radius: 4px;
             margin-top: 6px;
             width: 100%;
+            padding-bottom: 25px; /* Tạo khoảng trống để không bị vướng nút Thêm thuốc */
         }
         .table-thuoc-modal {
             width: 100%;
@@ -222,10 +223,10 @@
             border: 1px solid #cbd5e1;
             padding: 6px;
             font-size: 12px;
-            vertical-align: middle;
+            vertical-align: top;
             box-sizing: border-box;
             background: #fff;
-            overflow: hidden;
+            overflow: visible !important;
         }
         .table-thuoc-modal th {
             background-color: #f8fafc;
@@ -235,15 +236,31 @@
             top: 0;
             z-index: 10;
         }
-        .table-thuoc-modal input, 
-        .table-thuoc-modal select {
+        .table-thuoc-modal input {
             width: 100% !important;
-            padding: 4px 6px !important;
+            padding: 5px 6px !important;
             font-size: 11px !important;
             box-sizing: border-box !important;
             border: 1px solid #cbd5e1 !important;
             border-radius: 3px !important;
             outline: none;
+        }
+        
+        /* Tinh chỉnh khung gợi ý thuốc hiển thị nổi bật */
+        .thuoc-suggestions-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #cbd5e1;
+            border-radius: 0 0 6px 6px;
+            max-height: 180px;
+            overflow-y: auto;
+            z-index: 999999;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            display: none;
+            margin-top: 1px;
         }
     </style>
 
@@ -412,7 +429,6 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
 .table-thuoc-scroll-wrapper{border-radius:9px!important;}
 .table-thuoc-modal th{font-size:11px!important;padding:9px!important;}
 .table-thuoc-modal td{font-size:11px!important;padding:7px!important;}
-.table-thuoc-modal input,.table-thuoc-modal select{min-height:34px!important;font-size:11px!important;border-radius:6px!important;}
 
 .table-responsive::-webkit-scrollbar{height:8px;width:8px;}
 .table-responsive::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:10px;}
@@ -625,17 +641,17 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
                 <textarea id="dieutri" rows="2" placeholder="Nhập phác đồ điều trị chung..."></textarea>
             </div>
 
-            <!-- BẢNG KÊ ĐƠN THUỐC CÓ THANH TRƯỢT DỌC VÀ NGANG -->
+            <!-- BẢNG KÊ ĐƠN THUỐC CÓ TÌM KIẾM THUỐC THÔNG MINH -->
             <div class="form-group-modal" style="margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
                 <label style="font-weight: bold; color: #1e3a8a;">💊 Kê đơn thuốc (Tự động trừ kho & tạo hóa đơn):</label>
                 <div class="table-thuoc-scroll-wrapper">
                     <table class="table-thuoc-modal">
                         <thead>
                             <tr>
-                                <th style="width: 36%;">Tên thuốc từ kho</th>
+                                <th style="width: 38%;">Tìm & Chọn thuốc từ kho</th>
                                 <th style="width: 12%; text-align: center;">Số lượng</th>
                                 <th style="width: 20%;">Đơn giá</th>
-                                <th style="width: 24%;">Hướng dẫn dùng</th>
+                                <th style="width: 22%;">Hướng dẫn dùng</th>
                                 <th style="width: 8%; text-align: center;">Xóa</th>
                             </tr>
                         </thead>
@@ -755,7 +771,7 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
         </div>
     </div>
 
-    <!-- CẤU HÌNH CSS DÀNH RIÊNG CHO IN ẤN (ĐÃ TỐI ƯU CHỐNG TRANG TRẮNG) -->
+    <!-- CẤU HÌNH CSS DÀNH RIÊNG CHO IN ẤN -->
     <style>
     @media print {
         @page {
@@ -911,6 +927,9 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
                 if (!e.target.closest('.form-group-modal')) {
                     document.getElementById('suggestions-box').style.display = 'none';
                 }
+                if (!e.target.closest('.td-thuoc-search-wrap')) {
+                    document.querySelectorAll('.thuoc-suggestions-box').forEach(b => b.style.display = 'none');
+                }
             });
 
             if (typeof db !== 'undefined' && db) {
@@ -923,50 +942,48 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
         });
 
         async function taiDuLieuDanhMucVaKho() {
-            if (typeof db === 'undefined' || !db) return;
+    if (typeof db === 'undefined' || !db) return;
 
-            const { data: khData } = await db.from('khachhang').select('*');
-            let mapKH = {};
-            if (khData) {
-                khData.forEach(kh => {
-                    mapKH[kh.id] = kh.hovaten;
-                });
-            }
+    const { data: khData } = await db.from('khachhang').select('*');
+    let mapKH = {};
+    if (khData) {
+        khData.forEach(kh => {
+            mapKH[kh.id] = kh.hovaten;
+        });
+    }
 
-            const { data: tcData } = await db.from('thucung').select('*');
-            dsThuCungChoSearch = [];
-            if (tcData) {
-                tcData.forEach(tc => {
-                    mapThuCung[tc.id] = tc.tenthucung;
-                    let maKH = tc.makhachhang || tc.makh || tc.khachhang_id || tc.id_khachhang;
-                    let tenChu = (maKH && mapKH[maKH]) ? mapKH[maKH] : 'Chưa rõ';
-                    mapKhachHang[tc.id] = tenChu;
+    const { data: tcData } = await db.from('thucung').select('*');
+    dsThuCungChoSearch = [];
+    if (tcData) {
+        tcData.forEach(tc => {
+            mapThuCung[tc.id] = tc.tenthucung;
+            let maKH = tc.makhachhang || tc.makh || tc.khachhang_id || tc.id_khachhang;
+            let tenChu = (maKH && mapKH[maKH]) ? mapKH[maKH] : 'Chưa rõ';
+            mapKhachHang[tc.id] = tenChu;
 
-                    dsThuCungChoSearch.push({
-                        id: tc.id,
-                        label: `${tc.tenthucung} (Chủ: ${tenChu}) - ID: ${tc.id}`,
-                        tenthucung: tc.tenthucung,
-                        tenchu: tenChu,
-                        value: tc.id
-                    });
-                });
-            }
+            dsThuCungChoSearch.push({
+                id: tc.id,
+                label: `${tc.tenthucung} (Chủ: ${tenChu}) - ID: ${tc.id}`,
+                tenthucung: tc.tenthucung,
+                tenchu: tenChu,
+                value: tc.id
+            });
+        });
+    }
 
-            try {
-                let res = await db.from('khothuoc').select('*');
-                if (res.error || !res.data || res.data.length === 0) {
-                    res = await db.from('thuoc').select('*');
-                }
-                if (res.error || !res.data || res.data.length === 0) {
-                    res = await db.from('danhmucthuoc').select('*');
-                }
-                if (res.data && res.data.length > 0) {
-                    danhSachKhoThuocToanCuc = res.data;
-                }
-            } catch (err) {
-                console.error("Lỗi tải kho thuốc:", err);
-            }
+    try {
+        // Trỏ chính xác vào bảng 'khothuoc' của bạn
+        let res = await db.from('khothuoc').select('*');
+        if (res.data && res.data.length > 0) {
+            danhSachKhoThuocToanCuc = res.data;
+            console.log("Đã tải thành công kho thuốc từ bảng 'khothuoc':", danhSachKhoThuocToanCuc);
+        } else {
+            console.warn("Bảng 'khothuoc' trống hoặc không có dữ liệu.");
         }
+    } catch (err) {
+        console.error("Lỗi tải kho thuốc:", err);
+    }
+}
 
         function xuLyTimKiemThuCung(tuKhoa) {
             const box = document.getElementById('suggestions-box');
@@ -1031,7 +1048,6 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
                 renderPhanTrang();
             }
         }
-
 
         function renderPhanTrang() {
             const container = document.getElementById('data-table');
@@ -1333,26 +1349,15 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
             const container = document.getElementById('dsThuocKhamContainer');
             const rowId = 'r_kham_' + Date.now() + Math.random().toString(36).substring(2, 5);
 
-            let optionsHtml = `<option value="">-- Chọn thuốc từ kho --</option>`;
-            if (danhSachKhoThuocToanCuc && danhSachKhoThuocToanCuc.length > 0) {
-                danhSachKhoThuocToanCuc.forEach(tk => {
-                    const tenT = tk.tenthuoc || tk.ten || tk.tenthuocmoi || '';
-                    const giaT = tk.giaban !== undefined ? tk.giaban : (tk.gia !== undefined ? tk.gia : (tk.dongia !== undefined ? tk.dongia : 0));
-                    const selected = (thuocData.mathuoc === tenT) ? 'selected' : '';
-                    optionsHtml += `<option value="${tenT}" data-gia="${giaT}" ${selected}>${tenT} (Tồn: ${tk.soluong || 0})</option>`;
-                });
-            }
-
             let giaKhoiDau = thuocData.Gia !== undefined ? thuocData.Gia : (thuocData.gia !== undefined ? thuocData.gia : '');
+            let tenThuocKhoiDau = thuocData.mathuoc || '';
 
             const tr = document.createElement('tr');
             tr.id = rowId;
             tr.innerHTML = `
-                <td>
-                    <select class="select-kho-thuoc" onchange="chonThuocKham(this)">
-                        ${optionsHtml}
-                    </select>
-                    <input type="text" class="input-ten-thuoc" value="${thuocData.mathuoc || ''}" placeholder="Hoặc gõ tên thuốc..." style="margin-top:2px;">
+                <td style="position: relative;" class="td-thuoc-search-wrap">
+                    <input type="text" class="input-ten-thuoc" value="${tenThuocKhoiDau}" placeholder="Gõ tìm tên thuốc trong kho..." autocomplete="off" oninput="xuLyTimKiemThuocKho(this)">
+                    <div class="thuoc-suggestions-box"></div>
                 </td>
                 <td style="text-align: center;">
                     <input type="number" class="input-sl-thuoc" value="${thuocData.soluong || 1}" min="1" oninput="tinhTongTienKham()" style="text-align:center;">
@@ -1371,31 +1376,61 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
             tinhTongTienKham();
         }
 
+        function xuLyTimKiemThuocKho(inputEl) {
+            const tr = inputEl.closest('tr');
+            const box = tr.querySelector('.thuoc-suggestions-box');
+            const tuKhoa = inputEl.value.toLowerCase().trim();
+
+            if (!tuKhoa) {
+                box.style.display = 'none';
+                return;
+            }
+
+            const filtered = danhSachKhoThuocToanCuc.filter(tk => {
+                const tenT = (tk.tenthuoc || tk.ten || tk.tenthuocmoi || '').toLowerCase();
+                return tenT.includes(tuKhoa);
+            });
+
+            if (filtered.length === 0) {
+                box.innerHTML = `<div class="thuoc-suggestion-item" style="color: #777;">Không tìm thấy thuốc trong kho</div>`;
+                box.style.display = 'block';
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(tk => {
+                const tenT = tk.tenthuoc || tk.ten || tk.tenthuocmoi || '';
+                const giaT = tk.giaban !== undefined ? tk.giaban : (tk.gia !== undefined ? tk.gia : (tk.dongia !== undefined ? tk.dongia : 0));
+                const tonT = tk.soluong || 0;
+                
+                html += `<div class="thuoc-suggestion-item" onclick="chonThuocTuKho(this, '${tenT.replace(/'/g, "\\'")}', ${giaT})">
+                    <strong>${tenT}</strong> (Tồn: ${tonT}) - Giá: ${Number(giaT).toLocaleString('vi-VN')} đ
+                </div>`;
+            });
+
+            box.innerHTML = html;
+            box.style.display = 'block';
+        }
+
+        function chonThuocTuKho(element, tenThuoc, giaBan) {
+            const tr = element.closest('tr');
+            tr.querySelector('.input-ten-thuoc').value = tenThuoc;
+            
+            const inputGia = tr.querySelector('.input-gia-thuoc');
+            if (giaBan !== null && giaBan !== undefined && parseFloat(giaBan) > 0) {
+                inputGia.value = giaBan;
+            }
+
+            tr.querySelector('.thuoc-suggestions-box').style.display = 'none';
+            tinhTongTienKham();
+        }
+
         function xoaDongThuocKham(rowId) {
             const row = document.getElementById(rowId);
             if (row) {
                 row.remove();
                 tinhTongTienKham();
             }
-        }
-
-        function chonThuocKham(selectEl) {
-            const selectedOption = selectEl.options[selectEl.selectedIndex];
-            const gia = selectedOption.getAttribute('data-gia');
-            const tr = selectEl.closest('tr');
-            
-            if (selectedOption.value) {
-                tr.querySelector('.input-ten-thuoc').value = selectedOption.value;
-            }
-            
-            const inputGia = tr.querySelector('.input-gia-thuoc');
-            if (gia !== null && gia !== "" && parseFloat(gia) > 0) {
-                inputGia.value = gia; 
-            } else {
-                inputGia.value = ''; 
-            }
-            
-            tinhTongTienKham();
         }
 
         function tinhTongTienKham() {
@@ -1565,7 +1600,6 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
             const maPhieu = item.makhambenh || formatMaKham(item.id);
             const ngayKham = item.ngaykham ? new Date(item.ngaykham + 'T00:00:00').toLocaleDateString('vi-VN') : '---';
 
-            // Tạo chuỗi HTML cho phần danh sách thuốc (nếu có)
             let htmlThuoc = '';
             let tongTienThuocIn = 0;
             const hoaDonIn = mapHoaDonThuoc[id];
@@ -1611,7 +1645,6 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
                 } catch (e) {}
             }
 
-            // Xử lý hình ảnh triệu chứng (nếu có)
             let htmlHinhAnh = '';
             if (item.hinhanh && item.hinhanh.trim() !== '') {
                 htmlHinhAnh = `
@@ -1625,7 +1658,6 @@ table td:last-child button:hover{transform:translateY(-1px);filter:brightness(1.
             const qrText = encodeURIComponent(`KH_${tenChuSoHuu}_Pet_${tenTC}_KB_${item.id}`);
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=40x40&data=${qrText}`;
 
-            // Mở cửa sổ in độc lập hoàn toàn sạch sẽ, không lo lỗi CSS chung của trang
             const printWindow = window.open('', '_blank', 'width=800,height=600');
             printWindow.document.write(`
                 <!DOCTYPE html>
