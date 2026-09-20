@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Hóa đơn Dịch vụ - VetCare Pro</title>
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+    <!-- Gọi file CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+    <!-- FontAwesome cho icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root{
+          --vc-blue:#2457d6;
+          --vc-blue-dark:#193f9e;
+          --vc-blue-soft:#eef4ff;
+          --vc-text:#172033;
+          --vc-muted:#64748b;
+          --vc-border:#dbe3ef;
+          --vc-bg:#f4f7fb;
+          --vc-green:#059669;
+          --vc-red:#dc2626;
+          --vc-orange:#d97706;
+          --vc-purple:#7c3aed;
+        }
+
+        body{background:var(--vc-bg)!important;color:var(--vc-text);font-size:13px!important;}
+        .main-content{background:var(--vc-bg)!important;}
+        .content-body{padding:14px 16px 20px!important;}
+
+        .hddv-page{background:#f4f7fb!important;padding:10px 16px 20px!important}
+        .hddv-shell{background:#fff;border:1px solid #dfe6f0;border-radius:16px;box-shadow:0 6px 22px rgba(15,23,42,.055);overflow:hidden}
+        .hddv-head{padding:15px 18px 10px;border-bottom:1px solid #e8edf4;background:linear-gradient(180deg,#fff,#fbfdff)}
+        .hddv-head-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+        .hddv-title{display:flex;align-items:center;gap:11px}
+        .hddv-title-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#eff6ff,#dbeafe);color:#2563eb;font-size:19px}
+        .hddv-title h2{margin:0;font-size:19px;font-weight:850;color:#172033}
+        .hddv-title p{margin:3px 0 0;color:#94a3b8;font-size:10px}
+        .hddv-tools{display:flex;align-items:center;gap:8px}
+        .hddv-search{height:40px;width:280px;border:1px solid #d9e1ec;border-radius:9px;padding:0 12px 0 35px;outline:none;background:#fafcff;font-size:12px;color:#334155}
+        .hddv-search-wrap{position:relative}
+        .hddv-search-wrap i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:12px}
+        .hddv-search:focus{background:#fff;border-color:#5b86ed;box-shadow:0 0 0 3px rgba(37,99,235,.09)}
+        
+        .hddv-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px 18px 8px}
+        .hddv-stat{min-height:64px;border:1px solid #e3e9f2;border-radius:11px;background:linear-gradient(180deg,#fff,#f9fbff);display:flex;align-items:center;gap:10px;padding:9px 11px}
+        .hddv-stat-icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:#eff6ff;color:#2563eb;font-size:15px}
+        .hddv-stat b{display:block;font-size:17px;color:#173d91;line-height:20px}
+        .hddv-stat small{display:block;font-size:9px;color:#64748b;font-weight:650}
+
+        .table-container{padding:0 18px 16px;overflow-x:auto;}
+        .hddv-table{width:100%;border-collapse:collapse;margin-top:10px;}
+        .hddv-table th, .hddv-table td{border:1px solid #e2e8f0;padding:10px 12px;font-size:12px;vertical-align:middle;background:#fff;}
+        .hddv-table th{background-color:#f8fafc;font-weight:700;color:#1e293b;text-align:left;}
+        .hddv-table tr:hover td{background-color:#f8fafc;}
+
+        .btn-action{padding:5px 10px;border:none;border-radius:6px;font-size:11px;font-weight:bold;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
+        .btn-view{background:#eff6ff;color:#2563eb;}
+        .btn-delete{background:#fee2e2;color:#dc2626;}
+        .btn-action:hover{filter:brightness(0.95);}
+
+        .hddv-empty{text-align:center;padding:45px 20px;color:#94a3b8;font-size:13px;}
+        .hddv-empty i{font-size:28px;display:block;margin-bottom:8px;color:#cbd5e1;}
+
+        .hddv-pagination{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-top:1px solid #e8edf4;background:#fbfcfe;color:#64748b;font-size:10px}
+        .hddv-page-buttons{display:flex;align-items:center;gap:6px}
+        .hddv-page-buttons button{height:31px;padding:0 10px;border:1px solid #d5deea;border-radius:7px;background:#fff;color:#334155;font-size:10px;cursor:pointer}
+        .hddv-page-buttons button:hover:not(:disabled){background:#eff6ff;color:#1d4ed8}
+        .hddv-page-buttons button:disabled{opacity:.45;cursor:not-allowed}
+        .hddv-page-number{font-weight:800;color:#1e3a8a}
+
+        /* Modal chi tiết hóa đơn */
+        .modal-container { width: 90%; max-width: 600px; padding: 20px; background: #fff; border-radius: 12px; box-sizing: border-box; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 12px; }
+        .modal-header h3 { margin: 0; font-size: 16px; color: #1e3a8a; }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU BÊN TRÁI -->
+    <div id="menu-container"></div>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="main-content">
+        <div id="topnav-container"></div>
+
+        <div class="content-body hddv-page">
+            <div class="hddv-shell">
+                <div class="hddv-head">
+                    <div class="hddv-head-top">
+                        <div class="hddv-title">
+                            <div class="hddv-title-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                            <div>
+                                <h2>Quản lý Hóa đơn Dịch vụ</h2>
+                                <p>Theo dõi các dịch vụ phát sinh, chi phí và thông tin thanh toán</p>
+                            </div>
+                        </div>
+                        <div class="hddv-tools">
+                            <div class="hddv-search-wrap">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="searchInput" class="hddv-search"
+                                       placeholder="Tìm mã hóa đơn, tên chủ, thú cưng..."
+                                       onkeyup="timKiemHoaDonDichVu()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hddv-stats">
+                    <div class="hddv-stat">
+                        <div class="hddv-stat-icon"><i class="fa-solid fa-file-invoice"></i></div>
+                        <div><b id="statTongHD">0</b><small>Tổng hóa đơn dịch vụ</small></div>
+                    </div>
+                    <div class="hddv-stat">
+                        <div class="hddv-stat-icon"><i class="fa-solid fa-wallet"></i></div>
+                        <div><b id="statTongDoanhThu">0 đ</b><small>Tổng doanh thu dịch vụ</small></div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="hddv-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 15%;">Mã HĐ</th>
+                                <th style="width: 25%;">Tên chủ nuôi</th>
+                                <th style="width: 20%;">Tên thú cưng</th>
+                                <th style="width: 20%;">Dịch vụ đại diện</th>
+                                <th style="width: 10%; text-align: center;">Số lượng</th>
+                                <th style="width: 15%; text-align: right;">Đơn giá</th>
+                                <th style="width: 10%; text-align: center;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody">
+                            <!-- Dữ liệu được render bằng JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="hddv-pagination">
+                    <div id="paginationInfo">Hiển thị 0 - 0 của 0 bản ghi</div>
+                    <div class="hddv-page-buttons">
+                        <button id="btnPrevPage" onclick="doiTrang(-1)">Trang trước</button>
+                        <span class="hddv-page-number" id="pageIndicator">1 / 1</span>
+                        <button id="btnNextPage" onclick="doiTrang(1)">Trang sau</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL XEM CHI TIẾT HÓA ĐƠN -->
+    <div class="modal-overlay" id="detailModal" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Chi tiết hóa đơn dịch vụ</h3>
+                <button onclick="dongModal()" style="background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
+            </div>
+            <div id="modalDetailContent" style="font-size: 13px; line-height: 1.5;">
+                <!-- Chi tiết nạp động -->
+            </div>
+            <div style="text-align: right; margin-top: 15px;">
+                <button onclick="dongModal()" class="btn-action" style="background: #cbd5e1; color: #1e293b; padding: 6px 14px;">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT XỬ LÝ -->
+    <script>
+        let danhSachHoaDonGoc = [];
+        let danhSachKhamBenhGoc = [];
+        let mapThuCung = {};
+        let mapKhachHang = {};
+        let duLieuHienThi = [];
+
+        let trangHienTai = 1;
+        let soDongMoiTrang = 10;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await taiDuLieuHeThong();
+            await fetchHoaDonDichVu();
+        });
+
+        async function taiDuLieuHeThong() {
+            if (typeof db === 'undefined' || !db) return;
+
+            // 1. Tải khách hàng
+            const { data: khData } = await db.from('khachhang').select('*');
+            let mapKH = {};
+            if (khData) {
+                khData.forEach(kh => {
+                    mapKH[kh.id] = kh.hovaten;
+                });
+            }
+
+            // 2. Tải thú cưng
+            const { data: tcData } = await db.from('thucung').select('*');
+            if (tcData) {
+                tcData.forEach(tc => {
+                    mapThuCung[tc.id] = tc.tenthucung;
+                    let maKH = tc.makhachhang || tc.makh || tc.khachhang_id || tc.id_khachhang;
+                    mapKhachHang[tc.id] = (maKH && mapKH[maKH]) ? mapKH[maKH] : 'Chưa rõ';
+                });
+            }
+
+            // 3. Tải khám bệnh để liên kết makhambenh với thú cưng
+            const { data: kbData } = await db.from('khambenh').select('*');
+            if (kbData) {
+                danhSachKhamBenhGoc = kbData;
+            }
+        }
+
+        async function fetchHoaDonDichVu() {
+            if (typeof db === 'undefined' || !db) return;
+
+            const { data, error } = await db.from('hoadondichvu').select('*').order('id', { ascending: false });
+            if (error) {
+                console.error('Lỗi tải hóa đơn dịch vụ:', error);
+                return;
+            }
+
+            danhSachHoaDonGoc = data || [];
+            duLieuHienThi = danhSachHoaDonGoc;
+            trangHienTai = 1;
+            renderBang();
+        }
+
+        function renderBang() {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+
+            // Tính thống kê tổng
+            let tongDoanhThu = 0;
+            danhSachHoaDonGoc.forEach(item => {
+                let thanhTien = (parseFloat(item.soluong) || 1) * (parseFloat(item.gia) || 0);
+                tongDoanhThu += thanhTien;
+            });
+
+            document.getElementById('statTongHD').textContent = danhSachHoaDonGoc.length.toLocaleString('vi-VN');
+            document.getElementById('statTongDoanhThu').textContent = tongDoanhThu.toLocaleString('vi-VN') + ' đ';
+
+            const total = duLieuHienThi.length;
+            if (total === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="hddv-empty">
+                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                            <b>Không tìm thấy hóa đơn dịch vụ nào</b>
+                        </td>
+                    </tr>`;
+                document.getElementById('paginationInfo').innerText = 'Hiển thị 0 - 0 của 0 bản ghi';
+                document.getElementById('pageIndicator').innerText = '1 / 1';
+                document.getElementById('btnPrevPage').disabled = true;
+                document.getElementById('btnNextPage').disabled = true;
+                return;
+            }
+
+            const totalPages = Math.ceil(total / soDongMoiTrang);
+            if (trangHienTai > totalPages) trangHienTai = totalPages;
+            if (trangHienTai < 1) trangHienTai = 1;
+
+            const startIndex = (trangHienTai - 1) * soDongMoiTrang;
+            const endIndex = Math.min(startIndex + soDongMoiTrang, total);
+            const pageData = duLieuHienThi.slice(startIndex, endIndex);
+
+            pageData.forEach(item => {
+                const maHD = item.mahoadon || ('HDDV_' + item.id);
+                
+                // Tìm thông tin chủ nuôi và thú cưng thông qua makhambenh
+                let tenChuNuoi = 'Chưa rõ';
+                let tenThuCung = 'Chưa rõ';
+
+                if (item.makhambenh) {
+                    const kbItem = danhSachKhamBenhGoc.find(x => x.id === item.makhambenh);
+                    if (kbItem && kbItem.mathucung) {
+                        tenThuCung = mapThuCung[kbItem.mathucung] || 'Không rõ';
+                        tenChuNuoi = mapKhachHang[kbItem.mathucung] || 'Chưa rõ chủ';
+                    }
+                }
+
+                const tenDichVu = item.tendichvu || 'Dịch vụ phát sinh';
+                const soLuong = item.soluong || 1;
+                const donGia = Number(item.gia) || 0;
+                const donGiaText = donGia.toLocaleString('vi-VN') + ' đ';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${maHD}</strong></td>
+                        <td><i class="fa-solid fa-user" style="color:#2563eb; margin-right:4px;"></i> ${tenChuNuoi}</td>
+                        <td><i class="fa-solid fa-paw" style="color:#059669; margin-right:4px;"></i> ${tenThuCung}</td>
+                        <td>${tenDichVu}</td>
+                        <td style="text-align: center;">${soLuong}</td>
+                        <td style="text-align: right; font-weight: bold; color: #059669;">${donGiaText}</td>
+                        <td style="text-align: center;">
+                            <button class="btn-action btn-view" onclick="xemChiTiet(${item.id})"><i class="fa-solid fa-eye"></i> Xem</button>
+                            <button class="btn-action btn-delete" onclick="xoaHoaDon(${item.id})"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('paginationInfo').innerText = `Hiển thị ${startIndex + 1} - ${endIndex} của ${total} bản ghi`;
+            document.getElementById('pageIndicator').innerText = `${trangHienTai} / ${totalPages}`;
+            document.getElementById('btnPrevPage').disabled = (trangHienTai === 1);
+            document.getElementById('btnNextPage').disabled = (trangHienTai === totalPages);
+        }
+
+        function doiTrang(huong) {
+            trangHienTai += huong;
+            renderBang();
+        }
+
+        function timKiemHoaDonDichVu() {
+            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+            duLieuHienThi = danhSachHoaDonGoc.filter(item => {
+                const maHD = (item.mahoadon || ('HDDV_' + item.id)).toLowerCase();
+                const tenDV = (item.tendichvu || '').toLowerCase();
+                
+                let tenChuNuoi = '';
+                let tenThuCung = '';
+                if (item.makhambenh) {
+                    const kbItem = danhSachKhamBenhGoc.find(x => x.id === item.makhambenh);
+                    if (kbItem && kbItem.mathucung) {
+                        tenThuCung = (mapThuCung[kbItem.mathucung] || '').toLowerCase();
+                        tenChuNuoi = (mapKhachHang[kbItem.mathucung] || '').toLowerCase();
+                    }
+                }
+
+                return maHD.includes(tuKhoa) || tenDV.includes(tuKhoa) || tenChuNuoi.includes(tuKhoa) || tenThuCung.includes(tuKhoa);
+            });
+            trangHienTai = 1;
+            renderBang();
+        }
+
+        function xemChiTiet(id) {
+            const item = danhSachHoaDonGoc.find(x => x.id === id);
+            if (!item) return;
+
+            const maHD = item.mahoadon || ('HDDV_' + item.id);
+            let tenChuNuoi = 'Chưa rõ';
+            let tenThuCung = 'Chưa rõ';
+
+            if (item.makhambenh) {
+                const kbItem = danhSachKhamBenhGoc.find(x => x.id === item.makhambenh);
+                if (kbItem && kbItem.mathucung) {
+                    tenThuCung = mapThuCung[kbItem.mathucung] || 'Không rõ';
+                    tenChuNuoi = mapKhachHang[kbItem.mathucung] || 'Chưa rõ chủ';
+                }
+            }
+
+            let htmlChiTietList = '';
+            if (item.chitiet) {
+                try {
+                    let chiTietArr = JSON.parse(item.chitiet);
+                    if (Array.isArray(chiTietArr)) {
+                        chiTietArr.forEach((dv, index) => {
+                            let tt = (dv.soluong || 1) * (dv.gia || 0);
+                            htmlChiTietList += `
+                                <tr>
+                                    <td style="border:1px solid #cbd5e1; padding:6px;">${index + 1}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px;">${dv.tendichvu || ''}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">${dv.soluong || 1}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px; text-align:right;">${Number(dv.gia || 0).toLocaleString('vi-VN')} đ</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px; text-align:right; font-weight:bold; color:#059669;">${tt.toLocaleString('vi-VN')} đ</td>
+                                </tr>
+                            `;
+                        });
+                    }
+                } catch (e) {}
+            }
+
+            if (!htmlChiTietList) {
+                let tt = (item.soluong || 1) * (item.gia || 0);
+                htmlChiTietList = `
+                    <tr>
+                        <td style="border:1px solid #cbd5e1; padding:6px;">1</td>
+                        <td style="border:1px solid #cbd5e1; padding:6px;">${item.tendichvu || ''}</td>
+                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">${item.soluong || 1}</td>
+                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:right;">${Number(item.gia || 0).toLocaleString('vi-VN')} đ</td>
+                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:right; font-weight:bold; color:#059669;">${tt.toLocaleString('vi-VN')} đ</td>
+                    </tr>
+                `;
+            }
+
+            document.getElementById('modalDetailContent').innerHTML = `
+                <p><strong>Mã hóa đơn:</strong> ${maHD}</p>
+                <p><strong>Chủ nuôi:</strong> ${tenChuNuoi}</p>
+                <p><strong>Thú cưng:</strong> ${tenThuCung}</p>
+                <hr style="border:0; border-top:1px solid #e2e8f0; margin:10px 0;">
+                <p><strong>Danh sách dịch vụ chi tiết:</strong></p>
+                <table style="width:100%; border-collapse:collapse; margin-top:5px; font-size:12px;">
+                    <thead>
+                        <tr style="background:#f1f5f9;">
+                            <th style="border:1px solid #cbd5e1; padding:6px; width:35px;">STT</th>
+                            <th style="border:1px solid #cbd5e1; padding:6px;">Tên dịch vụ</th>
+                            <th style="border:1px solid #cbd5e1; padding:6px; text-align:center; width:50px;">SL</th>
+                            <th style="border:1px solid #cbd5e1; padding:6px; text-align:right;">Đơn giá</th>
+                            <th style="border:1px solid #cbd5e1; padding:6px; text-align:right;">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>${htmlChiTietList}</tbody>
+                </table>
+            `;
+
+            document.getElementById('detailModal').style.display = 'flex';
+        }
+
+        function dongModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+
+        async function xoaHoaDon(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa hóa đơn dịch vụ này không?')) {
+                const { error } = await db.from('hoadondichvu').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa hóa đơn: ' + error.message);
+                } else {
+                    alert('Xóa thành công!');
+                    await fetchHoaDonDichVu();
+                }
+            }
+        }
+    </script>
+</body>
+</html>
