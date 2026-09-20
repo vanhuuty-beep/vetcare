@@ -132,6 +132,10 @@ document.addEventListener("DOMContentLoaded", function() {
     <span><i class="fa-solid fa-wallet"></i></span> 
     <span class="menu-text">Thu chi phòng khám</span>
 </li>
+<li class="menu-item" id="menu-baocao" onclick="window.location.href='baocao.html'">
+    <span><i class="fa-solid fa-chart-pie"></i></span> 
+    <span class="menu-text">Báo cáo</span>
+</li>
         </ul>
 	
     `;
