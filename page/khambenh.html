@@ -89,8 +89,8 @@
             gap: 10px;
         }
 
-        /* Khung danh sách gợi ý tìm kiếm */
-        #suggestions-box, .thuoc-suggestions-box, .dv-suggestions-box {
+        /* Khung gợi ý thú cưng cũ */
+        #suggestions-box {
             position: absolute;
             top: 100%;
             left: 0;
@@ -105,16 +105,71 @@
             display: none;
             margin-top: 2px;
         }
-        .suggestion-item, .thuoc-suggestion-item, .dv-suggestion-item {
+        .suggestion-item {
             padding: 10px 12px;
             font-size: 13px;
             cursor: pointer;
             border-bottom: 1px solid #f1f5f9;
         }
-        .suggestion-item:hover, .thuoc-suggestion-item:hover, .dv-suggestion-item:hover {
+        .suggestion-item:hover {
             background-color: #f8fafc;
             color: #2563eb;
             font-weight: 500;
+        }
+
+        /* FORM NỔI (POPUP) CHUNG CHO THUỐC VÀ DỊCH VỤ */
+        .thuoc-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999999;
+        }
+        .thuoc-modal-container {
+            background: #fff;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 85vh;
+        }
+        .thuoc-modal-header {
+            padding: 14px 18px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .thuoc-modal-header h3 { margin: 0; font-size: 16px; color: #1e3a8a; font-weight: bold; }
+        .thuoc-modal-body {
+            padding: 16px;
+            overflow-y: auto;
+        }
+        .thuoc-search-input-popup {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 14px;
+            border: 2px solid #2563eb;
+            border-radius: 8px;
+            outline: none;
+            box-sizing: border-box;
+            margin-bottom: 12px;
+        }
+        .thuoc-result-item {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: 0.15s;
+        }
+        .thuoc-result-item:hover {
+            background: #eff6ff;
         }
         
         .table-thuoc-scroll-wrapper, .table-dichvu-scroll-wrapper {
@@ -367,31 +422,28 @@
                 <textarea id="dieutri" rows="2" placeholder="Nhập phác đồ điều trị chung..."></textarea>
             </div>
 
-            <!-- KHUNG BẤM ĐỂ HIỆN FORM DỊCH VỤ -->
+            <!-- KHUNG DỊCH VỤ KHÁM VỚI NÚT GỌI FORM NỔI -->
             <div class="form-group-modal" style="margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <label style="font-weight: bold; color: #1e3a8a; margin: 0;"><i class="fa-solid fa-notes-medical"></i> Dịch vụ khám phát sinh:</label>
+                    <label style="font-weight: bold; color: #1e3a8a; margin: 0;"><i class="fa-solid fa-notes-medical"></i> Dịch vụ khám phát sinh (Bấm kính lúp để chọn):</label>
                     <button type="button" onclick="batTatFormDichVu()" id="btnToggleDichVu" style="background: #10b981; color: white; border: none; padding: 5px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold;">
                         <i class="fa-solid fa-plus"></i> Chọn dịch vụ
                     </button>
                 </div>
 
-                <!-- Bảng chọn dịch vụ -->
                 <div id="khungChonDichVu" style="display: none; margin-top: 8px;">
                     <div class="table-dichvu-scroll-wrapper">
                         <table class="table-dichvu-modal">
                             <thead>
                                 <tr>
-                                    <th style="width: 45%;">Chọn dịch vụ từ hệ thống</th>
+                                    <th style="width: 45%;">Tên dịch vụ (Chọn từ hệ thống)</th>
                                     <th style="width: 12%; text-align: center;">Số lượng</th>
                                     <th style="width: 23%;">Đơn giá (VNĐ)</th>
                                     <th style="width: 10%; text-align: right;">Thành tiền</th>
                                     <th style="width: 10%; text-align: center;">Xóa</th>
                                 </tr>
                             </thead>
-                            <tbody id="dsDichVuKhamContainer">
-                                <!-- Dòng dịch vụ thêm động -->
-                            </tbody>
+                            <tbody id="dsDichVuKhamContainer"></tbody>
                         </table>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
@@ -401,24 +453,22 @@
                 </div>
             </div>
 
-            <!-- BẢNG KÊ ĐƠN THUỐC CÓ TÌM KIẾM THUỐC THÔNG MINH -->
+            <!-- BẢNG KÊ ĐƠN THUỐC VỚI NÚT GỌI FORM NỔI -->
             <div class="form-group-modal" style="margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
-                <label style="font-weight: bold; color: #1e3a8a;"><i class="fa-solid fa-pills"></i> Kê đơn thuốc (Tự động trừ kho & tạo hóa đơn):</label>
+                <label style="font-weight: bold; color: #1e3a8a;"><i class="fa-solid fa-pills"></i> Kê đơn thuốc (Bấm kính lúp để mở form nổi tìm kiếm):</label>
                 <div class="table-thuoc-scroll-wrapper">
                     <table class="table-thuoc-modal">
                         <thead>
                             <tr>
-                                <th style="width: 35%;">Tìm & Chọn thuốc từ kho</th>
+                                <th style="width: 38%;">Tên thuốc (Chọn từ kho)</th>
                                 <th style="width: 10%; text-align: center;">Số lượng</th>
                                 <th style="width: 18%;">Đơn giá</th>
-                                <th style="width: 15%; text-align: right;">Thành tiền</th>
-                                <th style="width: 14%;">Hướng dẫn dùng</th>
+                                <th style="width: 16%; text-align: right;">Thành tiền</th>
+                                <th style="width: 10%;">Hướng dẫn</th>
                                 <th style="width: 8%; text-align: center;">Xóa</th>
                             </tr>
                         </thead>
-                        <tbody id="dsThuocKhamContainer">
-                            <!-- Dòng thuốc thêm động -->
-                        </tbody>
+                        <tbody id="dsThuocKhamContainer"></tbody>
                     </table>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
@@ -451,6 +501,34 @@
         </div>
     </div>
 
+    <!-- FORM NỔI (POPUP) TÌM KIẾM THUỐC TRONG KHO -->
+    <div class="thuoc-modal-overlay" id="popupTimKiemThuoc">
+        <div class="thuoc-modal-container">
+            <div class="thuoc-modal-header">
+                <h3>🔍 Chọn thuốc từ kho</h3>
+                <button class="close-modal" onclick="dongPopupTimThuoc()" style="background:none; border:none; font-size:22px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="thuoc-modal-body">
+                <input type="text" id="popupInputTimKiem" class="thuoc-search-input-popup" placeholder="Nhập từ khóa tên thuốc cần tìm..." autocomplete="off" oninput="xuLyLocThuocPopup(this.value)">
+                <div id="popupDanhSachThuocContainer" style="max-height: 300px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORM NỔI (POPUP) TÌM KIẾM DỊCH VỤ -->
+    <div class="thuoc-modal-overlay" id="popupTimKiemDichVu">
+        <div class="thuoc-modal-container">
+            <div class="thuoc-modal-header">
+                <h3>🔍 Chọn dịch vụ từ hệ thống</h3>
+                <button class="close-modal" onclick="dongPopupTimDichVu()" style="background:none; border:none; font-size:22px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="thuoc-modal-body">
+                <input type="text" id="popupInputTimKiemDV" class="thuoc-search-input-popup" placeholder="Nhập từ khóa tên dịch vụ cần tìm..." autocomplete="off" oninput="xuLyLocDichVuPopup(this.value)">
+                <div id="popupDanhSachDichVuContainer" style="max-height: 300px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- KHUNG IN PHIẾU KHÁM -->
     <div id="printArea" style="display: none;"></div>
 
@@ -464,6 +542,8 @@
         let mapHoaDonThuoc = {}; 
         let mapHoaDonDichVu = {}; 
         let dsThuCungChoSearch = []; 
+        let dangChonDongThuocElement = null; 
+        let dangChonDongDichVuElement = null; // Lưu dòng dịch vụ đang chọn trên form nổi
 
         let trangHienTai = 1;
         let soDongMoiTrang = 12;
@@ -487,12 +567,6 @@
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.form-group-modal')) {
                     document.getElementById('suggestions-box').style.display = 'none';
-                }
-                if (!e.target.closest('.td-thuoc-search-wrap')) {
-                    document.querySelectorAll('.thuoc-suggestions-box').forEach(b => b.style.display = 'none');
-                }
-                if (!e.target.closest('.td-dv-search-wrap')) {
-                    document.querySelectorAll('.dv-suggestions-box').forEach(b => b.style.display = 'none');
                 }
             });
 
@@ -823,7 +897,66 @@
             renderPhanTrang();
         }
 
-        // XỬ LÝ DỊCH VỤ KHÁM LẤY TỪ BẢNG DICHVU
+        // --- CÁC HÀM XỬ LÝ FORM NỔI (POPUP) TÌM KIẾM DỊCH VỤ ---
+        function moPopupTimDichVu(btnEl) {
+            dangChonDongDichVuElement = btnEl.closest('tr');
+            document.getElementById('popupInputTimKiemDV').value = '';
+            document.getElementById('popupTimKiemDichVu').style.display = 'flex';
+            document.getElementById('popupInputTimKiemDV').focus();
+            xuLyLocDichVuPopup(''); // Hiện toàn bộ danh sách dịch vụ ban đầu
+        }
+
+        function dongPopupTimDichVu() {
+            document.getElementById('popupTimKiemDichVu').style.display = 'none';
+            dangChonDongDichVuElement = null;
+        }
+
+        function xuLyLocDichVuPopup(tuKhoa) {
+            const container = document.getElementById('popupDanhSachDichVuContainer');
+            const keyword = (tuKhoa || '').toLowerCase().trim();
+
+            const filtered = danhSachDichVuToanCuc.filter(dv => {
+                const tenDV = (dv.tendichvu || '').toLowerCase();
+                return tenDV.includes(keyword);
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:#777; padding: 20px;">Không tìm thấy dịch vụ phù hợp</div>`;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(dv => {
+                const tenDV = dv.tendichvu || '';
+                const giaDV = dv.dongia !== undefined ? Number(dv.dongia) : (dv.gia !== undefined ? Number(dv.gia) : 0);
+
+                html += `
+                    <div class="thuoc-result-item" onclick="chonDichVuTuPopup('${tenDV.replace(/'/g, "\\'")}', ${giaDV})">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong style="font-size: 13px; color: #1e293b;">${tenDV}</strong><br>
+                                <small style="color: #059669; font-weight: bold;">Đơn giá: ${giaDV.toLocaleString('vi-VN')} đ</small>
+                            </div>
+                            <button type="button" style="background:#2563eb; color:#fff; border:none; padding:5px 12px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:bold;">Chọn</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function chonDichVuTuPopup(tenDichVu, giaBan) {
+            if (dangChonDongDichVuElement) {
+                dangChonDongDichVuElement.querySelector('.input-ten-dichvu').value = tenDichVu;
+                const inputGia = dangChonDongDichVuElement.querySelector('.input-gia-dichvu');
+                if (giaBan !== null && giaBan !== undefined && parseFloat(giaBan) > 0) {
+                    inputGia.value = giaBan;
+                }
+                tinhTongTienKham();
+            }
+            dongPopupTimDichVu();
+        }
+
         function themDongDichVuKham(dvData = {}) {
             const container = document.getElementById('dsDichVuKhamContainer');
             const rowId = 'r_dv_' + Date.now() + Math.random().toString(36).substring(2, 5);
@@ -836,9 +969,11 @@
             const tr = document.createElement('tr');
             tr.id = rowId;
             tr.innerHTML = `
-                <td style="position: relative;" class="td-dv-search-wrap">
-                    <input type="text" class="input-ten-dichvu" value="${tenDVKhoiDau}" placeholder="Gõ tìm tên dịch vụ trong hệ thống..." autocomplete="off" oninput="xuLyTimKiemDichVu(this)" style="width:100%; padding:5px; border:1px solid #cbd5e1; border-radius:3px; font-size:11px;">
-                    <div class="dv-suggestions-box"></div>
+                <td>
+                    <div style="display: flex; gap: 4px;">
+                        <input type="text" class="input-ten-dichvu" value="${tenDVKhoiDau}" placeholder="Bấm để chọn dịch vụ..." readonly style="width:100%; padding:5px; border:1px solid #cbd5e1; border-radius:3px; font-size:11px; background:#f8fafc; cursor:pointer;" onclick="moPopupTimDichVu(this)">
+                        <button type="button" onclick="moPopupTimDichVu(this)" style="background: #2563eb; color: white; border: none; padding: 4px 8px; border-radius: 3px; font-size: 11px; cursor: pointer;" title="Mở form tìm dịch vụ">🔍</button>
+                    </div>
                 </td>
                 <td style="text-align: center;">
                     <input type="number" class="input-sl-dichvu" value="${slDV}" min="1" oninput="tinhTongTienKham()" style="width:100%; text-align:center; padding:5px; border:1px solid #cbd5e1; border-radius:3px; font-size:11px;">
@@ -857,48 +992,6 @@
             tinhTongTienKham();
         }
 
-        function xuLyTimKiemDichVu(inputEl) {
-            const tr = inputEl.closest('tr');
-            const box = tr.querySelector('.dv-suggestions-box');
-            const tuKhoa = inputEl.value.toLowerCase().trim();
-
-            if (!tuKhoa) {
-                box.style.display = 'none';
-                return;
-            }
-
-            const filtered = danhSachDichVuToanCuc.filter(dv => {
-                const ten = (dv.tendichvu || '').toLowerCase();
-                return ten.includes(tuKhoa);
-            });
-
-            if (filtered.length === 0) {
-                box.innerHTML = `<div class="dv-suggestion-item" style="color: #777;">Không tìm thấy dịch vụ phù hợp</div>`;
-                box.style.display = 'block';
-                return;
-            }
-
-            let html = '';
-            filtered.forEach(dv => {
-                const tenDV = dv.tendichvu || '';
-                const giaDV = dv.dongia !== undefined ? Number(dv.dongia) : 0;
-                
-                html += `<div class="dv-suggestion-item" onclick="chonDichVuItem(this, '${tenDV.replace(/'/g, "\\'")}', ${giaDV})">
-                    <strong>${tenDV}</strong> - Giá: ${giaDV.toLocaleString('vi-VN')} đ
-                </div>`;
-            });
-            box.innerHTML = html;
-            box.style.display = 'block';
-        }
-
-        function chonDichVuItem(element, tenDV, giaBan) {
-            const tr = element.closest('tr');
-            tr.querySelector('.input-ten-dichvu').value = tenDV;
-            tr.querySelector('.input-gia-dichvu').value = giaBan;
-            tr.querySelector('.dv-suggestions-box').style.display = 'none';
-            tinhTongTienKham();
-        }
-
         function xoaDongDichVuKham(rowId) {
             const row = document.getElementById(rowId);
             if (row) {
@@ -907,7 +1000,67 @@
             }
         }
 
-        // XỬ LÝ KÊ ĐƠN THUỐC TỪ KHO THUỐC
+        // --- CÁC HÀM XỬ LÝ FORM NỔI (POPUP) TÌM KIẾM THUỐC ---
+        function moPopupTimThuoc(btnEl) {
+            dangChonDongThuocElement = btnEl.closest('tr');
+            document.getElementById('popupInputTimKiem').value = '';
+            document.getElementById('popupTimKiemThuoc').style.display = 'flex';
+            document.getElementById('popupInputTimKiem').focus();
+            xuLyLocThuocPopup(''); 
+        }
+
+        function dongPopupTimThuoc() {
+            document.getElementById('popupTimKiemThuoc').style.display = 'none';
+            dangChonDongThuocElement = null;
+        }
+
+        function xuLyLocThuocPopup(tuKhoa) {
+            const container = document.getElementById('popupDanhSachThuocContainer');
+            const keyword = (tuKhoa || '').toLowerCase().trim();
+
+            const filtered = danhSachKhoThuocToanCuc.filter(tk => {
+                const tenT = (tk.tenthuoc || tk.ten || tk.tenthuocmoi || '').toLowerCase();
+                return tenT.includes(keyword);
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:#777; padding: 20px;">Không tìm thấy thuốc phù hợp trong kho</div>`;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(tk => {
+                const tenT = tk.tenthuoc || tk.ten || tk.tenthuocmoi || '';
+                const giaT = tk.giaban !== undefined ? tk.giaban : (tk.gia !== undefined ? tk.gia : (tk.dongia !== undefined ? tk.dongia : 0));
+                const tonT = tk.soluong || 0;
+
+                html += `
+                    <div class="thuoc-result-item" onclick="chonThuocTuPopup('${tenT.replace(/'/g, "\\'")}', ${giaT})">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong style="font-size: 13px; color: #1e293b;">${tenT}</strong><br>
+                                <small style="color: #64748b;">Tồn kho: ${tonT} | Đơn giá: ${Number(giaT).toLocaleString('vi-VN')} đ</small>
+                            </div>
+                            <button type="button" style="background:#2563eb; color:#fff; border:none; padding:5px 12px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:bold;">Chọn</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function chonThuocTuPopup(tenThuoc, giaBan) {
+            if (dangChonDongThuocElement) {
+                dangChonDongThuocElement.querySelector('.input-ten-thuoc').value = tenThuoc;
+                const inputGia = dangChonDongThuocElement.querySelector('.input-gia-thuoc');
+                if (giaBan !== null && giaBan !== undefined && parseFloat(giaBan) > 0) {
+                    inputGia.value = giaBan;
+                }
+                tinhTongTienKham();
+            }
+            dongPopupTimThuoc();
+        }
+
         function themDongThuocKham(thuocData = {}) {
             const container = document.getElementById('dsThuocKhamContainer');
             const rowId = 'r_kham_' + Date.now() + Math.random().toString(36).substring(2, 5);
@@ -920,9 +1073,11 @@
             const tr = document.createElement('tr');
             tr.id = rowId;
             tr.innerHTML = `
-                <td style="position: relative;" class="td-thuoc-search-wrap">
-                    <input type="text" class="input-ten-thuoc" value="${tenThuocKhoiDau}" placeholder="Gõ tìm tên thuốc trong kho..." autocomplete="off" oninput="xuLyTimKiemThuocKho(this)" style="width:100%; padding:5px; border:1px solid #cbd5e1; border-radius:3px; font-size:11px;">
-                    <div class="thuoc-suggestions-box"></div>
+                <td>
+                    <div style="display: flex; gap: 4px;">
+                        <input type="text" class="input-ten-thuoc" value="${tenThuocKhoiDau}" placeholder="Bấm để chọn thuốc..." readonly style="width:100%; padding:5px; border:1px solid #cbd5e1; border-radius:3px; font-size:11px; background:#f8fafc; cursor:pointer;" onclick="moPopupTimThuoc(this)">
+                        <button type="button" onclick="moPopupTimThuoc(this)" style="background: #2563eb; color: white; border: none; padding: 4px 8px; border-radius: 3px; font-size: 11px; cursor: pointer;" title="Mở form tìm thuốc">🔍</button>
+                    </div>
                 </td>
                 <td style="text-align: center;">
                     <input type="number" class="input-sl-thuoc" value="${slThuoc}" min="1" oninput="tinhTongTienKham()" style="width:100%; text-align:center; padding:5px; border:1px solid #cbd5e1; border-radius:3px; font-size:11px;">
@@ -941,50 +1096,6 @@
                 </td>
             `;
             container.appendChild(tr);
-            tinhTongTienKham();
-        }
-
-        function xuLyTimKiemThuocKho(inputEl) {
-            const tr = inputEl.closest('tr');
-            const box = tr.querySelector('.thuoc-suggestions-box');
-            const tuKhoa = inputEl.value.toLowerCase().trim();
-
-            if (!tuKhoa) {
-                box.style.display = 'none';
-                return;
-            }
-
-            const filtered = danhSachKhoThuocToanCuc.filter(tk => {
-                const tenT = (tk.tenthuoc || tk.ten || tk.tenthuocmoi || '').toLowerCase();
-                return tenT.includes(tuKhoa);
-            });
-
-            if (filtered.length === 0) {
-                box.innerHTML = `<div class="thuoc-suggestion-item" style="color: #777;">Không tìm thấy thuốc trong kho</div>`;
-                box.style.display = 'block';
-                return;
-            }
-
-            let html = '';
-            filtered.forEach(tk => {
-                const tenT = tk.tenthuoc || tk.ten || tk.tenthuocmoi || '';
-                const giaT = tk.giaban !== undefined ? tk.giaban : (tk.gia !== undefined ? tk.gia : (tk.dongia !== undefined ? tk.dongia : 0));
-                const tonT = tk.soluong || 0;
-                html += `<div class="thuoc-suggestion-item" onclick="chonThuocTuKho(this, '${tenT.replace(/'/g, "\\'")}', ${giaT})">
-                    <strong>${tenT}</strong> (Tồn: ${tonT}) - Giá: ${Number(giaT).toLocaleString('vi-VN')} đ
-                </div>`;
-            });
-            box.innerHTML = html;
-            box.style.display = 'block';
-        }
-
-        function chonThuocTuKho(element, tenThuoc, giaBan) {
-            const tr = element.closest('tr');
-            tr.querySelector('.input-ten-thuoc').value = tenThuoc;
-            if (giaBan !== null && giaBan !== undefined && parseFloat(giaBan) > 0) {
-                tr.querySelector('.input-gia-thuoc').value = giaBan;
-            }
-            tr.querySelector('.thuoc-suggestions-box').style.display = 'none';
             tinhTongTienKham();
         }
 
@@ -1122,9 +1233,7 @@
             const khungDV = document.getElementById('khungChonDichVu');
             const btnDV = document.getElementById('btnToggleDichVu');
             
-            // Lấy hóa đơn dịch vụ tương ứng với makhambenh
             const hoaDonDvCu = mapHoaDonDichVu[id];
-
             if (hoaDonDvCu && hoaDonDvCu.chitiet) {
                 try {
                     let chiTietDvArr = JSON.parse(hoaDonDvCu.chitiet);
@@ -1146,7 +1255,6 @@
                         btnDV.style.background = '#10b981';
                     }
                 } catch (e) {
-                    // Nếu chitiet là dạng chuỗi trực tiếp hoặc lỗi parse, xử lý theo object lẻ
                     khungDV.style.display = 'block';
                     btnDV.innerHTML = '<i class="fa-solid fa-minus"></i> Ẩn dịch vụ';
                     btnDV.style.background = '#64748b';
@@ -1364,7 +1472,6 @@
             const ngayKham = item.ngaykham ? new Date(item.ngaykham + 'T00:00:00').toLocaleDateString('vi-VN') : '---';
             const ngayTaiKham = item.ngaytaikham ? new Date(item.ngaytaikham + 'T00:00:00').toLocaleDateString('vi-VN') : 'Không có lịch hẹn';
 
-            // HIỂN THỊ DỊCH VỤ TRÊN PHIẾU IN
             let htmlDichVu = '';
             let tongTienDichVuIn = 0;
             const hoaDonDvIn = mapHoaDonDichVu[id];
@@ -1405,40 +1512,9 @@
                             </div>
                         `;
                     }
-                } catch (e) {
-                    // Xử lý khi chi tiết dịch vụ là dữ liệu thô
-                    let thanhTien = (hoaDonDvIn.soluong || 0) * (hoaDonDvIn.gia || 0);
-                    tongTienDichVuIn += thanhTien;
-                    htmlDichVu = `
-                        <div style="margin-bottom: 8px;">
-                            <div style="font-size: 10px; font-weight: bold; color: #1e3a8a; border-left: 3px solid #2563eb; padding-left: 4px; margin-bottom: 3px; text-transform: uppercase;">🏥 DỊCH VỤ KHÁM CHỮA BỆNH</div>
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <thead>
-                                    <tr style="background: #f1f5f9; font-size: 9px;">
-                                        <th style="border: 1px solid #cbd5e1; padding: 4px; text-align: left;">Tên dịch vụ</th>
-                                        <th style="border: 1px solid #cbd5e1; padding: 4px; text-align: center; width: 40px;">SL</th>
-                                        <th style="border: 1px solid #cbd5e1; padding: 4px; text-align: right;">Đơn giá</th>
-                                        <th style="border: 1px solid #cbd5e1; padding: 4px; text-align: right;">Thành tiền</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td style="border: 1px solid #cbd5e1; padding: 4px; text-align: left;">${hoaDonDvIn.tendichvu || ''}</td>
-                                        <td style="border: 1px solid #cbd5e1; padding: 4px; text-align: center;">${hoaDonDvIn.soluong || 0}</td>
-                                        <td style="border: 1px solid #cbd5e1; padding: 4px; text-align: right;">${Number(hoaDonDvIn.gia || 0).toLocaleString('vi-VN')} đ</td>
-                                        <td style="border: 1px solid #cbd5e1; padding: 4px; text-align: right;">${Number(thanhTien).toLocaleString('vi-VN')} đ</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <div style="text-align: right; margin-top: 3px; font-size: 9px; font-weight: bold;">
-                                Tổng tiền dịch vụ: <span style="color: #059669;">${Number(tongTienDichVuIn).toLocaleString('vi-VN')} đ</span>
-                            </div>
-                        </div>
-                    `;
-                }
+                } catch (e) {}
             }
 
-            // HIỂN THỊ ĐƠN THUỐC TRÊN PHIẾU IN
             let htmlThuoc = '';
             let tongTienThuocIn = 0;
             const hoaDonIn = mapHoaDonThuoc[id];
