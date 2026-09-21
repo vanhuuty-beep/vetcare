@@ -735,3 +735,12 @@ function dangXuat() {
         window.location.href = '../index.html';
     }
 }
+// Tự động chèn Favicon chung cho toàn bộ hệ thống
+(function() {
+    let link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    link.type = 'logo/png';
+    link.rel = 'shortcut icon';
+    // Sửa lại đường dẫn '../logo/logo.png' cho đúng với vị trí thực tế bạn lưu ảnh logo
+    link.href = '../logo/logo.png'; 
+    document.getElementsByTagName('head')[0].appendChild(link);
+})();
