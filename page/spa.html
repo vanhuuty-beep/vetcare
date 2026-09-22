@@ -2,20 +2,153 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản Lý Dịch Vụ Spa - VetCare Pro</title>
+
+    <!-- Favicon logo phòng khám -->
+    <link rel="icon" type="image/png" href="../logo/logo.png">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
     <!-- Thư viện Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-	<script src="../js/env.js"></script>
+    <script src="../js/env.js"></script>
     <script src="../js/config.js"></script>
     <script src="../js/supabase.js"></script>
     <script src="../js/utils.js"></script>
     <script src="../js/menu.js"></script>
-	<script src="../js/smart-search.js"></script>
+    <script src="../js/smart-search.js"></script>
+
     <!-- Gọi file CSS chung -->
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/mobile.css">
     <link rel="stylesheet" href="../css/style1.css">
-	<link rel="stylesheet" href="../css/smart-search.css">
+    <link rel="stylesheet" href="../css/smart-search.css">
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #eff6ff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --green: #059669;
+            --green-bg: #ecfdf5;
+            --shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+        }
+
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; min-height: 100%; }
+        body { background: var(--bg); color: var(--text); font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif; }
+
+        .content-body { background: var(--bg) !important; padding: 24px !important; min-height: calc(100vh - 60px); }
+        .spa-page { width: 100%; max-width: 1600px; margin: 0 auto; }
+
+        /* KHUNG ĐẦU TRANG */
+        .spa-top {
+            display: flex; align-items: center; justify-content: space-between; gap: 20px;
+            background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+            padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 20px;
+        }
+        .spa-heading { display: flex; align-items: center; gap: 14px; min-width: 0; }
+        .spa-heading-icon {
+            width: 48px; height: 48px; flex: 0 0 48px; display: flex; align-items: center; justify-content: center;
+            border-radius: 12px; color: var(--primary); background: #eff6ff; font-size: 20px;
+        }
+        .spa-heading h2 { margin: 0; font-size: 18px; font-weight: 800; color: var(--text); }
+        .spa-heading p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+
+        .btn-action-primary {
+            height: 40px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--primary); color: #fff;
+            font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); transition: 0.2s;
+        }
+        .btn-action-primary:hover { background: var(--primary-dark); }
+
+        .btn-action-outline {
+            height: 40px; padding: 0 16px; border: 1px solid var(--border); border-radius: 10px; background: #fff;
+            color: var(--text); font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;
+        }
+        .btn-action-outline:hover { background: #f1f5f9; border-color: #cbd5e1; }
+
+        /* THANH THỐNG KÊ TỔNG QUAN */
+        .spa-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .spa-stat { display: flex; align-items: center; gap: 14px; padding: 16px 18px; background: var(--white); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }
+        .spa-stat-icon { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 11px; color: var(--primary); background: var(--primary-light); font-size: 18px; }
+        .spa-stat:nth-child(2) .spa-stat-icon { color: #0891b2; background: #ecfeff; }
+        .spa-stat:nth-child(3) .spa-stat-icon { color: #059669; background: #ecfdf5; }
+        .spa-stat-number { color: var(--text); font-size: 18px; font-weight: 800; line-height: 1.1; }
+        .spa-stat-label { margin-top: 4px; color: var(--muted); font-size: 11px; }
+
+        /* THANH CÔNG CỤ TÌM KIẾM */
+        .spa-toolbar {
+            display: flex; align-items: center; justify-content: space-between; gap: 15px;
+            background: var(--white); border: 1px solid var(--border); border-radius: 14px;
+            padding: 14px 20px; margin-bottom: 20px; box-shadow: var(--shadow); flex-wrap: wrap;
+        }
+        .search-box-wrap { position: relative; min-width: 300px; }
+        .search-box-wrap i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; }
+        .search-box-wrap input {
+            width: 100%; height: 38px; padding: 0 14px 0 38px; border: 1px solid var(--border); border-radius: 9px;
+            background: #f8fafc; outline: none; font-size: 12px; color: var(--text); transition: 0.2s;
+        }
+        .search-box-wrap input:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+
+        /* BẢNG DỮ LIỆU CHÍNH */
+        .table-container {
+            background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+            box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px;
+        }
+        .custom-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        .custom-table th {
+            background: #f8fafc; color: var(--muted); font-weight: 700; font-size: 11px; text-transform: uppercase;
+            padding: 14px 16px; border-bottom: 1px solid var(--border); letter-spacing: 0.5px;
+        }
+        .custom-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: var(--text); }
+        .custom-table tr:hover { background: #f8fbff; }
+        .custom-table tr:last-child td { border-bottom: none; }
+
+        .spa-code-badge { display: inline-block; font-size: 11px; background: #eff6ff; color: var(--primary-dark); padding: 3px 8px; border-radius: 6px; font-weight: 700; }
+
+        /* NÚT THAO TÁC TRONG BẢNG */
+        .tbl-action-group { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+        .tbl-btn {
+            height: 32px; padding: 0 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: #fff; display: inline-flex; align-items: center; gap: 5px; transition: 0.15s;
+        }
+        .tbl-btn.edit { color: var(--primary); border-color: #bfdbfe; background: #eff6ff; }
+        .tbl-btn.edit:hover { background: #dbeafe; }
+        .tbl-btn.delete { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
+        .tbl-btn.delete:hover { background: #fee2e2; }
+
+        /* CHÂN BẢNG */
+        .table-footer {
+            display: flex; align-items: center; justify-content: space-between; padding: 16px 20px;
+            background: var(--white); border-top: 1px solid var(--border); font-size: 12px; color: var(--muted);
+        }
+
+        /* MODAL CHUNG */
+        .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 23, 42, .45); backdrop-filter: blur(3px); }
+        .modal-container { width: 100%; max-width: 520px; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 70px rgba(15, 23, 42, .25); animation: modalShow .18s ease; display: flex; flex-direction: column; }
+        @keyframes modalShow { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--border); background: #f8fafc; }
+        .modal-header h3 { margin: 0; color: var(--text); font-size: 16px; font-weight: 800; }
+        .close-modal { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: #f1f5f9; color: var(--muted); font-size: 18px; cursor: pointer; }
+        .close-modal:hover { color: #dc2626; background: #fee2e2; }
+        .modal-body { padding: 20px; overflow-y: auto; max-height: 75vh; }
+        
+        .form-group-modal { margin-bottom: 14px; }
+        .form-group-modal label { display: block; margin-bottom: 6px; color: var(--text); font-size: 12px; font-weight: 700; }
+        .form-group-modal input, .form-group-modal select, .form-group-modal textarea { width: 100%; height: 40px; padding: 0 14px; border: 1px solid var(--border); border-radius: 9px; background: #f9fafc; outline: none; font-size: 13px; color: var(--text); transition: 0.2s; }
+        .form-group-modal textarea { height: auto; padding: 10px 14px; }
+        .form-group-modal input:focus, .form-group-modal select:focus, .form-group-modal textarea:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 20px; border-top: 1px solid var(--border); background: #fafbfc; }
+
+        .empty-state { text-align: center; padding: 40px; color: var(--muted); }
+        .empty-state i { font-size: 32px; margin-bottom: 10px; color: #cbd5e1; }
+    </style>
 </head>
 <body>
 
@@ -24,35 +157,88 @@
 
     <!-- NỘI DUNG CHÍNH -->
     <div class="main-content">
-       <div id="topnav-container"></div>
+        <div id="topnav-container"></div>
 
         <div class="content-body">
-            <div class="card">
-                <div class="card-header">
-                    <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
-                        <span>✨</span> Danh Sách Dịch Vụ Spa
-                    </h3>
-                    <div class="card-header-actions">
-                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm tên dịch vụ Spa..." onkeyup="timKiemSpa()">
-                        <button class="btn-primary" onclick="moModalThem()" style="background-color: #0284c7; padding: 9px 16px;">+ Thêm Dịch Vụ</button>
+            <div class="spa-page">
+                <!-- Tiêu đề trang -->
+                <div class="spa-top">
+                    <div class="spa-heading">
+                        <div class="spa-heading-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                        <div>
+                            <h2>Danh Sách Dịch Vụ Spa</h2>
+                            <p>Quản lý các dịch vụ chăm sóc thú cưng, tắm sấy, cắt tỉa tạo kiểu và bảng giá chuẩn</p>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn-action-primary" onclick="moModalThem()"><i class="fa-solid fa-plus"></i> Thêm dịch vụ Spa</button>
                     </div>
                 </div>
-                
-                <div class="table-responsive">
-                    <table>
+
+                <!-- 3 Thẻ thống kê tổng quan -->
+                <div class="spa-stats">
+                    <div class="spa-stat">
+                        <div class="spa-stat-icon"><i class="fa-solid fa-list-check"></i></div>
+                        <div>
+                            <div class="spa-stat-number" id="statTongSpa">0</div>
+                            <div class="spa-stat-label">Tổng số dịch vụ Spa</div>
+                        </div>
+                    </div>
+                    <div class="spa-stat">
+                        <div class="spa-stat-icon"><i class="fa-solid fa-tag"></i></div>
+                        <div>
+                            <div class="spa-stat-number" id="statGiaTB">0 đ</div>
+                            <div class="spa-stat-label">Giá trung bình dịch vụ</div>
+                        </div>
+                    </div>
+                    <div class="spa-stat">
+                        <div class="spa-stat-icon"><i class="fa-solid fa-shield-dog"></i></div>
+                        <div>
+                            <div class="spa-stat-number" id="statHoatDong">Sẵn sàng</div>
+                            <div class="spa-stat-label">Trạng thái hệ thống</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thanh công cụ tìm kiếm -->
+                <div class="spa-toolbar">
+                    <div class="search-box-wrap">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="searchInput" placeholder="Tìm theo tên dịch vụ, ghi chú, mã..." oninput="timKiemSpa()">
+                    </div>
+                    <div>
+                        <span id="spaCount" style="font-size: 12px; font-weight: 600; color: var(--muted);">0 dịch vụ</span>
+                    </div>
+                </div>
+
+                <!-- Bảng danh sách dịch vụ Spa -->
+                <div class="table-container">
+                    <table class="custom-table">
                         <thead>
-                            <tr style="background: #1e3a8a; color: #ffffff;">
-                                <th style="padding: 10px;">Mã DV</th>
-                                <th style="padding: 10px;">Tên Dịch Vụ (tendichvu)</th>
-                                <th style="padding: 10px;">Giá Tiền (gia)</th>
-                                <th style="padding: 10px;">Ghi Chú (ghichu)</th>
-                                <th style="padding: 10px; text-align: center;">Thao Tác</th>
+                            <tr>
+                                <th style="width: 150px;">Mã DV</th>
+                                <th>Tên Dịch Vụ</th>
+                                <th style="width: 140px; text-align: right;">Giá Tiền (VNĐ)</th>
+                                <th>Ghi Chú & Mô Tả</th>
+                                <th style="width: 140px; text-align: right;">Thao Tác</th>
                             </tr>
                         </thead>
                         <tbody id="data-table">
-                            <!-- Dữ liệu được nạp tự động từ Supabase -->
+                            <tr>
+                                <td colspan="5">
+                                    <div class="empty-state">
+                                        <i class="fa-solid fa-spinner fa-spin"></i>
+                                        <div>Đang tải dữ liệu dịch vụ Spa...</div>
+                                    </div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
+
+                    <!-- Chân bảng -->
+                    <div class="table-footer">
+                        <div id="pagination-info">Hiển thị 0 bản ghi</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -60,38 +246,39 @@
 
     <!-- POPUP FORM THÊM / SỬA DỊCH VỤ SPA -->
     <div class="modal-overlay" id="spaModal">
-        <div class="modal-container" style="width: 500px; padding: 20px;">
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
-                <h3 id="modalTitle" style="margin:0; font-size: 16px;">Thêm dịch vụ Spa mới</h3>
-                <button class="close-modal" onclick="dongModal()" style="background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thêm dịch vụ Spa mới</h3>
+                <button class="close-modal" onclick="dongModal()">×</button>
             </div>
             
-            <input type="hidden" id="editingId">
-            
-            <!-- Ô hiển thị Mã dịch vụ Spa tự động -->
-            <div class="form-group-modal" style="margin-bottom: 12px;">
-                <label style="font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">Mã dịch vụ (Tự động):</label>
-                <input type="text" id="madichvu" readonly style="width: 100%; padding: 8px; font-size: 13px; background-color: #f1f5f9; font-weight: bold; color: #0284c7; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
-            </div>
-            
-            <div class="form-group-modal" style="margin-bottom: 12px;">
-                <label style="font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">Tên dịch vụ (tendichvu) (*):</label>
-                <input type="text" id="tendichvu" placeholder="VD: Tắm cắt lông tạo kiểu, Cạo vôi răng..." style="width: 100%; padding: 8px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
+            <div class="modal-body">
+                <input type="hidden" id="editingId">
+                
+                <div class="form-group-modal">
+                    <label>Mã dịch vụ (Tự động):</label>
+                    <input type="text" id="madichvu" readonly style="background-color: #f1f5f9; font-weight: bold; color: var(--primary-dark);">
+                </div>
+
+                <div class="form-group-modal">
+                    <label>Tên dịch vụ (*):</label>
+                    <input type="text" id="tendichvu" placeholder="VD: Tắm cắt lông tạo kiểu, Cạo vôi răng...">
+                </div>
+
+                <div class="form-group-modal">
+                    <label>Giá tiền (VNĐ) (*):</label>
+                    <input type="number" id="gia" placeholder="Ví dụ: 150000">
+                </div>
+
+                <div class="form-group-modal">
+                    <label>Ghi chú / Mô tả:</label>
+                    <textarea id="ghichu" rows="3" placeholder="Mô tả chi tiết các bước thực hiện dịch vụ..."></textarea>
+                </div>
             </div>
 
-            <div class="form-group-modal" style="margin-bottom: 12px;">
-                <label style="font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">Giá tiền (gia - VNĐ) (*):</label>
-                <input type="number" id="gia" placeholder="0" style="width: 100%; padding: 8px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
-            </div>
-
-            <div class="form-group-modal" style="margin-bottom: 12px;">
-                <label style="font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">Ghi chú (ghichu):</label>
-                <textarea id="ghichu" rows="3" placeholder="Mô tả chi tiết các bước thực hiện dịch vụ..." style="width: 100%; padding: 8px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;"></textarea>
-            </div>
-
-            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 15px;">
-                <button type="button" class="btn-secondary" onclick="dongModal()">Hủy</button>
-                <button type="button" class="btn-primary" onclick="luuSpa()" style="background-color: #0284c7;">Lưu dữ liệu</button>
+            <div class="modal-footer">
+                <button class="btn-action-outline" onclick="dongModal()">Hủy</button>
+                <button class="btn-action-primary" onclick="luuSpa()"><i class="fa-solid fa-floppy-disk"></i> Lưu dữ liệu</button>
             </div>
         </div>
     </div>
@@ -103,7 +290,6 @@
             await taiDanhSachSpa();
         });
 
-        // Hàm lấy chính xác mã phòng khám hiện tại (tránh lặp chữ PK)
         function layMaPhongKhamChuan() {
             try {
                 const userStr = sessionStorage.getItem('currentUser');
@@ -118,10 +304,10 @@
         }
 
         async function taiDanhSachSpa() {
+            if (typeof db === 'undefined' || !db) return;
             const { data, error } = await db.from('spa').select('*').order('id', { ascending: false });
             if (error) {
                 console.error('Lỗi tải danh sách spa:', error);
-                alert('Không thể tải dữ liệu từ bảng spa!');
             } else {
                 danhSachSpaGoc = data || [];
                 hienThiBang(danhSachSpaGoc);
@@ -132,26 +318,54 @@
             const tableBody = document.getElementById('data-table');
             tableBody.innerHTML = '';
             
+            // Cập nhật thống kê
+            const tongSpa = danhSachSpaGoc.length;
+            const tongGia = danhSachSpaGoc.reduce((sum, x) => sum + (Number(x.gia) || 0), 0);
+            const giaTB = tongSpa > 0 ? Math.round(tongGia / tongSpa) : 0;
+
+            document.getElementById('statTongSpa').textContent = tongSpa.toLocaleString('vi-VN');
+            document.getElementById('statGiaTB').textContent = giaTB.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('spaCount').textContent = `${data.length} dịch vụ`;
+
             if(data.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777; padding: 20px;">Chưa có dịch vụ Spa nào trong hệ thống</td></tr>`;
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                <div>Không tìm thấy dịch vụ Spa nào</div>
+                            </div>
+                        </td>
+                    </tr>`;
+                document.getElementById('pagination-info').innerText = 'Hiển thị 0 bản ghi';
                 return;
             }
 
             data.forEach((item) => {
                 const maDVFormatted = item.madichvu || ('DVPK' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
+                const giaFormatted = item.gia !== null && item.gia !== undefined ? Number(item.gia).toLocaleString('vi-VN') + ' đ' : '0 đ';
+
                 tableBody.innerHTML += `
-                    <tr style="border-bottom: 1px solid #e2e8f0;">
-                        <td style="padding: 10px; font-weight: bold; color: #1e3a8a;">${maDVFormatted}</td>
-                        <td style="padding: 10px; font-weight: 500; color: #0f172a;">${item.tendichvu || ''}</td>
-                        <td style="padding: 10px; color: #dc2626; font-weight: bold;">${Number(item.gia || 0).toLocaleString('vi-VN')} đ</td>
-                        <td style="padding: 10px; color: #64748b; font-size: 12px;">${item.ghichu || '---'}</td>
-                        <td style="padding: 10px; text-align: center; white-space: nowrap;">
-                            <button class="btn-edit" onclick="moModalSua(${item.id})" style="background: #0284c7; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; margin-right: 4px;">Sửa</button>
-                            <button class="btn-delete" onclick="xoaSpa(${item.id})" style="background: #dc2626; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer;">Xóa</button>
+                    <tr>
+                        <td><span class="spa-code-badge">${escapeHtml(maDVFormatted)}</span></td>
+                        <td><strong>${escapeHtml(item.tendichvu || '')}</strong></td>
+                        <td style="text-align: right; font-weight: 700; color: var(--green);">${giaFormatted}</td>
+                        <td style="color: var(--muted);">${escapeHtml(item.ghichu || '---')}</td>
+                        <td style="text-align: right;">
+                            <div class="tbl-action-group">
+                                <button class="tbl-btn edit" onclick="moModalSua(${item.id})">
+                                    <i class="fa-solid fa-pen"></i> Sửa
+                                </button>
+                                <button class="tbl-btn delete" onclick="xoaSpa(${item.id})">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
             });
+
+            document.getElementById('pagination-info').innerText = `Hiển thị ${data.length} bản ghi`;
         }
 
         function timKiemSpa() {
@@ -167,15 +381,13 @@
 
         function moModalThem() {
             document.getElementById('editingId').value = '';
-            
-            // Tự động sinh mã dịch vụ Spa chuẩn phòng khám kèm 4 chữ số ngẫu nhiên
             const maPK = layMaPhongKhamChuan();
             const randomNum = Math.floor(1000 + Math.random() * 9000);
             document.getElementById('madichvu').value = 'DVPK' + maPK + randomNum;
-
             document.getElementById('tendichvu').value = '';
             document.getElementById('gia').value = '';
             document.getElementById('ghichu').value = '';
+            
             document.getElementById('modalTitle').innerText = 'Thêm dịch vụ Spa mới';
             document.getElementById('spaModal').style.display = 'flex';
         }
@@ -191,7 +403,8 @@
             document.getElementById('tendichvu').value = item.tendichvu || '';
             document.getElementById('gia').value = item.gia || '';
             document.getElementById('ghichu').value = item.ghichu || '';
-            document.getElementById('modalTitle').innerText = 'Cập nhật dịch vụ Spa (Mã: ' + maDVFormatted + ')';
+            
+            document.getElementById('modalTitle').innerText = 'Cập nhật dịch vụ Spa';
             document.getElementById('spaModal').style.display = 'flex';
         }
 
@@ -244,6 +457,16 @@
                     taiDanhSachSpa();
                 }
             }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
     </script>
 </body>
