@@ -154,7 +154,7 @@
         .contact-info a:hover { text-decoration: underline; }
 
         .pet-cell-box { display: flex; align-items: center; gap: 10px; }
-        .pet-icon-wrap { width: 32px; height: 32px; border-radius: 8px; background: #ecfeff; color: #0891b2; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+        .pet-mini-avatar { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; background: #f1f5f9; border: 1px solid var(--border); flex-shrink: 0; }
         .pet-meta div:first-child { font-weight: 700; font-size: 12px; color: var(--text); }
         .pet-meta div:last-child { font-size: 11px; color: var(--muted); max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -163,6 +163,13 @@
             font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; margin-top: 2px;
         }
         .money-text { font-weight: 750; color: #0f172a; }
+
+        /* QR CODE THUMBNAIL */
+        .table-qr-thumb {
+            width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 8px; padding: 2px; background: #fff;
+            cursor: pointer; transition: 0.2s; object-fit: contain;
+        }
+        .table-qr-thumb:hover { transform: scale(1.08); border-color: var(--primary); }
 
         /* HÀNH ĐỘNG TABLE */
         .table-actions { display: flex; align-items: center; gap: 6px; }
@@ -190,7 +197,7 @@
         }
         .page-num.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-        /* MODAL */
+        /* MODAL CHUNG */
         .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 23, 42, .45); backdrop-filter: blur(3px); }
         .modal-container { width: 100%; max-width: 480px; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 70px rgba(15, 23, 42, .25); animation: modalShow .18s ease; }
         @keyframes modalShow { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -204,6 +211,12 @@
         .form-group-modal input { width: 100%; height: 42px; padding: 0 14px; border: 1px solid var(--border); border-radius: 9px; background: #f9fafc; outline: none; font-size: 13px; color: var(--text); transition: 0.2s; }
         .form-group-modal input:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
         .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 20px; border-top: 1px solid var(--border); background: #fafbfc; }
+
+        /* MODAL QR CODE ZOOM */
+        .qr-modal-content { text-align: center; padding: 10px; }
+        .qr-modal-content img { width: 220px; height: 220px; border: 1px solid var(--border); border-radius: 12px; padding: 8px; background: #fff; margin-bottom: 15px; }
+        .qr-modal-content h4 { margin: 0 0 5px 0; font-size: 16px; color: var(--text); }
+        .qr-modal-content p { margin: 0; font-size: 12px; color: var(--muted); }
 
         .empty-state { text-align: center; padding: 40px; color: var(--muted); }
         .empty-state i { font-size: 32px; margin-bottom: 10px; color: #cbd5e1; }
@@ -298,6 +311,7 @@
                                 <th>Liên hệ</th>
                                 <th>Địa chỉ</th>
                                 <th>Thú cưng</th>
+                                <th style="width: 70px; text-align: center;">Mã QR</th>
                                 <th>Lần khám gần nhất</th>
                                 <th>Tổng chi tiêu</th>
                                 <th style="width: 130px; text-align: right;">Thao tác</th>
@@ -305,7 +319,7 @@
                         </thead>
                         <tbody id="customerTableBody">
                             <tr>
-                                <td colspan="8">
+                                <td colspan="9">
                                     <div class="empty-state">
                                         <i class="fa-solid fa-spinner fa-spin"></i>
                                         <div>Đang tải dữ liệu khách hàng...</div>
@@ -356,10 +370,28 @@
         </div>
     </div>
 
+    <!-- MODAL XEM QR CODE PHÓNG TO -->
+    <div class="modal-overlay" id="qrModal" onclick="dongModalQR(event)">
+        <div class="modal-container" style="max-width: 340px;">
+            <div class="modal-header">
+                <h3>Mã QR Khách Hàng</h3>
+                <button class="close-modal" onclick="dongModalQRForce()">×</button>
+            </div>
+            <div class="modal-body qr-modal-content">
+                <img id="qrModalImage" src="" alt="QR Code">
+                <h4 id="qrModalName">Tên khách hàng</h4>
+                <p id="qrModalPhone">Số điện thoại</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         let danhSachKhachHangGoc = [];
         let mapThuCung = {};
         let mapLichSuKham = {};
+
+        // Ảnh đại diện thú cưng mặc định nếu chưa có trong DB
+        const DEFAULT_PET_IMAGE = 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=150&q=80';
 
         function chuanHoaSoDienThoai(sdt) {
             if (!sdt) return '';
@@ -410,7 +442,7 @@
             const tableBody = document.getElementById('customerTableBody');
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="8">
+                    <td colspan="9">
                         <div class="empty-state">
                             <i class="fa-solid fa-spinner fa-spin"></i>
                             <div>Đang tải dữ liệu khách hàng...</div>
@@ -460,7 +492,7 @@
                     }
                 }
 
-                // 2. Quét chi tiêu toàn diện qua tất cả các bảng
+                // 2. Quét chi tiêu toàn diện
                 window.khamToPet = {};
                 const { data: kbData } = await db.from('khambenh').select('*');
                 if (kbData) {
@@ -531,7 +563,7 @@
 
                 mapLichSuKham = thongKeChiTieu;
 
-                // 3. Tải danh sách khách hàng theo phòng khám
+                // 3. Tải danh sách khách hàng
                 const maphongkham = sessionStorage.getItem('maphongkham') || '';
                 const cleanCurrentPK = maphongkham ? maphongkham.replace(/_/g, '').trim().toLowerCase() : '';
 
@@ -560,7 +592,7 @@
         function hienThiLoi(message) {
             document.getElementById('customerTableBody').innerHTML = `
                 <tr>
-                    <td colspan="8">
+                    <td colspan="9">
                         <div class="empty-state">
                             <i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i>
                             <div>${escapeHtml(message)}</div>
@@ -591,7 +623,7 @@
             if (!data || !data.length) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8">
+                        <td colspan="9">
                             <div class="empty-state">
                                 <i class="fa-solid fa-user-slash"></i>
                                 <div>Không tìm thấy khách hàng nào</div>
@@ -618,6 +650,9 @@
             const displaySdt = chuanHoaSoDienThoai(sdt);
             const diaChi = item.diachi || 'Chưa có địa chỉ';
 
+            const qrString = `KH_${item.id}_${tenHienThi}_${displaySdt}`;
+            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrString)}`;
+
             const dsPet = info.pets;
             const soLuongPet = info.soPet;
             const tenPetText = soLuongPet ? dsPet.map(p => p.tenthucung || p.ten || 'Không tên').join(', ') : 'Chưa có thú cưng';
@@ -638,11 +673,16 @@
 
             let petHtml = `<span style="color: var(--muted); font-style: italic;">Chưa có thú cưng</span>`;
             if (soLuongPet > 0) {
+                const firstPet = dsPet[0];
+                const petName = firstPet.tenthucung || firstPet.ten || 'Thú cưng';
+                // Lấy ảnh thú cưng, nếu không có hoặc rỗng thì dùng ảnh mặc định
+                const petImg = firstPet.hinhanh || firstPet.anh || firstPet.hinh_anh || DEFAULT_PET_IMAGE;
+
                 petHtml = `
                     <div class="pet-cell-box">
-                        <div class="pet-icon-wrap"><i class="fa-solid fa-paw"></i></div>
+                        <img class="pet-mini-avatar" src="${escapeHtml(petImg)}" alt="Pet" onerror="this.src='${DEFAULT_PET_IMAGE}'">
                         <div class="pet-meta">
-                            <div>${soLuongPet} thú cưng</div>
+                            <div>${escapeHtml(petName)}${soLuongPet > 1 ? ` (+${soLuongPet - 1})` : ''}</div>
                             <div title="${escapeHtml(tenPetText)}">${escapeHtml(tenPetText)}</div>
                         </div>
                     </div>
@@ -674,6 +714,9 @@
                     </td>
                     <td><div style="max-width: 160px; font-size: 12px; color: var(--muted);"><i class="fa-solid fa-location-dot" style="color: var(--primary);"></i> ${escapeHtml(diaChi)}</div></td>
                     <td>${petHtml}</td>
+                    <td style="text-align: center;">
+                        <img class="table-qr-thumb" src="${qrImageUrl}" alt="QR" title="Nhấn để phóng to QR" onclick="moModalQR('${qrImageUrl}', '${escapeHtml(tenHienThi)}', '${escapeHtml(displaySdt)}')">
+                    </td>
                     <td style="font-size: 12px;">${ngayKhamStr}</td>
                     <td><span class="money-text">${escapeHtml(tongChiTieuText)}</span></td>
                     <td style="text-align: right;">
@@ -685,6 +728,23 @@
                     </td>
                 </tr>
             `;
+        }
+
+        function moModalQR(url, ten, sdt) {
+            document.getElementById('qrModalImage').src = url;
+            document.getElementById('qrModalName').textContent = ten;
+            document.getElementById('qrModalPhone').textContent = sdt ? `SĐT: ${sdt}` : 'Chưa có SĐT';
+            document.getElementById('qrModal').style.display = 'flex';
+        }
+
+        function dongModalQR(e) {
+            if (e.target.id === 'qrModal') {
+                document.getElementById('qrModal').style.display = 'none';
+            }
+        }
+
+        function dongModalQRForce() {
+            document.getElementById('qrModal').style.display = 'none';
         }
 
         function timKiemKhachHang() {
@@ -714,7 +774,7 @@
             if (!ketQua.length) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8">
+                        <td colspan="9">
                             <div class="empty-state">
                                 <i class="fa-solid fa-user-slash"></i>
                                 <div>Không tìm thấy khách hàng phù hợp</div>
@@ -773,7 +833,10 @@
         });
 
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') dongModal();
+            if (e.key === 'Escape') {
+                dongModal();
+                dongModalQRForce();
+            }
         });
 
         async function luuKhachHang() {
