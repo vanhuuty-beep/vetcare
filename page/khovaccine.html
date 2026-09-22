@@ -2,112 +2,161 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Kho Vắc-xin - VetCare Pro</title>
+
+    <!-- Favicon logo phòng khám -->
+    <link rel="icon" type="image/png" href="../logo/logo.png">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
     <!-- Thư viện Supabase JS -->
-   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-	<script src="../js/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
     <script src="../js/config.js"></script>
     <script src="../js/supabase.js"></script>
     <script src="../js/utils.js"></script>
     <script src="../js/menu.js"></script>
-	<script src="../js/smart-search.js"></script>
+    <script src="../js/smart-search.js"></script>
+
     <!-- Gọi file CSS chung -->
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/mobile.css">
     <link rel="stylesheet" href="../css/style1.css">
-	<link rel="stylesheet" href="../css/smart-search.css">
+    <link rel="stylesheet" href="../css/smart-search.css">
 
     <style>
-        .search-box {
-            padding: 8px 12px;
-            width: 250px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-            outline: none;
-        }
-        .search-box:focus {
-            border-color: #2563eb;
-        }
-        .card-header-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #eff6ff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --green: #059669;
+            --green-bg: #ecfdf5;
+            --orange: #d97706;
+            --shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
         }
 
-        /* Tối ưu modal gọn gàng */
-        .modal-container {
-            width: 500px;
-            padding: 20px 24px;
-        }
-        .modal-header {
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-        }
-        .form-group-modal {
-            margin-bottom: 10px;
-        }
-        .form-group-modal label {
-            font-size: 13px;
-            margin-bottom: 3px;
-            display: block;
-            font-weight: 500;
-        }
-        .form-group-modal input, .form-group-modal select {
-            width: 100%;
-            padding: 7px 10px;
-            font-size: 13px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .form-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .form-row .form-group-modal {
-            flex: 1;
-            margin-bottom: 0;
-        }
-        .modal-footer {
-            margin-top: 15px;
-            padding-top: 10px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; min-height: 100%; }
+        body { background: var(--bg); color: var(--text); font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif; }
 
-        /* CSS Phân trang */
-        .pagination-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            font-size: 13px;
+        .content-body { background: var(--bg) !important; padding: 24px !important; min-height: calc(100vh - 60px); }
+        .vx-page { width: 100%; max-width: 1600px; margin: 0 auto; }
+
+        /* KHUNG ĐẦU TRANG */
+        .vx-top {
+            display: flex; align-items: center; justify-content: space-between; gap: 20px;
+            background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+            padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 20px;
         }
-        .pagination-buttons {
-            display: flex;
-            gap: 5px;
+        .vx-heading { display: flex; align-items: center; gap: 14px; min-width: 0; }
+        .vx-heading-icon {
+            width: 48px; height: 48px; flex: 0 0 48px; display: flex; align-items: center; justify-content: center;
+            border-radius: 12px; color: var(--primary); background: #eff6ff; font-size: 20px;
         }
-        .pagination-buttons button {
-            padding: 5px 10px;
-            border: 1px solid #cbd5e1;
-            background: #fff;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 500;
+        .vx-heading h2 { margin: 0; font-size: 18px; font-weight: 800; color: var(--text); }
+        .vx-heading p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+
+        .btn-action-primary {
+            height: 40px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--primary); color: #fff;
+            font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); transition: 0.2s;
         }
-        .pagination-buttons button:hover:not(:disabled) {
-            background: #f1f5f9;
-            border-color: #94a3b8;
+        .btn-action-primary:hover { background: var(--primary-dark); }
+
+        .btn-action-outline {
+            height: 40px; padding: 0 16px; border: 1px solid var(--border); border-radius: 10px; background: #fff;
+            color: var(--text); font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;
         }
-        .pagination-buttons button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .btn-action-outline:hover { background: #f1f5f9; border-color: #cbd5e1; }
+
+        /* THANH THỐNG KÊ TỔNG QUAN */
+        .vx-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .vx-stat { display: flex; align-items: center; gap: 14px; padding: 16px 18px; background: var(--white); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }
+        .vx-stat-icon { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 11px; color: var(--primary); background: var(--primary-light); font-size: 18px; }
+        .vx-stat:nth-child(2) .vx-stat-icon { color: #059669; background: #ecfdf5; }
+        .vx-stat:nth-child(3) .vx-stat-icon { color: #0891b2; background: #ecfeff; }
+        .vx-stat-number { color: var(--text); font-size: 18px; font-weight: 800; line-height: 1.1; }
+        .vx-stat-label { margin-top: 4px; color: var(--muted); font-size: 11px; }
+
+        /* THANH CÔNG CỤ TÌM KIẾM */
+        .vx-toolbar {
+            display: flex; align-items: center; justify-content: space-between; gap: 15px;
+            background: var(--white); border: 1px solid var(--border); border-radius: 14px;
+            padding: 14px 20px; margin-bottom: 20px; box-shadow: var(--shadow); flex-wrap: wrap;
         }
+        .search-box-wrap { position: relative; min-width: 320px; }
+        .search-box-wrap i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; }
+        .search-box-wrap input {
+            width: 100%; height: 38px; padding: 0 14px 0 38px; border: 1px solid var(--border); border-radius: 9px;
+            background: #f8fafc; outline: none; font-size: 12px; color: var(--text); transition: 0.2s;
+        }
+        .search-box-wrap input:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+
+        /* BẢNG DỮ LIỆU CHÍNH */
+        .table-container {
+            background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+            box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px;
+        }
+        .custom-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        .custom-table th {
+            background: #f8fafc; color: var(--muted); font-weight: 700; font-size: 11px; text-transform: uppercase;
+            padding: 14px 16px; border-bottom: 1px solid var(--border); letter-spacing: 0.5px;
+        }
+        .custom-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: var(--text); }
+        .custom-table tr:hover { background: #f8fbff; }
+        .custom-table tr:last-child td { border-bottom: none; }
+
+        .vx-code-badge { display: inline-block; font-size: 11px; background: #eff6ff; color: var(--primary-dark); padding: 3px 8px; border-radius: 6px; font-weight: 700; }
+        .vx-group-badge { display: inline-block; font-size: 11px; background: #ecfeff; color: #0891b2; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+
+        /* NÚT THAO TÁC TRONG BẢNG */
+        .tbl-action-group { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+        .tbl-btn {
+            height: 32px; padding: 0 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: #fff; display: inline-flex; align-items: center; gap: 5px; transition: 0.15s;
+        }
+        .tbl-btn.edit { color: var(--primary); border-color: #bfdbfe; background: #eff6ff; }
+        .tbl-btn.edit:hover { background: #dbeafe; }
+        .tbl-btn.delete { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
+        .tbl-btn.delete:hover { background: #fee2e2; }
+
+        /* PHÂN TRANG & FOOTER BẢNG */
+        .table-footer {
+            display: flex; align-items: center; justify-content: space-between; padding: 16px 20px;
+            background: var(--white); border-top: 1px solid var(--border); font-size: 12px; color: var(--muted);
+        }
+        .pagination { display: flex; align-items: center; gap: 5px; }
+        .page-num {
+            width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: #fff;
+            color: var(--text); font-weight: 600; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s;
+        }
+        .page-num:hover:not(:disabled) { background: #f1f5f9; border-color: #cbd5e1; }
+        .page-num:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* MODAL CHUNG */
+        .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 23, 42, .45); backdrop-filter: blur(3px); }
+        .modal-container { width: 100%; max-width: 560px; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 70px rgba(15, 23, 42, .25); animation: modalShow .18s ease; display: flex; flex-direction: column; }
+        @keyframes modalShow { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--border); background: #f8fafc; }
+        .modal-header h3 { margin: 0; color: var(--text); font-size: 16px; font-weight: 800; }
+        .close-modal { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: #f1f5f9; color: var(--muted); font-size: 18px; cursor: pointer; }
+        .close-modal:hover { color: #dc2626; background: #fee2e2; }
+        .modal-body { padding: 20px; overflow-y: auto; max-height: 75vh; }
+        
+        .form-group-modal { margin-bottom: 14px; }
+        .form-group-modal label { display: block; margin-bottom: 6px; color: var(--text); font-size: 12px; font-weight: 700; }
+        .form-group-modal input, .form-group-modal select, .form-group-modal textarea { width: 100%; height: 40px; padding: 0 14px; border: 1px solid var(--border); border-radius: 9px; background: #f9fafc; outline: none; font-size: 13px; color: var(--text); transition: 0.2s; }
+        .form-group-modal input:focus, .form-group-modal select:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+        .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 20px; border-top: 1px solid var(--border); background: #fafbfc; }
+
+        .empty-state { text-align: center; padding: 40px; color: var(--muted); }
+        .empty-state i { font-size: 32px; margin-bottom: 10px; color: #cbd5e1; }
     </style>
 </head>
 <body>
@@ -120,44 +169,94 @@
         <div id="topnav-container"></div>
 
         <div class="content-body">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Quản lý Kho Vắc-xin</h3>
-                    <div class="card-header-actions">
-                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm tên vắc-xin, số lô, loại..." onkeyup="timKiemVaccine()">
-                        <button class="btn-primary" onclick="moModalThem()">+ Thêm vắc-xin mới</button>
+            <div class="vx-page">
+                <!-- Tiêu đề trang -->
+                <div class="vx-top">
+                    <div class="vx-heading">
+                        <div class="vx-heading-icon"><i class="fa-solid fa-syringe"></i></div>
+                        <div>
+                            <h2>Quản lý Kho Vắc-xin</h2>
+                            <p>Quản lý số lượng nhập, theo dõi lịch sử tiêm chủng, hạn dùng và tồn kho vắc-xin</p>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn-action-primary" onclick="moModalThem()"><i class="fa-solid fa-plus"></i> Thêm vắc-xin mới</button>
                     </div>
                 </div>
-                
-                <div class="table-responsive">
-                    <table>
+
+                <!-- 3 Thẻ thống kê tổng quan -->
+                <div class="vx-stats">
+                    <div class="vx-stat">
+                        <div class="vx-stat-icon"><i class="fa-solid fa-box-archive"></i></div>
+                        <div>
+                            <div class="vx-stat-number" id="statTongVX">0</div>
+                            <div class="vx-stat-label">Tổng loại vắc-xin</div>
+                        </div>
+                    </div>
+                    <div class="vx-stat">
+                        <div class="vx-stat-icon"><i class="fa-solid fa-cubes"></i></div>
+                        <div>
+                            <div class="vx-stat-number" id="statTongTonKho">0</div>
+                            <div class="vx-stat-label">Tổng liều tồn kho</div>
+                        </div>
+                    </div>
+                    <div class="vx-stat">
+                        <div class="vx-stat-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div>
+                            <div class="vx-stat-number" id="statTrangThai">Sẵn sàng</div>
+                            <div class="vx-stat-label">Trạng thái kho</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thanh công cụ tìm kiếm -->
+                <div class="vx-toolbar">
+                    <div class="search-box-wrap">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="searchInput" placeholder="Tìm tên vắc-xin, số lô, loại..." oninput="timKiemVaccine()">
+                    </div>
+                    <div>
+                        <span id="vxCount" style="font-size: 12px; font-weight: 600; color: var(--muted);">0 vắc-xin</span>
+                    </div>
+                </div>
+
+                <!-- Bảng danh sách vắc-xin -->
+                <div class="table-container">
+                    <table class="custom-table">
                         <thead>
                             <tr>
-                                <th>Mã vắc-xin</th>
+                                <th style="width: 140px;">Mã vắc-xin</th>
                                 <th>Tên vắc-xin</th>
-                                <th>Loại vắc-xin</th>
-                                <th>Số lô (solo)</th>
-                                <th>Hạn dùng</th>
-                                <th>SL Nhập</th>
-                                <th>Đã tiêm</th>
-                                <th>Còn lại</th>
-                                <th>Giá bán</th>
-                                <th>Thao tác</th>
+                                <th style="width: 150px;">Loại vắc-xin</th>
+                                <th style="width: 120px;">Số lô</th>
+                                <th style="width: 120px;">Hạn dùng</th>
+                                <th style="width: 90px; text-align: center;">SL Nhập</th>
+                                <th style="width: 90px; text-align: center;">Đã tiêm</th>
+                                <th style="width: 90px; text-align: center;">Còn lại</th>
+                                <th style="width: 130px; text-align: right;">Giá bán (VNĐ)</th>
+                                <th style="width: 140px; text-align: right;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="data-table">
-                            <!-- Dữ liệu được nạp tự động từ Supabase -->
+                            <tr>
+                                <td colspan="10">
+                                    <div class="empty-state">
+                                        <i class="fa-solid fa-spinner fa-spin"></i>
+                                        <div>Đang tải dữ liệu kho vắc-xin...</div>
+                                    </div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
-                </div>
 
-                <!-- Khu vực Phân trang -->
-                <div class="pagination-container">
-                    <div id="pagination-info">Hiển thị 0 - 0 của 0 bản ghi</div>
-                    <div class="pagination-buttons">
-                        <button id="prevBtn" onclick="doiTrang(-1)">Trang trước</button>
-                        <span id="pageIndicator" style="padding: 5px 10px; align-self: center;">Trang 1 / 1</span>
-                        <button id="nextBtn" onclick="doiTrang(1)">Trang sau</button>
+                    <!-- Phân trang dưới bảng -->
+                    <div class="table-footer">
+                        <div id="pagination-info">Hiển thị 0 bản ghi</div>
+                        <div class="pagination">
+                            <button class="page-num" id="prevBtn" onclick="doiTrang(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                            <span style="padding: 0 8px; font-weight: 700;" id="pageIndicator">1 / 1</span>
+                            <button class="page-num" id="nextBtn" onclick="doiTrang(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -169,57 +268,58 @@
         <div class="modal-container">
             <div class="modal-header">
                 <h3 id="modalTitle">Thêm vắc-xin mới</h3>
-                <button class="close-modal" onclick="dongModal()">&times;</button>
+                <button class="close-modal" onclick="dongModal()">×</button>
             </div>
             
-            <input type="hidden" id="editingId">
-            
-            <!-- Ô hiển thị/nhập Mã vắc-xin tự động -->
-            <div class="form-group-modal">
-                <label>Mã vắc-xin (Tự động):</label>
-                <input type="text" id="mavaccine" readonly style="background-color: #f1f5f9; font-weight: bold; color: #0284c7;">
-            </div>
-
-            <div class="form-group-modal">
-                <label>Tên vắc-xin (tenvaccine) (*):</label>
-                <input type="text" id="tenvaccine" placeholder="Nhập tên vắc-xin...">
-            </div>
-
-            <div class="form-group-modal">
-                <label>Loại vắc-xin (loaivaccine):</label>
-                <input type="text" id="loaivaccine" placeholder="Ví dụ: Dại, 5 trong 1, 7 trong 1...">
-            </div>
-
-            <div class="form-row">
+            <div class="modal-body">
+                <input type="hidden" id="editingId">
+                
                 <div class="form-group-modal">
-                    <label>Số lô (solo):</label>
-                    <input type="text" id="solo" placeholder="VD: VX12345...">
+                    <label>Mã vắc-xin (Tự động):</label>
+                    <input type="text" id="mavaccine" readonly style="background-color: #f1f5f9; font-weight: bold; color: var(--primary-dark);">
                 </div>
-                <div class="form-group-modal">
-                    <label>Hạn dùng (handung):</label>
-                    <input type="date" id="handung">
-                </div>
-            </div>
 
-            <div class="form-row">
                 <div class="form-group-modal">
-                    <label>Số lượng nhập (soluongnhap):</label>
-                    <input type="number" id="soluongnhap" placeholder="VD: 50">
+                    <label>Tên vắc-xin (*):</label>
+                    <input type="text" id="tenvaccine" placeholder="Nhập tên vắc-xin...">
                 </div>
-                <div class="form-group-modal">
-                    <label>Đã tiêm (datiem):</label>
-                    <input type="number" id="datiem" value="0" placeholder="VD: 10">
-                </div>
-            </div>
 
-            <div class="form-group-modal">
-                <label>Giá bán (giaban - VNĐ):</label>
-                <input type="number" step="1000" id="giaban" placeholder="VD: 120000">
+                <div class="form-group-modal">
+                    <label>Loại vắc-xin:</label>
+                    <input type="text" id="loaivaccine" placeholder="Ví dụ: Dại, 5 trong 1, 7 trong 1...">
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group-modal">
+                        <label>Số lô:</label>
+                        <input type="text" id="solo" placeholder="VD: VX12345...">
+                    </div>
+                    <div class="form-group-modal">
+                        <label>Hạn dùng:</label>
+                        <input type="date" id="handung">
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group-modal">
+                        <label>Số lượng nhập:</label>
+                        <input type="number" id="soluongnhap" placeholder="VD: 50">
+                    </div>
+                    <div class="form-group-modal">
+                        <label>Đã tiêm:</label>
+                        <input type="number" id="datiem" value="0" placeholder="VD: 10">
+                    </div>
+                </div>
+
+                <div class="form-group-modal">
+                    <label>Giá bán (VNĐ):</label>
+                    <input type="number" step="1000" id="giaban" placeholder="VD: 120000">
+                </div>
             </div>
 
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="dongModal()">Hủy</button>
-                <button class="btn-primary" onclick="luuVaccine()">Lưu dữ liệu</button>
+                <button class="btn-action-outline" onclick="dongModal()">Hủy</button>
+                <button class="btn-action-primary" onclick="luuVaccine()"><i class="fa-solid fa-floppy-disk"></i> Lưu dữ liệu</button>
             </div>
         </div>
     </div>
@@ -234,22 +334,21 @@
             fetchDuLieuKhoVaccine();
         });
 
-        // Hàm lấy chính xác mã phòng khám hiện tại từ sessionStorage
         function layMaPhongKhamChuan() {
             try {
                 const userStr = sessionStorage.getItem('currentUser');
                 if (userStr) {
                     const user = JSON.parse(userStr);
-                    if (user?.maphongkham) return user.maphongkham.replace('_', '');
+                    if (user?.maphongkham) return user.maphongkham.replace('PK_', '').replace('PK', '').replace('_', '');
                 }
                 const sessionMpk = sessionStorage.getItem('maphongkham');
-                if (sessionMpk) return sessionMpk.replace('_', '');
+                if (sessionMpk) return sessionMpk.replace('PK_', '').replace('PK', '').replace('_', '');
             } catch (e) {}
-            return '617723'; // Mặc định nếu không tìm thấy
+            return '617723';
         }
 
-        // Tải danh sách kho vắc-xin từ Supabase
         async function fetchDuLieuKhoVaccine() {
+            if (typeof db === 'undefined' || !db) return;
             const { data, error } = await db.from('khovaccine').select('*').order('id', { ascending: false });
 
             if (error) {
@@ -262,15 +361,36 @@
             }
         }
 
-        // Hiển thị ra bảng giao diện theo trang
         function hienThiPhanTrang() {
             const tableBody = document.getElementById('data-table');
             tableBody.innerHTML = '';
             
+            // Cập nhật thống kê
+            const tongVX = danhSachVaccineGoc.length;
+            let tongTonKho = 0;
+            danhSachVaccineGoc.forEach(item => {
+                let slNhap = parseInt(item.soluongnhap) || 0;
+                let daTiem = parseInt(item.datiem) || 0;
+                let ton = slNhap - daTiem;
+                if (ton > 0) tongTonKho += ton;
+            });
+
+            document.getElementById('statTongVX').textContent = tongVX.toLocaleString('vi-VN');
+            document.getElementById('statTongTonKho').textContent = tongTonKho.toLocaleString('vi-VN');
+            document.getElementById('vxCount').textContent = `${danhSachLoc.length} vắc-xin`;
+
             if(danhSachLoc.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#777;">Kho vắc-xin hiện chưa có dữ liệu</td></tr>`;
-                document.getElementById('pagination-info').innerText = 'Hiển thị 0 - 0 của 0 bản ghi';
-                document.getElementById('pageIndicator').innerText = 'Trang 1 / 1';
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="10">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-syringe"></i>
+                                <div>Kho vắc-xin hiện chưa có dữ liệu</div>
+                            </div>
+                        </td>
+                    </tr>`;
+                document.getElementById('pagination-info').innerText = 'Hiển thị 0 bản ghi';
+                document.getElementById('pageIndicator').innerText = '1 / 1';
                 document.getElementById('prevBtn').disabled = true;
                 document.getElementById('nextBtn').disabled = true;
                 return;
@@ -291,27 +411,35 @@
                 const tonKho = slNhap - daTiem;
                 const giaFormatted = item.giaban ? Number(item.giaban).toLocaleString('vi-VN') + ' đ' : '0 đ';
 
-                tableBody.innerHTML += `<tr>
-                    <td><strong>${maVaccineFormatted}</strong></td>
-                    <td>${item.tenvaccine || ''}</td>
-                    <td><span style="color: #0284c7; font-weight: 600;">${item.loaivaccine || 'Chưa phân loại'}</span></td>
-                    <td>${item.solo || ''}</td>
-                    <td>${item.handung || ''}</td>
-                    <td>${slNhap}</td>
-                    <td><strong style="color: #d97706;">${daTiem}</strong></td>
-                    <td><strong style="color: #059669;">${tonKho >= 0 ? tonKho : 0}</strong></td>
-                    <td><strong style="color: #059669;">${giaFormatted}</strong></td>
-                    <td>
-                        <button class="btn-edit" onclick="moModalSua(${item.id}, '${item.tenvaccine || ''}', '${item.loaivaccine || ''}', '${item.solo || ''}', '${item.handung || ''}', '${slNhap}', '${daTiem}', '${item.giaban !== null ? item.giaban : ''}', '${maVaccineFormatted}')">Sửa</button>
-                        <button class="btn-delete" onclick="xoaVaccine(${item.id})">Xóa</button>
-                    </td>
-                </tr>`;
+                tableBody.innerHTML += `
+                    <tr>
+                        <td><span class="vx-code-badge">${escapeHtml(maVaccineFormatted)}</span></td>
+                        <td><strong>${escapeHtml(item.tenvaccine || '')}</strong></td>
+                        <td><span class="vx-group-badge">${escapeHtml(item.loaivaccine || 'Chưa phân loại')}</span></td>
+                        <td>${escapeHtml(item.solo || '---')}</td>
+                        <td>${escapeHtml(item.handung || '---')}</td>
+                        <td style="text-align: center; font-weight: 600;">${slNhap}</td>
+                        <td style="text-align: center; font-weight: 700; color: var(--orange);">${daTiem}</td>
+                        <td style="text-align: center; font-weight: 700; color: var(--green);">${tonKho >= 0 ? tonKho : 0}</td>
+                        <td style="text-align: right; font-weight: 700; color: var(--green);">${giaFormatted}</td>
+                        <td style="text-align: right;">
+                            <div class="tbl-action-group">
+                                <button class="tbl-btn edit" onclick="moModalSua(${item.id})">
+                                    <i class="fa-solid fa-pen"></i> Sửa
+                                </button>
+                                <button class="tbl-btn delete" onclick="xoaVaccine(${item.id})">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
             });
 
             document.getElementById('pagination-info').innerText = `Hiển thị ${batDau + 1} - ${ketThuc} của ${danhSachLoc.length} bản ghi`;
-            document.getElementById('pageIndicator').innerText = `Trang ${trangHienTai} / ${tongSoTrang}`;
+            document.getElementById('pageIndicator').innerText = `${trangHienTai} / ${tongSoTrang || 1}`;
             document.getElementById('prevBtn').disabled = (trangHienTai === 1);
-            document.getElementById('nextBtn').disabled = (trangHienTai === tongSoTrang);
+            document.getElementById('nextBtn').disabled = (trangHienTai >= tongSoTrang);
         }
 
         function doiTrang(huong) {
@@ -326,46 +454,47 @@
                 const soLo = (item.solo || '').toLowerCase();
                 const loai = (item.loaivaccine || '').toLowerCase();
                 const ma = (item.mavaccine || ('VX' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'))).toLowerCase();
-                
                 return ten.includes(tuKhoa) || soLo.includes(tuKhoa) || loai.includes(tuKhoa) || ma.includes(tuKhoa);
             });
             trangHienTai = 1;
             hienThiPhanTrang();
         }
 
-        // Mở Modal Thêm - Tự động gắn đúng mã phòng khám thực tế của tài khoản đăng nhập
         function moModalThem() {
-    document.getElementById('editingId').value = '';
-    
-    // Tạo 4 số ngẫu nhiên từ 1000 đến 9999
-    const maPK = layMaPhongKhamChuan();
-    const randomNum = Math.floor(1000 + Math.random() * 9000); 
-    document.getElementById('mavaccine').value = 'VX' + maPK + randomNum;
+            document.getElementById('editingId').value = '';
+            const maPK = layMaPhongKhamChuan();
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('mavaccine').value = 'VX' + maPK + randomNum;
 
-    document.getElementById('tenvaccine').value = '';
-    document.getElementById('loaivaccine').value = '';
-    document.getElementById('solo').value = '';
-    document.getElementById('handung').value = '';
-    document.getElementById('soluongnhap').value = '';
-    document.getElementById('datiem').value = '0';
-    document.getElementById('giaban').value = '';
-    
-    document.getElementById('modalTitle').innerText = 'Thêm vắc-xin mới vào kho';
-    document.getElementById('vaccineModal').style.display = 'flex';
-}
-
-        function moModalSua(id, tenvaccine, loaivaccine, solo, handung, soluongnhap, datiem, giaban, mavaccine) {
-            document.getElementById('editingId').value = id;
-            document.getElementById('mavaccine').value = mavaccine;
-            document.getElementById('tenvaccine').value = tenvaccine;
-            document.getElementById('loaivaccine').value = loaivaccine;
-            document.getElementById('solo').value = solo;
-            document.getElementById('handung').value = handung;
-            document.getElementById('soluongnhap').value = soluongnhap;
-            document.getElementById('datiem').value = datiem;
-            document.getElementById('giaban').value = giaban;
+            document.getElementById('tenvaccine').value = '';
+            document.getElementById('loaivaccine').value = '';
+            document.getElementById('solo').value = '';
+            document.getElementById('handung').value = '';
+            document.getElementById('soluongnhap').value = '';
+            document.getElementById('datiem').value = '0';
+            document.getElementById('giaban').value = '';
             
-            document.getElementById('modalTitle').innerText = 'Cập nhật thông tin vắc-xin (Mã: ' + mavaccine + ')';
+            document.getElementById('modalTitle').innerText = 'Thêm vắc-xin mới vào kho';
+            document.getElementById('vaccineModal').style.display = 'flex';
+        }
+
+        function moModalSua(id) {
+            const item = danhSachVaccineGoc.find(x => x.id === id);
+            if (!item) return;
+
+            const maVaccineFormatted = item.mavaccine || ('VX' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
+
+            document.getElementById('editingId').value = item.id;
+            document.getElementById('mavaccine').value = maVaccineFormatted;
+            document.getElementById('tenvaccine').value = item.tenvaccine || '';
+            document.getElementById('loaivaccine').value = item.loaivaccine || '';
+            document.getElementById('solo').value = item.solo || '';
+            document.getElementById('handung').value = item.handung || '';
+            document.getElementById('soluongnhap').value = item.soluongnhap !== null ? item.soluongnhap : '';
+            document.getElementById('datiem').value = item.datiem !== null ? item.datiem : '0';
+            document.getElementById('giaban').value = item.giaban !== null ? item.giaban : '';
+            
+            document.getElementById('modalTitle').innerText = 'Cập nhật thông tin vắc-xin';
             document.getElementById('vaccineModal').style.display = 'flex';
         }
 
@@ -422,7 +551,7 @@
         }
 
         async function xoaVaccine(id) {
-            if (confirm('Bạn có chắc chắn muốn xóa vắc-xin ID: ' + id + ' này không?')) {
+            if (confirm('Bạn có chắc chắn muốn xóa vắc-xin này không?')) {
                 const { error } = await db.from('khovaccine').delete().eq('id', id);
                 if (error) {
                     alert('Lỗi khi xóa: ' + error.message);
@@ -431,6 +560,16 @@
                     fetchDuLieuKhoVaccine();
                 }
             }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
     </script>
 </body>
