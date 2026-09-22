@@ -2,7 +2,15 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Hóa đơn & Đơn thuốc - VetCare Pro</title>
+
+    <!-- Favicon logo phòng khám -->
+    <link rel="icon" type="image/png" href="../logo/logo.png">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
     <!-- Thư viện Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/env.js"></script>
@@ -11,6 +19,7 @@
     <script src="../js/utils.js"></script>
     <script src="../js/menu.js"></script>
     <script src="../js/smart-search.js"></script>
+
     <!-- Gọi file CSS chung -->
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/mobile.css">
@@ -18,129 +27,146 @@
     <link rel="stylesheet" href="../css/smart-search.css">
 
     <style>
-        .search-box {
-            padding: 8px 12px;
-            width: 250px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-            outline: none;
-        }
-        .search-box:focus {
-            border-color: #2563eb;
-        }
-        .card-header-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #eff6ff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --green: #059669;
+            --green-bg: #ecfdf5;
+            --orange: #d97706;
+            --shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
         }
 
-        .modal-container {
-            width: 820px;
-            padding: 20px 24px;
-        }
-        .modal-header {
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-        }
-        .form-group-modal {
-            margin-bottom: 10px;
-        }
-        .form-group-modal label {
-            font-size: 13px;
-            margin-bottom: 3px;
-            display: block;
-            font-weight: 500;
-        }
-        .form-group-modal input, .form-group-modal select, .form-group-modal textarea {
-            width: 100%;
-            padding: 7px 10px;
-            font-size: 13px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        
-        .table-thuoc-modal {
-            width: 100%;
-            margin-top: 10px;
-            border-collapse: collapse;
-        }
-        .table-thuoc-modal th, .table-thuoc-modal td {
-            border: 1px solid #e2e8f0;
-            padding: 6px;
-            font-size: 12px;
-            text-align: left;
-            vertical-align: top;
-        }
-        .table-thuoc-modal th {
-            background-color: #f8fafc;
-            font-weight: 600;
-        }
-        
-        .btn-add-row {
-            background-color: #10b981;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-top: 8px;
-        }
-        .btn-add-row:hover {
-            background-color: #059669;
-        }
-        .btn-remove-row {
-            background-color: #dc2626;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 11px;
-        }
-        .btn-print-invoice {
-            background-color: #0284c7;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: 500;
-        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; min-height: 100%; }
+        body { background: var(--bg); color: var(--text); font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif; }
 
-        /* CSS Phân trang */
-        .pagination-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            font-size: 13px;
+        .content-body { background: var(--bg) !important; padding: 24px !important; min-height: calc(100vh - 60px); }
+        .dt-page { width: 100%; max-width: 1600px; margin: 0 auto; }
+
+        /* KHUNG ĐẦU TRANG */
+        .dt-top {
+            display: flex; align-items: center; justify-content: space-between; gap: 20px;
+            background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+            padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 20px;
         }
-        .pagination-buttons {
-            display: flex;
-            gap: 5px;
+        .dt-heading { display: flex; align-items: center; gap: 14px; min-width: 0; }
+        .dt-heading-icon {
+            width: 48px; height: 48px; flex: 0 0 48px; display: flex; align-items: center; justify-content: center;
+            border-radius: 12px; color: var(--primary); background: #eff6ff; font-size: 20px;
         }
-        .pagination-buttons button {
-            padding: 5px 10px;
-            border: 1px solid #cbd5e1;
-            background: #fff;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 500;
+        .dt-heading h2 { margin: 0; font-size: 18px; font-weight: 800; color: var(--text); }
+        .dt-heading p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+
+        .btn-action-primary {
+            height: 40px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--primary); color: #fff;
+            font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); transition: 0.2s;
         }
-        .pagination-buttons button:hover:not(:disabled) {
-            background: #f1f5f9;
-            border-color: #94a3b8;
+        .btn-action-primary:hover { background: var(--primary-dark); }
+
+        .btn-action-outline {
+            height: 40px; padding: 0 16px; border: 1px solid var(--border); border-radius: 10px; background: #fff;
+            color: var(--text); font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;
         }
-        .pagination-buttons button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .btn-action-outline:hover { background: #f1f5f9; border-color: #cbd5e1; }
+
+        /* THANH THỐNG KÊ TỔNG QUAN */
+        .dt-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .dt-stat { display: flex; align-items: center; gap: 14px; padding: 16px 18px; background: var(--white); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }
+        .dt-stat-icon { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 11px; color: var(--primary); background: var(--primary-light); font-size: 18px; }
+        .dt-stat:nth-child(2) .dt-stat-icon { color: #059669; background: #ecfdf5; }
+        .dt-stat:nth-child(3) .dt-stat-icon { color: #d97706; background: #fff7ed; }
+        .dt-stat-number { color: var(--text); font-size: 18px; font-weight: 800; line-height: 1.1; }
+        .dt-stat-label { margin-top: 4px; color: var(--muted); font-size: 11px; }
+
+        /* THANH CÔNG CỤ TÌM KIẾM */
+        .dt-toolbar {
+            display: flex; align-items: center; justify-content: space-between; gap: 15px;
+            background: var(--white); border: 1px solid var(--border); border-radius: 14px;
+            padding: 14px 20px; margin-bottom: 20px; box-shadow: var(--shadow); flex-wrap: wrap;
         }
+        .search-box-wrap { position: relative; min-width: 320px; }
+        .search-box-wrap i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; }
+        .search-box-wrap input {
+            width: 100%; height: 38px; padding: 0 14px 0 38px; border: 1px solid var(--border); border-radius: 9px;
+            background: #f8fafc; outline: none; font-size: 12px; color: var(--text); transition: 0.2s;
+        }
+        .search-box-wrap input:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+
+        /* BẢNG DỮ LIỆU CHÍNH */
+        .table-container {
+            background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+            box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px;
+        }
+        .custom-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        .custom-table th {
+            background: #f8fafc; color: var(--muted); font-weight: 700; font-size: 11px; text-transform: uppercase;
+            padding: 14px 16px; border-bottom: 1px solid var(--border); letter-spacing: 0.5px;
+        }
+        .custom-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: var(--text); }
+        .custom-table tr:hover { background: #f8fbff; }
+        .custom-table tr:last-child td { border-bottom: none; }
+
+        .dt-code-badge { display: inline-block; font-size: 11px; background: #eff6ff; color: var(--primary-dark); padding: 3px 8px; border-radius: 6px; font-weight: 700; }
+
+        /* NÚT THAO TÁC TRONG BẢNG */
+        .tbl-action-group { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+        .tbl-btn {
+            height: 32px; padding: 0 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: #fff; display: inline-flex; align-items: center; gap: 5px; transition: 0.15s;
+        }
+        .tbl-btn.print { color: #4338ca; border-color: #c7d2fe; background: #e0e7ff; }
+        .tbl-btn.print:hover { background: #c7d2fe; }
+        .tbl-btn.edit { color: var(--primary); border-color: #bfdbfe; background: #eff6ff; }
+        .tbl-btn.edit:hover { background: #dbeafe; }
+        .tbl-btn.delete { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
+        .tbl-btn.delete:hover { background: #fee2e2; }
+
+        /* PHÂN TRANG & FOOTER BẢNG */
+        .table-footer {
+            display: flex; align-items: center; justify-content: space-between; padding: 16px 20px;
+            background: var(--white); border-top: 1px solid var(--border); font-size: 12px; color: var(--muted);
+        }
+        .pagination { display: flex; align-items: center; gap: 5px; }
+        .page-num {
+            width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: #fff;
+            color: var(--text); font-weight: 600; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s;
+        }
+        .page-num:hover:not(:disabled) { background: #f1f5f9; border-color: #cbd5e1; }
+        .page-num:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* MODAL CHUNG */
+        .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 23, 42, .45); backdrop-filter: blur(3px); }
+        .modal-container { width: 100%; max-width: 860px; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 70px rgba(15, 23, 42, .25); animation: modalShow .18s ease; display: flex; flex-direction: column; max-height: 90vh; }
+        @keyframes modalShow { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--border); background: #f8fafc; }
+        .modal-header h3 { margin: 0; color: var(--text); font-size: 16px; font-weight: 800; }
+        .close-modal { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: #f1f5f9; color: var(--muted); font-size: 18px; cursor: pointer; }
+        .close-modal:hover { color: #dc2626; background: #fee2e2; }
+        .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+        
+        .form-group-modal { margin-bottom: 14px; }
+        .form-group-modal label { display: block; margin-bottom: 6px; color: var(--text); font-size: 12px; font-weight: 700; }
+        .form-group-modal input, .form-group-modal select, .form-group-modal textarea { width: 100%; height: 40px; padding: 0 14px; border: 1px solid var(--border); border-radius: 9px; background: #f9fafc; outline: none; font-size: 13px; color: var(--text); transition: 0.2s; }
+        .form-group-modal input:focus, .form-group-modal select:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 20px; border-top: 1px solid var(--border); background: #fafbfc; }
+
+        /* BẢNG KÊ THUỐC TRONG MODAL */
+        .table-thuoc-modal { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        .table-thuoc-modal th, .table-thuoc-modal td { border: 1px solid var(--border); padding: 8px; font-size: 12px; background: #fff; vertical-align: middle; }
+        .table-thuoc-modal th { background: #f8fafc; font-weight: 700; color: var(--muted); text-align: left; }
+
+        .btn-add-row { background: #059669; color: #fff; border: 0; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; transition: 0.15s; }
+        .btn-add-row:hover { background: #047857; }
+        .btn-remove-row { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; width: 30px; height: 30px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-remove-row:hover { background: #fee2e2; }
+
+        .empty-state { text-align: center; padding: 40px; color: var(--muted); }
+        .empty-state i { font-size: 32px; margin-bottom: 10px; color: #cbd5e1; }
     </style>
 </head>
 <body>
@@ -153,39 +179,89 @@
         <div id="topnav-container"></div>
 
         <div class="content-body">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Danh sách Hóa đơn / Đơn thuốc</h3>
-                    <div class="card-header-actions">
-                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm theo mã khám, tên chủ, tên thuốc..." onkeyup="timKiemDonThuoc()">
-                        <button class="btn-primary" onclick="moModalThem()">+ Lập hóa đơn thuốc mới</button>
+            <div class="dt-page">
+                <!-- Tiêu đề trang -->
+                <div class="dt-top">
+                    <div class="dt-heading">
+                        <div class="dt-heading-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                        <div>
+                            <h2>Danh sách Hóa đơn & Đơn thuốc</h2>
+                            <p>Quản lý hóa đơn đơn thuốc điều trị, tự động trừ kho và in hóa đơn thanh toán</p>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn-action-primary" onclick="moModalThem()"><i class="fa-solid fa-plus"></i> Lập hóa đơn thuốc mới</button>
                     </div>
                 </div>
-                
-                <div class="table-responsive">
-                    <table>
+
+                <!-- 3 Thẻ thống kê tổng quan -->
+                <div class="dt-stats">
+                    <div class="dt-stat">
+                        <div class="dt-stat-icon"><i class="fa-solid fa-receipt"></i></div>
+                        <div>
+                            <div class="dt-stat-number" id="statTongDon">0</div>
+                            <div class="dt-stat-label">Tổng số hóa đơn thuốc</div>
+                        </div>
+                    </div>
+                    <div class="dt-stat">
+                        <div class="dt-stat-icon"><i class="fa-solid fa-wallet"></i></div>
+                        <div>
+                            <div class="dt-stat-number" id="statTongDoanhThu">0 đ</div>
+                            <div class="dt-stat-label">Tổng doanh thu thuốc</div>
+                        </div>
+                    </div>
+                    <div class="dt-stat">
+                        <div class="dt-stat-icon"><i class="fa-solid fa-warehouse"></i></div>
+                        <div>
+                            <div class="dt-stat-number" id="statKhoStatus">Hoạt động</div>
+                            <div class="dt-stat-label">Trừ kho tự động</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thanh công cụ tìm kiếm -->
+                <div class="dt-toolbar">
+                    <div class="search-box-wrap">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="searchInput" placeholder="Tìm theo mã đơn, mã khám, tên chủ, tên thuốc..." oninput="timKiemDonThuoc()">
+                    </div>
+                    <div>
+                        <span id="dtCount" style="font-size: 12px; font-weight: 600; color: var(--muted);">0 đơn thuốc</span>
+                    </div>
+                </div>
+
+                <!-- Bảng danh sách hóa đơn đơn thuốc -->
+                <div class="table-container">
+                    <table class="custom-table">
                         <thead>
                             <tr>
-                                <th>Mã đơn</th>
-                                <th>Mã khám bệnh & Chủ nuôi</th>
-                                <th>Chi tiết thuốc & Hướng dẫn</th>
-                                <th>Tổng tiền</th>
-                                <th>Thao tác</th>
+                                <th style="width: 150px;">Mã đơn</th>
+                                <th style="width: 200px;">Mã khám bệnh & Chủ nuôi</th>
+                                <th>Chi tiết thuốc & Hướng dẫn sử dụng</th>
+                                <th style="width: 140px; text-align: right;">Tổng tiền (VNĐ)</th>
+                                <th style="width: 180px; text-align: right;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="data-table">
-                            <!-- Dữ liệu được nạp tự động -->
+                            <tr>
+                                <td colspan="5">
+                                    <div class="empty-state">
+                                        <i class="fa-solid fa-spinner fa-spin"></i>
+                                        <div>Đang tải dữ liệu hóa đơn đơn thuốc...</div>
+                                    </div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
-                </div>
 
-                <!-- Khu vực Phân trang -->
-                <div class="pagination-container">
-                    <div id="pagination-info">Hiển thị 0 - 0 của 0 bản ghi</div>
-                    <div class="pagination-buttons">
-                        <button id="prevBtn" onclick="doiTrang(-1)">Trang trước</button>
-                        <span id="pageIndicator" style="padding: 5px 10px; align-self: center;">Trang 1 / 1</span>
-                        <button id="nextBtn" onclick="doiTrang(1)">Trang sau</button>
+                    <!-- Phân trang dưới bảng -->
+                    <div class="table-footer">
+                        <div id="pagination-info">Hiển thị 0 bản ghi</div>
+                        <div class="pagination">
+                            <button class="page-num" id="prevBtn" onclick="doiTrang(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                            <span style="padding: 0 8px; font-weight: 700;" id="pageIndicator">1 / 1</span>
+                            <button class="page-num" id="nextBtn" onclick="doiTrang(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -197,59 +273,63 @@
         <div class="modal-container">
             <div class="modal-header">
                 <h3 id="modalTitle">Lập hóa đơn thuốc mới</h3>
-                <button class="close-modal" onclick="dongModal()">&times;</button>
+                <button class="close-modal" onclick="dongModal()">×</button>
             </div>
             
-            <input type="hidden" id="editingId">
-            
-            <!-- Ô hiển thị Mã đơn tự động -->
-            <div class="form-group-modal">
-                <label>Mã đơn (Tự động):</label>
-                <input type="text" id="madonhang" readonly style="background-color: #f1f5f9; font-weight: bold; color: #0284c7;">
-            </div>
-            
-            <div class="form-group-modal">
-                <label>Mã khám bệnh (makhambenh) (*):</label>
-                <input type="text" id="makhambenh" placeholder="Nhập mã khám bệnh (VD: 1)...">
-            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editingId">
+                
+                <div class="form-row-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group-modal">
+                        <label>Mã đơn (Tự động):</label>
+                        <input type="text" id="madonhang" readonly style="background-color: #f1f5f9; font-weight: bold; color: var(--primary-dark);">
+                    </div>
+                    <div class="form-group-modal">
+                        <label>Mã khám bệnh (*):</label>
+                        <input type="text" id="makhambenh" placeholder="Nhập mã khám bệnh (VD: 1)...">
+                    </div>
+                </div>
 
-            <div class="form-group-modal" style="margin-top: 15px;">
-                <label><strong>Danh sách thuốc sử dụng (Tự động trừ kho khi lưu):</strong></label>
-                <table class="table-thuoc-modal" id="bangChonThuoc">
-                    <thead>
-                        <tr>
-                            <th style="width: 28%;">Tên thuốc (mathuoc)</th>
-                            <th style="width: 12%;">Số lượng</th>
-                            <th style="width: 18%;">Đơn giá</th>
-                            <th style="width: 32%;">Hướng dẫn (huongdan)</th>
-                            <th style="width: 10%; text-align: center;">Xóa</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dsThuocContainer">
-                        <!-- Các dòng thuốc thêm động -->
-                    </tbody>
-                </table>
-                <button type="button" class="btn-add-row" onclick="themDongThuoc()">+ Thêm thuốc</button>
-            </div>
+                <div class="form-group-modal" style="margin-top: 10px;">
+                    <label style="color: var(--primary); font-weight: 800;"><i class="fa-solid fa-pills"></i> Danh sách thuốc sử dụng (Tự động trừ kho khi lưu):</label>
+                    <table class="table-thuoc-modal" id="bangChonThuoc">
+                        <thead>
+                            <tr>
+                                <th style="width: 32%;">Tên thuốc / Chọn từ kho</th>
+                                <th style="width: 12%; text-align: center;">Số lượng</th>
+                                <th style="width: 20%;">Đơn giá (VNĐ)</th>
+                                <th style="width: 30%;">Hướng dẫn sử dụng</th>
+                                <th style="width: 6%; text-align: center;">Xóa</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dsThuocContainer"></tbody>
+                    </table>
+                    <button type="button" class="btn-add-row" onclick="themDongThuoc()"><i class="fa-solid fa-plus"></i> Thêm thuốc</button>
+                </div>
 
-            <div style="margin-top: 15px; text-align: right; font-size: 15px; font-weight: bold;">
-                Tổng tiền: <span id="tongTienHienThi" style="color: #dc2626;">0 đ</span>
+                <div style="background: var(--primary-light); border: 1px solid #bfdbfe; padding: 12px 16px; border-radius: 10px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 13px; font-weight: 800; color: var(--primary-dark);">💰 TỔNG TIỀN ĐƠN THUỐC:</span>
+                    <span id="tongTienHienThi" style="font-size: 18px; font-weight: 800; color: #dc2626;">0 đ</span>
+                </div>
             </div>
 
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="dongModal()">Hủy</button>
-                <button class="btn-primary" onclick="luuDonThuoc()">Lưu hóa đơn & Trừ kho</button>
+                <button class="btn-action-outline" onclick="dongModal()">Hủy</button>
+                <button class="btn-action-primary" onclick="luuDonThuoc()"><i class="fa-solid fa-floppy-disk"></i> Lưu hóa đơn & Trừ kho</button>
             </div>
         </div>
     </div>
 
     <!-- KHUNG IN HÓA ĐƠN THUỐC -->
     <div id="printInvoiceArea" style="display: none;">
-        <div class="print-header"></div>
+        <div class="print-header" style="text-align: center; border-bottom: 2px solid #0284c7; padding-bottom: 6px; margin-bottom: 10px;">
+            <h2 style="font-size: 15px; margin: 0; color: #0284c7; font-weight: bold;">HỆ THỐNG PHÒNG KHÁM THÚ Y VETCARE PRO</h2>
+            <p style="font-size: 10px; margin: 2px 0; color: #555;">Địa chỉ: Chi nhánh toàn quốc | Hotline: 1900 xxxx</p>
+        </div>
         
-        <div class="print-title">
-            <h3>HÓA ĐƠN THANH TOÁN & ĐƠN THUỐC</h3>
-            <p id="inv-madon">Mã đơn: HD0001</p>
+        <div class="print-title" style="text-align: center; margin-bottom: 12px;">
+            <h3 id="inv-madon" style="font-size: 13px; margin: 0; text-transform: uppercase; color: #1e293b; font-weight: bold;">HÓA ĐƠN THANH TOÁN & ĐƠN THUỐC</h3>
+            <p style="font-size: 10px; margin: 2px 0; color: #64748b;">Chi tiết đơn thuốc điều trị</p>
         </div>
         
         <div class="print-grid" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 10px; margin-bottom: 10px; border-radius: 4px; font-size: 11px;">
@@ -272,9 +352,7 @@
                     <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: left;">Hướng dẫn</th>
                 </tr>
             </thead>
-            <tbody id="inv-table-body">
-                <!-- Dữ liệu thuốc in -->
-            </tbody>
+            <tbody id="inv-table-body"></tbody>
         </table>
 
         <div style="text-align: right; font-size: 12px; font-weight: bold; margin-bottom: 25px;">
@@ -295,59 +373,16 @@
 
     <style>
     @media print {
-        body, body * {
-            visibility: hidden !important;
-        }
-        
-        #menu-container,
-        #topnav-container,
-        .main-content,
-        .card,
-        .modal-overlay {
-            display: none !important;
-            visibility: hidden !important;
-        }
-
-        #printInvoiceArea, #printInvoiceArea * {
-            visibility: visible !important;
-        }
-        
+        body, body * { visibility: hidden !important; }
+        #menu-container, #topnav-container, .main-content, .card, .modal-overlay { display: none !important; visibility: hidden !important; }
+        #printInvoiceArea, #printInvoiceArea * { visibility: visible !important; }
         #printInvoiceArea {
-            display: block !important;
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            font-family: 'Arial', sans-serif !important;
-            color: #111 !important;
-            background: #fff !important;
-            padding: 15px !important;
-            box-sizing: border-box !important;
-            z-index: 999999 !important;
+            display: block !important; position: absolute !important; top: 0 !important; left: 0 !important;
+            width: 100% !important; font-family: 'Arial', sans-serif !important; color: #111 !important;
+            background: #fff !important; padding: 15px !important; box-sizing: border-box !important; z-index: 999999 !important;
         }
-
-        #printInvoiceArea table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-        }
-        #printInvoiceArea th, #printInvoiceArea td {
-            visibility: visible !important;
-        }
-
-        .print-header {
-            text-align: center;
-            border-bottom: 2px solid #0284c7;
-            padding-bottom: 6px;
-            margin-bottom: 10px;
-        }
-        .print-header h2 { font-size: 15px; margin: 0; color: #0284c7; font-weight: bold; }
-        .print-header p { font-size: 10px; margin: 2px 0; color: #555; }
-        .print-title {
-            text-align: center;
-            margin-bottom: 12px;
-        }
-        .print-title h3 { font-size: 13px; margin: 0; text-transform: uppercase; color: #1e293b; font-weight: bold; }
-        .print-title p { font-size: 10px; margin: 2px 0; color: #64748b; }
+        #printInvoiceArea table { width: 100% !important; border-collapse: collapse !important; }
+        #printInvoiceArea th, #printInvoiceArea td { visibility: visible !important; }
     }
     </style>
 
@@ -374,7 +409,6 @@
             }
         });
 
-        // Lấy chính xác mã phòng khám hiện tại (không bị lặp chữ PK)
         function layMaPhongKhamChuan() {
             try {
                 const userStr = sessionStorage.getItem('currentUser');
@@ -389,34 +423,28 @@
         }
 
         async function fetchDuLieuBanDau() {
+            if (typeof db === 'undefined' || !db) return;
+
             const { data: khData } = await db.from('khachhang').select('*');
-            if (khData) {
-                khData.forEach(kh => { mapKhachHang[kh.id] = kh.hovaten; });
-            }
+            if (khData) { khData.forEach(kh => { mapKhachHang[kh.id] = kh.hovaten; }); }
 
             const { data: tcData } = await db.from('thucung').select('*');
             if (tcData) {
                 tcData.forEach(tc => {
                     let maKH = tc.makhachhang || tc.makh || tc.khachhang_id;
-                    if (maKH && mapKhachHang[maKH]) {
-                        mapThuCung[tc.id] = mapKhachHang[maKH];
-                    }
+                    if (maKH && mapKhachHang[maKH]) { mapThuCung[tc.id] = mapKhachHang[maKH]; }
                 });
             }
 
             const { data: kbData } = await db.from('khambenh').select('*');
             if (kbData) {
                 kbData.forEach(kb => {
-                    if (kb.mathucung && mapThuCung[kb.mathucung]) {
-                        mapKhamBenh[kb.id] = mapThuCung[kb.mathucung];
-                    }
+                    if (kb.mathucung && mapThuCung[kb.mathucung]) { mapKhamBenh[kb.id] = mapThuCung[kb.mathucung]; }
                 });
             }
 
             const { data: khoData, error: khoErr } = await db.from('khothuoc').select('*');
-            if (!khoErr && khoData) {
-                danhSachKhoThuocGoc = khoData;
-            }
+            if (!khoErr && khoData) { danhSachKhoThuocGoc = khoData; }
 
             const { data, error } = await db.from('hoadonthuoc').select('*').order('id', { ascending: false });
             if (error) {
@@ -448,23 +476,23 @@
             tr.innerHTML = `
                 <td>
                     <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <select class="select-thuoc" onchange="chonThuocTuKho(this)" style="width:100%; padding:5px; font-size:12px;">
+                        <select class="select-thuoc" onchange="chonThuocTuKho(this)" style="width:100%; padding:6px; font-size:12px; border:1px solid var(--border); border-radius:6px; background:#fff;">
                             ${optionsHtml}
                         </select>
-                        <input type="text" class="input-mathuoc" placeholder="Hoặc gõ tên thuốc..." value="${thuocData.mathuoc || ''}" style="width:100%; padding:4px; font-size:12px; box-sizing: border-box;">
+                        <input type="text" class="input-mathuoc" placeholder="Hoặc gõ tên thuốc..." value="${escapeHtml(thuocData.mathuoc || '')}" style="width:100%; padding:6px; font-size:12px; border:1px solid var(--border); border-radius:6px;">
                     </div>
                 </td>
                 <td>
-                    <input type="number" class="input-soluong" value="${thuocData.soluong || 1}" min="1" oninput="tinhTongTien()" style="width:100%; padding:4px; font-size:12px; box-sizing: border-box;">
+                    <input type="number" class="input-soluong" value="${thuocData.soluong || 1}" min="1" oninput="tinhTongTien()" style="width:100%; padding:6px; font-size:12px; border:1px solid var(--border); border-radius:6px; text-align:center;">
                 </td>
                 <td>
-                    <input type="number" class="input-gia" value="${giaKhoiDau}" placeholder="Nhập giá..." oninput="tinhTongTien()" style="width:100%; padding:4px; font-size:12px; box-sizing: border-box;">
+                    <input type="number" class="input-gia" value="${giaKhoiDau}" placeholder="Giá..." oninput="tinhTongTien()" style="width:100%; padding:6px; font-size:12px; border:1px solid var(--border); border-radius:6px;">
                 </td>
                 <td>
-                    <input type="text" class="input-huongdan" value="${thuocData.huongdan || ''}" placeholder="VD: Sáng 1 viên..." style="width:100%; padding:4px; font-size:12px; box-sizing: border-box;">
+                    <input type="text" class="input-huongdan" value="${escapeHtml(thuocData.huongdan || '')}" placeholder="VD: Sáng 1 viên..." style="width:100%; padding:6px; font-size:12px; border:1px solid var(--border); border-radius:6px;">
                 </td>
                 <td style="text-align: center;">
-                    <button type="button" class="btn-remove-row" onclick="xoaDongThuoc('${rowId}')">Xóa</button>
+                    <button type="button" class="btn-remove-row" onclick="xoaDongThuoc('${rowId}')"><i class="fa-solid fa-trash"></i></button>
                 </td>
             `;
             container.appendChild(tr);
@@ -511,10 +539,41 @@
             const tableBody = document.getElementById('data-table');
             tableBody.innerHTML = '';
             
+            // Cập nhật thống kê
+            const tongDon = danhSachDonThuocGoc.length;
+            let tongDoanhThu = 0;
+            danhSachDonThuocGoc.forEach(item => {
+                let chiTiet = [];
+                try {
+                    chiTiet = typeof item.chitiet === 'string' ? JSON.parse(item.chitiet) : (item.chitiet || []);
+                } catch(e) {}
+                if (chiTiet.length > 0) {
+                    chiTiet.forEach(t => {
+                        let g = t.Gia !== undefined ? t.Gia : (t.gia !== undefined ? t.gia : 0);
+                        tongDoanhThu += (parseFloat(t.soluong) || 0) * (parseFloat(g) || 0);
+                    });
+                } else {
+                    let g = item.Gia !== undefined ? item.Gia : (item.gia !== undefined ? item.gia : 0);
+                    tongDoanhThu += (parseFloat(item.soluong) || 0) * (parseFloat(g) || 0);
+                }
+            });
+
+            document.getElementById('statTongDon').textContent = tongDon.toLocaleString('vi-VN');
+            document.getElementById('statTongDoanhThu').textContent = tongDoanhThu.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('dtCount').textContent = `${danhSachLoc.length} đơn thuốc`;
+
             if(danhSachLoc.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777;">Chưa có hóa đơn thuốc nào</td></tr>`;
-                document.getElementById('pagination-info').innerText = 'Hiển thị 0 - 0 của 0 bản ghi';
-                document.getElementById('pageIndicator').innerText = 'Trang 1 / 1';
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                                <div>Không tìm thấy hóa đơn đơn thuốc nào</div>
+                            </div>
+                        </td>
+                    </tr>`;
+                document.getElementById('pagination-info').innerText = 'Hiển thị 0 bản ghi';
+                document.getElementById('pageIndicator').innerText = '1 / 1';
                 document.getElementById('prevBtn').disabled = true;
                 document.getElementById('nextBtn').disabled = true;
                 return;
@@ -547,15 +606,15 @@
                 }
 
                 if (danhSachChiTiet.length > 0) {
-                    chiTietHtml = `<ul style="margin: 0; padding-left: 15px; font-size: 12px;">`;
+                    chiTietHtml = `<ul style="margin: 0; padding-left: 15px; font-size: 12px; color: var(--muted);">`;
                     danhSachChiTiet.forEach(t => {
                         const itemGia = t.Gia !== undefined ? t.Gia : (t.gia !== undefined ? t.gia : 0);
-                        chiTietHtml += `<li><b>${t.mathuoc || ''}</b> - SL: ${t.soluong || 0} - Giá: ${Number(itemGia).toLocaleString('vi-VN')}đ <i>(${t.huongdan || ''})</i></li>`;
+                        chiTietHtml += `<li><strong style="color: var(--text);">${escapeHtml(t.mathuoc || '')}</strong> - SL: ${t.soluong || 0} - Giá: ${Number(itemGia).toLocaleString('vi-VN')}đ <i>(${escapeHtml(t.huongdan || '')})</i></li>`;
                     });
                     chiTietHtml += `</ul>`;
                 } else {
                     const itemGia = item.Gia !== undefined ? item.Gia : (item.gia !== undefined ? item.gia : 0);
-                    chiTietHtml = `<b>${item.mathuoc || ''}</b> - SL: ${item.soluong || 0} - Giá: ${Number(itemGia).toLocaleString('vi-VN')}đ<br><small>HD: ${item.huongdan || ''}</small>`;
+                    chiTietHtml = `<b>${escapeHtml(item.mathuoc || '')}</b> - SL: ${item.soluong || 0} - Giá: ${Number(itemGia).toLocaleString('vi-VN')}đ<br><small style="color: var(--muted);">HD: ${escapeHtml(item.huongdan || '')}</small>`;
                 }
 
                 let tongTienVal = 0;
@@ -569,26 +628,36 @@
                     tongTienVal = (parseFloat(item.soluong) || 0) * (parseFloat(g) || 0);
                 }
 
-                tableBody.innerHTML += `<tr>
-                    <td><strong>${maDonFormatted}</strong></td>
-                    <td>
-                        <span style="color: #2563eb; font-weight: bold;">${maKBText}</span><br>
-                        <span style="color: #555; font-size: 13px;">Chủ: ${tenChuSoHuu}</span>
-                    </td>
-                    <td>${chiTietHtml}</td>
-                    <td><strong style="color: #059669;">${tongTienVal.toLocaleString('vi-VN')} đ</strong></td>
-                    <td>
-                        <button class="btn-print-invoice" onclick="inHoaDonThuoc(${item.id})">In</button>
-                        <button class="btn-edit" onclick="moModalSua(${item.id})">Sửa</button>
-                        <button class="btn-delete" onclick="xoaDonThuoc(${item.id})">Xóa</button>
-                    </td>
-                </tr>`;
+                tableBody.innerHTML += `
+                    <tr>
+                        <td><span class="dt-code-badge">${escapeHtml(maDonFormatted)}</span></td>
+                        <td>
+                            <strong style="color: var(--primary);">${escapeHtml(maKBText)}</strong><br>
+                            <span style="color: var(--muted); font-size: 12px;"><i class="fa-solid fa-user" style="font-size: 10px;"></i> ${escapeHtml(tenChuSoHuu)}</span>
+                        </td>
+                        <td>${chiTietHtml}</td>
+                        <td style="text-align: right; font-weight: 700; color: var(--green);">${tongTienVal.toLocaleString('vi-VN')} đ</td>
+                        <td style="text-align: right;">
+                            <div class="tbl-action-group">
+                                <button class="tbl-btn print" onclick="inHoaDonThuoc(${item.id})" title="In hóa đơn">
+                                    <i class="fa-solid fa-print"></i>
+                                </button>
+                                <button class="tbl-btn edit" onclick="moModalSua(${item.id})" title="Sửa đơn">
+                                    <i class="fa-solid fa-pen"></i> Sửa
+                                </button>
+                                <button class="tbl-btn delete" onclick="xoaDonThuoc(${item.id})" title="Xóa đơn">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
             });
 
             document.getElementById('pagination-info').innerText = `Hiển thị ${batDau + 1} - ${ketThuc} của ${danhSachLoc.length} bản ghi`;
-            document.getElementById('pageIndicator').innerText = `Trang ${trangHienTai} / ${tongSoTrang}`;
+            document.getElementById('pageIndicator').innerText = `${trangHienTai} / ${tongSoTrang || 1}`;
             document.getElementById('prevBtn').disabled = (trangHienTai === 1);
-            document.getElementById('nextBtn').disabled = (trangHienTai === tongSoTrang);
+            document.getElementById('nextBtn').disabled = (trangHienTai >= tongSoTrang);
         }
 
         function doiTrang(huong) {
@@ -598,8 +667,6 @@
 
         function moModalThem() {
             document.getElementById('editingId').value = '';
-            
-            // Sinh mã hóa đơn tự động chuẩn (HDPK + mã phòng khám + 4 số ngẫu nhiên)
             const maPK = layMaPhongKhamChuan();
             const randomNum = Math.floor(1000 + Math.random() * 9000);
             document.getElementById('madonhang').value = 'HDPK' + maPK + randomNum;
@@ -644,7 +711,7 @@
                 });
             }
 
-            document.getElementById('modalTitle').innerText = 'Cập nhật hóa đơn thuốc (ID: ' + id + ')';
+            document.getElementById('modalTitle').innerText = 'Cập nhật hóa đơn thuốc';
             document.getElementById('donThuocModal').style.display = 'flex';
         }
 
@@ -750,7 +817,7 @@
         }
 
         async function xoaDonThuoc(id) {
-            if (confirm('Bạn có chắc chắn muốn xóa hóa đơn thuốc ID: ' + id + ' này không?')) {
+            if (confirm('Bạn có chắc chắn muốn xóa hóa đơn thuốc này không?')) {
                 const itemCu = danhSachDonThuocGoc.find(x => x.id == id);
                 if (itemCu) {
                     let chiTietCu = [];
@@ -796,7 +863,7 @@
             const item = danhSachDonThuocGoc.find(x => x.id === id);
             if (!item) return;
 
-            document.getElementById('inv-madon').innerText = 'Mã đơn: ' + (item.madonhang || ('HD' + String(item.id).padStart(4, '0')));
+            document.getElementById('inv-madon').innerText = 'HÓA ĐƠN THANH TOÁN & ĐƠN THUỐC - ' + (item.madonhang || ('HD' + String(item.id).padStart(4, '0')));
             document.getElementById('inv-makhambenh').innerText = typeof formatMaKham === 'function' ? formatMaKham(item.makhambenh) : ('KB' + String(item.makhambenh).padStart(4, '0'));
             document.getElementById('inv-chusohuu').innerText = mapKhamBenh[item.makhambenh] || 'Không rõ chủ';
             document.getElementById('inv-ngaylap').innerText = new Date().toLocaleDateString('vi-VN');
@@ -825,17 +892,27 @@
 
                 tbody.innerHTML += `
                     <tr>
-                        <td style="border: 1px solid #cbd5e1; padding: 5px;">${t.mathuoc || ''}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px;">${escapeHtml(t.mathuoc || '')}</td>
                         <td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${sl}</td>
                         <td style="border: 1px solid #cbd5e1; padding: 5px; text-align: right;">${gia.toLocaleString('vi-VN')} đ</td>
                         <td style="border: 1px solid #cbd5e1; padding: 5px; text-align: right;">${thanhTien.toLocaleString('vi-VN')} đ</td>
-                        <td style="border: 1px solid #cbd5e1; padding: 5px;">${t.huongdan || ''}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px;">${escapeHtml(t.huongdan || '')}</td>
                     </tr>
                 `;
             });
 
             document.getElementById('inv-tongtien').innerText = tongTien.toLocaleString('vi-VN') + ' đ';
             window.print();
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
     </script>
 </body>
