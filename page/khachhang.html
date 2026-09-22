@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Khách hàng - VetCare Pro</title>
 
     <!-- Favicon logo phòng khám -->
@@ -16,7 +15,7 @@
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- VetCare -->
+    <!-- VetCare JS -->
     <script src="../js/env.js"></script>
     <script src="../js/config.js"></script>
     <script src="../js/supabase.js"></script>
@@ -36,172 +35,178 @@
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
             --primary-light: #eff6ff;
-            --text: #172033;
-            --text2: #475569;
-            --muted: #94a3b8;
-            --bg: #f4f7fb;
+            --text: #1e293b;
+            --muted: #64748b;
+            --bg: #f8fafc;
             --white: #ffffff;
-            --border: #e5eaf1;
+            --border: #e2e8f0;
             --green: #059669;
             --green-bg: #ecfdf5;
             --orange: #d97706;
             --orange-bg: #fff7ed;
-            --red: #dc2626;
-            --red-bg: #fef2f2;
-            --purple: #7c3aed;
-            --purple-bg: #f5f3ff;
-            --cyan: #0891b2;
-            --cyan-bg: #ecfeff;
-            --shadow: 0 8px 30px rgba(15, 23, 42, .055);
-            --shadow-hover: 0 14px 35px rgba(37, 99, 235, .13);
+            --shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
         }
 
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; min-height: 100%; }
         body { background: var(--bg); color: var(--text); font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif; }
 
-        .content-body { background: var(--bg) !important; padding: 18px !important; min-height: calc(100vh - 60px); }
+        .content-body { background: var(--bg) !important; padding: 24px !important; min-height: calc(100vh - 60px); }
         .customer-page { width: 100%; max-width: 1600px; margin: 0 auto; }
 
+        /* KHUNG ĐẦU TRANG */
         .customer-top {
             display: flex; align-items: center; justify-content: space-between; gap: 20px;
             background: var(--white); border: 1px solid var(--border); border-radius: 16px;
-            padding: 18px 20px; box-shadow: var(--shadow); margin-bottom: 14px;
+            padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 20px;
         }
-        .customer-heading { display: flex; align-items: center; gap: 13px; min-width: 0; }
+        .customer-heading { display: flex; align-items: center; gap: 14px; min-width: 0; }
         .customer-heading-icon {
-            width: 46px; height: 46px; flex: 0 0 46px; display: flex; align-items: center; justify-content: center;
-            border-radius: 13px; color: var(--primary); background: linear-gradient(135deg, #eff6ff, #dbeafe); font-size: 19px;
+            width: 48px; height: 48px; flex: 0 0 48px; display: flex; align-items: center; justify-content: center;
+            border-radius: 12px; color: var(--primary); background: #eff6ff; font-size: 20px;
         }
-        .customer-heading h2 { margin: 0; font-size: 19px; font-weight: 800; color: var(--text); }
-        .customer-heading p { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+        .customer-heading h2 { margin: 0; font-size: 18px; font-weight: 800; color: var(--text); }
+        .customer-heading p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
 
-        .customer-header-actions { display: flex; align-items: center; gap: 9px; }
-        .customer-search { position: relative; }
-        .customer-search i { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 13px; }
-        .customer-search input {
-            width: 285px; height: 42px; padding: 0 14px 0 38px; border: 1px solid #dce3ed; border-radius: 10px;
-            background: #f9fafc; outline: none; color: var(--text); font-size: 12px; transition: .2s;
+        .customer-header-actions { display: flex; align-items: center; gap: 10px; }
+        .btn-action-outline {
+            height: 40px; padding: 0 16px; border: 1px solid var(--border); border-radius: 10px; background: #fff;
+            color: var(--text); font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;
         }
-        .customer-search input:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, .08); }
+        .btn-action-outline:hover { background: #f1f5f9; border-color: #cbd5e1; }
 
-        .customer-add {
-            height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 16px;
-            border: 0; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff;
-            font-size: 11px; font-weight: 750; cursor: pointer; box-shadow: 0 6px 16px rgba(37, 99, 235, .22); transition: .2s;
+        .btn-action-primary {
+            height: 40px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--primary); color: #fff;
+            font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); transition: 0.2s;
         }
-        .customer-add:hover { transform: translateY(-1px); box-shadow: 0 9px 20px rgba(37, 99, 235, .28); }
+        .btn-action-primary:hover { background: var(--primary-dark); }
 
-        .customer-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
-        .customer-stat { display: flex; align-items: center; gap: 12px; min-height: 76px; padding: 12px 14px; background: var(--white); border: 1px solid var(--border); border-radius: 13px; box-shadow: var(--shadow); }
-        .customer-stat-icon { width: 38px; height: 38px; flex: 0 0 38px; display: flex; align-items: center; justify-content: center; border-radius: 10px; color: var(--primary); background: var(--primary-light); font-size: 16px; }
+        /* THANH THỐNG KÊ NHỎ */
+        .customer-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .customer-stat { display: flex; align-items: center; gap: 14px; padding: 16px 18px; background: var(--white); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }
+        .customer-stat-icon { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 11px; color: var(--primary); background: var(--primary-light); font-size: 18px; }
         .customer-stat:nth-child(2) .customer-stat-icon { color: #0891b2; background: #ecfeff; }
         .customer-stat:nth-child(3) .customer-stat-icon { color: #059669; background: #ecfdf5; }
         .customer-stat:nth-child(4) .customer-stat-icon { color: #d97706; background: #fff7ed; }
         .customer-stat-number { color: var(--text); font-size: 18px; font-weight: 800; line-height: 1.1; }
-        .customer-stat-label { margin-top: 4px; color: var(--muted); font-size: 10px; }
+        .customer-stat-label { margin-top: 4px; color: var(--muted); font-size: 11px; }
 
-        .customer-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 14px; }
-        .customer-filter { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-        .filter-btn {
-            height: 34px; padding: 0 13px; border: 1px solid #e1e7ef; border-radius: 9px; background: #fff;
-            color: #64748b; font-size: 10px; font-weight: 700; cursor: pointer; transition: .18s;
+        /* THANH CÔNG CỤ LỌC */
+        .customer-toolbar {
+            display: flex; align-items: center; justify-content: space-between; gap: 15px;
+            background: var(--white); border: 1px solid var(--border); border-radius: 14px;
+            padding: 14px 20px; margin-bottom: 20px; box-shadow: var(--shadow); flex-wrap: wrap;
         }
-        .filter-btn:hover { border-color: #bfdbfe; color: var(--primary); background: #f8fbff; }
-        .filter-btn.active { color: #fff; border-color: var(--primary); background: var(--primary); box-shadow: 0 5px 13px rgba(37, 99, 235, .18); }
-        .customer-result-count { color: #64748b; font-size: 10px; }
-        .customer-result-count strong { color: var(--text); }
-
-        .customer-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
-
-        .customer-card {
-            position: relative; display: flex; flex-direction: column; min-width: 0; background: #fff;
-            border: 1px solid var(--border); border-radius: 15px; padding: 15px; box-shadow: var(--shadow);
-            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; overflow: hidden;
+        .toolbar-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1; }
+        .search-box-wrap { position: relative; min-width: 280px; }
+        .search-box-wrap i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; }
+        .search-box-wrap input {
+            width: 100%; height: 38px; padding: 0 14px 0 38px; border: 1px solid var(--border); border-radius: 9px;
+            background: #f8fafc; outline: none; font-size: 12px; color: var(--text); transition: 0.2s;
         }
-        .customer-card:hover { transform: translateY(-3px); border-color: #d6e3f7; box-shadow: var(--shadow-hover); }
-        .customer-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 13px; }
+        .search-box-wrap input:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
 
-        .customer-avatar {
-            width: 45px; height: 45px; flex: 0 0 45px; display: flex; align-items: center; justify-content: center;
-            border-radius: 13px; color: #fff; background: linear-gradient(135deg, #3b82f6, #2563eb); font-size: 17px; font-weight: 800; text-transform: uppercase; box-shadow: 0 6px 14px rgba(37, 99, 235, .2);
+        .filter-dropdown {
+            height: 38px; padding: 0 14px; border: 1px solid var(--border); border-radius: 9px; background: #fff;
+            color: var(--text); font-size: 12px; font-weight: 600; outline: none; cursor: pointer;
         }
-        .customer-card-title { flex: 1; min-width: 0; }
-        .customer-card-name { margin: 0; color: var(--text); font-size: 14px; font-weight: 800; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .customer-card-phone { margin-top: 5px; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .customer-card-phone a { color: var(--primary); text-decoration: none; font-weight: 700; }
-        .customer-code-mini { display: inline-flex; padding: 4px 6px; margin-top: 5px; border-radius: 5px; background: #f1f5f9; color: #64748b; font-size: 8px; font-weight: 700; }
+        .filter-dropdown:hover { border-color: #cbd5e1; }
 
-        .customer-card-qr { width: 50px; height: 50px; flex: 0 0 50px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2px; background: #fff; cursor: pointer; transition: .18s; }
-        .customer-card-qr:hover { transform: scale(1.04); border-color: #bfdbfe; }
+        /* BẢNG DỮ LIỆU CHÍNH */
+        .table-container {
+            background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+            box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px;
+        }
+        .custom-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        .custom-table th {
+            background: #f8fafc; color: var(--muted); font-weight: 700; font-size: 11px; text-transform: uppercase;
+            padding: 14px 16px; border-bottom: 1px solid var(--border); letter-spacing: 0.5px;
+        }
+        .custom-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: var(--text); }
+        .custom-table tr:hover { background: #f8fbff; }
+        .custom-table tr:last-child td { border-bottom: none; }
 
-        .customer-address-box { display: flex; align-items: flex-start; gap: 7px; min-height: 35px; padding: 8px 9px; border-radius: 8px; background: #f8fafc; margin-bottom: 12px; }
-        .customer-address-box i { margin-top: 2px; color: #94a3b8; font-size: 10px; }
-        .customer-address-text { color: #64748b; font-size: 9px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        /* CÁC THÀNH PHẦN TRONG BẢNG */
+        .customer-cell-info { display: flex; align-items: center; gap: 12px; }
+        .table-avatar {
+            width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0;
+            text-transform: uppercase;
+        }
+        .customer-name-text { font-weight: 700; color: var(--text); font-size: 13px; }
+        .customer-code-mini { display: inline-block; font-size: 10px; color: var(--muted); margin-top: 2px; }
+        
+        .badge-vip {
+            display: inline-flex; align-items: center; gap: 4px; background: #fef3c7; color: #b45309;
+            font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; margin-top: 2px;
+        }
+        .badge-normal {
+            display: inline-flex; align-items: center; gap: 4px; background: #dcfce7; color: #15803d;
+            font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; margin-top: 2px;
+        }
+        .badge-new {
+            display: inline-flex; align-items: center; gap: 4px; background: #e0f2fe; color: #0369a1;
+            font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; margin-top: 2px;
+        }
 
-        .customer-pet-box { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; padding-bottom: 11px; border-bottom: 1px solid #edf1f5; }
-        .pet-info-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
-        .pet-icon { width: 32px; height: 32px; flex: 0 0 32px; display: flex; align-items: center; justify-content: center; border-radius: 9px; color: #0891b2; background: #ecfeff; font-size: 13px; }
-        .pet-label { color: #94a3b8; font-size: 8px; margin-bottom: 2px; }
-        .pet-count-text { color: var(--text); font-size: 10px; font-weight: 750; }
-        .pet-names { max-width: 125px; color: #94a3b8; font-size: 8px; text-align: right; line-height: 1.35; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .contact-info div { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+        .contact-info a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        .contact-info a:hover { text-decoration: underline; }
 
-        .customer-info-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
-        .customer-info-item { padding: 9px; border-radius: 9px; background: #fafbfc; border: 1px solid #eef1f5; }
-        .customer-info-label { color: #94a3b8; font-size: 8px; margin-bottom: 4px; }
-        .customer-info-value { color: var(--text); font-size: 10px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .customer-info-value.money { color: #0f172a; }
-        .customer-info-value.points { color: var(--green); }
+        .pet-cell-box { display: flex; align-items: center; gap: 10px; }
+        .pet-icon-wrap { width: 32px; height: 32px; border-radius: 8px; background: #ecfeff; color: #0891b2; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+        .pet-meta div:first-child { font-weight: 700; font-size: 12px; color: var(--text); }
+        .pet-meta div:last-child { font-size: 11px; color: var(--muted); max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .customer-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 11px; border-top: 1px solid #edf1f5; }
-        .customer-type { display: inline-flex; align-items: center; gap: 4px; height: 25px; padding: 0 8px; border-radius: 7px; font-size: 8px; font-weight: 800; }
-        .type-new { color: #0369a1; background: #e0f2fe; }
-        .type-normal { color: #15803d; background: #dcfce7; }
-        .type-vip { color: #b45309; background: #fef3c7; }
+        .status-tag-kham {
+            display: inline-flex; align-items: center; gap: 5px; background: #ecfdf5; color: #059669;
+            font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; margin-top: 2px;
+        }
+        .money-text { font-weight: 750; color: #0f172a; }
 
-        .card-actions { display: flex; gap: 4px; }
-        .card-action { width: 29px; height: 27px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 7px; cursor: pointer; font-size: 10px; transition: .15s; }
-        .card-action:hover { transform: translateY(-1px); }
-        .card-action-pet { color: #047857; background: #d1fae5; }
-        .card-action-edit { color: #b45309; background: #ffedd5; }
-        .card-action-delete { color: #b91c1c; background: #fee2e2; }
+        /* HÀNH ĐỘNG TABLE */
+        .table-actions { display: flex; align-items: center; gap: 6px; }
+        .tbl-btn {
+            width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: #fff;
+            color: var(--muted); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s; font-size: 12px;
+        }
+        .tbl-btn:hover { background: #f1f5f9; color: var(--primary); border-color: #cbd5e1; }
+        .tbl-btn.pet { color: #047857; background: #d1fae5; border-color: #a7f3d0; }
+        .tbl-btn.pet:hover { background: #a7f3d0; }
+        .tbl-btn.edit { color: #b45309; background: #ffedd5; border-color: #fed7aa; }
+        .tbl-btn.edit:hover { background: #fed7aa; }
+        .tbl-btn.delete { color: #b91c1c; background: #fee2e2; border-color: #fecaca; }
+        .tbl-btn.delete:hover { background: #fecaca; }
 
-        .customer-empty { grid-column: 1 / -1; min-height: 280px; display: flex; align-items: center; justify-content: center; flex-direction: column; background: #fff; border: 1px dashed #dbe3ee; border-radius: 15px; color: #94a3b8; text-align: center; }
-        .customer-empty i { width: 58px; height: 58px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; border-radius: 16px; color: #94a3b8; background: #f1f5f9; font-size: 23px; }
-        .customer-empty strong { color: #64748b; font-size: 13px; }
-        .customer-empty span { margin-top: 5px; font-size: 10px; }
+        /* PHÂN TRANG & FOOTER BẢNG */
+        .table-footer {
+            display: flex; align-items: center; justify-content: space-between; padding: 16px 20px;
+            background: var(--white); border-top: 1px solid var(--border); font-size: 12px; color: var(--muted);
+        }
+        .pagination { display: flex; align-items: center; gap: 5px; }
+        .page-num {
+            width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: #fff;
+            color: var(--text); font-weight: 600; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s;
+        }
+        .page-num.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-        .customer-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 2px 2px; color: #94a3b8; font-size: 10px; }
-        .customer-pagination { display: flex; align-items: center; gap: 4px; }
-        .customer-page-btn { min-width: 29px; height: 29px; padding: 0 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #e1e7ef; border-radius: 7px; color: #64748b; background: #fff; font-size: 9px; cursor: pointer; transition: .15s; }
-        .customer-page-btn:hover { border-color: #bfdbfe; color: var(--primary); }
-        .customer-page-btn.active { color: #fff; background: var(--primary); border-color: var(--primary); }
-
+        /* MODAL */
         .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 23, 42, .45); backdrop-filter: blur(3px); }
         .modal-container { width: 100%; max-width: 480px; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 70px rgba(15, 23, 42, .25); animation: modalShow .18s ease; }
         @keyframes modalShow { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 17px 18px; border-bottom: 1px solid #edf1f5; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--border); }
         .modal-header h3 { margin: 0; color: var(--text); font-size: 16px; font-weight: 800; }
-        .close-modal { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: #f1f5f9; color: #64748b; font-size: 20px; cursor: pointer; }
+        .close-modal { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: #f1f5f9; color: var(--muted); font-size: 18px; cursor: pointer; }
         .close-modal:hover { color: #dc2626; background: #fee2e2; }
-        .modal-body { padding: 18px; }
-        .form-group-modal { margin-bottom: 14px; }
-        .form-group-modal label { display: block; margin-bottom: 6px; color: #475569; font-size: 11px; font-weight: 700; }
-        .form-group-modal input { width: 100%; height: 42px; padding: 0 12px; border: 1px solid #dce3ed; border-radius: 9px; background: #f9fafc; outline: none; color: #172033; font-size: 12px; transition: .18s; }
-        .form-group-modal input:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, .08); }
-        .modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 18px; border-top: 1px solid #edf1f5; background: #fafbfc; }
-        .btn-secondary, .btn-primary { height: 38px; padding: 0 15px; border: 0; border-radius: 8px; font-size: 11px; font-weight: 750; cursor: pointer; }
-        .btn-secondary { color: #64748b; background: #e2e8f0; }
-        .btn-primary { color: #fff; background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .modal-body { padding: 20px; }
+        .form-group-modal { margin-bottom: 16px; }
+        .form-group-modal label { display: block; margin-bottom: 6px; color: var(--text); font-size: 12px; font-weight: 700; }
+        .form-group-modal input { width: 100%; height: 42px; padding: 0 14px; border: 1px solid var(--border); border-radius: 9px; background: #f9fafc; outline: none; font-size: 13px; color: var(--text); transition: 0.2s; }
+        .form-group-modal input:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 20px; border-top: 1px solid var(--border); background: #fafbfc; }
 
-        .customer-loading { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; min-height: 260px; background: #fff; border-radius: 15px; color: #94a3b8; font-size: 11px; }
-        .customer-loading i { margin-right: 8px; color: var(--primary); animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        @media (max-width: 1250px) { .customer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-        @media (max-width: 1050px) { .customer-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .customer-top { flex-direction: column; align-items: stretch; } }
-        @media (max-width: 850px) { .customer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-        @media (max-width: 600px) { .customer-grid { grid-template-columns: 1fr; } }
+        .empty-state { text-align: center; padding: 40px; color: var(--muted); }
+        .empty-state i { font-size: 32px; margin-bottom: 10px; color: #cbd5e1; }
     </style>
 </head>
 
@@ -213,23 +218,21 @@
 
         <div class="content-body">
             <div class="customer-page">
+                <!-- Tiêu đề trang -->
                 <div class="customer-top">
                     <div class="customer-heading">
                         <div class="customer-heading-icon"><i class="fa-solid fa-users"></i></div>
                         <div>
                             <h2>Danh sách khách hàng</h2>
-                            <p>Quản lý khách hàng, thú cưng và lịch sử giao dịch</p>
+                            <p>Quản lý thông tin khách hàng, thú cưng và lịch sử giao dịch</p>
                         </div>
                     </div>
                     <div class="customer-header-actions">
-                        <div class="customer-search">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" id="searchInput" placeholder="Tìm tên, SĐT hoặc mã khách hàng..." oninput="timKiemKhachHang()">
-                        </div>
-                        <button class="customer-add" onclick="moModalThem()"><i class="fa-solid fa-plus"></i> Thêm khách hàng</button>
+                        <button class="btn-action-primary" onclick="moModalThem()"><i class="fa-solid fa-plus"></i> Thêm khách hàng</button>
                     </div>
                 </div>
 
+                <!-- 4 Thẻ thống kê tổng quan -->
                 <div class="customer-stats">
                     <div class="customer-stat">
                         <div class="customer-stat-icon"><i class="fa-solid fa-users"></i></div>
@@ -249,43 +252,82 @@
                         <div class="customer-stat-icon"><i class="fa-solid fa-wallet"></i></div>
                         <div>
                             <div class="customer-stat-number" id="statChiTieu">0 đ</div>
-                            <div class="customer-stat-label">Tổng chi tiêu</div>
+                            <div class="customer-stat-label">Tổng chi tiêu hệ thống</div>
                         </div>
                     </div>
                     <div class="customer-stat">
                         <div class="customer-stat-icon"><i class="fa-solid fa-star"></i></div>
                         <div>
                             <div class="customer-stat-number" id="statDiem">0</div>
-                            <div class="customer-stat-label">Điểm tích lũy</div>
+                            <div class="customer-stat-label">Tổng điểm tích lũy</div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Thanh tìm kiếm và bộ lọc -->
                 <div class="customer-toolbar">
-                    <div class="customer-filter">
-                        <button class="filter-btn active" data-filter="all" onclick="doiBoLoc('all', this)"><i class="fa-solid fa-layer-group"></i> Tất cả</button>
-                        <button class="filter-btn" data-filter="pet" onclick="doiBoLoc('pet', this)"><i class="fa-solid fa-paw"></i> Có thú cưng</button>
-                        <button class="filter-btn" data-filter="nopet" onclick="doiBoLoc('nopet', this)"><i class="fa-solid fa-user"></i> Chưa có thú cưng</button>
-                        <button class="filter-btn" data-filter="vip" onclick="doiBoLoc('vip', this)"><i class="fa-solid fa-crown"></i> VIP</button>
+                    <div class="toolbar-left">
+                        <div class="search-box-wrap">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="searchInput" placeholder="Tìm theo tên, SĐT, mã khách hàng..." oninput="timKiemKhachHang()">
+                        </div>
+                        <select class="filter-dropdown" id="filterCustomerType" onchange="timKiemKhachHang()">
+                            <option value="all">Tất cả khách hàng</option>
+                            <option value="vip">Khách hàng VIP</option>
+                            <option value="normal">Khách hàng Thường</option>
+                            <option value="new">Khách hàng Mới</option>
+                        </select>
+                        <select class="filter-dropdown" id="filterPet" onchange="timKiemKhachHang()">
+                            <option value="all">Tất cả thú cưng</option>
+                            <option value="has_pet">Có thú cưng</option>
+                            <option value="no_pet">Chưa có thú cưng</option>
+                        </select>
                     </div>
-                    <div class="customer-result-count" id="customerResultCount">Hiển thị <strong>0</strong> khách hàng</div>
+                    <div>
+                        <button class="btn-action-outline" onclick="lamMoiDuLieu()"><i class="fa-solid fa-rotate"></i> Làm mới</button>
+                    </div>
                 </div>
 
-                <div class="customer-grid" id="data-table">
-                    <div class="customer-loading">
-                        <i class="fa-solid fa-spinner"></i> Đang tải dữ liệu khách hàng...
-                    </div>
-                </div>
+                <!-- Bảng danh sách dữ liệu -->
+                <div class="table-container">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>Khách hàng</th>
+                                <th>Liên hệ</th>
+                                <th>Địa chỉ</th>
+                                <th>Thú cưng</th>
+                                <th>Lần khám gần nhất</th>
+                                <th>Tổng chi tiêu</th>
+                                <th style="width: 130px; text-align: right;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerTableBody">
+                            <tr>
+                                <td colspan="8">
+                                    <div class="empty-state">
+                                        <i class="fa-solid fa-spinner fa-spin"></i>
+                                        <div>Đang tải dữ liệu khách hàng...</div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
 
-                <div class="customer-footer">
-                    <div id="customerCount">0 khách hàng</div>
-                    <div class="customer-pagination" id="customerPagination"></div>
+                    <!-- Chân bảng & Phân trang -->
+                    <div class="table-footer">
+                        <div id="tableInfoCount">Hiển thị 0 khách hàng</div>
+                        <div class="pagination" id="tablePagination">
+                            <button class="page-num active">1</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL -->
+    <!-- MODAL THÊM / SỬA KHÁCH HÀNG -->
     <div class="modal-overlay" id="customerModal">
         <div class="modal-container">
             <div class="modal-header">
@@ -296,7 +338,7 @@
                 <input type="hidden" id="editingId">
                 <div class="form-group-modal">
                     <label>Họ và tên *</label>
-                    <input type="text" id="hovaten" placeholder="Nhập họ và tên...">
+                    <input type="text" id="hovaten" placeholder="Nhập họ và tên khách hàng...">
                 </div>
                 <div class="form-group-modal">
                     <label>Số điện thoại</label>
@@ -304,12 +346,12 @@
                 </div>
                 <div class="form-group-modal">
                     <label>Địa chỉ</label>
-                    <input type="text" id="diachi" placeholder="Nhập địa chỉ...">
+                    <input type="text" id="diachi" placeholder="Nhập địa chỉ khu vực...">
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="dongModal()">Hủy</button>
-                <button class="btn-primary" onclick="luuKhachHang()"><i class="fa-solid fa-floppy-disk"></i> Lưu dữ liệu</button>
+                <button class="btn-action-outline" onclick="dongModal()">Hủy</button>
+                <button class="btn-action-primary" onclick="luuKhachHang()"><i class="fa-solid fa-floppy-disk"></i> Lưu thông tin</button>
             </div>
         </div>
     </div>
@@ -318,7 +360,6 @@
         let danhSachKhachHangGoc = [];
         let mapThuCung = {};
         let mapLichSuKham = {};
-        let boLocHienTai = 'all';
 
         function chuanHoaSoDienThoai(sdt) {
             if (!sdt) return '';
@@ -366,17 +407,23 @@
         }
 
         async function fetchKhachHang() {
-            const tableBody = document.getElementById('data-table');
+            const tableBody = document.getElementById('customerTableBody');
             tableBody.innerHTML = `
-                <div class="customer-loading">
-                    <i class="fa-solid fa-spinner"></i> Đang tải dữ liệu khách hàng...
-                </div>
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                            <div>Đang tải dữ liệu khách hàng...</div>
+                        </div>
+                    </td>
+                </tr>
             `;
 
             try {
                 mapThuCung = {};
                 mapLichSuKham = {};
 
+                // 1. Lấy danh sách thú cưng
                 const { data: tcData, error: tcError } = await db.from('thucung').select('*');
                 let petToKhach = {};
                 if (!tcError && tcData) {
@@ -413,6 +460,7 @@
                     }
                 }
 
+                // 2. Quét chi tiêu toàn diện qua tất cả các bảng
                 window.khamToPet = {};
                 const { data: kbData } = await db.from('khambenh').select('*');
                 if (kbData) {
@@ -483,6 +531,7 @@
 
                 mapLichSuKham = thongKeChiTieu;
 
+                // 3. Tải danh sách khách hàng theo phòng khám
                 const maphongkham = sessionStorage.getItem('maphongkham') || '';
                 const cleanCurrentPK = maphongkham ? maphongkham.replace(/_/g, '').trim().toLowerCase() : '';
 
@@ -499,7 +548,7 @@
                         return dbPK === cleanCurrentPK;
                     });
                 } else {
-                    danhSachKhachHangGoc = [];
+                    danhSachKhachHangGoc = danhSachTatCa;
                 }
 
                 hienThiBang(danhSachKhachHangGoc);
@@ -509,17 +558,20 @@
         }
 
         function hienThiLoi(message) {
-            document.getElementById('data-table').innerHTML = `
-                <div class="customer-empty">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                    <strong>${escapeHtml(message)}</strong>
-                    <span>Vui lòng kiểm tra kết nối hoặc thử tải lại trang.</span>
-                </div>
+            document.getElementById('customerTableBody').innerHTML = `
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i>
+                            <div>${escapeHtml(message)}</div>
+                        </div>
+                    </td>
+                </tr>
             `;
         }
 
         function hienThiBang(data) {
-            const grid = document.getElementById('data-table');
+            const tbody = document.getElementById('customerTableBody');
             const tongKhach = danhSachKhachHangGoc.length;
             let tongPet = 0, tongTienTatCa = 0, tongDiemTatCa = 0;
 
@@ -535,36 +587,36 @@
             document.getElementById('statChiTieu').textContent = formatTien(tongTienTatCa);
             document.getElementById('statDiem').textContent = tongDiemTatCa.toLocaleString('vi-VN');
 
-            grid.innerHTML = '';
+            tbody.innerHTML = '';
             if (!data || !data.length) {
-                grid.innerHTML = `
-                    <div class="customer-empty">
-                        <i class="fa-solid fa-user-slash"></i>
-                        <strong>Không tìm thấy khách hàng</strong>
-                        <span>Thử thay đổi từ khóa hoặc bộ lọc.</span>
-                    </div>
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-user-slash"></i>
+                                <div>Không tìm thấy khách hàng nào</div>
+                            </div>
+                        </td>
+                    </tr>
                 `;
-                capNhatFooter(0);
+                document.getElementById('tableInfoCount').textContent = 'Hiển thị 0 khách hàng';
                 return;
             }
 
-            data.forEach(item => {
-                grid.innerHTML += taoCardKhachHang(item);
+            data.forEach((item, index) => {
+                tbody.innerHTML += taoRowKhachHang(item, index + 1);
             });
 
-            capNhatFooter(data.length);
+            document.getElementById('tableInfoCount').textContent = `Hiển thị ${data.length} khách hàng`;
         }
 
-        function taoCardKhachHang(item) {
+        function taoRowKhachHang(item, stt) {
             const info = layThongTinKhachHang(item);
             const maKhachHang = item.makhachhang || (typeof formatMaKhachHang === 'function' ? formatMaKhachHang(item.id) : 'KH' + item.id);
             const tenHienThi = item.hovaten || item.ten || 'Chưa có tên';
             const sdt = item.sodienthoai || item.sdt || '';
             const displaySdt = chuanHoaSoDienThoai(sdt);
             const diaChi = item.diachi || 'Chưa có địa chỉ';
-
-            const qrData = encodeURIComponent(`KH_${item.id}_${tenHienThi}_${displaySdt}`);
-            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${qrData}`;
 
             const dsPet = info.pets;
             const soLuongPet = info.soPet;
@@ -575,89 +627,71 @@
 
             let loaiKhachHtml = '';
             if (info.loai === 'vip') {
-                loaiKhachHtml = `<span class="customer-type type-vip"><i class="fa-solid fa-crown"></i> VIP</span>`;
+                loaiKhachHtml = `<span class="badge-vip"><i class="fa-solid fa-crown"></i> VIP</span>`;
             } else if (info.loai === 'normal') {
-                loaiKhachHtml = `<span class="customer-type type-normal"><i class="fa-solid fa-user-check"></i> Thường</span>`;
+                loaiKhachHtml = `<span class="badge-normal"><i class="fa-solid fa-user-check"></i> Thường</span>`;
             } else {
-                loaiKhachHtml = `<span class="customer-type type-new"><i class="fa-solid fa-user-plus"></i> Mới</span>`;
+                loaiKhachHtml = `<span class="badge-new"><i class="fa-solid fa-user-plus"></i> Mới</span>`;
             }
 
             const phoneHtml = displaySdt ? `<a href="tel:${escapeHtml(displaySdt)}"><i class="fa-solid fa-phone"></i> ${escapeHtml(displaySdt)}</a>` : `<span style="color:#94a3b8">Chưa có SĐT</span>`;
 
-            return `
-                <div class="customer-card" data-id="${item.id}" data-type="${info.loai}" data-has-pet="${soLuongPet > 0 ? 'yes' : 'no'}">
-                    <div class="customer-card-top">
-                        <div class="customer-avatar">${escapeHtml(layChuAvatar(tenHienThi))}</div>
-                        <div class="customer-card-title">
-                            <h3 class="customer-card-name" title="${escapeHtml(tenHienThi)}">${escapeHtml(tenHienThi)}</h3>
-                            <div class="customer-card-phone">${phoneHtml}</div>
-                            <span class="customer-code-mini">${escapeHtml(maKhachHang)}</span>
+            let petHtml = `<span style="color: var(--muted); font-style: italic;">Chưa có thú cưng</span>`;
+            if (soLuongPet > 0) {
+                petHtml = `
+                    <div class="pet-cell-box">
+                        <div class="pet-icon-wrap"><i class="fa-solid fa-paw"></i></div>
+                        <div class="pet-meta">
+                            <div>${soLuongPet} thú cưng</div>
+                            <div title="${escapeHtml(tenPetText)}">${escapeHtml(tenPetText)}</div>
                         </div>
-                        <img class="customer-card-qr" src="${qrImageUrl}" alt="QR khách hàng" title="Nhấn để xem QR" onclick="moQR('${qrImageUrl}')">
                     </div>
-                    <div class="customer-address-box">
-                        <i class="fa-solid fa-location-dot"></i>
-                        <div class="customer-address-text" title="${escapeHtml(diaChi)}">${escapeHtml(diaChi)}</div>
-                    </div>
-                    <div class="customer-pet-box">
-                        <div class="pet-info-left">
-                            <div class="pet-icon"><i class="fa-solid fa-paw"></i></div>
+                `;
+            }
+
+            let ngayKhamStr = '---';
+            if (info.lich.lanKhamGanNhat) {
+                ngayKhamStr = `${lanKhamText}<br><span class="status-tag-kham"><i class="fa-solid fa-check"></i> Đã khám</span>`;
+            }
+
+            return `
+                <tr>
+                    <td style="font-weight: 600; color: var(--muted);">${stt}</td>
+                    <td>
+                        <div class="customer-cell-info">
+                            <div class="table-avatar">${escapeHtml(layChuAvatar(tenHienThi))}</div>
                             <div>
-                                <div class="pet-label">Thú cưng</div>
-                                <div class="pet-count-text">${soLuongPet} thú cưng</div>
+                                <div class="customer-name-text">${escapeHtml(tenHienThi)}</div>
+                                <span class="customer-code-mini">${escapeHtml(maKhachHang)}</span><br>
+                                ${loaiKhachHtml}
                             </div>
                         </div>
-                        <div class="pet-names" title="${escapeHtml(tenPetText)}">${escapeHtml(tenPetText)}</div>
-                    </div>
-                    <div class="customer-info-grid">
-                        <div class="customer-info-item">
-                            <div class="customer-info-label">Lần khám gần nhất</div>
-                            <div class="customer-info-value" title="${escapeHtml(lanKhamText)}">${escapeHtml(lanKhamText)}</div>
+                    </td>
+                    <td>
+                        <div class="contact-info">
+                            <div><i class="fa-solid fa-phone" style="width: 14px;"></i> ${phoneHtml}</div>
                         </div>
-                        <div class="customer-info-item">
-                            <div class="customer-info-label">Tổng chi tiêu</div>
-                            <div class="customer-info-value money">${escapeHtml(tongChiTieuText)}</div>
+                    </td>
+                    <td><div style="max-width: 160px; font-size: 12px; color: var(--muted);"><i class="fa-solid fa-location-dot" style="color: var(--primary);"></i> ${escapeHtml(diaChi)}</div></td>
+                    <td>${petHtml}</td>
+                    <td style="font-size: 12px;">${ngayKhamStr}</td>
+                    <td><span class="money-text">${escapeHtml(tongChiTieuText)}</span></td>
+                    <td style="text-align: right;">
+                        <div class="table-actions" style="justify-content: flex-end;">
+                            <button class="tbl-btn pet" title="Quản lý thú cưng" onclick="themThuCungChoKhach(${item.id})"><i class="fa-solid fa-paw"></i></button>
+                            <button class="tbl-btn edit" title="Sửa khách hàng" onclick="moModalSua(${item.id})"><i class="fa-solid fa-pen"></i></button>
+                            <button class="tbl-btn delete" title="Xóa khách hàng" onclick="xoaKhachHang(${item.id})"><i class="fa-solid fa-trash"></i></button>
                         </div>
-                        <div class="customer-info-item">
-                            <div class="customer-info-label">Điểm tích lũy</div>
-                            <div class="customer-info-value points"><i class="fa-solid fa-star"></i> ${info.diem} điểm</div>
-                        </div>
-                        <div class="customer-info-item">
-                            <div class="customer-info-label">Số lần giao dịch</div>
-                            <div class="customer-info-value">${info.lich.soLan || 0} lần</div>
-                        </div>
-                    </div>
-                    <div class="customer-card-footer">
-                        ${loaiKhachHtml}
-                        <div class="card-actions">
-                            <button class="card-action card-action-pet" title="Quản lý thú cưng" onclick="themThuCungChoKhach(${item.id})"><i class="fa-solid fa-paw"></i></button>
-                            <button class="card-action card-action-edit" title="Sửa khách hàng" onclick="moModalSua(${item.id})"><i class="fa-solid fa-pen"></i></button>
-                            <button class="card-action card-action-delete" title="Xóa khách hàng" onclick="xoaKhachHang(${item.id})"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </div>
-                </div>
+                    </td>
+                </tr>
             `;
-        }
-
-        function capNhatFooter(total) {
-            document.getElementById('customerCount').textContent = `${total.toLocaleString('vi-VN')} khách hàng`;
-            document.getElementById('customerResultCount').innerHTML = `Hiển thị <strong>${total.toLocaleString('vi-VN')}</strong> khách hàng`;
-            document.getElementById('customerPagination').innerHTML = total > 0 ? `<button class="customer-page-btn active" type="button">1</button>` : '';
         }
 
         function timKiemKhachHang() {
             const tuKhoa = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
-            locVaHienThi(tuKhoa, boLocHienTai);
-        }
+            const loaiKH = document.getElementById('filterCustomerType')?.value || 'all';
+            const locPet = document.getElementById('filterPet')?.value || 'all';
 
-        function doiBoLoc(filter, button) {
-            boLocHienTai = filter;
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            if (button) button.classList.add('active');
-            timKiemKhachHang();
-        }
-
-        function locVaHienThi(tuKhoa, filter) {
             let ketQua = danhSachKhachHangGoc.filter(item => {
                 const ten = String(item.hovaten || item.ten || '').toLowerCase();
                 const sdt = String(item.sodienthoai || item.sdt || '').toLowerCase();
@@ -668,16 +702,46 @@
                 if (!matchSearch) return false;
 
                 const info = layThongTinKhachHang(item);
-                if (filter === 'pet') return info.soPet > 0;
-                if (filter === 'nopet') return info.soPet === 0;
-                if (filter === 'vip') return info.loai === 'vip';
+                if (loaiKH !== 'all' && info.loai !== loaiKH) return false;
+                if (locPet === 'has_pet' && info.soPet === 0) return false;
+                if (locPet === 'no_pet' && info.soPet > 0) return false;
+
                 return true;
             });
-            hienThiBang(ketQua);
+
+            const tbody = document.getElementById('customerTableBody');
+            tbody.innerHTML = '';
+            if (!ketQua.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-user-slash"></i>
+                                <div>Không tìm thấy khách hàng phù hợp</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('tableInfoCount').textContent = 'Hiển thị 0 khách hàng';
+                return;
+            }
+
+            ketQua.forEach((item, index) => {
+                tbody.innerHTML += taoRowKhachHang(item, index + 1);
+            });
+            document.getElementById('tableInfoCount').textContent = `Hiển thị ${ketQua.length} khách hàng`;
         }
 
-        function moQR(url) { window.open(url, '_blank'); }
-        function themThuCungChoKhach(makhachhang) { window.location.href = `thucung.html?makhachhang=${encodeURIComponent(makhachhang)}`; }
+        function lamMoiDuLieu() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterCustomerType').value = 'all';
+            document.getElementById('filterPet').value = 'all';
+            fetchKhachHang();
+        }
+
+        function themThuCungChoKhach(makhachhang) {
+            window.location.href = `thucung.html?makhachhang=${encodeURIComponent(makhachhang)}`;
+        }
 
         function moModalThem() {
             document.getElementById('editingId').value = '';
