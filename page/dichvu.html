@@ -2,103 +2,160 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Dịch vụ - VetCare Pro</title>
-    <!-- Thư viện Supabase JS -->
+
+    <!-- Favicon logo phòng khám -->
+    <link rel="icon" type="image/png" href="../logo/logo.png">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-	<script src="../js/env.js"></script>
+    <script src="../js/env.js"></script>
     <script src="../js/config.js"></script>
     <script src="../js/supabase.js"></script>
     <script src="../js/utils.js"></script>
     <script src="../js/menu.js"></script>
-	<script src="../js/smart-search.js"></script>
-    <!-- Gọi file CSS chung -->
+    <script src="../js/smart-search.js"></script>
+
+    <!-- CSS chung -->
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/mobile.css">
     <link rel="stylesheet" href="../css/style1.css">
-	<link rel="stylesheet" href="../css/smart-search.css">
+    <link rel="stylesheet" href="../css/smart-search.css">
 
     <style>
-        .search-box {
-            padding: 8px 12px;
-            width: 250px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-            outline: none;
-        }
-        .search-box:focus {
-            border-color: #2563eb;
-        }
-        .card-header-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #eff6ff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --green: #059669;
+            --green-bg: #ecfdf5;
+            --shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
         }
 
-        /* Tối ưu modal gọn gàng */
-        .modal-container {
-            width: 500px;
-            padding: 20px 24px;
-        }
-        .modal-header {
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-        }
-        .form-group-modal {
-            margin-bottom: 10px;
-        }
-        .form-group-modal label {
-            font-size: 13px;
-            margin-bottom: 3px;
-            display: block;
-            font-weight: 500;
-        }
-        .form-group-modal input, .form-group-modal textarea {
-            width: 100%;
-            padding: 7px 10px;
-            font-size: 13px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .modal-footer {
-            margin-top: 15px;
-            padding-top: 10px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; min-height: 100%; }
+        body { background: var(--bg); color: var(--text); font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif; }
 
-        /* CSS Phân trang */
-        .pagination-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            font-size: 13px;
+        .content-body { background: var(--bg) !important; padding: 24px !important; min-height: calc(100vh - 60px); }
+        .dv-page { width: 100%; max-width: 1600px; margin: 0 auto; }
+
+        /* KHUNG ĐẦU TRANG */
+        .dv-top {
+            display: flex; align-items: center; justify-content: space-between; gap: 20px;
+            background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+            padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 20px;
         }
-        .pagination-buttons {
-            display: flex;
-            gap: 5px;
+        .dv-heading { display: flex; align-items: center; gap: 14px; min-width: 0; }
+        .dv-heading-icon {
+            width: 48px; height: 48px; flex: 0 0 48px; display: flex; align-items: center; justify-content: center;
+            border-radius: 12px; color: var(--primary); background: #eff6ff; font-size: 20px;
         }
-        .pagination-buttons button {
-            padding: 5px 10px;
-            border: 1px solid #cbd5e1;
-            background: #fff;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 500;
+        .dv-heading h2 { margin: 0; font-size: 18px; font-weight: 800; color: var(--text); }
+        .dv-heading p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+
+        .btn-action-primary {
+            height: 40px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--primary); color: #fff;
+            font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); transition: 0.2s;
         }
-        .pagination-buttons button:hover:not(:disabled) {
-            background: #f1f5f9;
-            border-color: #94a3b8;
+        .btn-action-primary:hover { background: var(--primary-dark); }
+
+        .btn-action-outline {
+            height: 40px; padding: 0 16px; border: 1px solid var(--border); border-radius: 10px; background: #fff;
+            color: var(--text); font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;
         }
-        .pagination-buttons button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .btn-action-outline:hover { background: #f1f5f9; border-color: #cbd5e1; }
+
+        /* THANH THỐNG KÊ TỔNG QUAN */
+        .dv-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .dv-stat { display: flex; align-items: center; gap: 14px; padding: 16px 18px; background: var(--white); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }
+        .dv-stat-icon { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 11px; color: var(--primary); background: var(--primary-light); font-size: 18px; }
+        .dv-stat:nth-child(2) .dv-stat-icon { color: #0891b2; background: #ecfeff; }
+        .dv-stat:nth-child(3) .dv-stat-icon { color: #059669; background: #ecfdf5; }
+        .dv-stat-number { color: var(--text); font-size: 18px; font-weight: 800; line-height: 1.1; }
+        .dv-stat-label { margin-top: 4px; color: var(--muted); font-size: 11px; }
+
+        /* THANH CÔNG CỤ TÌM KIẾM */
+        .dv-toolbar {
+            display: flex; align-items: center; justify-content: space-between; gap: 15px;
+            background: var(--white); border: 1px solid var(--border); border-radius: 14px;
+            padding: 14px 20px; margin-bottom: 20px; box-shadow: var(--shadow); flex-wrap: wrap;
         }
+        .search-box-wrap { position: relative; min-width: 300px; }
+        .search-box-wrap i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; }
+        .search-box-wrap input {
+            width: 100%; height: 38px; padding: 0 14px 0 38px; border: 1px solid var(--border); border-radius: 9px;
+            background: #f8fafc; outline: none; font-size: 12px; color: var(--text); transition: 0.2s;
+        }
+        .search-box-wrap input:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+
+        /* BẢNG DỮ LIỆU CHÍNH */
+        .table-container {
+            background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+            box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px;
+        }
+        .custom-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        .custom-table th {
+            background: #f8fafc; color: var(--muted); font-weight: 700; font-size: 11px; text-transform: uppercase;
+            padding: 14px 16px; border-bottom: 1px solid var(--border); letter-spacing: 0.5px;
+        }
+        .custom-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: var(--text); }
+        .custom-table tr:hover { background: #f8fbff; }
+        .custom-table tr:last-child td { border-bottom: none; }
+
+        .dv-code-badge { display: inline-block; font-size: 11px; background: #f1f5f9; color: var(--primary-dark); padding: 3px 8px; border-radius: 6px; font-weight: 700; }
+        .dv-group-badge { display: inline-block; font-size: 11px; background: #ecfeff; color: #0891b2; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+
+        /* NÚT THAO TÁC TRONG BẢNG */
+        .tbl-action-group { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+        .tbl-btn {
+            height: 32px; padding: 0 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: #fff; display: inline-flex; align-items: center; gap: 5px; transition: 0.15s;
+        }
+        .tbl-btn.edit { color: var(--primary); border-color: #bfdbfe; background: #eff6ff; }
+        .tbl-btn.edit:hover { background: #dbeafe; }
+        .tbl-btn.delete { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
+        .tbl-btn.delete:hover { background: #fee2e2; }
+
+        /* PHÂN TRANG & FOOTER BẢNG */
+        .table-footer {
+            display: flex; align-items: center; justify-content: space-between; padding: 16px 20px;
+            background: var(--white); border-top: 1px solid var(--border); font-size: 12px; color: var(--muted);
+        }
+        .pagination { display: flex; align-items: center; gap: 5px; }
+        .page-num {
+            width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: #fff;
+            color: var(--text); font-weight: 600; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s;
+        }
+        .page-num:hover:not(:disabled) { background: #f1f5f9; border-color: #cbd5e1; }
+        .page-num:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* MODAL CHUNG */
+        .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 23, 42, .45); backdrop-filter: blur(3px); }
+        .modal-container { width: 100%; max-width: 520px; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 70px rgba(15, 23, 42, .25); animation: modalShow .18s ease; display: flex; flex-direction: column; }
+        @keyframes modalShow { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--border); background: #f8fafc; }
+        .modal-header h3 { margin: 0; color: var(--text); font-size: 16px; font-weight: 800; }
+        .close-modal { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: #f1f5f9; color: var(--muted); font-size: 18px; cursor: pointer; }
+        .close-modal:hover { color: #dc2626; background: #fee2e2; }
+        .modal-body { padding: 20px; overflow-y: auto; max-height: 75vh; }
+        
+        .form-group-modal { margin-bottom: 14px; }
+        .form-group-modal label { display: block; margin-bottom: 6px; color: var(--text); font-size: 12px; font-weight: 700; }
+        .form-group-modal input, .form-group-modal select, .form-group-modal textarea { width: 100%; height: 40px; padding: 0 14px; border: 1px solid var(--border); border-radius: 9px; background: #f9fafc; outline: none; font-size: 13px; color: var(--text); transition: 0.2s; }
+        .form-group-modal textarea { height: auto; padding: 10px 14px; }
+        .form-group-modal input:focus, .form-group-modal select:focus, .form-group-modal textarea:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 20px; border-top: 1px solid var(--border); background: #fafbfc; }
+
+        .empty-state { text-align: center; padding: 40px; color: var(--muted); }
+        .empty-state i { font-size: 32px; margin-bottom: 10px; color: #cbd5e1; }
     </style>
 </head>
 <body>
@@ -111,40 +168,90 @@
         <div id="topnav-container"></div>
 
         <div class="content-body">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Danh mục Dịch vụ</h3>
-                    <div class="card-header-actions">
-                        <input type="text" id="searchInput" class="search-box" placeholder="Tìm tên dịch vụ, nhóm..." onkeyup="timKiemDichVu()">
-                        <button class="btn-primary" onclick="moModalThem()">+ Thêm dịch vụ mới</button>
+            <div class="dv-page">
+                <!-- Tiêu đề trang -->
+                <div class="dv-top">
+                    <div class="dv-heading">
+                        <div class="dv-heading-icon"><i class="fa-solid fa-notes-medical"></i></div>
+                        <div>
+                            <h2>Danh mục Dịch vụ</h2>
+                            <p>Quản lý các dịch vụ khám chữa bệnh, phẫu thuật, xét nghiệm và bảng giá chuẩn</p>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn-action-primary" onclick="moModalThem()"><i class="fa-solid fa-plus"></i> Thêm dịch vụ mới</button>
                     </div>
                 </div>
-                
-                <div class="table-responsive">
-                    <table>
+
+                <!-- 3 Thẻ thống kê tổng quan -->
+                <div class="dv-stats">
+                    <div class="dv-stat">
+                        <div class="dv-stat-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                        <div>
+                            <div class="dv-stat-number" id="statTongDV">0</div>
+                            <div class="dv-stat-label">Tổng số dịch vụ</div>
+                        </div>
+                    </div>
+                    <div class="dv-stat">
+                        <div class="dv-stat-icon"><i class="fa-solid fa-layer-group"></i></div>
+                        <div>
+                            <div class="dv-stat-number" id="statNhomDV">0</div>
+                            <div class="dv-stat-label">Nhóm dịch vụ</div>
+                        </div>
+                    </div>
+                    <div class="dv-stat">
+                        <div class="dv-stat-icon"><i class="fa-solid fa-tag"></i></div>
+                        <div>
+                            <div class="dv-stat-number" id="statGiaTB">0 đ</div>
+                            <div class="dv-stat-label">Đơn giá trung bình</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thanh công cụ tìm kiếm -->
+                <div class="dv-toolbar">
+                    <div class="search-box-wrap">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="searchInput" placeholder="Tìm theo tên dịch vụ, nhóm, mã dịch vụ..." oninput="timKiemDichVu()">
+                    </div>
+                    <div>
+                        <span id="dvCount" style="font-size: 12px; font-weight: 600; color: var(--muted);">0 dịch vụ</span>
+                    </div>
+                </div>
+
+                <!-- Bảng danh sách dịch vụ -->
+                <div class="table-container">
+                    <table class="custom-table">
                         <thead>
                             <tr>
-                                <th>Mã dịch vụ</th>
+                                <th style="width: 140px;">Mã dịch vụ</th>
                                 <th>Tên dịch vụ</th>
-                                <th>Nhóm dịch vụ</th>
-                                <th>Đơn giá</th>
-                                <th>Mô tả</th>
-                                <th>Thao tác</th>
+                                <th style="width: 180px;">Nhóm dịch vụ</th>
+                                <th style="width: 140px; text-align: right;">Đơn giá (VNĐ)</th>
+                                <th>Mô tả chi tiết</th>
+                                <th style="width: 140px; text-align: right;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="data-table">
-                            <!-- Dữ liệu được nạp tự động từ Supabase -->
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <i class="fa-solid fa-spinner fa-spin"></i>
+                                        <div>Đang tải dữ liệu dịch vụ...</div>
+                                    </div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
-                </div>
 
-                <!-- Khu vực Phân trang -->
-                <div class="pagination-container">
-                    <div id="pagination-info">Hiển thị 0 - 0 của 0 bản ghi</div>
-                    <div class="pagination-buttons">
-                        <button id="prevBtn" onclick="doiTrang(-1)">Trang trước</button>
-                        <span id="pageIndicator" style="padding: 5px 10px; align-self: center;">Trang 1 / 1</span>
-                        <button id="nextBtn" onclick="doiTrang(1)">Trang sau</button>
+                    <!-- Phân trang dưới bảng -->
+                    <div class="table-footer">
+                        <div id="pagination-info">Hiển thị 0 bản ghi</div>
+                        <div class="pagination">
+                            <button class="page-num" id="prevBtn" onclick="doiTrang(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                            <span style="padding: 0 8px; font-weight: 700;" id="pageIndicator">1 / 1</span>
+                            <button class="page-num" id="nextBtn" onclick="doiTrang(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -156,40 +263,41 @@
         <div class="modal-container">
             <div class="modal-header">
                 <h3 id="modalTitle">Thêm dịch vụ mới</h3>
-                <button class="close-modal" onclick="dongModal()">&times;</button>
+                <button class="close-modal" onclick="dongModal()">×</button>
             </div>
             
-            <input type="hidden" id="editingId">
-            
-            <!-- Ô hiển thị/nhập Mã dịch vụ tự động -->
-            <div class="form-group-modal">
-                <label>Mã dịch vụ (Tự động):</label>
-                <input type="text" id="madichvu" readonly style="background-color: #f1f5f9; font-weight: bold; color: #0284c7;">
-            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editingId">
+                
+                <div class="form-group-modal">
+                    <label>Mã dịch vụ (Tự động):</label>
+                    <input type="text" id="madichvu" readonly style="background-color: #f1f5f9; font-weight: bold; color: var(--primary-dark);">
+                </div>
 
-            <div class="form-group-modal">
-                <label>Tên dịch vụ (tendichvu) (*):</label>
-                <input type="text" id="tendichvu" placeholder="Nhập tên dịch vụ...">
-            </div>
+                <div class="form-group-modal">
+                    <label>Tên dịch vụ (*):</label>
+                    <input type="text" id="tendichvu" placeholder="Nhập tên dịch vụ...">
+                </div>
 
-            <div class="form-group-modal">
-                <label>Nhóm dịch vụ (nhomdichvu):</label>
-                <input type="text" id="nhomdichvu" placeholder="Ví dụ: Khám bệnh, Phẫu thuật, Xét nghiệm...">
-            </div>
+                <div class="form-group-modal">
+                    <label>Nhóm dịch vụ:</label>
+                    <input type="text" id="nhomdichvu" placeholder="Ví dụ: Khám bệnh, Phẫu thuật, Xét nghiệm...">
+                </div>
 
-            <div class="form-group-modal">
-                <label>Đơn giá (dongia - VNĐ):</label>
-                <input type="number" step="1000" id="dongia" placeholder="VD: 100000">
-            </div>
+                <div class="form-group-modal">
+                    <label>Đơn giá (VNĐ):</label>
+                    <input type="number" step="1000" id="dongia" placeholder="Ví dụ: 150000">
+                </div>
 
-            <div class="form-group-modal">
-                <label>Mô tả (mota):</label>
-                <textarea id="mota" rows="2" placeholder="Mô tả chi tiết về dịch vụ..."></textarea>
+                <div class="form-group-modal">
+                    <label>Mô tả:</label>
+                    <textarea id="mota" rows="3" placeholder="Mô tả chi tiết quy trình hoặc lưu ý dịch vụ..."></textarea>
+                </div>
             </div>
 
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="dongModal()">Hủy</button>
-                <button class="btn-primary" onclick="luuDichVu()">Lưu dữ liệu</button>
+                <button class="btn-action-outline" onclick="dongModal()">Hủy</button>
+                <button class="btn-action-primary" onclick="luuDichVu()"><i class="fa-solid fa-floppy-disk"></i> Lưu dữ liệu</button>
             </div>
         </div>
     </div>
@@ -204,7 +312,6 @@
             fetchDuLieuDichVu();
         });
 
-        // Hàm lấy chính xác mã phòng khám hiện tại từ sessionStorage
         function layMaPhongKhamChuan() {
             try {
                 const userStr = sessionStorage.getItem('currentUser');
@@ -215,11 +322,11 @@
                 const sessionMpk = sessionStorage.getItem('maphongkham');
                 if (sessionMpk) return sessionMpk.replace('_', '');
             } catch (e) {}
-            return '617723'; // Mặc định nếu không tìm thấy
+            return '617723';
         }
 
-        // Tải danh sách dịch vụ từ Supabase
         async function fetchDuLieuDichVu() {
+            if (typeof db === 'undefined' || !db) return;
             const { data, error } = await db.from('dichvu').select('*').order('id', { ascending: false });
 
             if (error) {
@@ -232,15 +339,33 @@
             }
         }
 
-        // Hiển thị ra bảng giao diện theo trang
         function hienThiPhanTrang() {
             const tableBody = document.getElementById('data-table');
             tableBody.innerHTML = '';
             
+            // Cập nhật thống kê
+            const tongDV = danhSachDichVuGoc.length;
+            const setNhom = new Set(danhSachDichVuGoc.map(x => x.nhomdichvu).filter(Boolean));
+            const tongGia = danhSachDichVuGoc.reduce((sum, x) => sum + (Number(x.dongia) || 0), 0);
+            const giaTB = tongDV > 0 ? Math.round(tongGia / tongDV) : 0;
+
+            document.getElementById('statTongDV').textContent = tongDV.toLocaleString('vi-VN');
+            document.getElementById('statNhomDV').textContent = setNhom.size.toLocaleString('vi-VN');
+            document.getElementById('statGiaTB').textContent = giaTB.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('dvCount').textContent = `${danhSachLoc.length} dịch vụ`;
+
             if(danhSachLoc.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#777;">Chưa có dịch vụ nào</td></tr>`;
-                document.getElementById('pagination-info').innerText = 'Hiển thị 0 - 0 của 0 bản ghi';
-                document.getElementById('pageIndicator').innerText = 'Trang 1 / 1';
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-notes-medical"></i>
+                                <div>Không tìm thấy dịch vụ nào</div>
+                            </div>
+                        </td>
+                    </tr>`;
+                document.getElementById('pagination-info').innerText = 'Hiển thị 0 bản ghi';
+                document.getElementById('pageIndicator').innerText = '1 / 1';
                 document.getElementById('prevBtn').disabled = true;
                 document.getElementById('nextBtn').disabled = true;
                 return;
@@ -258,54 +383,54 @@
                 const maDichVuFormatted = item.madichvu || ('DV' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'));
                 const donGiaFormatted = item.dongia !== null && item.dongia !== undefined ? Number(item.dongia).toLocaleString('vi-VN') + ' đ' : '0 đ';
 
-                tableBody.innerHTML += `<tr>
-                    <td><strong>${maDichVuFormatted}</strong></td>
-                    <td>${item.tendichvu || ''}</td>
-                    <td><span style="color: #0284c7; font-weight: 600;">${item.nhomdichvu || 'Chưa phân nhóm'}</span></td>
-                    <td><strong style="color: #059669;">${donGiaFormatted}</strong></td>
-                    <td>${item.mota || ''}</td>
-                    <td>
-                        <button class="btn-edit" onclick="moModalSua(${item.id}, '${item.tendichvu || ''}', '${item.nhomdichvu || ''}', '${item.dongia !== null ? item.dongia : ''}', '${item.mota || ''}', '${maDichVuFormatted}')">Sửa</button>
-                        <button class="btn-delete" onclick="xoaDichVu(${item.id})">Xóa</button>
-                    </td>
-                </tr>`;
+                tableBody.innerHTML += `
+                    <tr>
+                        <td><span class="dv-code-badge">${escapeHtml(maDichVuFormatted)}</span></td>
+                        <td><strong>${escapeHtml(item.tendichvu || '')}</strong></td>
+                        <td><span class="dv-group-badge">${escapeHtml(item.nhomdichvu || 'Chưa phân nhóm')}</span></td>
+                        <td style="text-align: right; font-weight: 700; color: var(--green);">${donGiaFormatted}</td>
+                        <td style="color: var(--muted);">${escapeHtml(item.mota || '---')}</td>
+                        <td style="text-align: right;">
+                            <div class="tbl-action-group">
+                                <button class="tbl-btn edit" onclick="moModalSua(${item.id}, '${escapeHtml(item.tendichvu || '')}', '${escapeHtml(item.nhomdichvu || '')}', '${item.dongia !== null ? item.dongia : ''}', '${escapeHtml(item.mota || '')}', '${escapeHtml(maDichVuFormatted)}')">
+                                    <i class="fa-solid fa-pen"></i> Sửa
+                                </button>
+                                <button class="tbl-btn delete" onclick="xoaDichVu(${item.id})">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>`;
             });
 
-            // Cập nhật thông tin phân trang chân bảng
             document.getElementById('pagination-info').innerText = `Hiển thị ${batDau + 1} - ${ketThuc} của ${danhSachLoc.length} bản ghi`;
-            document.getElementById('pageIndicator').innerText = `Trang ${trangHienTai} / ${tongSoTrang}`;
+            document.getElementById('pageIndicator').innerText = `${trangHienTai} / ${tongSoTrang || 1}`;
             document.getElementById('prevBtn').disabled = (trangHienTai === 1);
-            document.getElementById('nextBtn').disabled = (trangHienTai === tongSoTrang);
+            document.getElementById('nextBtn').disabled = (trangHienTai >= tongSoTrang);
         }
 
-        // Chuyển trang trước / sau
         function doiTrang(huong) {
             trangHienTai += huong;
             hienThiPhanTrang();
         }
 
-        // Tìm kiếm dịch vụ
         function timKiemDichVu() {
             const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
             danhSachLoc = danhSachDichVuGoc.filter(item => {
                 const tenDV = (item.tendichvu || '').toLowerCase();
                 const nhom = (item.nhomdichvu || '').toLowerCase();
                 const ma = (item.madichvu || ('DV' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'))).toLowerCase();
-                
                 return tenDV.includes(tuKhoa) || nhom.includes(tuKhoa) || ma.includes(tuKhoa);
             });
             trangHienTai = 1;
             hienThiPhanTrang();
         }
 
-        // Mở Modal Thêm (Tự động sinh mã chuẩn phòng khám với 4 số ngẫu nhiên)
         function moModalThem() {
             document.getElementById('editingId').value = '';
-            
             const maPK = layMaPhongKhamChuan();
             const randomNum = Math.floor(1000 + Math.random() * 9000);
             document.getElementById('madichvu').value = 'DV' + maPK + randomNum;
-
             document.getElementById('tendichvu').value = '';
             document.getElementById('nhomdichvu').value = '';
             document.getElementById('dongia').value = '';
@@ -315,7 +440,6 @@
             document.getElementById('dichVuModal').style.display = 'flex';
         }
 
-        // Mở Modal Sửa
         function moModalSua(id, tendichvu, nhomdichvu, dongia, mota, madichvu) {
             document.getElementById('editingId').value = id;
             document.getElementById('madichvu').value = madichvu;
@@ -324,16 +448,14 @@
             document.getElementById('dongia').value = dongia;
             document.getElementById('mota').value = mota;
             
-            document.getElementById('modalTitle').innerText = 'Cập nhật dịch vụ (Mã: ' + madichvu + ')';
+            document.getElementById('modalTitle').innerText = 'Cập nhật dịch vụ';
             document.getElementById('dichVuModal').style.display = 'flex';
         }
 
-        // Đóng Modal
         function dongModal() {
             document.getElementById('dichVuModal').style.display = 'none';
         }
 
-        // Lưu dữ liệu (Thêm hoặc Cập nhật)
         async function luuDichVu() {
             const id = document.getElementById('editingId').value;
             const madichvu = document.getElementById('madichvu').value.trim();
@@ -376,9 +498,8 @@
             }
         }
 
-        // Xóa dịch vụ
         async function xoaDichVu(id) {
-            if (confirm('Bạn có chắc chắn muốn xóa dịch vụ ID: ' + id + ' này không?')) {
+            if (confirm('Bạn có chắc chắn muốn xóa dịch vụ này không?')) {
                 const { error } = await db.from('dichvu').delete().eq('id', id);
                 if (error) {
                     alert('Lỗi khi xóa: ' + error.message);
@@ -387,6 +508,16 @@
                     fetchDuLieuDichVu();
                 }
             }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
     </script>
 </body>
