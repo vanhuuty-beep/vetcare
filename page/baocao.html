@@ -130,8 +130,8 @@
                     </div>
                 </div>
 
-                <!-- BẢNG CHI TIẾT GIAO DỊCH: TÊN KHÁCH, THÚ CƯNG, DỊCH VỤ, THUỐC -->
-                <div class="bc-section-title"><i class="fa-solid fa-list-check" style="color:#2563eb;"></i> Danh sách chi tiết ca khám, chủ nuôi, thú cưng, dịch vụ & thuốc sử dụng</div>
+                <!-- BẢNG CHI TIẾT GIAO DỊCH: TÊN KHÁCH, SĐT, THÚ CƯNG, DỊCH VỤ, THUỐC -->
+                <div class="bc-section-title"><i class="fa-solid fa-list-check" style="color:#2563eb;"></i> Danh sách chi tiết ca khám, chủ nuôi, SĐT, thú cưng, dịch vụ & thuốc sử dụng</div>
                 <div style="padding: 0 18px 10px;">
                     <div class="bc-card-table" style="overflow-x: auto;">
                         <table class="bc-table">
@@ -140,6 +140,7 @@
                                     <th>STT</th>
                                     <th>Ngày khám</th>
                                     <th>Chủ nuôi (Khách hàng)</th>
+                                    <th>Số điện thoại</th>
                                     <th>Thú cưng</th>
                                     <th>Dịch vụ sử dụng</th>
                                     <th>Thuốc đã dùng</th>
@@ -147,7 +148,7 @@
                                 </tr>
                             </thead>
                             <tbody id="tbChiTietGiaoDich">
-                                <tr><td colspan="7" style="text-align:center; color:#888;">Đang tổng hợp dữ liệu...</td></tr>
+                                <tr><td colspan="8" style="text-align:center; color:#888;">Đang tổng hợp dữ liệu...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -209,16 +210,17 @@
         <table id="excelTableData" border="1">
             <thead>
                 <tr>
-                    <th colspan="7" style="background-color: #0284c7; color: white; font-size: 14px; text-align: center;">VETCARE PRO - BÁO CÁO CHI TIẾT CA KHÁM, THÚ CƯNG & THUỐC AN THẦN</th>
+                    <th colspan="8" style="background-color: #0284c7; color: white; font-size: 14px; text-align: center;">VETCARE PRO - BÁO CÁO CHI TIẾT CA KHÁM, SĐT, THÚ CƯNG & THUỐC AN THẦN</th>
                 </tr>
                 <tr>
-                    <th colspan="7" id="ex-thoigian" style="text-align: center; font-style: italic;"></th>
+                    <th colspan="8" id="ex-thoigian" style="text-align: center; font-style: italic;"></th>
                 </tr>
-                <tr><th colspan="7"></th></tr>
+                <tr><th colspan="8"></th></tr>
                 <tr style="background-color: #f1f5f9;">
                     <th>STT</th>
                     <th>Ngày khám</th>
                     <th>Chủ nuôi</th>
+                    <th>Số điện thoại</th>
                     <th>Thú cưng</th>
                     <th>Dịch vụ</th>
                     <th>Thuốc sử dụng</th>
@@ -349,12 +351,24 @@
                 return true;
             });
 
-            // Map dữ liệu hỗ trợ tra cứu nhanh
+            // Map dữ liệu hỗ trợ tra cứu nhanh (Tên khách hàng và SĐT)
             let khMap = {};
-            danhSachKhachHangGoc.forEach(kh => { khMap[kh.id] = kh.hovaten || kh.tenchunuoi || 'Khách lẻ'; });
+            let khSdtMap = {};
+            danhSachKhachHangGoc.forEach(kh => { 
+                let tenKh = kh.hovaten || kh.tenchunuoi || 'Khách lẻ';
+                let sdtKh = kh.sodienthoai || kh.sdt || kh.phone || '---';
+                khMap[kh.id] = tenKh; 
+                khSdtMap[kh.id] = sdtKh;
+            });
 
             let tcMap = {};
-            danhSachThuCungGoc.forEach(tc => { tcMap[tc.id] = { ten: tc.tenthucung || 'Thú cưng', makh: tc.makhachhang || tc.makh || tc.id_khachhang }; });
+            danhSachThuCungGoc.forEach(tc => { 
+                tcMap[tc.id] = { 
+                    ten: tc.tenthucung || 'Thú cưng', 
+                    makh: tc.makhachhang || tc.makh || tc.id_khachhang,
+                    sdt: tc.sodienthoai || tc.sdt || tc.phone || ''
+                }; 
+            });
 
             // Nhóm thuốc theo makhambenh
             let thuocTheoKham = {};
@@ -399,22 +413,28 @@
             filteredKb.forEach(item => {
                 const makb = item.id;
                 let tenChuNuoi = 'Khách lẻ';
+                let sdtChuNuoi = '---';
                 let tenThuCung = item.tenthucung || 'Thú cưng';
 
-                // Xác định tên chủ nuôi & thú cưng chuẩn xác
+                // Xác định tên chủ nuôi, số điện thoại & thú cưng chuẩn xác
                 if (item.makhachhang && khMap[item.makhachhang]) {
                     tenChuNuoi = khMap[item.makhachhang];
+                    sdtChuNuoi = khSdtMap[item.makhachhang] || '---';
                 } else if (item.mathucung && tcMap[item.mathucung]) {
                     let tcObj = tcMap[item.mathucung];
                     tenThuCung = tcObj.ten;
-                    if (tcObj.makh && khMap[tcObj.makh]) tenChuNuoi = khMap[tcObj.makh];
+                    if (tcObj.makh && khMap[tcObj.makh]) {
+                        tenChuNuoi = khMap[tcObj.makh];
+                        sdtChuNuoi = khSdtMap[tcObj.makh] || tcObj.sdt || '---';
+                    } else if (tcObj.sdt) {
+                        sdtChuNuoi = tcObj.sdt;
+                    }
                 } else if (item.tenchunuoi) {
                     tenChuNuoi = item.tenchunuoi;
+                    sdtChuNuoi = item.sodienthoai || item.sdt || '---';
                 }
 
                 let phiKham = parseFloat(item.chiphi || item.thanhtien || 0);
-                tongPhiDichVu += phiKham;
-
                 let tt = item.trangthai || 'Đang điều trị';
                 mapTrangThaiCount[tt] = (mapTrangThaiCount[tt] || 0) + 1;
 
@@ -439,6 +459,7 @@
                     }
                 });
 
+                tongPhiDichVu += phiKham;
                 tongTienThuoc += tienThuocCaKham;
                 let tongTienCa = phiKham + tienThuocCaKham;
 
@@ -453,6 +474,7 @@
                 bangChiTietGiaoDich.push({
                     ngay: (item.ngaykham || item.created_at || '').split('T')[0],
                     chunuoi: tenChuNuoi,
+                    sdt: sdtChuNuoi,
                     thucung: tenThuCung,
                     dichvu: dsDichVu.join(', '),
                     thuoc: tenThuocStrs.length > 0 ? tenThuocStrs.join(', ') : '<span style="color:#94a3b8; font-style:italic;">Không dùng thuốc</span>',
@@ -480,6 +502,7 @@
                         <td>${idx + 1}</td>
                         <td>${row.ngay}</td>
                         <td><strong>${row.chunuoi}</strong></td>
+                        <td><i class="fa-solid fa-phone" style="color:#059669; font-size:10px;"></i> ${row.sdt}</td>
                         <td><span style="color:#2563eb; font-weight:bold;">🐾 ${row.thucung}</span></td>
                         <td>${row.dichvu}</td>
                         <td>${row.thuoc}</td>
@@ -488,7 +511,7 @@
                 `;
             });
             if (tbHtml === '') {
-                tbHtml = `<tr><td colspan="7" style="text-align:center; color:#888; padding: 20px;">Không tìm thấy ca khám phù hợp với điều kiện lọc</td></tr>`;
+                tbHtml = `<tr><td colspan="8" style="text-align:center; color:#888; padding: 20px;">Không tìm thấy ca khám phù hợp với điều kiện lọc</td></tr>`;
             }
             document.getElementById('tbChiTietGiaoDich').innerHTML = tbHtml;
 
@@ -523,6 +546,7 @@
                         <td>${idx + 1}</td>
                         <td>${row.ngay}</td>
                         <td>${row.chunuoi}</td>
+                        <td>'${row.sdt}</td>
                         <td>${row.thucung}</td>
                         <td>${row.dichvu}</td>
                         <td>${row.thuoc.replace(/<[^>]*>/g, '')}</td>
@@ -540,6 +564,7 @@
                             <th style="border:1px solid #cbd5e1; padding:5px;">STT</th>
                             <th style="border:1px solid #cbd5e1; padding:5px;">Ngày</th>
                             <th style="border:1px solid #cbd5e1; padding:5px;">Chủ nuôi</th>
+                            <th style="border:1px solid #cbd5e1; padding:5px;">SĐT</th>
                             <th style="border:1px solid #cbd5e1; padding:5px;">Thú cưng</th>
                             <th style="border:1px solid #cbd5e1; padding:5px;">Dịch vụ</th>
                             <th style="border:1px solid #cbd5e1; padding:5px;">Thuốc sử dụng</th>
@@ -554,6 +579,7 @@
                         <td style="border:1px solid #cbd5e1; padding:5px; text-align:center;">${idx + 1}</td>
                         <td style="border:1px solid #cbd5e1; padding:5px;">${row.ngay}</td>
                         <td style="border:1px solid #cbd5e1; padding:5px;">${row.chunuoi}</td>
+                        <td style="border:1px solid #cbd5e1; padding:5px;">${row.sdt}</td>
                         <td style="border:1px solid #cbd5e1; padding:5px;">${row.thucung}</td>
                         <td style="border:1px solid #cbd5e1; padding:5px;">${row.dichvu}</td>
                         <td style="border:1px solid #cbd5e1; padding:5px;">${row.thuoc.replace(/<[^>]*>/g, '')}</td>
