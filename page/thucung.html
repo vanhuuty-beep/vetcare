@@ -786,10 +786,18 @@
                 return;
             }
 
+            // Bắt tham số makhachhang từ URL nếu trang được gọi từ khách hàng
+            const urlParams = new URLSearchParams(window.location.search);
+            const maKHUrl = urlParams.get('makhachhang');
+
             const maphongkham = sessionStorage.getItem('maphongkham') || '';
             const cannang = cannangStr !== '' ? parseFloat(cannangStr) : null;
 
             let payload = { tenthucung, loai, gioitinh, giong, maulong, tuoi, cannang, hinhanh, maphongkham };
+
+            if (maKHUrl) {
+                payload.makhachhang = parseInt(maKHUrl);
+            }
 
             if (id === '') {
                 const { data, error } = await db.from('thucung').insert([payload]).select();
@@ -801,7 +809,13 @@
                     const newId = data[0].id;
                     let mathucung = 'TC' + newId;
                     if (typeof formatMaThuCung === 'function') mathucung = formatMaThuCung(newId);
-                    await db.from('thucung').update({ mathucung }).eq('id', newId);
+                    
+                    let updateObj = { mathucung };
+                    if (maKHUrl && !data[0].makhachhang) {
+                        updateObj.makhachhang = parseInt(maKHUrl);
+                    }
+
+                    await db.from('thucung').update(updateObj).eq('id', newId);
                 }
                 alert('Thêm thú cưng thành công!');
             } else {
