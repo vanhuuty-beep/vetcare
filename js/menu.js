@@ -120,14 +120,11 @@ document.addEventListener("DOMContentLoaded", function() {
             <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
         </li>
         <ul class="submenu-container">
-            <li class="menu-item" id="menu-congnokhachhang" onclick="window.location.href='congno.html'">
+            <li class="menu-item" id="menu-qlcongno" onclick="window.location.href='qlcongno.html'">
                 <span><i class="fa-solid fa-user-tag"></i></span> 
-                <span class="menu-text">Công nợ khách hàng</span>
+                <span class="menu-text">Quản lý công nợ</span>
             </li>
-            <li class="menu-item" id="menu-congnonhacungcap" onclick="window.location.href='congnonhacungcap.html'">
-                <span><i class="fa-solid fa-truck-field"></i></span> 
-                <span class="menu-text">Công nợ nhà cung cấp</span>
-            </li>
+            
 				<li class="menu-item" id="menu-thuchi" onclick="window.location.href='thuchi.html'">
     <span><i class="fa-solid fa-wallet"></i></span> 
     <span class="menu-text">Thu chi phòng khám</span>
