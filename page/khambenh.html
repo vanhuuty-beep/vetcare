@@ -445,14 +445,19 @@
                         <input type="number" id="chiphi" placeholder="Nhập tiền công khám lâm sàng..." oninput="tinhTongTienKham()">
                     </div>
                     <div class="form-group-modal">
-                        <label>Hình ảnh lâm sàng (File / Chụp ảnh):</label>
-                        <input type="file" id="hinhanh" accept="image/*" capture="environment" style="padding: 6px;">
+                        <label>Tiền tạm ứng (VNĐ):</label>
+                        <input type="number" id="tientamung" placeholder="Nhập số tiền khách đã tạm ứng..." oninput="tinhTongTienKham()">
                     </div>
+                </div>
+
+                <div class="form-group-modal">
+                    <label>Hình ảnh lâm sàng (File / Chụp ảnh):</label>
+                    <input type="file" id="hinhanh" accept="image/*" capture="environment" style="padding: 6px;">
                 </div>
 
                 <!-- TỔNG THANH TOÁN -->
                 <div style="background: var(--primary-light); border: 1px solid #bfdbfe; padding: 12px 16px; border-radius: 10px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 13px; font-weight: 800; color: var(--primary-dark);">💰 TỔNG THANH TOÁN TOÀN BỘ PHIẾU KHÁM:</span>
+                    <span style="font-size: 13px; font-weight: 800; color: var(--primary-dark);">💰 CÒN LẠI PHẢI THANH TOÁN:</span>
                     <span id="hienThiTongTienChung" style="font-size: 18px; font-weight: 800; color: #dc2626;">0 đ</span>
                 </div>
             </div>
@@ -596,9 +601,11 @@
                 </tbody>
             </table>
 
-            <!-- TỔNG TIỀN -->
+            <!-- TỔNG TIỀN, TẠM ỨNG & CÒN LẠI -->
+            <div style="text-align: right; font-size: 11px; margin-bottom: 4px;">Tổng tiền: <span id="p-tongcong">0 đ</span></div>
+            <div style="text-align: right; font-size: 11px; margin-bottom: 4px;">Đã tạm ứng: <span id="p-tamung">0 đ</span></div>
             <div style="text-align: right; font-size: 12px; font-weight: bold; margin-bottom: 20px; color: #dc2626;">
-                TỔNG THANH TOÁN: <span id="p-tongtien">0 đ</span>
+                CÒN LẠI PHẢI THANH TOÁN: <span id="p-tongtien">0 đ</span>
             </div>
 
             <!-- CHỮ KÝ -->
@@ -1123,10 +1130,15 @@
             });
 
             let tienCongKham = parseFloat(document.getElementById('chiphi').value) || 0;
+            let tienTamUng = parseFloat(document.getElementById('tientamung').value) || 0;
+
+            let tongCong = tongTienThuoc + tongTienDichVu + tienCongKham;
+            let conLai = tongCong - tienTamUng;
+            if (conLai < 0) conLai = 0;
 
             document.getElementById('hienThiTongTienThuoc').innerText = tongTienThuoc.toLocaleString('vi-VN') + ' đ';
             document.getElementById('hienThiTongTienDichVu').innerText = tongTienDichVu.toLocaleString('vi-VN') + ' đ';
-            document.getElementById('hienThiTongTienChung').innerText = (tongTienThuoc + tongTienDichVu + tienCongKham).toLocaleString('vi-VN') + ' đ';
+            document.getElementById('hienThiTongTienChung').innerText = conLai.toLocaleString('vi-VN') + ' đ';
         }
 
         async function moModalThem() {
@@ -1142,6 +1154,7 @@
             document.getElementById('chandoan').value = '';
             document.getElementById('dieutri').value = '';
             document.getElementById('chiphi').value = '';
+            document.getElementById('tientamung').value = '';
             document.getElementById('hinhanh').value = '';
 
             document.getElementById('dsThuocKhamContainer').innerHTML = '';
@@ -1172,6 +1185,7 @@
             document.getElementById('chandoan').value = item.chandoan || '';
             document.getElementById('dieutri').value = item.dieutri || '';
             document.getElementById('chiphi').value = item.chiphi || '';
+            document.getElementById('tientamung').value = item.tientamung || ''; // Đã khắc phục lỗi mất tiền tạm ứng
             document.getElementById('hinhanh').value = '';
 
             document.getElementById('dsThuocKhamContainer').innerHTML = '';
@@ -1213,6 +1227,7 @@
             const chandoan = document.getElementById('chandoan').value.trim();
             const dieutri = document.getElementById('dieutri').value.trim();
             const chiphiStr = document.getElementById('chiphi').value.trim();
+            const tientamungStr = document.getElementById('tientamung').value.trim();
             const trangthai = document.getElementById('trangthai').value;
             
             const fileInput = document.getElementById('hinhanh');
@@ -1242,6 +1257,7 @@
                 nhietdo: nhietdoStr !== "" ? parseFloat(nhietdoStr) : null,
                 trieuchung, chandoan, dieutri,
                 chiphi: chiphiStr !== "" ? parseFloat(chiphiStr) : null,
+                tientamung: tientamungStr !== "" ? parseFloat(tientamungStr) : null,
                 trangthai,
                 hinhanh: hinhanhUrl,
                 maphongkham
@@ -1338,7 +1354,6 @@
             }
         }
 
-        // BƯỚC 1: MỞ MODAL CHỌN KHỔ GIẤY KHI BẤM IN
         function inPhieuKham(id) {
             const item = danhSachKhamBenhGoc.find(x => x.id === id);
             if (!item) {
@@ -1353,14 +1368,12 @@
             document.getElementById('modalChonKhoGiay').style.display = 'none';
         }
 
-        // BƯỚC 2: TIẾN HÀNH ĐỔ DỮ LIỆU VÀ GỌI IN THEO KHỔ GIẤY ĐÃ CHỌN (A4 HOẶC A5)
         function thucHienInPhieu(khoGiay) {
             dongModalChonKhoGiay();
             const id = dangInKhamId;
             const item = danhSachKhamBenhGoc.find(x => x.id === id);
             if (!item) return;
 
-            // Cập nhật lại style @page linh hoạt theo khổ giấy A4 hoặc A5
             const styleTag = document.getElementById('printPageStyle');
             if (khoGiay === 'A4') {
                 styleTag.innerHTML = `
@@ -1396,7 +1409,6 @@
                 document.getElementById('printContentBox').style.margin = '0';
             }
 
-            // Lấy thông tin phòng khám chuẩn theo tài khoản/hệ thống đăng nhập hiện tại
             let tenDonViHienTai = "HỆ THỐNG PHÒNG KHÁM THÚ Y VETCARE PRO";
             let diaChiPK = "Chi nhánh toàn quốc";
             let hotlinePK = "1900 xxxx";
@@ -1409,18 +1421,14 @@
                     else if (user?.ten) tenDonViHienTai = user.ten;
                     
                     if (user?.diachi) diaChiPK = user.diachi;
-                    
-                    // Ưu tiên đọc chính xác cột sodienthoai từ object user/phòng khám
                     if (user?.sodienthoai) hotlinePK = user.sodienthoai;
                     else if (user?.hotline) hotlinePK = user.hotline;
                     else if (user?.dienthoai) hotlinePK = user.dienthoai;
                     else if (user?.phone) hotlinePK = user.phone;
                 }
                 
-                // Kiểm tra trực tiếp trong sessionStorage
                 if (sessionStorage.getItem('tenphongkham')) tenDonViHienTai = sessionStorage.getItem('tenphongkham');
                 if (sessionStorage.getItem('diachi')) diaChiPK = sessionStorage.getItem('diachi');
-                
                 if (sessionStorage.getItem('sodienthoai')) hotlinePK = sessionStorage.getItem('sodienthoai');
                 else if (sessionStorage.getItem('hotline')) hotlinePK = sessionStorage.getItem('hotline');
                 else if (sessionStorage.getItem('dienthoai')) hotlinePK = sessionStorage.getItem('dienthoai');
@@ -1436,6 +1444,7 @@
             const ngayKham = item.ngaykham ? new Date(item.ngaykham + 'T00:00:00').toLocaleDateString('vi-VN') : '---';
             const ngayTaiKham = item.ngaytaikham ? new Date(item.ngaytaikham + 'T00:00:00').toLocaleDateString('vi-VN') : 'Không có';
             const chiPhiKham = Number(item.chiphi) || 0;
+            const tienTamUng = Number(item.tientamung) || 0; // Lấy giá trị tiền tạm ứng
 
             document.getElementById('p-maphieu').innerText = maKB;
             document.getElementById('p-ngaykham').innerText = ngayKham;
@@ -1447,7 +1456,6 @@
             document.getElementById('p-chanhdoan').innerText = item.chandoan || '---';
             document.getElementById('p-phacdo').innerText = item.dieutri || '---';
 
-            // Xử lý hiển thị hình ảnh chẩn đoán / lâm sàng nếu có
             const imgWrapper = document.getElementById('p-hinhanh-wrapper');
             const imgEl = document.getElementById('p-hinhanh-src');
             if (item.hinhanh && item.hinhanh.trim() !== '') {
@@ -1458,7 +1466,6 @@
                 imgWrapper.style.display = 'none';
             }
 
-            // Xử lý bảng Dịch vụ phát sinh (gồm cả Tiền công khám nếu có)
             let htmlDichVu = '';
             let tongTienDV = 0;
             let sttDV = 1;
@@ -1503,7 +1510,6 @@
             }
             document.getElementById('p-table-dichvu').innerHTML = htmlDichVu;
 
-            // Xử lý bảng Đơn thuốc điều trị
             let htmlThuoc = '';
             let tongTienThuoc = 0;
             const hoaDonCu = mapHoaDonThuoc[id];
@@ -1536,8 +1542,14 @@
             }
             document.getElementById('p-table-donthuoc').innerHTML = htmlThuoc;
 
-            const tongThanhToan = tongTienDV + tongTienThuoc;
-            document.getElementById('p-tongtien').innerText = tongThanhToan.toLocaleString('vi-VN') + ' đ';
+            let tongThanhToan = tongTienDV + tongTienThuoc;
+            let conLaiPhaiTra = tongThanhToan - tienTamUng;
+            if (conLaiPhaiTra < 0) conLaiPhaiTra = 0;
+
+            // Hiển thị đầy đủ thông tin thanh toán lên bản in
+            document.getElementById('p-tongcong').innerText = tongThanhToan.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('p-tamung').innerText = tienTamUng.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('p-tongtien').innerText = conLaiPhaiTra.toLocaleString('vi-VN') + ' đ';
             document.getElementById('p-bacsi').innerText = 'Bác sĩ phụ trách';
 
             setTimeout(() => {
