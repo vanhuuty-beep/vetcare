@@ -51,7 +51,6 @@
         body { background-color: var(--bg) !important; color: var(--text); font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; width: 100%; min-height: 100%; }
         .main-content { background-color: var(--bg) !important; min-height: 100vh; width: 100%; }
         
-        /* ĐÃ SỬA: Ép phần thân nội dung tràn rộng full màn hình, không bị bóp hẹp */
         .content-body { padding: 16px 20px !important; width: 100% !important; max-width: none !important; margin: 0 !important; }
 
         /* Top Header Bar */
@@ -368,6 +367,17 @@
             }
 
             try {
+                // Tải kho vắc-xin trước để dùng cho việc đối chiếu giá
+                const { data: khoVaccineData } = await db.from('khovaccine').select('*');
+                let khoVaccineMap = {};
+                if (khoVaccineData) {
+                    khoVaccineData.forEach(item => {
+                        let donGiaKho = parseFloat(item.giaban || item.gia || item.dongia || item.giatien) || 0;
+                        if (item.id) khoVaccineMap[String(item.id)] = donGiaKho;
+                        if (item.tenvaccine) khoVaccineMap[String(item.tenvaccine).trim().toLowerCase()] = donGiaKho;
+                    });
+                }
+
                 // 1. Khách hàng
                 const { data: khData } = await db.from('khachhang').select('*');
                 const tongKH = khData ? khData.length : 0;
@@ -475,7 +485,7 @@
                     });
                 }
 
-                // D. Bảng hoadonthuoc (Tính chuẩn số lượng * đơn giá)
+                // D. Bảng hoadonthuoc
                 let tongThuoc = 0;
                 const { data: dtData } = await db.from('hoadonthuoc').select('*');
                 if (dtData) {
@@ -491,13 +501,26 @@
                     });
                 }
 
-                // E. Bảng nhatkylamvaccine
+                // E. Bảng nhatkylamvaccine (Đối chiếu đơn giá từ bảng khovaccine)
                 let tongVaccine = 0;
                 const { data: vacData } = await db.from('nhatkylamvaccine').select('*');
                 if (vacData) {
                     vacData.forEach(item => {
                         const ngay = item.ngaytiem || item.created_at || '';
-                        const tien = parseFloat(item.giatien || item.tongtien || item.chiphi || item.gia) || 0;
+                        
+                        // Tìm đơn giá vắc-xin đối chiếu từ kho
+                        let donGiaVaccine = 0;
+                        if (item.mavaccine && khoVaccineMap[String(item.mavaccine).trim()]) {
+                            donGiaVaccine = khoVaccineMap[String(item.mavaccine).trim()];
+                        } else if (item.tenvaccine && khoVaccineMap[String(item.tenvaccine).trim().toLowerCase()]) {
+                            donGiaVaccine = khoVaccineMap[String(item.tenvaccine).trim().toLowerCase()];
+                        } else {
+                            // Dự phòng lấy trực tiếp từ bảng nhật ký nếu có sẵn cột giá
+                            donGiaVaccine = parseFloat(item.giatien || item.tongtien || item.chiphi || item.gia) || 0;
+                        }
+
+                        const tien = donGiaVaccine > 0 ? donGiaVaccine : (parseFloat(item.giatien || item.tongtien || item.chiphi || item.gia) || 0);
+
                         if (kiemTraThoiGian(ngay)) {
                             tongVaccine += tien;
                             ghiNhanDoanhThuTheoNgay(ngay, tien);
