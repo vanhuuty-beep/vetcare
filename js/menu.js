@@ -115,17 +115,21 @@ document.addEventListener("DOMContentLoaded", function() {
         <li class="menu-dropdown-toggle" onclick="toggleSubmenu(this)">
             <div class="menu-label-wrap">
                 <span class="group-icon"><i class="fa-solid fa-file-invoice-dollar"></i></span> 
-                <span class="menu-text">Công nợ- Thu chi</span>
+                <span class="menu-text">Công nợ</span>
             </div> 
             <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
         </li>
         <ul class="submenu-container">
-            <li class="menu-item" id="menu-qlcongno" onclick="window.location.href='qlcongno.html'">
+            <li class="menu-item" id="menu-congnokhachhang" onclick="window.location.href='congno.html'">
                 <span><i class="fa-solid fa-user-tag"></i></span> 
-                <span class="menu-text">Quản lý công nợ</span>
+                <span class="menu-text">Công nợ khách hàng</span>
             </li>
-            
-				<li class="menu-item" id="menu-thuchi" onclick="window.location.href='thuchi.html'">
+            <li class="menu-item" id="menu-congnonhacungcap" onclick="window.location.href='congnonhacungcap.html'">
+                <span><i class="fa-solid fa-truck-field"></i></span> 
+                <span class="menu-text">Công nợ nhà cung cấp</span>
+            </li>
+        </ul>
+		<li class="menu-item" id="menu-thuchi" onclick="window.location.href='thuchi.html'">
     <span><i class="fa-solid fa-wallet"></i></span> 
     <span class="menu-text">Thu chi phòng khám</span>
 </li>
@@ -133,8 +137,6 @@ document.addEventListener("DOMContentLoaded", function() {
     <span><i class="fa-solid fa-chart-pie"></i></span> 
     <span class="menu-text">Báo cáo</span>
 </li>
-        </ul>
-	
     `;
 
     if (isTrueOwner || isBacSi || isHuuTy) {
@@ -177,7 +179,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     dynamicMenuContent += heThongMenuHtml;
 
-    // Cố định chuẩn mã màu Xanh Navy (#1e3a8a) giống trên ảnh chụp màn hình của bạn
+    // Cố định chuẩn mã màu Xanh Navy (#1e3a8a)
     const mainThemeColor = '#1e3a8a';
 
     const menuHTML = `
@@ -204,6 +206,9 @@ document.addEventListener("DOMContentLoaded", function() {
         </ul>
     </div>
 
+    <!-- Màn hình mờ khi mở menu trên mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
     <style>
         .sidebar {
             width: 275px !important;
@@ -211,7 +216,7 @@ document.addEventListener("DOMContentLoaded", function() {
             color: #f8fafc !important;
             box-shadow: 4px 0 15px rgba(0, 0, 0, 0.08);
             border-right: 1px solid rgba(255, 255, 255, 0.08);
-            transition: width 0.3s ease, background 0.3s ease;
+            transition: width 0.3s ease, background 0.3s ease, transform 0.3s ease;
             position: fixed;
             top: 0;
             left: 0;
@@ -344,14 +349,39 @@ document.addEventListener("DOMContentLoaded", function() {
             background: #f1f5f9;
         }
 
-        body.sidebar-collapsed .sidebar { width: 70px !important; min-width: 70px !important; overflow: hidden; }
-        body.sidebar-collapsed .main-content { margin-left: 70px !important; }
-        body.sidebar-collapsed .sidebar .menu-text,
-        body.sidebar-collapsed .sidebar .menu-category,
-        body.sidebar-collapsed .sidebar .arrow,
-        body.sidebar-collapsed .sidebar .pos-badge,
-        body.sidebar-collapsed .sidebar #sidebar-date { display: none !important; }
-        body.sidebar-collapsed .submenu-container.open { display: none !important; }
+        /* --- XỬ LÝ RESPONSIVE TRÊN MOBILE --- */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            body.mobile-menu-open .sidebar {
+                transform: translateX(0);
+            }
+            body.mobile-menu-open .sidebar-overlay {
+                display: block;
+            }
+            .main-content {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+        }
+
+        body.sidebar-collapsed:not(.mobile-menu-open) .sidebar { width: 70px !important; min-width: 70px !important; overflow: hidden; transform: translateX(0) !important; }
+        body.sidebar-collapsed:not(.mobile-menu-open) .main-content { margin-left: 70px !important; }
+        body.sidebar-collapsed:not(.mobile-menu-open) .sidebar .menu-text,
+        body.sidebar-collapsed:not(.mobile-menu-open) .sidebar .menu-category,
+        body.sidebar-collapsed:not(.mobile-menu-open) .sidebar .arrow,
+        body.sidebar-collapsed:not(.mobile-menu-open) .sidebar .pos-badge,
+        body.sidebar-collapsed:not(.mobile-menu-open) .sidebar #sidebar-date { display: none !important; }
+        body.sidebar-collapsed:not(.mobile-menu-open) .submenu-container.open { display: none !important; }
 
         #pcNotificationDropdown {
             display: none;
@@ -450,33 +480,33 @@ document.addEventListener("DOMContentLoaded", function() {
     const topnavContainer = document.getElementById('topnav-container');
     if (topnavContainer) {
         topnavContainer.innerHTML = `
-            <div class="top-navbar" id="topNavbarHeader" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 25px; background: ${mainThemeColor}; border-bottom: 1px solid rgba(255,255,255,0.15); height: 55px; box-sizing: border-box; position: relative; color: white;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: rgba(255,255,255,0.15); border: none; font-size: 16px; color: white; width: 32px; height: 32px; border-radius: 6px;"><i class="fa-solid fa-bars"></i></button>
-                    <h2 style="margin: 0; font-size: 14px; font-weight: bold; color: white;">HỆ THỐNG QUẢN LÝ PHÒNG KHÁM THÚ Y</h2>
+            <div class="top-navbar" id="topNavbarHeader" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; background: ${mainThemeColor}; border-bottom: 1px solid rgba(255,255,255,0.15); height: 55px; box-sizing: border-box; position: relative; color: white;">
+                <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+                    <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: rgba(255,255,255,0.15); border: none; font-size: 16px; color: white; width: 32px; height: 32px; border-radius: 6px; flex-shrink: 0;"><i class="fa-solid fa-bars"></i></button>
+                    <h2 style="margin: 0; font-size: 13px; font-weight: bold; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">QUẢN LÝ PHÒNG KHÁM THÚ Y</h2>
                 </div>
                 
-                <div style="display: flex; align-items: center; gap: 14px; position: relative; margin-right: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px; position: relative;">
                     <div id="headerBellBtnPC" style="position: relative; display: flex; align-items: center; cursor: pointer; padding: 5px;" title="Bấm để xem lịch sử thông báo">
-                        <span style="font-size: 20px; color: #fbbf24; text-shadow: 0 1px 2px rgba(0,0,0,0.3);"><i class="fa-solid fa-bell"></i></span>
+                        <span style="font-size: 18px; color: #fbbf24;"><i class="fa-solid fa-bell"></i></span>
                         <span id="navNotificationBadge" style="position: absolute; top: 0; right: 0; background: #dc2626; color: white; font-size: 10px; padding: 1px 5px; border-radius: 50%; display: none; font-weight: bold;">0</span>
                     </div>
 
-                    <div class="search-container" style="position: relative; margin: 0;">
-                        <input type="text" id="globalSearchInput" class="search-box" placeholder="🔍 Tìm tên KH, SĐT, thú cưng..." autocomplete="off" style="padding: 7px 12px; width: 220px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 13px; outline: none; background: rgba(255,255,255,0.9); color: #1e293b;">
+                    <div class="search-container" style="position: relative; margin: 0; display: none; @media(min-width: 768px){display: block;}">
+                        <input type="text" id="globalSearchInput" class="search-box" placeholder="🔍 Tìm tên KH, SĐT..." autocomplete="off" style="padding: 6px 10px; width: 180px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 12px; outline: none; background: rgba(255,255,255,0.9); color: #1e293b;">
                         <div id="searchDropdown" class="search-dropdown"></div>
                     </div>
 
-                    <div onclick="moModalSuaThongTinCaNhan()" style="display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); font-size: 12px; font-weight: 600; color: white; cursor: pointer; white-space: nowrap;" title="Bấm để chỉnh sửa thông tin cá nhân">
-                        <span><i class="fa-solid fa-user"></i></span> <span style="max-width: 110px; overflow: hidden; text-overflow: ellipsis;">${tenHienThi}</span>
+                    <div onclick="moModalSuaThongTinCaNhan()" style="display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.15); padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); font-size: 12px; font-weight: 600; color: white; cursor: pointer; white-space: nowrap;">
+                        <span><i class="fa-solid fa-user"></i></span> <span style="max-width: 90px; overflow: hidden; text-overflow: ellipsis;">${tenHienThi}</span>
                     </div>
                     
-                    <a href="../mb/trangchu.html" style="background-color: #0284c7; color: white; text-decoration: none; padding: 7px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 4px;">
-                        <i class="fa-solid fa-mobile-screen-button"></i> Giao diện Mobile
+                    <a href="../mb/trangchu.html" style="background-color: #0284c7; color: white; text-decoration: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; white-space: nowrap; display: none; @media(min-width: 1024px){display: inline-flex;} align-items: center; gap: 4px;">
+                        <i class="fa-solid fa-mobile-screen-button"></i> Mobile
                     </a>
 
-                    <button onclick="dangXuat()" style="background-color: #dc2626; color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        <i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất
+                    <button onclick="dangXuat()" style="background-color: #dc2626; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 500; white-space: nowrap;">
+                        <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </div>
             </div>
@@ -535,16 +565,22 @@ document.addEventListener("DOMContentLoaded", function() {
     langNgheThongBaoRealtimePC();
 
     const savedSidebarState = localStorage.getItem('sidebarState');
-    if (savedSidebarState === 'collapsed') {
+    if (savedSidebarState === 'collapsed' && window.innerWidth > 992) {
         document.body.classList.add('sidebar-collapsed');
     }
 });
 
 function toggleSidebar() {
     const body = document.body;
-    body.classList.toggle('sidebar-collapsed');
-    const isCollapsed = body.classList.contains('sidebar-collapsed');
-    localStorage.setItem('sidebarState', isCollapsed ? 'collapsed' : 'expanded');
+    if (window.innerWidth <= 992) {
+        // Trên mobile: Mở/đóng menu trượt dạng overlay
+        body.classList.toggle('mobile-menu-open');
+    } else {
+        // Trên PC: Thu gọn / mở rộng menu dọc
+        body.classList.toggle('sidebar-collapsed');
+        const isCollapsed = body.classList.contains('sidebar-collapsed');
+        localStorage.setItem('sidebarState', isCollapsed ? 'collapsed' : 'expanded');
+    }
 }
 
 function moModalSuaThongTinCaNhan() {
@@ -561,7 +597,7 @@ function moModalSuaThongTinCaNhan() {
     modal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 999999; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;`;
 
     modal.innerHTML = `
-        <div style="background: #ffffff; padding: 25px; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); position: relative;">
+        <div style="background: #ffffff; padding: 25px; border-radius: 12px; width: 90%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); position: relative;">
             <button onclick="document.getElementById('modalSuaThongTinCaNhan').remove()" style="position: absolute; top: 12px; right: 15px; background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">&times;</button>
             <h3 style="color: #1e3a8a; margin-top: 0; margin-bottom: 15px; font-size: 18px; text-align: center;">👤 Chỉnh Sửa Thông Tin Cá Nhân</h3>
             <form onsubmit="luuThongTinCaNhan(event)">
@@ -632,7 +668,7 @@ function hienThiPopupGiaHanChoNhanVien() {
     modal.id = 'modalGiaHanNV';
     modal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); z-index: 999999; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;`;
     modal.innerHTML = `
-        <div style="background: #ffffff; padding: 35px; border-radius: 12px; width: 100%; max-width: 450px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+        <div style="background: #ffffff; padding: 35px; border-radius: 12px; width: 90%; max-width: 450px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
             <div style="font-size: 48px; margin-bottom: 10px;">🔒</div>
             <h2 style="color: #dc2626; margin-top: 0; font-size: 22px;">Phòng Khám Đã Hết Hạn Bản Quyền</h2>
             <p style="color: #475569; font-size: 14px; line-height: 1.5; margin-bottom: 20px;">Tài khoản sử dụng của phòng khám đã hết hạn bản quyền phần mềm. Vui lòng liên hệ <b>Chủ phòng khám</b> để tiến hành gia hạn và tiếp tục sử dụng hệ thống.</p>
@@ -732,11 +768,12 @@ function dangXuat() {
         window.location.href = '../index.html';
     }
 }
+
 // Tự động chèn Favicon chung từ thư mục logo cho toàn bộ hệ thống
 (function() {
     let link = document.querySelector("link[rel*='icon']") || document.createElement('link');
     link.type = 'image/png';
     link.rel = 'shortcut icon';
-    link.href = '../logo/logo.png'; // Đường dẫn trỏ tới thư mục logo
+    link.href = '../logo/logo.png';
     document.getElementsByTagName('head')[0].appendChild(link);
 })();
