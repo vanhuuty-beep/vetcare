@@ -115,24 +115,22 @@ document.addEventListener("DOMContentLoaded", function() {
         <li class="menu-dropdown-toggle" onclick="toggleSubmenu(this)">
             <div class="menu-label-wrap">
                 <span class="group-icon"><i class="fa-solid fa-file-invoice-dollar"></i></span> 
-                <span class="menu-text">Công nợ</span>
+                <span class="menu-text">Công nợ- Thu chi</span>
             </div> 
             <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
         </li>
         <ul class="submenu-container">
-            <li class="menu-item" id="menu-congnokhachhang" onclick="window.location.href='congno.html'">
+            <li class="menu-item" id="menu-qlcongno" onclick="window.location.href='qlcongno.html'">
                 <span><i class="fa-solid fa-user-tag"></i></span> 
-                <span class="menu-text">Công nợ khách hàng</span>
+                <span class="menu-text">Quản lý công nợ</span>
             </li>
-            <li class="menu-item" id="menu-congnonhacungcap" onclick="window.location.href='congnonhacungcap.html'">
-                <span><i class="fa-solid fa-truck-field"></i></span> 
-                <span class="menu-text">Công nợ nhà cung cấp</span>
-            </li>
-        </ul>
-		<li class="menu-item" id="menu-thuchi" onclick="window.location.href='thuchi.html'">
+            
+			<li class="menu-item" id="menu-thuchi" onclick="window.location.href='thuchi.html'">
     <span><i class="fa-solid fa-wallet"></i></span> 
     <span class="menu-text">Thu chi phòng khám</span>
 </li>
+        </ul>
+		
 <li class="menu-item" id="menu-baocao" onclick="window.location.href='baocao.html'">
     <span><i class="fa-solid fa-chart-pie"></i></span> 
     <span class="menu-text">Báo cáo</span>
