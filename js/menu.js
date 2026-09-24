@@ -107,10 +107,10 @@ document.addEventListener("DOMContentLoaded", function() {
             <li class="menu-item" id="menu-khovaccine" onclick="window.location.href='khovaccine.html'"><span><i class="fa-solid fa-syringe"></i></span> <span class="menu-text">Kho vắc-xin</span></li>
             <li class="menu-item" id="menu-nhatkylamvaccine" onclick="window.location.href='nhatkylamvaccine.html'"><span><i class="fa-solid fa-clock-rotate-left"></i></span> <span class="menu-text">Nhật ký tiêm</span></li>
             <li class="menu-item" id="menu-dichvu" onclick="window.location.href='dichvu.html'"><span><i class="fa-solid fa-tags"></i></span> <span class="menu-text">Giá dịch vụ</span></li>
-			<li class="menu-item" id="menu-dichvuchidinh" onclick="window.location.href='dichvuchidinh.html'">
-    <span><i class="fa-solid fa-file-medical"></i></span> 
-    <span class="menu-text">Giá dịch vụ chỉ định</span>
-</li>
+            <li class="menu-item" id="menu-dichvuchidinh" onclick="window.location.href='dichvuchidinh.html'">
+                <span><i class="fa-solid fa-file-medical"></i></span> 
+                <span class="menu-text">Giá dịch vụ chỉ định</span>
+            </li>
         </ul>
         <li class="menu-dropdown-toggle" onclick="toggleSubmenu(this)">
             <div class="menu-label-wrap">
@@ -125,16 +125,16 @@ document.addEventListener("DOMContentLoaded", function() {
                 <span class="menu-text">Quản lý công nợ</span>
             </li>
             
-			<li class="menu-item" id="menu-thuchi" onclick="window.location.href='thuchi.html'">
-    <span><i class="fa-solid fa-wallet"></i></span> 
-    <span class="menu-text">Thu chi phòng khám</span>
-</li>
+            <li class="menu-item" id="menu-thuchi" onclick="window.location.href='thuchi.html'">
+                <span><i class="fa-solid fa-wallet"></i></span> 
+                <span class="menu-text">Thu chi phòng khám</span>
+            </li>
         </ul>
-		
-<li class="menu-item" id="menu-baocao" onclick="window.location.href='baocao.html'">
-    <span><i class="fa-solid fa-chart-pie"></i></span> 
-    <span class="menu-text">Báo cáo</span>
-</li>
+        
+        <li class="menu-item" id="menu-baocao" onclick="window.location.href='baocao.html'">
+            <span><i class="fa-solid fa-chart-pie"></i></span> 
+            <span class="menu-text">Báo cáo sử dụng thuốc</span>
+        </li>
     `;
 
     if (isTrueOwner || isBacSi || isHuuTy) {
@@ -381,6 +381,55 @@ document.addEventListener("DOMContentLoaded", function() {
         body.sidebar-collapsed:not(.mobile-menu-open) .sidebar #sidebar-date { display: none !important; }
         body.sidebar-collapsed:not(.mobile-menu-open) .submenu-container.open { display: none !important; }
 
+        /* CSS THANH TÌM KIẾM THÔNG MINH TRÊN TOPBAR CHUNG */
+        .topbar-smart-search-global {
+            position: relative;
+            flex: 1;
+            max-width: 420px;
+            margin: 0 15px;
+        }
+        .topbar-smart-search-global input {
+            width: 100%;
+            height: 36px;
+            padding: 0 12px 0 34px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            font-size: 12px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.95);
+            color: #1e293b;
+            transition: all 0.2s;
+        }
+        .topbar-smart-search-global input:focus {
+            background: #ffffff;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25);
+        }
+        .topbar-smart-search-global::before {
+            content: "🔍";
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 13px;
+            z-index: 2;
+        }
+        #topbarSearchDropdownGlobal {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 15px 35px rgba(15, 23, 42, 0.18);
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 999999;
+            display: none;
+            text-align: left;
+        }
+
         #pcNotificationDropdown {
             display: none;
             position: fixed !important;
@@ -484,15 +533,16 @@ document.addEventListener("DOMContentLoaded", function() {
                     <h2 style="margin: 0; font-size: 13px; font-weight: bold; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">QUẢN LÝ PHÒNG KHÁM THÚ Y</h2>
                 </div>
                 
+                <!-- THANH TÌM KIẾM THÔNG MINH TOÀN HỆ THỐNG TRÊN TOPBAR -->
+                <div class="topbar-smart-search-global">
+                    <input type="text" id="topbarGlobalSearchInput" placeholder="🔍 Tìm khách hàng, SĐT hoặc thú cưng..." autocomplete="off" onkeyup="xuLyTimKiemThongMinhGlobalTopbar(this.value)">
+                    <div id="topbarSearchDropdownGlobal"></div>
+                </div>
+
                 <div style="display: flex; align-items: center; gap: 10px; position: relative;">
                     <div id="headerBellBtnPC" style="position: relative; display: flex; align-items: center; cursor: pointer; padding: 5px;" title="Bấm để xem lịch sử thông báo">
                         <span style="font-size: 18px; color: #fbbf24;"><i class="fa-solid fa-bell"></i></span>
                         <span id="navNotificationBadge" style="position: absolute; top: 0; right: 0; background: #dc2626; color: white; font-size: 10px; padding: 1px 5px; border-radius: 50%; display: none; font-weight: bold;">0</span>
-                    </div>
-
-                    <div class="search-container" style="position: relative; margin: 0; display: none; @media(min-width: 768px){display: block;}">
-                        <input type="text" id="globalSearchInput" class="search-box" placeholder="🔍 Tìm tên KH, SĐT..." autocomplete="off" style="padding: 6px 10px; width: 180px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 12px; outline: none; background: rgba(255,255,255,0.9); color: #1e293b;">
-                        <div id="searchDropdown" class="search-dropdown"></div>
                     </div>
 
                     <div onclick="moModalSuaThongTinCaNhan()" style="display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.15); padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); font-size: 12px; font-weight: 600; color: white; cursor: pointer; white-space: nowrap;">
@@ -510,6 +560,15 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
         `;
     }
+
+    // Đóng dropdown tìm kiếm global khi click ra ngoài
+    document.addEventListener('click', function(e) {
+        const searchContainer = document.querySelector('.topbar-smart-search-global');
+        const dropdown = document.getElementById('topbarSearchDropdownGlobal');
+        if (searchContainer && dropdown && !searchContainer.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
 
     if (!document.getElementById('globalAudioNotification')) {
         const audioTag = document.createElement('audio');
@@ -568,13 +627,144 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
+// --- HÀM TÌM KIẾM THÔNG MINH TOÀN HỆ THỐNG TRÊN TOPBAR (HIỆN KHÁCH HÀNG & THÚ CƯNG + BỘ 4 NÚT TÁC VỤ) ---
+async function xuLyTimKiemThongMinhGlobalTopbar(tuKhoa) {
+    const dropdown = document.getElementById('topbarSearchDropdownGlobal');
+    const keywordRaw = tuKhoa.trim();
+
+    if (!keywordRaw) {
+        dropdown.style.display = 'none';
+        return;
+    }
+
+    if (typeof db === 'undefined' || !db) {
+        dropdown.style.display = 'none';
+        return;
+    }
+
+    try {
+        // 1. Tìm chủ nuôi theo tên hoặc SĐT
+        const { data: listKhach, error: errKhach } = await db.from('khachhang')
+            .select('*')
+            .or(`hovaten.ilike.%${keywordRaw}%,sodienthoai.ilike.%${keywordRaw}%`)
+            .limit(5);
+
+        // 2. Lấy danh sách thú cưng độc lập khớp với từ khóa
+        const { data: listThuCung, error: errTC } = await db.from('thucung')
+            .select('*')
+            .ilike('tenthucung', `%${keywordRaw}%`)
+            .limit(5);
+
+        // Gom ID các khách hàng tìm được để lấy danh sách thú cưng của họ
+        let khachIds = [];
+        if (listKhach && listKhach.length > 0) {
+            khachIds = listKhach.map(k => k.id);
+        }
+
+        let mapThuCungTheoKhach = {};
+        if (khachIds.length > 0) {
+            // Truy vấn lấy thú cưng thuộc các khách hàng này (thường cột liên kết là makhachhang hoặc makh)
+            let resPets = await db.from('thucung').select('*').in('makhachhang', khachIds);
+            if (resPets.error || !resPets.data || resPets.data.length === 0) {
+                resPets = await db.from('thucung').select('*').in('makh', khachIds);
+            }
+            if (resPets.data) {
+                resPets.data.forEach(pet => {
+                    let kid = pet.makhachhang || pet.makh;
+                    if (!mapThuCungTheoKhach[kid]) mapThuCungTheoKhach[kid] = [];
+                    mapThuCungTheoKhach[kid].push(pet);
+                });
+            }
+        }
+
+        dropdown.style.display = 'block';
+        let html = '';
+
+        const hasKhach = listKhach && listKhach.length > 0;
+        const hasTC = listThuCung && listThuCung.length > 0;
+
+        if (!hasKhach && !hasTC) {
+            dropdown.innerHTML = `<div style="padding: 12px; font-size: 12px; color: #64748b; text-align: center;">Không tìm thấy khách hàng hoặc thú cưng phù hợp</div>`;
+            return;
+        }
+
+        // Hiển thị kết quả Khách hàng kèm thú cưng trực thuộc
+        if (hasKhach) {
+            html += `<div style="padding: 6px 12px; font-size: 11px; font-weight: bold; background: #f1f5f9; color: #475569; border-bottom: 1px solid #e2e8f0;">👤 KHÁCH HÀNG & THÚ CƯNG</div>`;
+            listKhach.forEach(kh => {
+                const sdtStr = kh.sodienthoai || kh.sdt || 'Không có';
+                const dsThuCungCuaKhach = mapThuCungTheoKhach[kh.id] || [];
+
+                html += `
+                    <div style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; background: #fff;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <div>
+                                <b style="color: #1e293b; font-size: 13px;">${kh.hovaten}</b> 
+                                <span style="font-size: 11px; color: #2563eb; margin-left: 6px;">(SĐT: ${sdtStr})</span>
+                            </div>
+                            <button onclick="window.location.href='khachhang.html?id=${kh.id}'" style="background: #e2e8f0; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold;">Xem KH</button>
+                        </div>
+                `;
+
+                if (dsThuCungCuaKhach.length > 0) {
+                    html += `<div style="padding-left: 10px; border-left: 2px solid #cbd5e1; margin-top: 4px; display: flex; flex-direction: column; gap: 6px;">`;
+                    dsThuCungCuaKhach.forEach(tc => {
+                        html += `
+                            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 6px 8px; border-radius: 6px; font-size: 11px;">
+                                <div>
+                                    <span style="font-weight: bold; color: #1e3a8a;">🐾 ${tc.tenthucung || tc.ten || '---'}</span>
+                                    <span style="color: #64748b; font-size: 10px; margin-left: 4px;">(${tc.loaigiong || tc.giong || 'Thú cưng'})</span>
+                                </div>
+                                <div style="display: flex; gap: 4px;">
+                                    <button type="button" onclick="window.location.href='khambenh.html?mathucung=${tc.id}'" style="background: #10b981; color: white; border: none; padding: 4px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;" title="Khám bệnh">Khám</button>
+                                    <button type="button" onclick="window.location.href='nhatkylamvaccine.html?mathucung=${tc.id}'" style="background: #f59e0b; color: white; border: none; padding: 4px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;" title="Tiêm vắc-xin">Tiêm</button>
+                                    <button type="button" onclick="window.location.href='noitru.html?mathucung=${tc.id}'" style="background: #8b5cf6; color: white; border: none; padding: 4px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;" title="Lưu trú nội trú">Lưu trú</button>
+                                    <button type="button" onclick="window.location.href='nhatkyspa.html?mathucung=${tc.id}'" style="background: #ec4899; color: white; border: none; padding: 4px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;" title="Spa thú cưng">Spa</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                } else {
+                    html += `<div style="font-size: 11px; color: #94a3b8; font-style: italic; padding-left: 10px;">Chưa có thú cưng nào</div>`;
+                }
+
+                html += `</div>`;
+            });
+        }
+
+        // Hiển thị kết quả tìm kiếm theo tên Thú cưng trực tiếp
+        if (hasTC) {
+            html += `<div style="padding: 6px 12px; font-size: 11px; font-weight: bold; background: #e0f2fe; color: #0369a1; border-bottom: 1px solid #bae6fd; margin-top: 4px;">🐾 KẾT QUẢ TÌM THÚ CƯNG</div>`;
+            listThuCung.forEach(tc => {
+                html += `
+                    <div style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fdfdfd;">
+                        <div>
+                            <div style="font-weight: bold; color: #1e3a8a; font-size: 12px;">🐶 ${tc.tenthucung || tc.ten || '---'}</div>
+                            <div style="font-size: 11px; color: #64748b;">Giống: ${tc.loaigiong || tc.giong || '---'}</div>
+                        </div>
+                        <div style="display: flex; gap: 4px;">
+                            <button type="button" onclick="window.location.href='khambenh.html?mathucung=${tc.id}'" style="background: #10b981; color: white; border: none; padding: 4px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;">Khám</button>
+                            <button type="button" onclick="window.location.href='nhatkylamvaccine.html?mathucung=${tc.id}'" style="background: #f59e0b; color: white; border: none; padding: 4px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;">Tiêm</button>
+                            <button type="button" onclick="window.location.href='noitru.html?mathucung=${tc.id}'" style="background: #8b5cf6; color: white; border: none; padding: 4px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;">Lưu trú</button>
+                            <button type="button" onclick="window.location.href='nhatkyspa.html?mathucung=${tc.id}'" style="background: #ec4899; color: white; border: none; padding: 4px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;">Spa</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        dropdown.innerHTML = html;
+    } catch (err) {
+        console.error('Lỗi tìm kiếm topbar:', err);
+    }
+}
+
 function toggleSidebar() {
     const body = document.body;
     if (window.innerWidth <= 992) {
-        // Trên mobile: Mở/đóng menu trượt dạng overlay
         body.classList.toggle('mobile-menu-open');
     } else {
-        // Trên PC: Thu gọn / mở rộng menu dọc
         body.classList.toggle('sidebar-collapsed');
         const isCollapsed = body.classList.contains('sidebar-collapsed');
         localStorage.setItem('sidebarState', isCollapsed ? 'collapsed' : 'expanded');
