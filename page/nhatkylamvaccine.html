@@ -107,7 +107,7 @@
         /* Bộ lọc */
         .vc-toolbar{
             margin:14px 22px 0;padding:10px;border:1px solid #e7edf5;border-radius:12px;
-            display:flex;align-items:center;gap:8px;background:#fbfdff;
+            display:flex;align-items:center;gap:8px;background:#fbfdff; flex-wrap: wrap;
         }
         .vc-filter{
             height:36px;padding:0 13px;border:1px solid transparent;background:transparent;
@@ -115,6 +115,7 @@
         }
         .vc-filter:hover{background:#f0f5ff;color:#2563eb}
         .vc-filter.active{background:#eaf1ff;color:#2563eb;border-color:#d7e4ff}
+        .vc-filter.dai-active{background:#fef2f2!important;color:#dc2626!important;border-color:#fecaca!important;}
         .vc-toolbar-spacer{flex:1}
         .vc-filter-select{height:36px;border:1px solid #dbe3ef;border-radius:9px;padding:0 10px;background:#fff;color:#475569;outline:none}
 
@@ -252,6 +253,7 @@
                     <button class="vc-filter" onclick="locTrangThai('Đã tiêm')">✓ &nbsp;Đã tiêm</button>
                     <button class="vc-filter" onclick="locTrangThai('Chờ nhắc lịch')">◷ &nbsp;Chờ nhắc lịch</button>
                     <button class="vc-filter" onclick="locTrangThai('Đã hủy')">⊗ &nbsp;Đã hủy</button>
+                    <button class="vc-filter" id="btnLocVaccineDai" onclick="locVaccineDai()" style="color: #dc2626; font-weight: 700;"><i class="fa-solid fa-shield-dog"></i> &nbsp;Chỉ vắc-xin Dại</button>
                     <div class="vc-toolbar-spacer"></div>
                     <select id="vaccineStatusFilter" class="vc-filter-select" onchange="locTrangThai(this.value)">
                         <option value="">Tất cả trạng thái</option>
@@ -534,6 +536,8 @@
         let mapKhachHang = {};
         let trangHienTai = 1;
         const soDongMoiTrang = 10;
+        let trangThaiDangLoc = '';
+        let chiLocVaccineDai = false;
 
         window.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -610,8 +614,6 @@
             }
         }
 
-        let trangThaiDangLoc = '';
-
         function capNhatKPI() {
             const data = danhSachNhatKyGoc || [];
             const today = new Date();
@@ -642,13 +644,39 @@
 
         function locTrangThai(status) {
             trangThaiDangLoc = status || '';
-            document.querySelectorAll('.vc-filter').forEach(btn => btn.classList.remove('active'));
+            chiLocVaccineDai = false;
+            document.querySelectorAll('.vc-filter').forEach(btn => btn.classList.remove('active', 'dai-active'));
+            
             const buttons = [...document.querySelectorAll('.vc-filter')];
             const matched = buttons.find(btn => (btn.textContent || '').includes(status || 'Tất cả'));
-            if (matched) matched.classList.add('active');
+            if (matched && !status) matched.classList.add('active');
+            else if (matched) matched.classList.add('active');
+
             const select = document.getElementById('vaccineStatusFilter');
             if (select) select.value = trangThaiDangLoc;
 
+            apDungBoLocTatCa();
+        }
+
+        function locVaccineDai() {
+            chiLocVaccineDai = !chiLocVaccineDai;
+            document.querySelectorAll('.vc-filter').forEach(btn => btn.classList.remove('active', 'dai-active'));
+            const btnDai = document.getElementById('btnLocVaccineDai');
+            if (chiLocVaccineDai) {
+                btnDai.classList.add('dai-active');
+            } else {
+                document.querySelector('.vc-filter').classList.add('active');
+            }
+            apDungBoLocTatCa();
+        }
+
+        function isVaccineDai(tenVaccine) {
+            if (!tenVaccine) return false;
+            const t = tenVaccine.toLowerCase();
+            return t.includes('dại') || t.includes('rabies') || t.includes('rabiva');
+        }
+
+        function apDungBoLocTatCa() {
             const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
             danhSachLoc = danhSachNhatKyGoc.filter(item => {
                 const text = [
@@ -656,9 +684,12 @@
                     mapThuCung[item.mathucung]?.tenthucung,
                     mapThuCung[item.mathucung]?.tenchu
                 ].filter(Boolean).join(' ').toLowerCase();
+
                 const matchKeyword = !keyword || text.includes(keyword);
                 const matchStatus = !trangThaiDangLoc || item.trangthai === trangThaiDangLoc;
-                return matchKeyword && matchStatus;
+                const matchDai = !chiLocVaccineDai || isVaccineDai(item.tenvaccine);
+
+                return matchKeyword && matchStatus && matchDai;
             });
             trangHienTai = 1;
             hienThiPhanTrang();
@@ -669,7 +700,7 @@
             tableBody.innerHTML = '';
             
             if(danhSachLoc.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="8"><div class="vc-empty"><div class="vc-empty-icon">💉</div><div class="vc-empty-title">Chưa có dữ liệu tiêm vắc-xin</div><div class="vc-empty-text">Hãy thêm mũi tiêm đầu tiên để bắt đầu quản lý lịch sử tiêm.</div></div></td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="8"><div class="vc-empty"><div class="vc-empty-icon">💉</div><div class="vc-empty-title">Chưa có dữ liệu tiêm vắc-xin</div><div class="vc-empty-text">Hãy thêm mũi tiêm đầu tiên hoặc thay đổi bộ lọc để xem kết quả.</div></div></td></tr>`;
                 document.getElementById('pagination-info').innerText = 'Hiển thị 0 - 0 của 0 bản ghi';
                 document.getElementById('pageIndicator').innerText = 'Trang 1 / 1';
                 document.getElementById('prevBtn').disabled = true;
@@ -731,20 +762,7 @@
         }
 
         function timKiemNhatKy() {
-            const tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
-            danhSachLoc = danhSachNhatKyGoc.filter(item => {
-                const tenVC = (item.tenvaccine || '').toLowerCase();
-                const maVC = (item.mavaccine || '').toLowerCase();
-                const bacSi = (item.bacsi || '').toLowerCase();
-                const maNK = (item.manhatky || ('nkpk' + layMaPhongKhamChuan() + String(item.id).padStart(4, '0'))).toLowerCase();
-                const pet = (mapThuCung[item.mathucung]?.tenthucung || '').toLowerCase();
-                const chu = (mapThuCung[item.mathucung]?.tenchu || '').toLowerCase();
-                const matchKeyword = !tuKhoa || [tenVC, maVC, bacSi, maNK, pet, chu].some(v => v.includes(tuKhoa));
-                const matchStatus = !trangThaiDangLoc || item.trangthai === trangThaiDangLoc;
-                return matchKeyword && matchStatus;
-            });
-            trangHienTai = 1;
-            hienThiPhanTrang();
+            apDungBoLocTatCa();
         }
 
         function moModalThem() {
@@ -922,7 +940,7 @@
                 let ngayTiem = item.ngaytiem || '';
                 if (!ngayTiem) return false;
                 let dStr = ngayTiem.split('T')[0];
-                return dStr >= tuNgay && dStr <= denNgay && item.trangthai !== 'Đã hủy';
+                return dStr >= tuNgay && dStr <= denNgay && item.trangthai !== 'Đã hủy' && isVaccineDai(item.tenvaccine);
             });
 
             const fTuNgay = tuNgay.split('-').reverse().join('/');
