@@ -563,11 +563,11 @@
 
                 mapLichSuKham = thongKeChiTieu;
 
-                // 3. Tải danh sách khách hàng
+                // 3. Tải danh sách khách hàng (Sắp xếp ID giảm dần để khách mới nhất lên đầu)
                 const maphongkham = sessionStorage.getItem('maphongkham') || '';
                 const cleanCurrentPK = maphongkham ? maphongkham.replace(/_/g, '').trim().toLowerCase() : '';
 
-                const { data, error } = await db.from('khachhang').select('*').order('id', { ascending: true });
+                const { data, error } = await db.from('khachhang').select('*').order('id', { ascending: false });
                 if (error) {
                     hienThiLoi('Không thể tải dữ liệu khách hàng');
                     return;
@@ -675,7 +675,6 @@
             if (soLuongPet > 0) {
                 const firstPet = dsPet[0];
                 const petName = firstPet.tenthucung || firstPet.ten || 'Thú cưng';
-                // Lấy ảnh thú cưng, nếu không có hoặc rỗng thì dùng ảnh mặc định
                 const petImg = firstPet.hinhanh || firstPet.anh || firstPet.hinh_anh || DEFAULT_PET_IMAGE;
 
                 petHtml = `
