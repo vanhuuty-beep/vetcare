@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Sử Khử Trùng - VetCare Pro</title>
+    <!-- Thư viện Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/menu.js"></script>
+
+    <!-- Thư viện CSS chung của hệ thống -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/style1.css">
+
+    <style>
+        /* Khung nội dung chính tràn rộng toàn màn hình */
+        .main-container { 
+            padding: 20px 30px !important; 
+            max-width: none !important; 
+            width: 100% !important; 
+            box-sizing: border-box !important; 
+            margin: 0 !important; 
+        }
+
+        .page-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+            width: 100%;
+        }
+        .page-header h2 { margin: 0; color: #1e3a8a; font-size: 22px; font-weight: 800; }
+        .btn-primary-custom { background: #2563eb; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; }
+        .btn-primary-custom:hover { background: #1d4ed8; }
+        
+        .card-box { 
+            background: #fff; 
+            border-radius: 12px; 
+            padding: 24px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            border: 1px solid #e2e8f0; 
+            width: 100% !important; 
+            box-sizing: border-box !important; 
+        }
+        
+        .table-custom { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        .table-custom th { background: #f8fafc; color: #475569; padding: 14px 12px; text-align: left; font-weight: 700; border-bottom: 2px solid #e2e8f0; }
+        .table-custom td { padding: 14px 12px; border-bottom: 1px solid #f1f5f9; color: #1e293b; vertical-align: middle; }
+        .table-custom tr:hover { background: #f8fafc; }
+
+        /* Modal nhập liệu với nhãn và ô nhập nằm ngang hàng nhau */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); justify-content: center; align-items: center; z-index: 9999; }
+        .modal-container { background: #fff; width: 90%; max-width: 680px; padding: 30px; border-radius: 14px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); box-sizing: border-box; }
+        
+        .form-group { 
+            margin-bottom: 16px; 
+            display: grid; 
+            grid-template-columns: 160px 1fr; 
+            align-items: center; 
+            gap: 12px; 
+        }
+        
+        .form-group label { 
+            font-size: 13px; 
+            font-weight: 700; 
+            color: #334155; 
+            text-align: right; 
+        }
+
+        .form-group input, .form-group textarea, .form-group select { 
+            width: 100%; 
+            padding: 10px 14px; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 8px; 
+            font-size: 13.5px; 
+            outline: none; 
+            box-sizing: border-box; 
+            background: #fff; 
+            color: #1e293b; 
+        }
+        .form-group input:focus, .form-group textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+    </style>
+</head>
+<body>
+
+    <div id="menu-container"></div>
+
+    <div class="main-content">
+        <div id="topnav-container"></div>
+
+        <div class="main-container">
+            <div class="page-header">
+                <h2>🧼 Lịch Sử Khử Trùng & Vệ Sinh Phòng Khám</h2>
+                <button class="btn-primary-custom" onclick="moModalThemKhuTrung()">
+                    <i class="fa-solid fa-plus"></i> Thêm Lịch Khử Trùng
+                </button>
+            </div>
+
+            <div class="card-box">
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <input type="text" id="inputTimKiem" placeholder="🔍 Tìm kiếm theo khu vực hoặc người thực hiện..." onkeyup="taiDanhSachKhuTrung()" style="flex: 1; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; outline: none;">
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th style="width: 20%;">Thời gian</th>
+                                <th style="width: 22%;">Khu vực khử trùng</th>
+                                <th style="width: 22%;">Phương pháp / Dung dịch</th>
+                                <th style="width: 16%;">Người thực hiện</th>
+                                <th style="width: 15%;">Ghi chú</th>
+                                <th style="text-align: center; width: 5%;">Xóa</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bangKhutrungBody">
+                            <tr><td colspan="6" style="text-align: center; color: #64748b; padding: 25px;">Đang tải dữ liệu...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM KHỬ TRÙNG -->
+    <div class="modal-overlay" id="modalKhutrung">
+        <div class="modal-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+                <h3 style="margin: 0; font-size: 18px; color: #1e3a8a;"><i class="fa-solid fa-pump-soap"></i> Thêm Nhật Ký Khử Trùng</h3>
+                <button onclick="dongModalThemKhuTrung()" style="background: none; border: none; font-size: 22px; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            <form onsubmit="luuLichSuKhutrung(event)">
+                <div class="form-group">
+                    <label>Khu vực khử trùng (*):</label>
+                    <input type="text" id="txtKhuVuc" placeholder="Ví dụ: Phòng khám bệnh, Phòng mổ..." required>
+                </div>
+                <div class="form-group">
+                    <label>Phương pháp / Dung dịch:</label>
+                    <input type="text" id="txtPhuongPhap" placeholder="Ví dụ: Phun Cloramin B 2%, Đèn UV...">
+                </div>
+                <div class="form-group">
+                    <label>Thời gian thực hiện (*):</label>
+                    <input type="datetime-local" id="txtThoiGian" required>
+                </div>
+                <div class="form-group">
+                    <label>Người thực hiện:</label>
+                    <input type="text" id="txtNguoiThucHien" placeholder="Họ tên nhân viên...">
+                </div>
+                <div class="form-group" style="align-items: flex-start;">
+                    <label style="padding-top: 8px;">Ghi chú:</label>
+                    <textarea id="txtGhiChu" rows="3" placeholder="Ghi chú thêm nếu có..."></textarea>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                    <button type="button" onclick="dongModalThemKhuTrung()" style="background: #94a3b8; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer;">Hủy</button>
+                    <button type="submit" style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">💾 Lưu lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            taiDanhSachKhuTrung();
+        });
+
+        function layMaPhongKhamHienTai() {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('currentUser'));
+                if (user) {
+                    return user.maphongkham || user.mapk || user.phongkhamid || '';
+                }
+            } catch(e) {}
+            return '';
+        }
+
+        async function taiDanhSachKhuTrung() {
+            const tuKhoa = document.getElementById('inputTimKiem').value.trim().toLowerCase();
+            const tbody = document.getElementById('bangKhutrungBody');
+            const maPK = layMaPhongKhamHienTai();
+            
+            let query = db.from('lichsukhutrung').select('*');
+            
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+            const tentaiKhoan = String(currentUser.tentaikhoan || currentUser.username || '').toLowerCase();
+            const isHuuTy = tentaiKhoan === 'huuty' || tentaiKhoan.includes('huuty');
+
+            if (maPK && !isHuuTy) {
+                query = query.eq('maphongkham', maPK);
+            }
+
+            query = query.order('ngaykhutrung', { ascending: false });
+
+            const { data, error } = await query;
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: red; padding: 20px;">Lỗi tải dữ liệu: ${error.message}</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 25px;">Chưa có lịch sử khử trùng nào</td></tr>`;
+                return;
+            }
+
+            const filtered = data.filter(item => {
+                const khuvuc = (item.khuvuc || '').toLowerCase();
+                const nguoithuchien = (item.nguoithuchien || '').toLowerCase();
+                return !tuKhoa || khuvuc.includes(tuKhoa) || nguoithuchien.includes(tuKhoa);
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 25px;">Không tìm thấy kết quả phù hợp</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(item => {
+                const ngayFormatted = item.ngaykhutrung ? new Date(item.ngaykhutrung).toLocaleString('vi-VN') : '---';
+                html += `
+                    <tr>
+                        <td style="font-weight: 600; color: #2563eb;">${ngayFormatted}</td>
+                        <td><b>${item.khuvuc || '---'}</b></td>
+                        <td>${item.phuongphap || '---'}</td>
+                        <td>${item.nguoithuchien || '---'}</td>
+                        <td>${item.ghichu || '---'}</td>
+                        <td style="text-align: center;">
+                            <button onclick="xoaLichSu(${item.id})" style="background: #fee2e2; color: #dc2626; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer;" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function moModalThemKhuTrung() {
+            document.getElementById('txtKhuVuc').value = '';
+            document.getElementById('txtPhuongPhap').value = '';
+            document.getElementById('txtGhiChu').value = '';
+            
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('txtThoiGian').value = now.toISOString().slice(0, 16);
+
+            try {
+                const user = JSON.parse(sessionStorage.getItem('currentUser'));
+                if (user) {
+                    document.getElementById('txtNguoiThucHien').value = user.tennhanvien || user.hovaten || '';
+                }
+            } catch(e) {}
+
+            document.getElementById('modalKhutrung').style.display = 'flex';
+        }
+
+        function dongModalThemKhuTrung() {
+            document.getElementById('modalKhutrung').style.display = 'none';
+        }
+
+        async function luuLichSuKhutrung(event) {
+            event.preventDefault();
+            const khuvuc = document.getElementById('txtKhuVuc').value.trim();
+            const phuongphap = document.getElementById('txtPhuongPhap').value.trim();
+            const ngaykhutrung = document.getElementById('txtThoiGian').value;
+            const nguoithuchien = document.getElementById('txtNguoiThucHien').value.trim();
+            const ghichu = document.getElementById('txtGhiChu').value.trim();
+            const maphongkham = layMaPhongKhamHienTai();
+
+            const payload = {
+                khuvuc,
+                phuongphap,
+                ngaykhutrung,
+                nguoithuchien,
+                ghichu
+            };
+            if (maphongkham) payload.maphongkham = maphongkham;
+
+            const { error } = await db.from('lichsukhutrung').insert([payload]);
+
+            if (error) {
+                alert('Lỗi lưu dữ liệu: ' + error.message);
+            } else {
+                alert('✅ Thêm lịch sử khử trùng thành công!');
+                dongModalThemKhuTrung();
+                taiDanhSachKhuTrung();
+            }
+        }
+
+        async function xoaLichSu(id) {
+            if (!confirm('Bạn có chắc chắn muốn xóa nhật ký này không?')) return;
+            const { error } = await db.from('lichsukhutrung').delete().eq('id', id);
+            if (error) {
+                alert('Lỗi khi xóa: ' + error.message);
+            } else {
+                taiDanhSachKhuTrung();
+            }
+        }
+    </script>
+</body>
+</html>
