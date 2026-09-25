@@ -131,10 +131,7 @@ document.addEventListener("DOMContentLoaded", function() {
             </li>
         </ul>
         
-        <li class="menu-item" id="menu-baocao" onclick="window.location.href='baocao.html'">
-            <span><i class="fa-solid fa-chart-pie"></i></span> 
-            <span class="menu-text">Báo cáo sử dụng thuốc</span>
-        </li>
+        
     `;
 
     if (isTrueOwner || isBacSi || isHuuTy) {
@@ -172,6 +169,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 <li class="menu-item" id="menu-spa" onclick="window.location.href='spa.html'"><span><i class="fa-solid fa-bath"></i></span> <span class="menu-text">Bảng giá Spa</span></li>
                 <li class="menu-item" id="menu-nhatkyspa" onclick="window.location.href='nhatkyspa.html'"><span><i class="fa-solid fa-scissors"></i></span> <span class="menu-text">Nhật ký Spa</span></li>
             </ul>
+            <li class="menu-item" id="menu-khutrung" onclick="window.location.href='khutrung.html'">
+                <span><i class="fa-solid fa-pump-soap"></i></span> 
+                <span class="menu-text">Lịch sử khử trùng</span>
+            </li>
+			<li class="menu-item" id="menu-baocao" onclick="window.location.href='baocao.html'">
+            <span><i class="fa-solid fa-chart-pie"></i></span> 
+            <span class="menu-text">Báo cáo sử dụng thuốc</span>
+        </li>
         `;
     }
 
