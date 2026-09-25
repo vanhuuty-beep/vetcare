@@ -464,8 +464,8 @@
                 const { data: lkData, error: lkErr } = await db.from('thucung_khachhang').select('*');
                 danhSachLienKetGoc = lkErr ? [] : (lkData || []);
 
-                // 3. Tải danh sách thú cưng
-                const { data, error } = await db.from('thucung').select('*').order('id', { ascending: true });
+                // 3. Tải danh sách thú cưng (Sắp xếp ID giảm dần để thú cưng mới nhất lên đầu)
+                const { data, error } = await db.from('thucung').select('*').order('id', { ascending: false });
                 if (error) {
                     hienThiLoi('Không thể tải dữ liệu thú cưng');
                     return;
@@ -632,7 +632,6 @@
             const currentMenu = document.getElementById(`actionMenu_${id}`);
             const isOpen = currentMenu.classList.contains('show');
 
-            // Đóng tất cả các menu đang mở khác
             document.querySelectorAll('.action-menu-popup').forEach(menu => menu.classList.remove('show'));
 
             if (!isOpen) {
@@ -640,7 +639,6 @@
             }
         }
 
-        // Click ra ngoài thì ẩn menu
         window.addEventListener('click', function() {
             document.querySelectorAll('.action-menu-popup').forEach(menu => menu.classList.remove('show'));
         });
@@ -786,7 +784,6 @@
                 return;
             }
 
-            // Bắt tham số makhachhang từ URL nếu trang được gọi từ khách hàng
             const urlParams = new URLSearchParams(window.location.search);
             const maKHUrl = urlParams.get('makhachhang');
 
