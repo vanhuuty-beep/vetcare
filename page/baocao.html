@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Xuất Báo Cáo & Sử Dụng Thuốc An Thần - VetCare Pro</title>
+    <title>Xuất Báo Cáo Ca Khám & Sử Dụng Thuốc An Thần - VetCare Pro</title>
     <!-- Thư viện Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/env.js"></script>
@@ -35,16 +35,13 @@
         .bc-btn-excel { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
         .bc-btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
 
-        .bc-stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; padding: 14px 18px; }
+        .bc-stats { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; padding: 14px 18px; }
         .bc-stat { min-height: 70px; border: 1px solid #e3e9f2; border-radius: 11px; background: linear-gradient(180deg,#fff,#f9fbff); display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
         .bc-stat-icon { width: 38px; height: 38px; border-radius: 9px; display: grid; place-items: center; background: #eff6ff; color: #2563eb; font-size: 16px; }
         .bc-stat b { display: block; font-size: 18px; color: #173d91; line-height: 20px; }
         .bc-stat small { display: block; font-size: 10px; color: #64748b; font-weight: 650; }
 
         .bc-section-title { font-size: 12px; font-weight: 800; color: #1e3a8a; margin: 15px 18px 10px; text-transform: uppercase; border-left: 3px solid #2563eb; padding-left: 6px; }
-        .bc-content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 18px 18px; }
-        @media(max-width: 900px) { .bc-content-grid { grid-template-columns: 1fr; } .bc-stats { grid-template-columns: repeat(2, minmax(0,1fr)); } }
-
         .bc-card-table { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; padding: 12px; }
         .bc-table { width: 100%; border-collapse: collapse; min-width: 100%; }
         .bc-table th, .bc-table td { padding: 9px 11px; font-size: 11px; border-bottom: 1px solid #edf1f6; text-align: left; }
@@ -67,10 +64,10 @@
                 <!-- Tiêu đề trang -->
                 <div class="bc-head">
                     <div class="bc-title">
-                        <div class="bc-title-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                        <div class="bc-title-icon"><i class="fa-solid fa-file-lines"></i></div>
                         <div>
-                            <h2>Báo Cáo Doanh Thu, Khách Hàng, Thú Cưng & Thuốc An Thần</h2>
-                            <p>Quản lý chi tiết ca khám, dịch vụ, thuốc sử dụng và lọc nhóm thuốc kiểm soát đặc biệt</p>
+                            <h2>Báo Cáo Ca Khám, Thú Cưng & Thuốc An Thần</h2>
+                            <p>Quản lý chi tiết ca khám, dịch vụ, thuốc sử dụng theo phòng khám hiện tại</p>
                         </div>
                     </div>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -110,19 +107,11 @@
                     </button>
                 </div>
 
-                <!-- Thẻ thống kê tổng quan -->
+                <!-- Thẻ thống kê -->
                 <div class="bc-stats">
-                    <div class="bc-stat">
-                        <div class="bc-stat-icon"><i class="fa-solid fa-wallet" style="color:#059669;"></i></div>
-                        <div><b id="statDoanhThu" style="color:#059669;">0 đ</b><small>Tổng doanh thu</small></div>
-                    </div>
                     <div class="bc-stat">
                         <div class="bc-stat-icon"><i class="fa-solid fa-file-medical"></i></div>
                         <div><b id="statTongKham">0</b><small>Tổng ca khám</small></div>
-                    </div>
-                    <div class="bc-stat">
-                        <div class="bc-stat-icon"><i class="fa-solid fa-pills" style="color:#d97706;"></i></div>
-                        <div><b id="statTienThuoc" style="color:#d97706;">0 đ</b><small>Doanh thu tiền thuốc</small></div>
                     </div>
                     <div class="bc-stat">
                         <div class="bc-stat-icon"><i class="fa-solid fa-syringe" style="color:#7c3aed;"></i></div>
@@ -130,9 +119,9 @@
                     </div>
                 </div>
 
-                <!-- BẢNG CHI TIẾT GIAO DỊCH: TÊN KHÁCH, SĐT, THÚ CƯNG, DỊCH VỤ, THUỐC -->
+                <!-- BẢNG CHI TIẾT GIAO DỊCH -->
                 <div class="bc-section-title"><i class="fa-solid fa-list-check" style="color:#2563eb;"></i> Danh sách chi tiết ca khám, chủ nuôi, SĐT, thú cưng, dịch vụ & thuốc sử dụng</div>
-                <div style="padding: 0 18px 10px;">
+                <div style="padding: 0 18px 18px;">
                     <div class="bc-card-table" style="overflow-x: auto;">
                         <table class="bc-table">
                             <thead>
@@ -144,58 +133,10 @@
                                     <th>Thú cưng</th>
                                     <th>Dịch vụ sử dụng</th>
                                     <th>Thuốc đã dùng</th>
-                                    <th style="text-align:right;">Thành tiền (VNĐ)</th>
                                 </tr>
                             </thead>
                             <tbody id="tbChiTietGiaoDich">
-                                <tr><td colspan="8" style="text-align:center; color:#888;">Đang tổng hợp dữ liệu...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Nội dung chi tiết bảng phụ (Trạng thái & Tỷ trọng) -->
-                <div class="bc-section-title">Tổng hợp số liệu thống kê bổ sung</div>
-                <div class="bc-content-grid">
-                    <!-- Bảng thống kê trạng thái bệnh -->
-                    <div class="bc-card-table">
-                        <b style="font-size: 11px; color: #1e3a8a; display:block; margin-bottom: 8px;"><i class="fa-solid fa-circle-info"></i> Thống kê trạng thái điều trị</b>
-                        <table class="bc-table">
-                            <thead>
-                                <tr>
-                                    <th>Trạng thái</th>
-                                    <th style="text-align:right;">Số lượng phiếu</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbTrangThai">
-                                <tr><td colspan="2" style="text-align:center; color:#888;">Đang tải dữ liệu...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Bảng tóm tắt các khoản thu -->
-                    <div class="bc-card-table">
-                        <b style="font-size: 11px; color: #1e3a8a; display:block; margin-bottom: 8px;"><i class="fa-solid fa-money-bill-wave"></i> Tỷ trọng cấu trúc doanh thu</b>
-                        <table class="bc-table">
-                            <thead>
-                                <tr>
-                                    <th>Khoản mục thu</th>
-                                    <th style="text-align:right;">Thành tiền</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Tiền thuốc điều trị</td>
-                                    <td id="tdTongTienThuoc" style="text-align:right; font-weight:bold; color:#d97706;">0 đ</td>
-                                </tr>
-                                <tr>
-                                    <td>Phí dịch vụ & công khám</td>
-                                    <td id="tdTongPhiDichVu" style="text-align:right; font-weight:bold; color:#2563eb;">0 đ</td>
-                                </tr>
-                                <tr style="background:#f8fafc;">
-                                    <td><strong>Tổng cộng thực thu</strong></td>
-                                    <td id="tdTongThucThu" style="text-align:right; font-weight:bold; color:#059669; font-size:12px;">0 đ</td>
-                                </tr>
+                                <tr><td colspan="7" style="text-align:center; color:#888;">Đang tổng hợp dữ liệu...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -210,12 +151,15 @@
         <table id="excelTableData" border="1">
             <thead>
                 <tr>
-                    <th colspan="8" style="background-color: #0284c7; color: white; font-size: 14px; text-align: center;">VETCARE PRO - BÁO CÁO CHI TIẾT CA KHÁM, SĐT, THÚ CƯNG & THUỐC AN THẦN</th>
+                    <th colspan="7" id="ex-tenphongkham" style="background-color: #0284c7; color: white; font-size: 14px; text-align: center;">BÁO CÁO CHI TIẾT CA KHÁM, SĐT, THÚ CƯNG & THUỐC AN THẦN</th>
                 </tr>
                 <tr>
-                    <th colspan="8" id="ex-thoigian" style="text-align: center; font-style: italic;"></th>
+                    <th colspan="7" id="ex-thongtinpk" style="text-align: center; font-weight: normal; font-size: 11px;"></th>
                 </tr>
-                <tr><th colspan="8"></th></tr>
+                <tr>
+                    <th colspan="7" id="ex-thoigian" style="text-align: center; font-style: italic;"></th>
+                </tr>
+                <tr><th colspan="7"></th></tr>
                 <tr style="background-color: #f1f5f9;">
                     <th>STT</th>
                     <th>Ngày khám</th>
@@ -224,7 +168,6 @@
                     <th>Thú cưng</th>
                     <th>Dịch vụ</th>
                     <th>Thuốc sử dụng</th>
-                    <th>Thành tiền (VNĐ)</th>
                 </tr>
             </thead>
             <tbody id="ex-tbody">
@@ -233,26 +176,21 @@
         </table>
     </div>
 
-    <!-- KHUNG IN BÁO CÁO (Ẩn khi xem giao diện) -->
+    <!-- KHUNG IN BÁO CÁO -->
     <div id="printReportArea" style="display: none;">
         <div style="text-align: center; margin-bottom: 15px;">
-            <h2 style="margin: 0; font-size: 14px; color: #0284c7; font-weight: bold;">VETCARE PRO - PHÒNG KHÁM THÚ Y</h2>
-            <h3 style="margin: 4px 0; font-size: 12px; text-transform: uppercase;">BÁO CÁO CHI TIẾT HOẠT ĐỘNG KHÁM BỆNH & SỬ DỤNG THUỐC</h3>
+            <h2 id="print-tenphongkham" style="margin: 0; font-size: 14px; color: #0284c7; font-weight: bold;">PHÒNG KHÁM THÚ Y</h2>
+            <p id="print-diachisdt" style="font-size: 10px; color: #333; margin: 3px 0;"></p>
+            <h3 style="margin: 8px 0 4px; font-size: 12px; text-transform: uppercase;">BÁO CÁO HOẠT ĐỘNG KHÁM BỆNH & SỬ DỤNG THUỐC</h3>
             <p id="p-thoigian-in" style="font-size: 10px; color: #555; margin: 0;"></p>
         </div>
 
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 10px;">
             <tr>
-                <td style="border: 1px solid #cbd5e1; padding: 6px; background:#f8fafc;"><strong>Tổng số ca khám:</strong></td>
-                <td style="border: 1px solid #cbd5e1; padding: 6px;" id="pr-tongkham">0</td>
-                <td style="border: 1px solid #cbd5e1; padding: 6px; background:#f8fafc;"><strong>Tổng doanh thu:</strong></td>
-                <td style="border: 1px solid #cbd5e1; padding: 6px; color:#059669; font-weight:bold;" id="pr-doanhthu">0 đ</td>
-            </tr>
-            <tr>
-                <td style="border: 1px solid #cbd5e1; padding: 6px; background:#f8fafc;"><strong>Doanh thu tiền thuốc:</strong></td>
-                <td style="border: 1px solid #cbd5e1; padding: 6px; color:#d97706; font-weight:bold;" id="pr-tienthuoc">0 đ</td>
-                <td style="border: 1px solid #cbd5e1; padding: 6px; background:#f8fafc;"><strong>Phí dịch vụ & khám:</strong></td>
-                <td style="border: 1px solid #cbd5e1; padding: 6px; color:#2563eb; font-weight:bold;" id="pr-tiendichvu">0 đ</td>
+                <td style="border: 1px solid #cbd5e1; padding: 6px; background:#f8fafc; width: 25%;"><strong>Tổng số ca khám:</strong></td>
+                <td style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;" id="pr-tongkham">0</td>
+                <td style="border: 1px solid #cbd5e1; padding: 6px; background:#f8fafc; width: 25%;"><strong>Lượt dùng thuốc an thần:</strong></td>
+                <td style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;" id="pr-luotanthan">0</td>
             </tr>
         </table>
 
@@ -266,27 +204,53 @@
                 <p style="font-size: 8px; color: #666; font-style: italic;">(Ký, ghi rõ họ tên)</p>
             </div>
             <div>
-                <p><strong>Quản lý phòng khám</strong></p>
+                <p id="print-footer-phongkham"><strong>Quản lý phòng khám</strong></p>
                 <p style="font-size: 8px; color: #666; font-style: italic;">(Ký, đóng dấu)</p>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT XỬ LÝ DỮ LIỆU LIÊN KẾT 4 BẢNG -->
+    <!-- SCRIPT XỬ LÝ DỮ LIỆU -->
     <script>
         let danhSachKhamGoc = [];
         let danhSachHoaDonThuocGoc = [];
         let danhSachKhachHangGoc = [];
         let danhSachThuCungGoc = [];
         let danhSachHoaDonDichVuGoc = [];
+        
+        let thongTinPhongKham = {
+            ten: 'PHÒNG KHÁM THÚ Y',
+            diachi: '',
+            sodienthoai: ''
+        };
 
-        // Từ khóa nhận diện nhóm thuốc An thần thông dụng trong thú y
         const tuKhoaAnThan = ['xylazine', 'zoletil', 'propofol', 'atropine', 'ketamine', 'diazepam', 'midazolam', 'acepromazine'];
 
         window.addEventListener('DOMContentLoaded', async () => {
+            await layThongTinPhongKham();
             await taiTatCaDuLieu();
             xuLyLocBaoCao();
         });
+
+        async function layThongTinPhongKham() {
+            if (typeof db === 'undefined' || !db) return;
+            const maphongkham = sessionStorage.getItem('maphongkham') || '';
+            if (!maphongkham) return;
+
+            try {
+                // Truy vấn bảng chupk để lấy tên phòng khám, địa chỉ, số điện thoại
+                const { data } = await db.from('chupk').select('*').eq('maphongkham', maphongkham).maybeSingle();
+                if (data) {
+                    thongTinPhongKham.ten = data.tenphongkham || data.ten_phong_kham || `PHÒNG KHÁM THÚ Y (${maphongkham})`;
+                    thongTinPhongKham.diachi = data.diachi || '';
+                    thongTinPhongKham.sodienthoai = data.sodienthoai || data.sdt || '';
+                } else {
+                    thongTinPhongKham.ten = `PHÒNG KHÁM THÚ Y (${maphongkham})`;
+                }
+            } catch (e) {
+                console.log('Không lấy được thông tin phòng khám từ bảng chupk', e);
+            }
+        }
 
         async function taiTatCaDuLieu() {
             if (typeof db === 'undefined' || !db) return;
@@ -300,11 +264,22 @@
                     db.from('hoadondichvu').select('*')
                 ]);
 
-                if (resKb.data) danhSachKhamGoc = resKb.data;
-                if (resThuoc.data) danhSachHoaDonThuocGoc = resThuoc.data;
-                if (resKh.data) danhSachKhachHangGoc = resKh.data;
-                if (resTc.data) danhSachThuCungGoc = resTc.data;
-                if (resHddv.data) danhSachHoaDonDichVuGoc = resHddv.data;
+                const currentPK = sessionStorage.getItem('maphongkham') || '';
+                const cleanCurrentPK = currentPK ? currentPK.replace(/_/g, '').trim().toLowerCase() : '';
+
+                function filterByPK(list) {
+                    if (!cleanCurrentPK || !list) return list || [];
+                    return list.filter(item => {
+                        const dbPK = item.maphongkham ? item.maphongkham.toString().replace(/_/g, '').trim().toLowerCase() : '';
+                        return !dbPK || dbPK === cleanCurrentPK;
+                    });
+                }
+
+                if (resKb.data) danhSachKhamGoc = filterByPK(resKb.data);
+                if (resThuoc.data) danhSachHoaDonThuocGoc = filterByPK(resThuoc.data);
+                if (resKh.data) danhSachKhachHangGoc = filterByPK(resKh.data);
+                if (resTc.data) danhSachThuCungGoc = filterByPK(resTc.data);
+                if (resHddv.data) danhSachHoaDonDichVuGoc = filterByPK(resHddv.data);
             } catch (err) {
                 console.error("Lỗi khi tải cơ sở dữ liệu báo cáo:", err);
             }
@@ -340,7 +315,6 @@
                 denNgayStr = document.getElementById('denNgay').value;
             }
 
-            // Lọc phiếu khám theo thời gian
             let filteredKb = danhSachKhamGoc.filter(item => {
                 const ngay = item.ngaykham || item.created_at || '';
                 if (!ngay) return false;
@@ -351,7 +325,6 @@
                 return true;
             });
 
-            // Map dữ liệu hỗ trợ tra cứu nhanh (Tên khách hàng và SĐT)
             let khMap = {};
             let khSdtMap = {};
             danhSachKhachHangGoc.forEach(kh => { 
@@ -370,7 +343,6 @@
                 }; 
             });
 
-            // Nhóm thuốc theo makhambenh
             let thuocTheoKham = {};
             danhSachHoaDonThuocGoc.forEach(hd => {
                 const makt = hd.makhambenh;
@@ -379,21 +351,19 @@
                 
                 let chiTietArr = [];
                 if (hd.chitiet) {
-                    try { chiTietArr = JSON.parse(hd.chitiet); } catch(e) { chiTietArr = [{ mathuoc: hd.mathuoc, soluong: hd.soluong, Gia: hd.Gia || hd.gia }]; }
+                    try { chiTietArr = JSON.parse(hd.chitiet); } catch(e) { chiTietArr = [{ mathuoc: hd.mathuoc, soluong: hd.soluong }]; }
                 } else {
-                    chiTietArr = [{ mathuoc: hd.mathuoc, soluong: hd.soluong, Gia: hd.Gia || hd.gia }];
+                    chiTietArr = [{ mathuoc: hd.mathuoc, soluong: hd.soluong }];
                 }
 
                 chiTietArr.forEach(t => {
                     thuocTheoKham[makt].push({
                         ten: t.mathuoc || 'Thuốc',
-                        soluong: parseFloat(t.soluong) || 1,
-                        gia: parseFloat(t.Gia || t.gia) || 0
+                        soluong: parseFloat(t.soluong) || 1
                     });
                 });
             });
 
-            // Nhóm dịch vụ theo makhambenh từ bảng hoadondichvu
             let dvTheoKham = {};
             danhSachHoaDonDichVuGoc.forEach(dv => {
                 const makt = dv.makhambenh || dv.makb;
@@ -402,12 +372,8 @@
                 dvTheoKham[makt].push(dv.tendichvu || dv.tendv || 'Dịch vụ y tế');
             });
 
-            // Tổng hợp danh sách hiển thị
             let tongSoKham = 0;
-            let tongPhiDichVu = 0;
-            let tongTienThuoc = 0;
             let tongLuotAnThan = 0;
-            let mapTrangThaiCount = {};
             let bangChiTietGiaoDich = [];
 
             filteredKb.forEach(item => {
@@ -416,7 +382,6 @@
                 let sdtChuNuoi = '---';
                 let tenThuCung = item.tenthucung || 'Thú cưng';
 
-                // Xác định tên chủ nuôi, số điện thoại & thú cưng chuẩn xác
                 if (item.makhachhang && khMap[item.makhachhang]) {
                     tenChuNuoi = khMap[item.makhachhang];
                     sdtChuNuoi = khSdtMap[item.makhachhang] || '---';
@@ -434,20 +399,11 @@
                     sdtChuNuoi = item.sodienthoai || item.sdt || '---';
                 }
 
-                let phiKham = parseFloat(item.chiphi || item.thanhtien || 0);
-                let tt = item.trangthai || 'Đang điều trị';
-                mapTrangThaiCount[tt] = (mapTrangThaiCount[tt] || 0) + 1;
-
-                // Lấy danh sách thuốc của ca khám này
                 let dsThuocCaKham = thuocTheoKham[makb] || [];
-                let tienThuocCaKham = 0;
                 let tenThuocStrs = [];
                 let coDungAnThan = false;
 
                 dsThuocCaKham.forEach(t => {
-                    let thanhTienT = t.soluong * t.gia;
-                    tienThuocCaKham += thanhTienT;
-                    
                     let tenThuocLower = t.ten.toLowerCase();
                     let isAt = tuKhoaAnThan.some(kw => tenThuocLower.includes(kw));
                     if (isAt) {
@@ -459,15 +415,10 @@
                     }
                 });
 
-                tongPhiDichVu += phiKham;
-                tongTienThuoc += tienThuocCaKham;
-                let tongTienCa = phiKham + tienThuocCaKham;
-
-                // Lấy dịch vụ bổ sung
                 let dsDichVu = dvTheoKham[makb] || [item.noidung || item.trieuchung || 'Khám tổng quát'];
 
                 if (loaiThuocLoc === 'anthan' && !coDungAnThan) {
-                    return; // Bỏ qua nếu lọc riêng ca an thần mà ca này không dùng
+                    return; 
                 }
 
                 tongSoKham++;
@@ -477,24 +428,13 @@
                     sdt: sdtChuNuoi,
                     thucung: tenThuCung,
                     dichvu: dsDichVu.join(', '),
-                    thuoc: tenThuocStrs.length > 0 ? tenThuocStrs.join(', ') : '<span style="color:#94a3b8; font-style:italic;">Không dùng thuốc</span>',
-                    thanhtien: tongTienCa
+                    thuoc: tenThuocStrs.length > 0 ? tenThuocStrs.join(', ') : '<span style="color:#94a3b8; font-style:italic;">Không dùng thuốc</span>'
                 });
             });
 
-            let tongDoanhThu = tongPhiDichVu + tongTienThuoc;
-
-            // Hiển thị thống kê tổng quan lên giao diện
-            document.getElementById('statDoanhThu').textContent = tongDoanhThu.toLocaleString('vi-VN') + ' đ';
             document.getElementById('statTongKham').textContent = tongSoKham.toLocaleString('vi-VN');
-            document.getElementById('statTienThuoc').textContent = tongTienThuoc.toLocaleString('vi-VN') + ' đ';
             document.getElementById('statLuotAnThan').textContent = tongLuotAnThan.toLocaleString('vi-VN');
 
-            document.getElementById('tdTongTienThuoc').textContent = tongTienThuoc.toLocaleString('vi-VN') + ' đ';
-            document.getElementById('tdTongPhiDichVu').textContent = tongPhiDichVu.toLocaleString('vi-VN') + ' đ';
-            document.getElementById('tdTongThucThu').textContent = tongDoanhThu.toLocaleString('vi-VN') + ' đ';
-
-            // Đổ dữ liệu bảng chi tiết giao dịch
             let tbHtml = '';
             bangChiTietGiaoDich.forEach((row, idx) => {
                 tbHtml += `
@@ -506,39 +446,31 @@
                         <td><span style="color:#2563eb; font-weight:bold;">🐾 ${row.thucung}</span></td>
                         <td>${row.dichvu}</td>
                         <td>${row.thuoc}</td>
-                        <td style="text-align:right; font-weight:bold; color:#059669;">${row.thanhtien.toLocaleString('vi-VN')} đ</td>
                     </tr>
                 `;
             });
             if (tbHtml === '') {
-                tbHtml = `<tr><td colspan="8" style="text-align:center; color:#888; padding: 20px;">Không tìm thấy ca khám phù hợp với điều kiện lọc</td></tr>`;
+                tbHtml = `<tr><td colspan="7" style="text-align:center; color:#888; padding: 20px;">Không tìm thấy ca khám phù hợp với điều kiện lọc</td></tr>`;
             }
             document.getElementById('tbChiTietGiaoDich').innerHTML = tbHtml;
 
-            // Bảng trạng thái điều trị
-            let tbTrangThaiHtml = '';
-            for (let key in mapTrangThaiCount) {
-                tbTrangThaiHtml += `
-                    <tr>
-                        <td>${key}</td>
-                        <td style="text-align:right; font-weight:bold;">${mapTrangThaiCount[key]} phiếu</td>
-                    </tr>
-                `;
-            }
-            if (tbTrangThaiHtml === '') tbTrangThaiHtml = `<tr><td colspan="2" style="text-align:center; color:#888;">Không có dữ liệu</td></tr>`;
-            document.getElementById('tbTrangThai').innerHTML = tbTrangThaiHtml;
-
-            // Gán dữ liệu cho khung In & Xuất Excel ẩn
             let thoiGianText = `Thời gian: ${loaiLoc === 'tatca' ? 'Toàn bộ thời gian' : (tuNgayStr + ' đến ' + denNgayStr)} ${loaiThuocLoc === 'anthan' ? ' | [LỌC RIÊNG NHÓM THUỐC AN THẦN]' : ''}`;
             document.getElementById('p-thoigian-in').textContent = thoiGianText;
             document.getElementById('pr-tongkham').textContent = tongSoKham;
-            document.getElementById('pr-doanhthu').textContent = tongDoanhThu.toLocaleString('vi-VN') + ' đ';
-            document.getElementById('pr-tienthuoc').textContent = tongTienThuoc.toLocaleString('vi-VN') + ' đ';
-            document.getElementById('pr-tiendichvu').textContent = tongPhiDichVu.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('pr-luotanthan').textContent = tongLuotAnThan;
 
+            // Hiển thị Tên, Địa chỉ và SĐT phòng khám lên phiếu in
+            document.getElementById('print-tenphongkham').textContent = thongTinPhongKham.ten.toUpperCase();
+            let diachiSdtStr = '';
+            if (thongTinPhongKham.diachi) diachiSdtStr += `Địa chỉ: ${thongTinPhongKham.diachi}`;
+            if (thongTinPhongKham.sodienthoai) diachiSdtStr += (diachiSdtStr ? ' | ' : '') + `Điện thoại: ${thongTinPhongKham.sodienthoai}`;
+            document.getElementById('print-diachisdt').textContent = diachiSdtStr;
+            document.getElementById('print-footer-phongkham').innerHTML = `<strong>${thongTinPhongKham.ten}</strong>`;
+
+            document.getElementById('ex-tenphongkham').textContent = `${thongTinPhongKham.ten} - BÁO CÁO CHI TIẾT CA KHÁM, SĐT, THÚ CƯNG & THUỐC AN THẦN`;
+            document.getElementById('ex-thongtinpk').textContent = diachiSdtStr;
             document.getElementById('ex-thoigian').textContent = thoiGianText;
 
-            // Đổ vào bảng Excel ẩn
             let exTbodyHtml = '';
             bangChiTietGiaoDich.forEach((row, idx) => {
                 exTbodyHtml += `
@@ -550,25 +482,22 @@
                         <td>${row.thucung}</td>
                         <td>${row.dichvu}</td>
                         <td>${row.thuoc.replace(/<[^>]*>/g, '')}</td>
-                        <td>${row.thanhtien}</td>
                     </tr>
                 `;
             });
             document.getElementById('ex-tbody').innerHTML = exTbodyHtml;
 
-            // Đổ vào bản in
             let printTableHtml = `
                 <table style="width:100%; border-collapse:collapse; font-size:10px;">
                     <thead>
                         <tr style="background:#f1f5f9;">
-                            <th style="border:1px solid #cbd5e1; padding:5px;">STT</th>
-                            <th style="border:1px solid #cbd5e1; padding:5px;">Ngày</th>
-                            <th style="border:1px solid #cbd5e1; padding:5px;">Chủ nuôi</th>
-                            <th style="border:1px solid #cbd5e1; padding:5px;">SĐT</th>
-                            <th style="border:1px solid #cbd5e1; padding:5px;">Thú cưng</th>
-                            <th style="border:1px solid #cbd5e1; padding:5px;">Dịch vụ</th>
-                            <th style="border:1px solid #cbd5e1; padding:5px;">Thuốc sử dụng</th>
-                            <th style="border:1px solid #cbd5e1; padding:5px; text-align:right;">Thành tiền</th>
+                            <th style="border:1px solid #cbd5e1; padding:5px; width: 6%;">STT</th>
+                            <th style="border:1px solid #cbd5e1; padding:5px; width: 12%;">Ngày</th>
+                            <th style="border:1px solid #cbd5e1; padding:5px; width: 18%;">Chủ nuôi</th>
+                            <th style="border:1px solid #cbd5e1; padding:5px; width: 14%;">SĐT</th>
+                            <th style="border:1px solid #cbd5e1; padding:5px; width: 14%;">Thú cưng</th>
+                            <th style="border:1px solid #cbd5e1; padding:5px; width: 18%;">Dịch vụ</th>
+                            <th style="border:1px solid #cbd5e1; padding:5px; width: 18%;">Thuốc sử dụng</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -583,7 +512,6 @@
                         <td style="border:1px solid #cbd5e1; padding:5px;">${row.thucung}</td>
                         <td style="border:1px solid #cbd5e1; padding:5px;">${row.dichvu}</td>
                         <td style="border:1px solid #cbd5e1; padding:5px;">${row.thuoc.replace(/<[^>]*>/g, '')}</td>
-                        <td style="border:1px solid #cbd5e1; padding:5px; text-align:right;">${row.thanhtien.toLocaleString('vi-VN')} đ</td>
                     </tr>
                 `;
             });
@@ -597,7 +525,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `BaoCao_ChiTiet_ThuocAnThan_${new Date().toISOString().split('T')[0]}.xls`;
+            a.download = `BaoCao_CaKham_ThuocAnThan_${new Date().toISOString().split('T')[0]}.xls`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -612,7 +540,7 @@
                 <html lang="vi">
                 <head>
                     <meta charset="UTF-8">
-                    <title>In Báo Cáo Chi Tiết Ca Khám & Thuốc An Thần</title>
+                    <title>In Báo Cáo Ca Khám & Thuốc An Thần</title>
                     <style>
                         body { font-family: Arial, sans-serif; color: #111; font-size: 11px; margin: 15px; }
                         table th, table td { font-size: 10px; }
