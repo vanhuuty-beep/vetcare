@@ -460,9 +460,13 @@
                     khData.forEach(kh => { mapKhachHang[kh.id] = kh; });
                 }
 
-                // 2. Tải liên kết thú cưng - khách hàng
-                const { data: lkData, error: lkErr } = await db.from('thucung_khachhang').select('*');
-                danhSachLienKetGoc = lkErr ? [] : (lkData || []);
+                // 2. Tải liên kết thú cưng - khách hàng (bắt lỗi an toàn nếu bảng không tồn tại)
+                try {
+                    const { data: lkData } = await db.from('thucung_khachhang').select('*');
+                    danhSachLienKetGoc = lkData || [];
+                } catch (e) {
+                    danhSachLienKetGoc = [];
+                }
 
                 // 3. Tải danh sách thú cưng (Sắp xếp ID giảm dần để thú cưng mới nhất lên đầu)
                 const { data, error } = await db.from('thucung').select('*').order('id', { ascending: false });
@@ -561,23 +565,37 @@
                 genderHtml = `<span class="badge-gender-female"><i class="fa-solid fa-venus"></i> Cái</span>`;
             }
 
-            // Lấy thông tin chủ nuôi liên kết
-            const cacChuNuoi = danhSachLienKetGoc.filter(lk => {
+            // --- ĐỒNG BỘ TÌM KIẾM LIÊN KẾT CHỦ NUÔI LINH HOẠT ---
+            let danhSachKHId = [];
+            
+            // 1. Kiểm tra cột khóa ngoại trực tiếp trên bảng thucung (makhachhang, khachhang_id, makh)
+            const directKhId = item.makhachhang !== undefined ? item.makhachhang : (item.khachhang_id !== undefined ? item.khachhang_id : item.makh);
+            if (directKhId !== null && directKhId !== undefined && directKhId !== '') {
+                danhSachKHId.push(directKhId);
+            }
+
+            // 2. Kiểm tra qua bảng trung gian thucung_khachhang
+            const cacLienKet = danhSachLienKetGoc.filter(lk => {
                 const pId = lk.thucung_id !== undefined ? lk.thucung_id : lk.mathucung;
                 return Number(pId) === Number(item.id);
             });
+            cacLienKet.forEach(lk => {
+                const khId = lk.makhachhang !== undefined ? lk.makhachhang : (lk.khachhang_id !== undefined ? lk.khachhang_id : lk.makh);
+                if (khId !== null && khId !== undefined && !danhSachKHId.includes(khId)) {
+                    danhSachKHId.push(khId);
+                }
+            });
 
             let ownerHtml = `<span style="color: var(--muted); font-style: italic;">Chưa có chủ nuôi</span>`;
-            if (cacChuNuoi.length > 0) {
-                const khId = cacChuNuoi[0].makhachhang !== undefined ? cacChuNuoi[0].makhachhang : cacChuNuoi[0].khachhang_id;
-                const kh = mapKhachHang[khId] || {};
-                const tenChu = kh.hovaten || kh.tenkhachhang || 'Chưa rõ';
-                const sdtChu = chuanHoaSoDienThoai(kh.sodienthoai || kh.sdt || '');
+            if (danhSachKHId.length > 0) {
+                const kh = mapKhachHang[danhSachKHId[0]] || {};
+                const tenChu = kh.hovaten || kh.tenkhachhang || kh.ten || 'Chưa rõ';
+                const sdtChu = chuanHoaSoDienThoai(kh.sodienthoai || kh.sdt || kh.phone || '');
                 const phoneDisplay = sdtChu ? `<a href="tel:${escapeHtml(sdtChu)}"><i class="fa-solid fa-phone"></i> ${escapeHtml(sdtChu)}</a>` : 'Chưa có SĐT';
 
                 ownerHtml = `
                     <div class="owner-info-cell">
-                        <div>${escapeHtml(tenChu)} ${cacChuNuoi.length > 1 ? `(+${cacChuNuoi.length - 1})` : ''}</div>
+                        <div>${escapeHtml(tenChu)} ${danhSachKHId.length > 1 ? `(+${danhSachKHId.length - 1})` : ''}</div>
                         <div>${phoneDisplay}</div>
                     </div>
                 `;
@@ -670,12 +688,18 @@
                 const giong = String(item.giong || '').toLowerCase();
                 const ma = String(item.mathucung || (typeof formatMaThuCung === 'function' ? formatMaThuCung(item.id) : 'TC' + item.id)).toLowerCase();
 
-                const cacChuNuoi = danhSachLienKetGoc.filter(lk => Number(lk.thucung_id || lk.mathucung) === Number(item.id));
                 let chuSearch = '';
-                cacChuNuoi.forEach(lk => {
-                    const khId = lk.makhachhang !== undefined ? lk.makhachhang : lk.khachhang_id;
+                const directKhId = item.makhachhang !== undefined ? item.makhachhang : (item.khachhang_id !== undefined ? item.khachhang_id : item.makh);
+                if (directKhId !== null && directKhId !== undefined) {
+                    const kh = mapKhachHang[directKhId] || {};
+                    chuSearch += ` ${kh.hovaten || kh.tenkhachhang || ''} ${kh.sodienthoai || kh.sdt || ''} ${kh.makhachhang || ''}`;
+                }
+
+                const cacLienKet = danhSachLienKetGoc.filter(lk => Number(lk.thucung_id || lk.mathucung) === Number(item.id));
+                cacLienKet.forEach(lk => {
+                    const khId = lk.makhachhang !== undefined ? lk.makhachhang : (lk.khachhang_id !== undefined ? lk.khachhang_id : lk.makh);
                     const kh = mapKhachHang[khId] || {};
-                    chuSearch += ` ${kh.hovaten || ''} ${kh.sodienthoai || ''} ${kh.makhachhang || ''}`;
+                    chuSearch += ` ${kh.hovaten || kh.tenkhachhang || ''} ${kh.sodienthoai || kh.sdt || ''} ${kh.makhachhang || ''}`;
                 });
                 chuSearch = chuSearch.toLowerCase();
 
@@ -850,17 +874,24 @@
 
             const petData = danhSachThuCungGoc.find(x => String(x.id) === String(petId)) || {};
             
-            const cacChuNuoi = danhSachLienKetGoc.filter(lk => {
+            let danhSachKHId = [];
+            const directKhId = petData.makhachhang !== undefined ? petData.makhachhang : (petData.khachhang_id !== undefined ? petData.khachhang_id : petData.makh);
+            if (directKhId !== null && directKhId !== undefined) danhSachKHId.push(directKhId);
+
+            const cacLienKet = danhSachLienKetGoc.filter(lk => {
                 const petIdCol = lk.thucung_id !== undefined ? lk.thucung_id : lk.mathucung;
                 return Number(petIdCol) === Number(petId);
             });
+            cacLienKet.forEach(lk => {
+                const khId = lk.makhachhang !== undefined ? lk.makhachhang : (lk.khachhang_id !== undefined ? lk.khachhang_id : lk.makh);
+                if (khId !== null && khId !== undefined && !danhSachKHId.includes(khId)) danhSachKHId.push(khId);
+            });
 
             let chuNuoiInfoHtml = 'Chưa có thông tin chủ nuôi';
-            if (cacChuNuoi.length > 0) {
-                chuNuoiInfoHtml = cacChuNuoi.map(lk => {
-                    const khId = lk.makhachhang !== undefined ? lk.makhachhang : lk.khachhang_id;
+            if (danhSachKHId.length > 0) {
+                chuNuoiInfoHtml = danhSachKHId.map(khId => {
                     const kh = mapKhachHang[khId] || {};
-                    return `<b>${escapeHtml(kh.hovaten || kh.tenkhachhang || 'Không rõ')}</b> (SĐT: ${escapeHtml(kh.sodienthoai || kh.sdt || '---')})`;
+                    return `<b>${escapeHtml(kh.hovaten || kh.tenkhachhang || kh.ten || 'Không rõ')}</b> (SĐT: ${escapeHtml(kh.sodienthoai || kh.sdt || kh.phone || '---')})`;
                 }).join(' | ');
             }
 
