@@ -11,8 +11,10 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-    <!-- Thư viện Supabase JS -->
+    <!-- Thư viện Supabase JS và SheetJS (XLSX) xuất Excel -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <script src="../js/env.js"></script>
     <script src="../js/config.js"></script>
     <script src="../js/supabase.js"></script>
@@ -63,11 +65,18 @@
         .dt-heading h2 { margin: 0; font-size: 18px; font-weight: 800; color: var(--text); }
         .dt-heading p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
 
+        .header-actions-group { display: flex; align-items: center; gap: 10px; }
         .btn-action-primary {
             height: 40px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--primary); color: #fff;
             font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); transition: 0.2s;
         }
         .btn-action-primary:hover { background: var(--primary-dark); }
+
+        .btn-action-success {
+            height: 40px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--green); color: #fff;
+            font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2); transition: 0.2s;
+        }
+        .btn-action-success:hover { background: #047857; }
 
         .btn-action-outline {
             height: 40px; padding: 0 16px; border: 1px solid var(--border); border-radius: 10px; background: #fff;
@@ -189,7 +198,8 @@
                             <p>Quản lý hóa đơn đơn thuốc điều trị, tự động trừ kho và in hóa đơn thanh toán</p>
                         </div>
                     </div>
-                    <div>
+                    <div class="header-actions-group">
+                        <button class="btn-action-success" onclick="moModalBaoCao()"><i class="fa-solid fa-file-excel"></i> Xuất báo cáo sử dụng thuốc</button>
                         <button class="btn-action-primary" onclick="moModalThem()"><i class="fa-solid fa-plus"></i> Lập hóa đơn thuốc mới</button>
                     </div>
                 </div>
@@ -235,16 +245,17 @@
                     <table class="custom-table">
                         <thead>
                             <tr>
-                                <th style="width: 150px;">Mã đơn</th>
-                                <th style="width: 200px;">Mã khám bệnh & Chủ nuôi</th>
-                                <th>Chi tiết thuốc & Hướng dẫn sử dụng</th>
-                                <th style="width: 140px; text-align: right;">Tổng tiền (VNĐ)</th>
-                                <th style="width: 180px; text-align: right;">Thao tác</th>
+                                <th style="width: 130px;">Mã đơn</th>
+                                <th style="width: 110px;">Ngày lập</th>
+                                <th style="width: 180px;">Mã khám & Chủ nuôi</th>
+                                <th>Dịch vụ sử dụng / Chẩn đoán & Chi tiết thuốc</th>
+                                <th style="width: 130px; text-align: right;">Tổng tiền (VNĐ)</th>
+                                <th style="width: 160px; text-align: right;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="data-table">
                             <tr>
-                                <td colspan="5">
+                                <td colspan="6">
                                     <div class="empty-state">
                                         <i class="fa-solid fa-spinner fa-spin"></i>
                                         <div>Đang tải dữ liệu hóa đơn đơn thuốc...</div>
@@ -320,24 +331,88 @@
         </div>
     </div>
 
-    <!-- KHUNG IN HÓA ĐƠN THUỐC -->
+    <!-- MODAL XEM TRƯỚC VÀ XUẤT BÁO CÁO SỬ DỤNG THUỐC -->
+    <div class="modal-overlay" id="modalBaoCao">
+        <div class="modal-container" style="max-width: 1100px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-file-excel" style="color: var(--green);"></i> Báo cáo sử dụng thuốc điều trị</h3>
+                <button class="close-modal" onclick="dongModalBaoCao()">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; gap: 12px; align-items: flex-end; margin-bottom: 15px; background: #f8fafc; padding: 12px; border-radius: 10px; border: 1px solid var(--border); flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 4px; display: block;">Từ ngày:</label>
+                        <input type="date" id="bcTuNgay" style="width: 100%; height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px;">
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 4px; display: block;">Đến ngày:</label>
+                        <input type="date" id="bcDenNgay" style="width: 100%; height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px;">
+                    </div>
+                    <div style="flex: 1.5; min-width: 220px;">
+                        <label style="font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 4px; display: block;">Loại thuốc / Lọc nhóm thuốc:</label>
+                        <select id="bcLoaiThuoc" style="width: 100%; height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; background: #fff;">
+                            <option value="all">Tất cả các loại thuốc</option>
+                            <option value="an_than">🔒 Chỉ lọc các Thuốc An Thần (Xylazine, Zoletil, Propofol, Midazolam, Diazepam, Ketamine...)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button class="btn-action-primary" onclick="taiDuLieuBaoCao()" style="height: 36px;"><i class="fa-solid fa-filter"></i> Lọc dữ liệu</button>
+                    </div>
+                </div>
+
+                <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px;">
+                    <table class="custom-table" style="font-size: 12px;">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px; text-align: center;">STT</th>
+                                <th>Ngày khám</th>
+                                <th>Chủ nuôi (Khách hàng)</th>
+                                <th>Số điện thoại</th>
+                                <th>Thú cưng</th>
+                                <th>Dịch vụ sử dụng / Chẩn đoán</th>
+                                <th>Thuốc đã dùng</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bcTableBody">
+                            <tr>
+                                <td colspan="7" class="empty-state">Vui lòng chọn khoảng thời gian và nhấn Lọc dữ liệu</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                <button class="btn-action-primary" onclick="inBaoCaoTongHop()" style="background: #0284c7;"><i class="fa-solid fa-file-pdf"></i> In / Xuất File PDF Báo Cáo</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-action-outline" onclick="dongModalBaoCao()">Đóng</button>
+                    <button class="btn-action-success" onclick="xuatFileExcelBaoCao()"><i class="fa-solid fa-file-excel"></i> Xuất file Excel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHUNG IN ĐƠN THUỐC -->
     <div id="printInvoiceArea" style="display: none;">
-        <div class="print-header" style="text-align: center; border-bottom: 2px solid #0284c7; padding-bottom: 6px; margin-bottom: 10px;">
-            <h2 style="font-size: 15px; margin: 0; color: #0284c7; font-weight: bold;">HỆ THỐNG PHÒNG KHÁM THÚ Y VETCARE PRO</h2>
-            <p style="font-size: 10px; margin: 2px 0; color: #555;">Địa chỉ: Chi nhánh toàn quốc | Hotline: 1900 xxxx</p>
+        <div style="text-align: center; border-bottom: 2px solid #0284c7; padding-bottom: 6px; margin-bottom: 10px;">
+            <h2 id="inv-tenphongkham" style="font-size: 15px; margin: 0; color: #0284c7; font-weight: bold;">PHÒNG KHÁM THÚ Y VETCARE PRO</h2>
+            <p style="font-size: 10px; margin: 2px 0; color: #555;">Đơn thuốc điều trị & Hướng dẫn sử dụng</p>
         </div>
         
-        <div class="print-title" style="text-align: center; margin-bottom: 12px;">
+        <div style="text-align: center; margin-bottom: 12px;">
             <h3 id="inv-madon" style="font-size: 13px; margin: 0; text-transform: uppercase; color: #1e293b; font-weight: bold;">HÓA ĐƠN THANH TOÁN & ĐƠN THUỐC</h3>
-            <p style="font-size: 10px; margin: 2px 0; color: #64748b;">Chi tiết đơn thuốc điều trị</p>
         </div>
         
-        <div class="print-grid" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 10px; margin-bottom: 10px; border-radius: 4px; font-size: 11px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 10px; margin-bottom: 10px; border-radius: 4px; font-size: 11px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                 <div><strong>Mã khám bệnh:</strong> <span id="inv-makhambenh"></span></div>
                 <div><strong>Chủ vật nuôi:</strong> <span id="inv-chusohuu"></span></div>
             </div>
-            <div style="display: flex; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <div><strong>Thú cưng:</strong> <span id="inv-thucung"></span></div>
+                <div><strong>SĐT:</strong> <span id="inv-sdt"></span></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <div><strong>Dịch vụ sử dụng / Chẩn đoán:</strong> <span id="inv-dichvu" style="color: var(--primary); font-weight: bold;"></span></div>
                 <div><strong>Ngày lập:</strong> <span id="inv-ngaylap"></span></div>
             </div>
         </div>
@@ -345,11 +420,11 @@
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px;">
             <thead>
                 <tr style="background: #f1f5f9;">
-                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: left;">Tên thuốc</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">Số lượng</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: right;">Đơn giá</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: right;">Thành tiền</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: left;">Hướng dẫn</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Tên thuốc</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 70px;">Số lượng</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: right; width: 100px;">Đơn giá</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: right; width: 100px;">Thành tiền</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left; width: 140px;">Hướng dẫn</th>
                 </tr>
             </thead>
             <tbody id="inv-table-body"></tbody>
@@ -371,18 +446,61 @@
         </div>
     </div>
 
+    <!-- KHUNG IN BÁO CÁO TỔNG HỢP -->
+    <div id="printBaoCaoArea" style="display: none;">
+        <div style="text-align: center; margin-bottom: 15px;">
+            <h2 id="pdf-ten-phongkham" style="font-size: 16px; margin: 0; color: #0284c7; font-weight: bold; text-transform: uppercase;">PHÒNG KHÁM THÚ Y</h2>
+            <h3 id="pdf-tieu-de" style="font-size: 13px; margin: 6px 0 2px; color: #1e293b; font-weight: bold; text-transform: uppercase;">BÁO CÁO SỬ DỤNG THUỐC ĐIỀU TRỊ</h3>
+            <p id="pdf-thoi-gian" style="font-size: 11px; margin: 0; color: #64748b;">Thời gian: ---</p>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 11px;" id="pdf-table-main">
+            <thead>
+                <tr style="background: #f1f5f9;">
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 40px;">STT</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left; width: 85px;">Ngày khám</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Chủ nuôi</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left; width: 90px;">SĐT</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left; width: 80px;">Thú cưng</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Dịch vụ sử dụng / Chẩn đoán</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Thuốc đã dùng</th>
+                </tr>
+            </thead>
+            <tbody id="pdf-table-body"></tbody>
+        </table>
+
+        <div style="display: flex; justify-content: space-between; text-align: center; font-size: 11px; margin-top: 30px;">
+            <div style="width: 40%;">
+                <p style="margin: 0;"><strong>Người lập báo cáo</strong></p>
+                <p style="font-size: 10px; color: #666; font-style: italic; margin: 2px 0 0;">(Ký, ghi rõ họ tên)</p>
+            </div>
+            <div style="width: 40%;">
+                <p style="margin: 0;"><strong>Quản lý phòng khám</strong></p>
+                <p style="font-size: 10px; color: #666; font-style: italic; margin: 2px 0 0;">(Ký, đóng dấu)</p>
+            </div>
+        </div>
+    </div>
+
     <style>
     @media print {
         body, body * { visibility: hidden !important; }
         #menu-container, #topnav-container, .main-content, .card, .modal-overlay { display: none !important; visibility: hidden !important; }
-        #printInvoiceArea, #printInvoiceArea * { visibility: visible !important; }
-        #printInvoiceArea {
+        
+        body.printing-invoice #printInvoiceArea, body.printing-invoice #printInvoiceArea * { visibility: visible !important; }
+        body.printing-invoice #printInvoiceArea {
             display: block !important; position: absolute !important; top: 0 !important; left: 0 !important;
             width: 100% !important; font-family: 'Arial', sans-serif !important; color: #111 !important;
             background: #fff !important; padding: 15px !important; box-sizing: border-box !important; z-index: 999999 !important;
         }
-        #printInvoiceArea table { width: 100% !important; border-collapse: collapse !important; }
-        #printInvoiceArea th, #printInvoiceArea td { visibility: visible !important; }
+
+        body.printing-baocao #printBaoCaoArea, body.printing-baocao #printBaoCaoArea * { visibility: visible !important; }
+        body.printing-baocao #printBaoCaoArea {
+            display: block !important; position: absolute !important; top: 0 !important; left: 0 !important;
+            width: 100% !important; font-family: 'Arial', sans-serif !important; color: #111 !important;
+            background: #fff !important; padding: 20px !important; box-sizing: border-box !important; z-index: 999999 !important;
+        }
+
+        @page { size: A4 portrait; margin: 10mm; }
     }
     </style>
 
@@ -391,8 +509,7 @@
         let danhSachLoc = [];
         let danhSachKhoThuocGoc = [];
         let mapKhamBenh = {}; 
-        let mapThuCung = {};    
-        let mapKhachHang = {};  
+        let chiTietKhamBenhMap = {}; 
         let trangHienTai = 1;
         const soDongMoiTrang = 10;
 
@@ -409,6 +526,19 @@
             }
         });
 
+        function layTenPhongKhamDangNhap() {
+            try {
+                const userStr = sessionStorage.getItem('currentUser');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    if (user?.tenphongkham) return user.tenphongkham;
+                }
+                const sessionTpk = sessionStorage.getItem('tenphongkham');
+                if (sessionTpk) return sessionTpk;
+            } catch (e) {}
+            return 'PHÒNG KHÁM THÚ Y VETCARE PRO';
+        }
+
         function layMaPhongKhamChuan() {
             try {
                 const userStr = sessionStorage.getItem('currentUser');
@@ -422,24 +552,101 @@
             return '617723';
         }
 
+        // HÀM TRUY VẤN VÀ ÁNH XẠ CHUẨN XÁC DỊCH VỤ DÙNG CHUNG TUYỆT ĐỐI VỚI BÁO CÁO
         async function fetchDuLieuBanDau() {
             if (typeof db === 'undefined' || !db) return;
 
-            const { data: khData } = await db.from('khachhang').select('*');
-            if (khData) { khData.forEach(kh => { mapKhachHang[kh.id] = kh.hovaten; }); }
-
-            const { data: tcData } = await db.from('thucung').select('*');
-            if (tcData) {
-                tcData.forEach(tc => {
-                    let maKH = tc.makhachhang || tc.makh || tc.khachhang_id;
-                    if (maKH && mapKhachHang[maKH]) { mapThuCung[tc.id] = mapKhachHang[maKH]; }
+            // 1. Tải bảng dịch vụ để map đúng tên dịch vụ theo id hoặc mã dịch vụ
+            let mapDichVu = {};
+            const { data: dvData } = await db.from('dichvu').select('*');
+            if (dvData) {
+                dvData.forEach(dv => {
+                    let tenDv = dv.tendichvu || dv.ten || dv.name || dv.tendv || '';
+                    if (dv.id) mapDichVu[String(dv.id)] = tenDv;
+                    if (dv.madichvu) mapDichVu[String(dv.madichvu)] = tenDv;
+                    if (dv.ma) mapDichVu[String(dv.ma)] = tenDv;
                 });
             }
 
+            // 2. Tải bảng hoadondichvu để map trực tiếp dịch vụ theo makhambenh (hoặc makb) y hệt như bên báo cáo
+            let dvTheoKham = {};
+            const { data: hddvData } = await db.from('hoadondichvu').select('*');
+            if (hddvData) {
+                hddvData.forEach(dv => {
+                    const makt = dv.makhambenh || dv.makb;
+                    if (!makt) return;
+                    if (!dvTheoKham[makt]) dvTheoKham[makt] = [];
+                    let tenDvName = dv.tendichvu || dv.tendv || 'Dịch vụ y tế';
+                    dvTheoKham[makt].push(tenDvName);
+                });
+            }
+
+            let fullKhachHang = {};
+            const { data: khData } = await db.from('khachhang').select('*');
+            if (khData) { 
+                khData.forEach(kh => { 
+                    fullKhachHang[kh.id] = kh;
+                }); 
+            }
+
+            let fullThuCung = {};
+            const { data: tcData } = await db.from('thucung').select('*');
+            if (tcData) {
+                tcData.forEach(tc => {
+                    fullThuCung[tc.id] = tc;
+                });
+            }
+
+            // 3. Tải bảng khám bệnh
             const { data: kbData } = await db.from('khambenh').select('*');
             if (kbData) {
                 kbData.forEach(kb => {
-                    if (kb.mathucung && mapThuCung[kb.mathucung]) { mapKhamBenh[kb.id] = mapThuCung[kb.mathucung]; }
+                    let khName = 'Không rõ';
+                    let sdt = '---';
+                    let petName = '---';
+
+                    let petObj = fullThuCung[kb.mathucung] || fullThuCung[kb.thucung_id];
+                    if (petObj) {
+                        petName = petObj.tenthucung || petObj.ten || 'Thú cưng';
+                        let khId = petObj.makhachhang || petObj.makh || petObj.khachhang_id;
+                        let khObj = fullKhachHang[khId];
+                        if (khObj) {
+                            khName = khObj.hovaten || khObj.tenkhachhang || 'Không rõ';
+                            sdt = khObj.sodienthoai || khObj.sdt || '---';
+                        }
+                    }
+
+                    if (kb.mathucung && fullThuCung[kb.mathucung]) { 
+                        mapKhamBenh[kb.id] = khName; 
+                    }
+
+                    // Ưu tiên lấy từ hoadondichvu trước, nếu không có mới lấy từ thông tin ca khám hoặc chẩn đoán
+                    let dsDichVuCaKham = dvTheoKham[kb.id] || [];
+                    let tenDichVuChuan = '';
+                    if (dsDichVuCaKham.length > 0) {
+                        tenDichVuChuan = dsDichVuCaKham.join(', ');
+                    } else {
+                        let rawDvKey = kb.madichvu || kb.dichvu_id || kb.tendichvu_id || kb.iddichvu;
+                        if (rawDvKey && mapDichVu[String(rawDvKey)]) {
+                            tenDichVuChuan = mapDichVu[String(rawDvKey)];
+                        } else if (kb.tendichvu && mapDichVu[String(kb.tendichvu)]) {
+                            tenDichVuChuan = mapDichVu[String(kb.tendichvu)];
+                        } else if (kb.tendichvu) {
+                            tenDichVuChuan = kb.tendichvu;
+                        }
+                    }
+
+                    if (!tenDichVuChuan) {
+                        tenDichVuChuan = kb.noidung || kb.trieuchung || kb.chuandoan || 'Khám tổng quát';
+                    }
+
+                    chiTietKhamBenhMap[kb.id] = {
+                        ngaykham: kb.ngaykham || kb.created_at || new Date().toISOString(),
+                        khachhang: khName,
+                        sodienthoai: sdt,
+                        thucung: petName,
+                        dichvu: tenDichVuChuan
+                    };
                 });
             }
 
@@ -539,7 +746,6 @@
             const tableBody = document.getElementById('data-table');
             tableBody.innerHTML = '';
             
-            // Cập nhật thống kê
             const tongDon = danhSachDonThuocGoc.length;
             let tongDoanhThu = 0;
             danhSachDonThuocGoc.forEach(item => {
@@ -565,7 +771,7 @@
             if(danhSachLoc.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="5">
+                        <td colspan="6">
                             <div class="empty-state">
                                 <i class="fa-solid fa-file-invoice-dollar"></i>
                                 <div>Không tìm thấy hóa đơn đơn thuốc nào</div>
@@ -592,7 +798,11 @@
                 const maKBText = typeof formatMaKham === 'function' ? formatMaKham(item.makhambenh) : ('KB' + String(item.makhambenh).padStart(4, '0'));
                 const tenChuSoHuu = mapKhamBenh[item.makhambenh] || 'Không rõ chủ';
 
-                let chiTietHtml = '';
+                let kbInfo = chiTietKhamBenhMap[item.makhambenh] || {};
+                let ngayLapStr = kbInfo.ngaykham ? kbInfo.ngaykham.split('T')[0] : (item.created_at ? item.created_at.split('T')[0] : '---');
+                let tenDichVuHienThi = kbInfo.dichvu || 'Khám bệnh thông thường';
+
+                let chiTietHtml = `<div style="margin-bottom: 6px;"><strong style="color: var(--primary);"><i class="fa-solid fa-stethoscope"></i> ${escapeHtml(tenDichVuHienThi)}</strong></div>`;
                 let danhSachChiTiet = [];
                 
                 try {
@@ -606,7 +816,7 @@
                 }
 
                 if (danhSachChiTiet.length > 0) {
-                    chiTietHtml = `<ul style="margin: 0; padding-left: 15px; font-size: 12px; color: var(--muted);">`;
+                    chiTietHtml += `<ul style="margin: 0; padding-left: 15px; font-size: 12px; color: var(--muted);">`;
                     danhSachChiTiet.forEach(t => {
                         const itemGia = t.Gia !== undefined ? t.Gia : (t.gia !== undefined ? t.gia : 0);
                         chiTietHtml += `<li><strong style="color: var(--text);">${escapeHtml(t.mathuoc || '')}</strong> - SL: ${t.soluong || 0} - Giá: ${Number(itemGia).toLocaleString('vi-VN')}đ <i>(${escapeHtml(t.huongdan || '')})</i></li>`;
@@ -614,7 +824,7 @@
                     chiTietHtml += `</ul>`;
                 } else {
                     const itemGia = item.Gia !== undefined ? item.Gia : (item.gia !== undefined ? item.gia : 0);
-                    chiTietHtml = `<b>${escapeHtml(item.mathuoc || '')}</b> - SL: ${item.soluong || 0} - Giá: ${Number(itemGia).toLocaleString('vi-VN')}đ<br><small style="color: var(--muted);">HD: ${escapeHtml(item.huongdan || '')}</small>`;
+                    chiTietHtml += `<b>${escapeHtml(item.mathuoc || '')}</b> - SL: ${item.soluong || 0} - Giá: ${Number(itemGia).toLocaleString('vi-VN')}đ<br><small style="color: var(--muted);">HD: ${escapeHtml(item.huongdan || '')}</small>`;
                 }
 
                 let tongTienVal = 0;
@@ -631,6 +841,7 @@
                 tableBody.innerHTML += `
                     <tr>
                         <td><span class="dt-code-badge">${escapeHtml(maDonFormatted)}</span></td>
+                        <td><span style="font-weight: 600; font-size: 12px;"><i class="fa-regular fa-calendar" style="color: var(--muted);"></i> ${escapeHtml(ngayLapStr)}</span></td>
                         <td>
                             <strong style="color: var(--primary);">${escapeHtml(maKBText)}</strong><br>
                             <span style="color: var(--muted); font-size: 12px;"><i class="fa-solid fa-user" style="font-size: 10px;"></i> ${escapeHtml(tenChuSoHuu)}</span>
@@ -755,7 +966,6 @@
                 return;
             }
 
-            // 1. Hoàn lại kho nếu là sửa hóa đơn cũ
             if (id !== "") {
                 const itemCu = danhSachDonThuocGoc.find(x => x.id == id);
                 if (itemCu) {
@@ -776,7 +986,6 @@
                 }
             }
 
-            // 2. Trừ kho thuốc mới
             for (let t of chiTietThuoc) {
                 const thuocTrongKho = danhSachKhoThuocGoc.find(tk => (tk.tenthuoc || tk.ten) === t.mathuoc);
                 if (thuocTrongKho) {
@@ -859,14 +1068,208 @@
             hienThiPhanTrang();
         }
 
+        function moModalBaoCao() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('bcTuNgay').value = today;
+            document.getElementById('bcDenNgay').value = today;
+            document.getElementById('bcLoaiThuoc').value = 'all';
+            document.getElementById('modalBaoCao').style.display = 'flex';
+            taiDuLieuBaoCao();
+        }
+
+        function dongModalBaoCao() {
+            document.getElementById('modalBaoCao').style.display = 'none';
+        }
+
+        function layDuLieuBaoCaoLoc() {
+            const tuNgay = document.getElementById('bcTuNgay').value;
+            const denNgay = document.getElementById('bcDenNgay').value;
+            const loaiThuocLoc = document.getElementById('bcLoaiThuoc').value;
+
+            const tuKhoaAnThan = [
+                'an thần', 'an than', 'sedative', 'xylazine', 'rompun', 'zoletil', 
+                'ketamine', 'propofol', 'midazolam', 'diazepam', 'valium', 'detomidine', 'medetomidine'
+            ];
+
+            let ketQua = [];
+            danhSachDonThuocGoc.forEach(item => {
+                let kbInfo = chiTietKhamBenhMap[item.makhambenh] || {
+                    ngaykham: item.created_at || new Date().toISOString(),
+                    khachhang: 'Không rõ',
+                    sodienthoai: '---',
+                    thucung: '---',
+                    dichvu: 'Khám bệnh thông thường'
+                };
+
+                let ngayKhamStr = kbInfo.ngaykham ? kbInfo.ngaykham.split('T')[0] : '';
+                if (tuNgay && ngayKhamStr < tuNgay) return;
+                if (denNgay && ngayKhamStr > denNgay) return;
+
+                let chiTiet = [];
+                try {
+                    chiTiet = typeof item.chitiet === 'string' ? JSON.parse(item.chitiet) : (item.chitiet || []);
+                } catch(e) {
+                    chiTiet = [{ mathuoc: item.mathuoc, soluong: item.soluong, huongdan: item.huongdan }];
+                }
+
+                if (loaiThuocLoc === 'an_than') {
+                    chiTiet = chiTiet.filter(t => {
+                        let tenThuocLower = (t.mathuoc || '').toLowerCase();
+                        return tuKhoaAnThan.some(keyword => tenThuocLower.includes(keyword));
+                    });
+                    if (chiTiet.length === 0) return; 
+                }
+
+                let thuocStr = chiTiet.map(t => `${t.mathuoc} (SL: ${t.soluong})`).join(', ');
+
+                ketQua.push({
+                    ngaykham: ngayKhamStr,
+                    khachhang: kbInfo.khachhang,
+                    sodienthoai: kbInfo.sodienthoai,
+                    thucung: kbInfo.thucung,
+                    dichvu: kbInfo.dichvu,
+                    thuoc: thuocStr
+                });
+            });
+
+            return ketQua;
+        }
+
+        function taiDuLieuBaoCao() {
+            const tbody = document.getElementById('bcTableBody');
+            tbody.innerHTML = '';
+
+            const dataBC = layDuLieuBaoCaoLoc();
+            if (dataBC.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Không có dữ liệu sử dụng thuốc phù hợp trong khoảng thời gian này</td></tr>`;
+                return;
+            }
+
+            dataBC.forEach((row, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="text-align: center; font-weight: bold; color: var(--muted);">${idx + 1}</td>
+                        <td>${row.ngaykham}</td>
+                        <td><strong>${escapeHtml(row.khachhang)}</strong></td>
+                        <td>${escapeHtml(row.sodienthoai)}</td>
+                        <td>${escapeHtml(row.thucung)}</td>
+                        <td>${escapeHtml(row.dichvu)}</td>
+                        <td>${escapeHtml(row.thuoc)}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function inBaoCaoTongHop() {
+            const dataBC = layDuLieuBaoCaoLoc();
+            if (dataBC.length === 0) {
+                alert('Không có dữ liệu để in báo cáo!');
+                return;
+            }
+
+            const tuNgay = document.getElementById('bcTuNgay').value || '---';
+            const denNgay = document.getElementById('bcDenNgay').value || '---';
+            const loaiThuocLoc = document.getElementById('bcLoaiThuoc').value;
+
+            document.getElementById('pdf-ten-phongkham').innerText = layTenPhongKhamDangNhap();
+            document.getElementById('pdf-tieu-de').innerText = loaiThuocLoc === 'an_than' ? 'BÁO CÁO CHI TIẾT SỬ DỤNG THUỐC AN THẦN' : 'BÁO CÁO SỬ DỤNG THUỐC ĐIỀU TRỊ';
+            document.getElementById('pdf-thoi-gian').innerText = `Thời gian: ${tuNgay} đến ${denNgay}`;
+
+            const pdfTbody = document.getElementById('pdf-table-body');
+            pdfTbody.innerHTML = '';
+
+            dataBC.forEach((row, idx) => {
+                pdfTbody.innerHTML += `
+                    <tr>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${idx + 1}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px;">${escapeHtml(row.ngaykham)}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px;">${escapeHtml(row.khachhang)}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px;">${escapeHtml(row.sodienthoai)}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px;">${escapeHtml(row.thucung)}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px;">${escapeHtml(row.dichvu)}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px;">${escapeHtml(row.thuoc)}</td>
+                    </tr>
+                `;
+            });
+
+            document.body.className = 'printing-baocao';
+            window.print();
+            document.body.className = '';
+        }
+
+        function xuatFileExcelBaoCao() {
+            const dataBC = layDuLieuBaoCaoLoc();
+            if (dataBC.length === 0) {
+                alert('Không có dữ liệu để xuất báo cáo!');
+                return;
+            }
+
+            const tuNgay = document.getElementById('bcTuNgay').value;
+            const denNgay = document.getElementById('bcDenNgay').value;
+            const loaiThuocLoc = document.getElementById('bcLoaiThuoc').value;
+            let tenNhomBaoCao = loaiThuocLoc === 'an_than' ? 'BÁO CÁO SỬ DỤNG THUỐC AN THẦN' : 'BÁO CÁO SỬ DỤNG THUỐC ĐIỀU TRỊ';
+
+            let sheetData = [
+                [layTenPhongKhamDangNhap().toUpperCase()],
+                [tenNhomBaoCao],
+                [`Từ ngày: ${tuNgay ? new Date(tuNgay).toLocaleDateString('vi-VN') : '---'} đến ngày: ${denNgay ? new Date(denNgay).toLocaleDateString('vi-VN') : '---'}`],
+                [], 
+                ["STT", "Ngày khám", "Chủ nuôi (Khách hàng)", "Số điện thoại", "Thú cưng", "Dịch vụ sử dụng / Chuẩn đoán", "Thuốc đã dùng"] 
+            ];
+
+            dataBC.forEach((item, index) => {
+                sheetData.push([
+                    index + 1,
+                    item.ngaykham,
+                    item.khachhang,
+                    "'" + item.sodienthoai, 
+                    item.thucung,
+                    item.dichvu,
+                    item.thuoc
+                ]);
+            });
+
+            const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+            let colWidths = [
+                { wch: 6 },  
+                { wch: 15 },  
+                { wch: 25 },  
+                { wch: 16 },  
+                { wch: 16 },  
+                { wch: 30 },  
+                { wch: 45 }   
+            ];
+            worksheet['!cols'] = colWidths;
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "BaoCaoSuDungThuoc");
+            XLSX.writeFile(workbook, "Bao_Cao_Su_Dung_Thuoc_VetCare.xlsx");
+        }
+
+        // HÀM IN ĐƠN THUỐC - ĐÃ DÙNG CHUNG MAP DỊCH VỤ VỚI BÁO CÁO
         function inHoaDonThuoc(id) {
             const item = danhSachDonThuocGoc.find(x => x.id === id);
             if (!item) return;
 
+            document.getElementById('inv-tenphongkham').innerText = layTenPhongKhamDangNhap();
             document.getElementById('inv-madon').innerText = 'HÓA ĐƠN THANH TOÁN & ĐƠN THUỐC - ' + (item.madonhang || ('HD' + String(item.id).padStart(4, '0')));
             document.getElementById('inv-makhambenh').innerText = typeof formatMaKham === 'function' ? formatMaKham(item.makhambenh) : ('KB' + String(item.makhambenh).padStart(4, '0'));
-            document.getElementById('inv-chusohuu').innerText = mapKhamBenh[item.makhambenh] || 'Không rõ chủ';
-            document.getElementById('inv-ngaylap').innerText = new Date().toLocaleDateString('vi-VN');
+            
+            let kbInfo = chiTietKhamBenhMap[item.makhambenh] || {
+                khachhang: 'Không rõ',
+                sodienthoai: '---',
+                thucung: '---',
+                dichvu: 'Khám bệnh thông thường',
+                ngaykham: item.created_at || new Date().toISOString()
+            };
+
+            let ngayLapInStr = kbInfo.ngaykham ? kbInfo.ngaykham.split('T')[0] : new Date().toLocaleDateString('vi-VN');
+
+            document.getElementById('inv-chusohuu').innerText = kbInfo.khachhang;
+            document.getElementById('inv-thucung').innerText = kbInfo.thucung;
+            document.getElementById('inv-sdt').innerText = kbInfo.sodienthoai;
+            document.getElementById('inv-dichvu').innerText = kbInfo.dichvu; 
+            document.getElementById('inv-ngaylap').innerText = ngayLapInStr;
 
             let danhSachChiTiet = [];
             try {
@@ -892,17 +1295,20 @@
 
                 tbody.innerHTML += `
                     <tr>
-                        <td style="border: 1px solid #cbd5e1; padding: 5px;">${escapeHtml(t.mathuoc || '')}</td>
-                        <td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${sl}</td>
-                        <td style="border: 1px solid #cbd5e1; padding: 5px; text-align: right;">${gia.toLocaleString('vi-VN')} đ</td>
-                        <td style="border: 1px solid #cbd5e1; padding: 5px; text-align: right;">${thanhTien.toLocaleString('vi-VN')} đ</td>
-                        <td style="border: 1px solid #cbd5e1; padding: 5px;">${escapeHtml(t.huongdan || '')}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px;">${escapeHtml(t.mathuoc || '')}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center;">${sl}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: right;">${gia.toLocaleString('vi-VN')} đ</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: right;">${thanhTien.toLocaleString('vi-VN')} đ</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px;">${escapeHtml(t.huongdan || '')}</td>
                     </tr>
                 `;
             });
 
             document.getElementById('inv-tongtien').innerText = tongTien.toLocaleString('vi-VN') + ' đ';
+            
+            document.body.className = 'printing-invoice';
             window.print();
+            document.body.className = '';
         }
 
         function escapeHtml(str) {
