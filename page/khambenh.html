@@ -114,15 +114,15 @@
         .filter-btn:hover { background: #f1f5f9; color: var(--text); }
         .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-        /* BẢNG DỮ LIỆU CHÍNH */
+        /* BẢNG DỮ LIỆU CHÍNH - HỖ TRỢ CUỘN NGANG AN TOÀN TRÊN MOBILE */
         .table-container {
             background: var(--white); border: 1px solid var(--border); border-radius: 16px;
-            box-shadow: var(--shadow); overflow: visible; margin-bottom: 20px;
+            box-shadow: var(--shadow); overflow-x: auto; margin-bottom: 20px;
         }
-        .custom-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        .custom-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 950px; }
         .custom-table th {
             background: #f8fafc; color: var(--muted); font-weight: 700; font-size: 11px; text-transform: uppercase;
-            padding: 14px 16px; border-bottom: 1px solid var(--border); letter-spacing: 0.5px;
+            padding: 14px 16px; border-bottom: 1px solid var(--border); letter-spacing: 0.5px; white-space: nowrap;
         }
         .custom-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: var(--text); position: relative; }
         .custom-table tr:hover { background: #f8fbff; }
@@ -134,7 +134,7 @@
 
         .badge-status {
             display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 6px;
-            font-size: 11px; font-weight: 700; cursor: pointer; border: 0; transition: 0.15s;
+            font-size: 11px; font-weight: 700; cursor: pointer; border: 0; transition: 0.15s; white-space: nowrap;
         }
         .badge-status:hover { filter: brightness(0.95); }
 
@@ -164,7 +164,7 @@
         /* PHÂN TRANG & FOOTER BẢNG */
         .table-footer {
             display: flex; align-items: center; justify-content: space-between; padding: 16px 20px;
-            background: var(--white); border-top: 1px solid var(--border); font-size: 12px; color: var(--muted);
+            background: var(--white); border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); flex-wrap: wrap; gap: 10px;
         }
         .pagination { display: flex; align-items: center; gap: 5px; }
         .page-num {
@@ -214,6 +214,17 @@
 
         .empty-state { text-align: center; padding: 40px; color: var(--muted); }
         .empty-state i { font-size: 32px; margin-bottom: 10px; color: #cbd5e1; }
+
+        /* RESPONSIVE TRÊN MOBILE */
+        @media (max-width: 768px) {
+            .content-body { padding: 12px !important; }
+            .kb-top { flex-direction: column; align-items: stretch; gap: 12px; padding: 16px; }
+            .kb-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .kb-toolbar { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px; }
+            .toolbar-left { flex-direction: column; align-items: stretch; }
+            .search-box-wrap { min-width: 100%; }
+            .form-row-2 { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 
@@ -290,7 +301,7 @@
                     </div>
                 </div>
 
-                <!-- Bảng danh sách dữ liệu -->
+                <!-- Bảng danh sách dữ liệu (Hỗ trợ cuộn ngang mượt mà trên mobile) -->
                 <div class="table-container">
                     <table class="custom-table">
                         <thead>
@@ -1002,7 +1013,6 @@
                     </div>
                 </td>
                 <td style="text-align: center;">
-                    <!-- Thêm step="any" để hỗ trợ nhập số thập phân lẻ như 0.4, 0.3 -->
                     <input type="number" class="input-sl-thuoc" value="${slThuoc}" min="0.1" step="any" oninput="tinhTongTienKham()" style="width:100%; text-align:center; padding:6px; border:1px solid var(--border); border-radius:6px; font-size:12px;">
                 </td>
                 <td>
@@ -1298,7 +1308,6 @@
 
             if (chiTietThuoc.length === 0) return;
 
-            // 1. Hoàn lại kho cũ nếu đang ở chế độ Sửa phiếu khám (dùng parseFloat để tránh lỗi nối chuỗi kiểu numeric)
             const { data: existingHd } = await db.from('hoadonthuoc').select('*').eq('makhambenh', maKhamBenhMoi);
             if (existingHd && existingHd.length > 0) {
                 let itemCu = existingHd[0];
@@ -1322,7 +1331,6 @@
                 }
             }
 
-            // 2. Trừ kho mới cho các thuốc được kê (dùng parseFloat để trừ chính xác số lẻ như 0.4)
             for (let t of chiTietThuoc) {
                 const thuocTrongKho = danhSachKhoThuocToanCuc.find(tk => (tk.tenthuoc || tk.ten) === t.mathuoc);
                 if (thuocTrongKho) {
@@ -1335,7 +1343,6 @@
                 }
             }
 
-            // 3. Lưu hoặc cập nhật hóa đơn thuốc
             const payloadHoaDon = {
                 makhambenh: parseInt(maKhamBenhMoi),
                 chitiet: JSON.stringify(chiTietThuoc),
@@ -1385,7 +1392,6 @@
         async function xoaKhamBenh(id) {
             if (!confirm('Bạn có chắc chắn muốn xóa phiếu khám này không? Thao tác này sẽ hoàn lại kho thuốc đã kê!')) return;
 
-            // Hoàn lại kho thuốc trước khi xóa
             const hoaDonCu = mapHoaDonThuoc[id];
             if (hoaDonCu && hoaDonCu.chitiet) {
                 try {
