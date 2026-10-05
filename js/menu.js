@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <li class="menu-item" id="menu-quanlyuser" onclick="window.location.href='quanlyuser.html'"><span><i class="fa-solid fa-user-shield"></i></span> <span class="menu-text">Quản lý nhân viên</span></li>
             <li class="menu-item" id="menu-thanhtoan" onclick="window.location.href='thanhtoan.html'"><span><i class="fa-solid fa-credit-card"></i></span> <span class="menu-text">Thanh toán & Gia hạn</span></li>
             <li class="menu-item" id="menu-quanlychung" onclick="window.location.href='quanlychung.html'">
-                <span><i class="fa-solid fa-crown"></i></span> <span class="menu-text" style="font-weight: bold;">Quản lý chung (Hệ thống)</span>
+                <span><i class="fa-solid fa-crown"></i></span> <span class="menu-text" style="font-weight: 700;">Quản lý chung (Hệ thống)</span>
             </li>
             <li class="menu-item" id="menu-lienhe" onclick="window.location.href='lienhe.html'"><span><i class="fa-solid fa-headset"></i></span> <span class="menu-text">Liên hệ</span></li>
         `;
@@ -115,23 +115,20 @@ document.addEventListener("DOMContentLoaded", function() {
         <li class="menu-dropdown-toggle" onclick="toggleSubmenu(this)">
             <div class="menu-label-wrap">
                 <span class="group-icon"><i class="fa-solid fa-file-invoice-dollar"></i></span> 
-                <span class="menu-text">Công nợ- Thu chi</span>
+                <span class="menu-text">Công nợ - Thu chi</span>
             </div> 
             <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
-        </li>
+        </li> 
         <ul class="submenu-container">
             <li class="menu-item" id="menu-qlcongno" onclick="window.location.href='qlcongno.html'">
                 <span><i class="fa-solid fa-user-tag"></i></span> 
                 <span class="menu-text">Quản lý công nợ</span>
             </li>
-            
             <li class="menu-item" id="menu-thuchi" onclick="window.location.href='thuchi.html'">
                 <span><i class="fa-solid fa-wallet"></i></span> 
                 <span class="menu-text">Thu chi phòng khám</span>
             </li>
         </ul>
-        
-        
     `;
 
     if (isTrueOwner || isBacSi || isHuuTy) {
@@ -173,34 +170,35 @@ document.addEventListener("DOMContentLoaded", function() {
                 <span><i class="fa-solid fa-pump-soap"></i></span> 
                 <span class="menu-text">Lịch sử khử trùng</span>
             </li>
-			<li class="menu-item" id="menu-baocao" onclick="window.location.href='baocao.html'">
-            <span><i class="fa-solid fa-chart-pie"></i></span> 
-            <span class="menu-text">Báo cáo sử dụng thuốc</span>
-        </li>
+            <li class="menu-item" id="menu-baocao" onclick="window.location.href='baocao.html'">
+                <span><i class="fa-solid fa-chart-pie"></i></span> 
+                <span class="menu-text">Báo cáo sử dụng thuốc</span>
+            </li>
         `;
     }
 
     dynamicMenuContent += heThongMenuHtml;
 
-    // Cố định chuẩn mã màu Xanh Navy (#1e3a8a)
-    const mainThemeColor = '#1e3a8a';
+    // Tông màu chủ đạo SaaS Deep Slate & Indigo tinh tế
+    const mainThemeColor = '#0f172a';
 
     const menuHTML = `
     <div class="sidebar ${isExpired && !isHuuTy ? 'sidebar-frozen' : ''}" id="sidebar" style="background: ${mainThemeColor};">
         <div class="sidebar-header" style="flex-direction: column; align-items: flex-start; gap: 4px;">
             <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
                 <div style="display: flex; align-items: center;">
-                    <span style="font-size: 20px; margin-right: 8px;"><i class="fa-solid fa-paw" style="color: #60a5fa;"></i></span> <span class="menu-text">VetCare Pro</span>
+                    <span style="font-size: 22px; margin-right: 10px; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: rgba(59, 130, 246, 0.15); border-radius: 10px; color: #60a5fa;"><i class="fa-solid fa-paw"></i></span> 
+                    <span class="menu-text" style="font-weight: 800; font-size: 20px; letter-spacing: 0.5px; background: linear-gradient(135deg, #ffffff 0%, #93c5fd 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">VetCare Pro</span>
                 </div>
             </div>
-            <div id="sidebar-date" style="font-size: 11px; font-weight: normal; color: rgba(255, 255, 255, 0.85); padding-left: 28px;">
+            <div id="sidebar-date" style="font-size: 11px; font-weight: 500; color: #94a3b8; padding-left: 2px; margin-top: 4px;">
                 📅 ${ngayHienTai}
             </div>
         </div>
         
         <li class="menu-item sub-item menu-pos-highlight" id="menu-pos" onclick="${isExpired && !isHuuTy ? 'hienThiThongBaoHetHan()' : "window.location.href='pos.html'"}">
             <span class="pos-icon"><i class="fa-solid fa-bolt"></i></span> 
-            <span class="menu-text" style="font-weight: bold;">BÁN HÀNG POS</span>
+            <span class="menu-text" style="font-weight: 700;">BÁN HÀNG POS</span>
             <span class="pos-badge">HOT</span>
         </li>
         
@@ -217,9 +215,9 @@ document.addEventListener("DOMContentLoaded", function() {
             width: 275px !important;
             min-width: 275px !important;
             color: #f8fafc !important;
-            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.08);
-            border-right: 1px solid rgba(255, 255, 255, 0.08);
-            transition: width 0.3s ease, background 0.3s ease, transform 0.3s ease;
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.12);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease, transform 0.3s ease;
             position: fixed;
             top: 0;
             left: 0;
@@ -230,54 +228,51 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         .sidebar::-webkit-scrollbar { width: 5px; }
-        .sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
 
         .sidebar-header {
-            padding: 18px 16px 12px 16px !important;
-            font-size: 20px !important;
-            font-weight: bold !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(0, 0, 0, 0.1);
+            padding: 20px 16px 14px 16px !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(0, 0, 0, 0.15);
         }
-        .sidebar-header .menu-text { font-size: 24px !important; letter-spacing: 0.5px; color: #ffffff; }
 
         .sidebar .menu-category {
             font-size: 11px !important;
             font-weight: 800 !important;
-            color: #94a3b8;
-            padding: 14px 16px 6px 16px;
-            letter-spacing: 0.8px;
+            color: #64748b;
+            padding: 16px 16px 6px 16px;
+            letter-spacing: 1px;
             text-transform: uppercase;
         }
 
-        .sidebar ul.menu-list { list-style: none; padding: 8px 10px; margin: 0; }
+        .sidebar ul.menu-list { list-style: none; padding: 10px 12px; margin: 0; }
 
         .sidebar .menu-item {
             display: flex !important;
             align-items: center !important;
             white-space: nowrap !important;
-            padding: 10px 14px;
-            color: #cbd5e1 !important;
+            padding: 11px 14px;
+            color: #94a3b8 !important;
             text-decoration: none;
-            font-size: 13.5px !important;
-            font-weight: 600 !important;
-            border-radius: 8px;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            border-radius: 10px;
             margin: 3px 0;
             cursor: pointer;
-            transition: all 0.2s ease-in-out;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .sidebar .menu-item:hover {
-            background-color: rgba(255, 255, 255, 0.08) !important;
-            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.06) !important;
+            color: #f8fafc !important;
             transform: translateX(3px);
         }
 
         .sidebar .menu-item.active {
-            background: rgba(255, 255, 255, 0.2) !important;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
             color: #ffffff !important;
-            font-weight: 700 !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            font-weight: 600 !important;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
         }
 
         .sidebar .menu-item span.menu-text { display: inline-block !important; visibility: visible !important; opacity: 1 !important; }
@@ -288,7 +283,7 @@ document.addEventListener("DOMContentLoaded", function() {
             width: 24px;
             text-align: center;
             font-size: 14px !important;
-            margin-right: 10px;
+            margin-right: 12px;
             flex-shrink: 0;
         }
 
@@ -296,60 +291,62 @@ document.addEventListener("DOMContentLoaded", function() {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 14px;
+            padding: 11px 14px;
             cursor: pointer;
-            color: #cbd5e1;
-            font-weight: 700 !important;
-            font-size: 13.5px !important;
+            color: #94a3b8;
+            font-weight: 600 !important;
+            font-size: 13px !important;
             background: none !important;
             border: none !important;
             margin: 3px 0;
-            border-radius: 8px;
+            border-radius: 10px;
             transition: all 0.2s ease;
             user-select: none;
             width: 100%;
             box-sizing: border-box;
         }
-        .menu-dropdown-toggle:hover { background: rgba(255, 255, 255, 0.08) !important; color: #ffffff; }
-        .menu-dropdown-toggle .menu-label-wrap { display: flex; align-items: center; white-space: nowrap; overflow: hidden; gap: 10px; }
+        .menu-dropdown-toggle:hover { background: rgba(255, 255, 255, 0.06) !important; color: #f8fafc; }
+        .menu-dropdown-toggle .menu-label-wrap { display: flex; align-items: center; white-space: nowrap; overflow: hidden; gap: 12px; }
         .menu-dropdown-toggle .group-icon { display: inline-block; width: 24px; text-align: center; font-size: 14px !important; flex-shrink: 0; }
-        .menu-dropdown-toggle .arrow { font-size: 10px; transition: transform 0.3s ease; flex-shrink: 0; margin-left: 6px; color: #94a3b8; }
-        .menu-dropdown-toggle.active-parent .arrow { transform: rotate(180deg); color: #ffffff; }
+        .menu-dropdown-toggle .arrow { font-size: 10px; transition: transform 0.3s ease; flex-shrink: 0; margin-left: 6px; color: #64748b; }
+        .menu-dropdown-toggle.active-parent .arrow { transform: rotate(180deg); color: #60a5fa; }
+        .menu-dropdown-toggle.active-parent { color: #f8fafc; }
 
         .submenu-container {
             display: none;
             list-style: none;
             padding-left: 14px;
             margin: 2px 0 6px 0;
-            background: rgba(0, 0, 0, 0.15);
-            border-radius: 8px;
-            padding-top: 4px;
-            padding-bottom: 4px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding-top: 6px;
+            padding-bottom: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
         }
         .submenu-container.open { display: block; }
-        .submenu-container .menu-item { padding: 8px 12px 8px 10px; font-size: 13px !important; margin: 2px 4px; }
+        .submenu-container .menu-item { padding: 9px 12px 9px 10px; font-size: 12.5px !important; margin: 2px 4px; }
 
         .menu-pos-highlight {
-            background: rgba(255, 255, 255, 0.25) !important;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
             color: #ffffff !important;
-            border-radius: 8px;
-            margin: 12px 10px !important;
-            padding: 11px 14px !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            margin: 14px 12px !important;
+            padding: 12px 14px !important;
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.35);
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        .menu-pos-highlight:hover { background: rgba(255, 255, 255, 0.35) !important; transform: translateY(-1px); }
-        .menu-pos-highlight .pos-icon { font-size: 15px; margin-right: 10px; }
-        .menu-pos-highlight .pos-badge { background-color: #dc2626; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: auto; }
+        .menu-pos-highlight:hover { filter: brightness(1.08); transform: translateY(-1px); }
+        .menu-pos-highlight .pos-icon { font-size: 15px; margin-right: 12px; }
+        .menu-pos-highlight .pos-badge { background-color: #ef4444; color: white; font-size: 9px; padding: 2px 7px; border-radius: 6px; font-weight: 800; margin-left: auto; letter-spacing: 0.5px; }
 
         .sidebar-frozen { pointer-events: none; opacity: 0.65; filter: grayscale(30%); }
 
         .main-content {
             margin-left: 275px;
-            transition: margin-left 0.3s ease;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             min-height: 100vh;
-            background: #f1f5f9;
+            background: #f8fafc;
         }
 
         /* --- XỬ LÝ RESPONSIVE TRÊN MOBILE --- */
@@ -357,7 +354,8 @@ document.addEventListener("DOMContentLoaded", function() {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
             z-index: 999;
         }
 
@@ -377,8 +375,8 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
-        body.sidebar-collapsed:not(.mobile-menu-open) .sidebar { width: 70px !important; min-width: 70px !important; overflow: hidden; transform: translateX(0) !important; }
-        body.sidebar-collapsed:not(.mobile-menu-open) .main-content { margin-left: 70px !important; }
+        body.sidebar-collapsed:not(.mobile-menu-open) .sidebar { width: 75px !important; min-width: 75px !important; overflow: hidden; transform: translateX(0) !important; }
+        body.sidebar-collapsed:not(.mobile-menu-open) .main-content { margin-left: 75px !important; }
         body.sidebar-collapsed:not(.mobile-menu-open) .sidebar .menu-text,
         body.sidebar-collapsed:not(.mobile-menu-open) .sidebar .menu-category,
         body.sidebar-collapsed:not(.mobile-menu-open) .sidebar .arrow,
@@ -391,29 +389,31 @@ document.addEventListener("DOMContentLoaded", function() {
             position: relative;
             flex: 1;
             max-width: 420px;
-            margin: 0 15px;
+            margin: 0 20px;
         }
         .topbar-smart-search-global input {
             width: 100%;
-            height: 36px;
-            padding: 0 12px 0 34px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            font-size: 12px;
+            height: 38px;
+            padding: 0 14px 0 38px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            font-size: 12.5px;
             outline: none;
-            background: rgba(255, 255, 255, 0.95);
-            color: #1e293b;
-            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        .topbar-smart-search-global input::placeholder { color: rgba(255, 255, 255, 0.5); }
         .topbar-smart-search-global input:focus {
             background: #ffffff;
-            border-color: #60a5fa;
-            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25);
+            border-color: #3b82f6;
+            color: #1e293b;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
         }
         .topbar-smart-search-global::before {
             content: "🔍";
             position: absolute;
-            left: 10px;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
             font-size: 13px;
@@ -421,13 +421,13 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         #topbarSearchDropdownGlobal {
             position: absolute;
-            top: calc(100% + 6px);
+            top: calc(100% + 8px);
             left: 0;
             right: 0;
             background: #fff;
-            border-radius: 10px;
-            border: 1px solid #cbd5e1;
-            box-shadow: 0 15px 35px rgba(15, 23, 42, 0.18);
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
             max-height: 400px;
             overflow-y: auto;
             z-index: 999999;
@@ -438,18 +438,18 @@ document.addEventListener("DOMContentLoaded", function() {
         #pcNotificationDropdown {
             display: none;
             position: fixed !important;
-            top: 60px !important;
+            top: 65px !important;
             right: 25px !important;
-            width: 320px !important;
+            width: 330px !important;
             max-width: calc(100vw - 40px) !important;
             max-height: 70vh !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
             background: #ffffff !important;
-            border-radius: 12px !important;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+            border-radius: 14px !important;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15) !important;
             z-index: 999999 !important;
-            border: 1px solid #cbd5e1 !important;
+            border: 1px solid #e2e8f0 !important;
             word-break: break-word !important;
         }
         #pcNotificationDropdown * {
@@ -461,8 +461,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
         #notification-center-pc {
             position: fixed !important;
-            bottom: 20px !important;
-            right: 20px !important;
+            bottom: 24px !important;
+            right: 24px !important;
             z-index: 9999999 !important;
             display: flex;
             flex-direction: column;
@@ -471,17 +471,18 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         .notify-toast-pc {
             pointer-events: auto;
-            width: 320px !important;
+            width: 330px !important;
             max-width: 90vw !important;
             background: #ffffff !important;
-            padding: 12px 15px !important;
-            border-radius: 10px !important;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
+            padding: 14px 16px !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12) !important;
             display: flex !important;
             align-items: flex-start !important;
-            border-left: 4px solid #008080 !important;
+            border-left: 4px solid #10b981 !important;
             box-sizing: border-box !important;
             word-break: break-word !important;
+            border: 1px solid #f1f5f9;
         }
         .notify-toast-pc * {
             max-width: 100% !important;
@@ -532,33 +533,33 @@ document.addEventListener("DOMContentLoaded", function() {
     const topnavContainer = document.getElementById('topnav-container');
     if (topnavContainer) {
         topnavContainer.innerHTML = `
-            <div class="top-navbar" id="topNavbarHeader" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; background: ${mainThemeColor}; border-bottom: 1px solid rgba(255,255,255,0.15); height: 55px; box-sizing: border-box; position: relative; color: white;">
-                <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
-                    <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: rgba(255,255,255,0.15); border: none; font-size: 16px; color: white; width: 32px; height: 32px; border-radius: 6px; flex-shrink: 0;"><i class="fa-solid fa-bars"></i></button>
-                    <h2 style="margin: 0; font-size: 13px; font-weight: bold; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">QUẢN LÝ PHÒNG KHÁM THÚ Y</h2>
+            <div class="top-navbar" id="topNavbarHeader" style="display: flex; justify-content: space-between; align-items: center; padding: 0 20px; background: ${mainThemeColor}; border-bottom: 1px solid rgba(255,255,255,0.08); height: 60px; box-sizing: border-box; position: relative; color: white;">
+                <div style="display: flex; align-items: center; gap: 12px; overflow: hidden;">
+                    <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: rgba(255,255,255,0.08); border: none; font-size: 15px; color: white; width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s;" title="Thu gọn/Mở rộng Menu"><i class="fa-solid fa-bars"></i></button>
+                    <h2 style="margin: 0; font-size: 13.5px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.3px;">QUẢN LÝ PHÒNG KHÁM THÚ Y</h2>
                 </div>
                 
                 <!-- THANH TÌM KIẾM THÔNG MINH TOÀN HỆ THỐNG TRÊN TOPBAR -->
                 <div class="topbar-smart-search-global">
-                    <input type="text" id="topbarGlobalSearchInput" placeholder="🔍 Tìm khách hàng, SĐT hoặc thú cưng..." autocomplete="off" onkeyup="xuLyTimKiemThongMinhGlobalTopbar(this.value)">
+                    <input type="text" id="topbarGlobalSearchInput" placeholder="Tìm kiếm khách hàng, SĐT hoặc thú cưng..." autocomplete="off" onkeyup="xuLyTimKiemThongMinhGlobalTopbar(this.value)">
                     <div id="topbarSearchDropdownGlobal"></div>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: 10px; position: relative;">
-                    <div id="headerBellBtnPC" style="position: relative; display: flex; align-items: center; cursor: pointer; padding: 5px;" title="Bấm để xem lịch sử thông báo">
-                        <span style="font-size: 18px; color: #fbbf24;"><i class="fa-solid fa-bell"></i></span>
-                        <span id="navNotificationBadge" style="position: absolute; top: 0; right: 0; background: #dc2626; color: white; font-size: 10px; padding: 1px 5px; border-radius: 50%; display: none; font-weight: bold;">0</span>
+                <div style="display: flex; align-items: center; gap: 12px; position: relative;">
+                    <div id="headerBellBtnPC" style="position: relative; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: rgba(255,255,255,0.08); border-radius: 9px; cursor: pointer; transition: 0.2s;" title="Xem lịch sử thông báo">
+                        <span style="font-size: 16px; color: #fbbf24;"><i class="fa-solid fa-bell"></i></span>
+                        <span id="navNotificationBadge" style="position: absolute; top: -2px; right: -2px; background: #ef4444; color: white; font-size: 9px; padding: 1px 5px; border-radius: 50%; display: none; font-weight: bold;">0</span>
                     </div>
 
-                    <div onclick="moModalSuaThongTinCaNhan()" style="display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.15); padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); font-size: 12px; font-weight: 600; color: white; cursor: pointer; white-space: nowrap;">
-                        <span><i class="fa-solid fa-user"></i></span> <span style="max-width: 90px; overflow: hidden; text-overflow: ellipsis;">${tenHienThi}</span>
+                    <div onclick="moModalSuaThongTinCaNhan()" style="display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.08); padding: 6px 12px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.1); font-size: 12px; font-weight: 600; color: white; cursor: pointer; white-space: nowrap; transition: 0.2s;" title="Chỉnh sửa thông tin cá nhân">
+                        <span style="color: #60a5fa;"><i class="fa-solid fa-user-circle"></i></span> <span style="max-width: 100px; overflow: hidden; text-overflow: ellipsis;">${tenHienThi}</span>
                     </div>
                     
-                    <a href="../mb/trangchu.html" style="background-color: #0284c7; color: white; text-decoration: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; white-space: nowrap; display: none; @media(min-width: 1024px){display: inline-flex;} align-items: center; gap: 4px;">
+                    <a href="../mb/trangchu.html" style="background-color: #0284c7; color: white; text-decoration: none; padding: 7px 12px; border-radius: 9px; font-size: 11.5px; font-weight: 600; white-space: nowrap; display: none; @media(min-width: 1024px){display: inline-flex;} align-items: center; gap: 6px; transition: 0.2s;">
                         <i class="fa-solid fa-mobile-screen-button"></i> Mobile
                     </a>
 
-                    <button onclick="dangXuat()" style="background-color: #dc2626; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 500; white-space: nowrap;">
+                    <button onclick="dangXuat()" style="background-color: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); padding: 7px 12px; border-radius: 9px; cursor: pointer; font-size: 12px; font-weight: 600; white-space: nowrap; transition: 0.2s;" title="Đăng xuất">
                         <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </div>
@@ -593,12 +594,12 @@ document.addEventListener("DOMContentLoaded", function() {
         const dropdown = document.createElement('div');
         dropdown.id = 'pcNotificationDropdown';
         dropdown.innerHTML = `
-            <div style="background: #1e3a8a; color: white; padding: 10px 12px; font-weight: bold; font-size: 13px; display: flex; justify-content: space-between; align-items: center; border-radius: 11px 11px 0 0;">
+            <div style="background: #0f172a; color: white; padding: 12px 16px; font-weight: 700; font-size: 13px; display: flex; justify-content: space-between; align-items: center; border-radius: 13px 13px 0 0;">
                 <span>🔔 Lịch sử thông báo</span>
-                <button onclick="xoaTatCaThongBaoPC()" style="background: rgba(255,255,255,0.2); border: none; color: #fbbf24; padding: 2px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">Xóa tất cả</button>
+                <button onclick="xoaTatCaThongBaoPC()" style="background: rgba(255,255,255,0.15); border: none; color: #fbbf24; padding: 3px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: 600;">Xóa tất cả</button>
             </div>
             <div id="pcNotificationList" style="padding: 0;">
-                <div style="padding: 15px; text-align: center; color: #64748b; font-size: 12px;">Chưa có thông báo nào</div>
+                <div style="padding: 20px; text-align: center; color: #64748b; font-size: 12px;">Chưa có thông báo nào</div>
             </div>
         `;
         document.body.appendChild(dropdown);
@@ -632,7 +633,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
-// --- HÀM TÌM KIẾM THÔNG MINH TOÀN HỆ THỐNG TRÊN TOPBAR (HIỆN KHÁCH HÀNG & THÚ CƯNG + BỘ 4 NÚT TÁC VỤ) ---
+// --- HÀM TÌM KIẾM THÔNG MINH TOÀN HỆ THỐNG TRÊN TOPBAR ---
 async function xuLyTimKiemThongMinhGlobalTopbar(tuKhoa) {
     const dropdown = document.getElementById('topbarSearchDropdownGlobal');
     const keywordRaw = tuKhoa.trim();
@@ -648,19 +649,16 @@ async function xuLyTimKiemThongMinhGlobalTopbar(tuKhoa) {
     }
 
     try {
-        // 1. Tìm chủ nuôi theo tên hoặc SĐT
-        const { data: listKhach, error: errKhach } = await db.from('khachhang')
+        const { data: listKhach } = await db.from('khachhang')
             .select('*')
             .or(`hovaten.ilike.%${keywordRaw}%,sodienthoai.ilike.%${keywordRaw}%`)
             .limit(5);
 
-        // 2. Lấy danh sách thú cưng độc lập khớp với từ khóa
-        const { data: listThuCung, error: errTC } = await db.from('thucung')
+        const { data: listThuCung } = await db.from('thucung')
             .select('*')
             .ilike('tenthucung', `%${keywordRaw}%`)
             .limit(5);
 
-        // Gom ID các khách hàng tìm được để lấy danh sách thú cưng của họ
         let khachIds = [];
         if (listKhach && listKhach.length > 0) {
             khachIds = listKhach.map(k => k.id);
@@ -668,7 +666,6 @@ async function xuLyTimKiemThongMinhGlobalTopbar(tuKhoa) {
 
         let mapThuCungTheoKhach = {};
         if (khachIds.length > 0) {
-            // Truy vấn lấy thú cưng thuộc các khách hàng này (thường cột liên kết là makhachhang hoặc makh)
             let resPets = await db.from('thucung').select('*').in('makhachhang', khachIds);
             if (resPets.error || !resPets.data || resPets.data.length === 0) {
                 resPets = await db.from('thucung').select('*').in('makh', khachIds);
@@ -689,70 +686,68 @@ async function xuLyTimKiemThongMinhGlobalTopbar(tuKhoa) {
         const hasTC = listThuCung && listThuCung.length > 0;
 
         if (!hasKhach && !hasTC) {
-            dropdown.innerHTML = `<div style="padding: 12px; font-size: 12px; color: #64748b; text-align: center;">Không tìm thấy khách hàng hoặc thú cưng phù hợp</div>`;
+            dropdown.innerHTML = `<div style="padding: 15px; font-size: 12.5px; color: #64748b; text-align: center;">Không tìm thấy khách hàng hoặc thú cưng phù hợp</div>`;
             return;
         }
 
-        // Hiển thị kết quả Khách hàng kèm thú cưng trực thuộc
         if (hasKhach) {
-            html += `<div style="padding: 6px 12px; font-size: 11px; font-weight: bold; background: #f1f5f9; color: #475569; border-bottom: 1px solid #e2e8f0;">👤 KHÁCH HÀNG & THÚ CƯNG</div>`;
+            html += `<div style="padding: 8px 14px; font-size: 11px; font-weight: 800; background: #f1f5f9; color: #475569; border-bottom: 1px solid #e2e8f0; letter-spacing: 0.5px;">👤 KHÁCH HÀNG & THÚ CƯNG</div>`;
             listKhach.forEach(kh => {
                 const sdtStr = kh.sodienthoai || kh.sdt || 'Không có';
                 const dsThuCungCuaKhach = mapThuCungTheoKhach[kh.id] || [];
 
                 html += `
-                    <div style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; background: #fff;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <div style="padding: 12px 14px; border-bottom: 1px solid #f1f5f9; background: #fff;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <div>
                                 <b style="color: #1e293b; font-size: 13px;">${kh.hovaten}</b> 
-                                <span style="font-size: 11px; color: #2563eb; margin-left: 6px;">(SĐT: ${sdtStr})</span>
+                                <span style="font-size: 11.5px; color: #2563eb; font-weight: 600; margin-left: 6px;">(SĐT: ${sdtStr})</span>
                             </div>
-                            <button onclick="window.location.href='khachhang.html?id=${kh.id}'" style="background: #e2e8f0; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold;">Xem KH</button>
+                            <button onclick="window.location.href='khachhang.html?id=${kh.id}'" style="background: #e2e8f0; border: none; padding: 3px 8px; border-radius: 6px; font-size: 10.5px; cursor: pointer; font-weight: 700; color: #334155;">Xem KH</button>
                         </div>
                 `;
 
                 if (dsThuCungCuaKhach.length > 0) {
-                    html += `<div style="padding-left: 10px; border-left: 2px solid #cbd5e1; margin-top: 4px; display: flex; flex-direction: column; gap: 6px;">`;
+                    html += `<div style="padding-left: 10px; border-left: 2px solid #cbd5e1; margin-top: 6px; display: flex; flex-direction: column; gap: 6px;">`;
                     dsThuCungCuaKhach.forEach(tc => {
                         html += `
-                            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 6px 8px; border-radius: 6px; font-size: 11px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 6px 10px; border-radius: 8px; font-size: 11.5px;">
                                 <div>
-                                    <span style="font-weight: bold; color: #1e3a8a;">🐾 ${tc.tenthucung || tc.ten || '---'}</span>
-                                    <span style="color: #64748b; font-size: 10px; margin-left: 4px;">(${tc.loaigiong || tc.giong || 'Thú cưng'})</span>
+                                    <span style="font-weight: 700; color: #0f172a;">🐾 ${tc.tenthucung || tc.ten || '---'}</span>
+                                    <span style="color: #64748b; font-size: 11px; margin-left: 4px;">(${tc.loaigiong || tc.giong || 'Thú cưng'})</span>
                                 </div>
                                 <div style="display: flex; gap: 4px;">
-                                    <button type="button" onclick="window.location.href='khambenh.html?mathucung=${tc.id}'" style="background: #10b981; color: white; border: none; padding: 4px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;" title="Khám bệnh">Khám</button>
-                                    <button type="button" onclick="window.location.href='nhatkylamvaccine.html?mathucung=${tc.id}'" style="background: #f59e0b; color: white; border: none; padding: 4px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;" title="Tiêm vắc-xin">Tiêm</button>
-                                    <button type="button" onclick="window.location.href='noitru.html?mathucung=${tc.id}'" style="background: #8b5cf6; color: white; border: none; padding: 4px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;" title="Lưu trú nội trú">Lưu trú</button>
-                                    <button type="button" onclick="window.location.href='nhatkyspa.html?mathucung=${tc.id}'" style="background: #ec4899; color: white; border: none; padding: 4px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;" title="Spa thú cưng">Spa</button>
+                                    <button type="button" onclick="window.location.href='khambenh.html?mathucung=${tc.id}'" style="background: #10b981; color: white; border: none; padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: 700; cursor: pointer;">Khám</button>
+                                    <button type="button" onclick="window.location.href='nhatkylamvaccine.html?mathucung=${tc.id}'" style="background: #f59e0b; color: white; border: none; padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: 700; cursor: pointer;">Tiêm</button>
+                                    <button type="button" onclick="window.location.href='noitru.html?mathucung=${tc.id}'" style="background: #8b5cf6; color: white; border: none; padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: 700; cursor: pointer;">Lưu trú</button>
+                                    <button type="button" onclick="window.location.href='nhatkyspa.html?mathucung=${tc.id}'" style="background: #ec4899; color: white; border: none; padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: 700; cursor: pointer;">Spa</button>
                                 </div>
                             </div>
                         `;
                     });
                     html += `</div>`;
                 } else {
-                    html += `<div style="font-size: 11px; color: #94a3b8; font-style: italic; padding-left: 10px;">Chưa có thú cưng nào</div>`;
+                    html += `<div style="font-size: 11.5px; color: #94a3b8; font-style: italic; padding-left: 4px;">Chưa có thú cưng nào</div>`;
                 }
 
                 html += `</div>`;
             });
         }
 
-        // Hiển thị kết quả tìm kiếm theo tên Thú cưng trực tiếp
         if (hasTC) {
-            html += `<div style="padding: 6px 12px; font-size: 11px; font-weight: bold; background: #e0f2fe; color: #0369a1; border-bottom: 1px solid #bae6fd; margin-top: 4px;">🐾 KẾT QUẢ TÌM THÚ CƯNG</div>`;
+            html += `<div style="padding: 8px 14px; font-size: 11px; font-weight: 800; background: #eff6ff; color: #0369a1; border-bottom: 1px solid #bae6fd; margin-top: 4px; letter-spacing: 0.5px;">🐾 KẾT QUẢ TÌM THÚ CƯNG</div>`;
             listThuCung.forEach(tc => {
                 html += `
-                    <div style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fdfdfd;">
+                    <div style="padding: 10px 14px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fff;">
                         <div>
-                            <div style="font-weight: bold; color: #1e3a8a; font-size: 12px;">🐶 ${tc.tenthucung || tc.ten || '---'}</div>
+                            <div style="font-weight: 700; color: #0f172a; font-size: 12.5px;">🐶 ${tc.tenthucung || tc.ten || '---'}</div>
                             <div style="font-size: 11px; color: #64748b;">Giống: ${tc.loaigiong || tc.giong || '---'}</div>
                         </div>
                         <div style="display: flex; gap: 4px;">
-                            <button type="button" onclick="window.location.href='khambenh.html?mathucung=${tc.id}'" style="background: #10b981; color: white; border: none; padding: 4px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;">Khám</button>
-                            <button type="button" onclick="window.location.href='nhatkylamvaccine.html?mathucung=${tc.id}'" style="background: #f59e0b; color: white; border: none; padding: 4px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;">Tiêm</button>
-                            <button type="button" onclick="window.location.href='noitru.html?mathucung=${tc.id}'" style="background: #8b5cf6; color: white; border: none; padding: 4px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;">Lưu trú</button>
-                            <button type="button" onclick="window.location.href='nhatkyspa.html?mathucung=${tc.id}'" style="background: #ec4899; color: white; border: none; padding: 4px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;">Spa</button>
+                            <button type="button" onclick="window.location.href='khambenh.html?mathucung=${tc.id}'" style="background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 700; cursor: pointer;">Khám</button>
+                            <button type="button" onclick="window.location.href='nhatkylamvaccine.html?mathucung=${tc.id}'" style="background: #f59e0b; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 700; cursor: pointer;">Tiêm</button>
+                            <button type="button" onclick="window.location.href='noitru.html?mathucung=${tc.id}'" style="background: #8b5cf6; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 700; cursor: pointer;">Lưu trú</button>
+                            <button type="button" onclick="window.location.href='nhatkyspa.html?mathucung=${tc.id}'" style="background: #ec4899; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 700; cursor: pointer;">Spa</button>
                         </div>
                     </div>
                 `;
@@ -787,32 +782,32 @@ function moModalSuaThongTinCaNhan() {
 
     const modal = document.createElement('div');
     modal.id = 'modalSuaThongTinCaNhan';
-    modal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 999999; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;`;
+    modal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 999999; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif;`;
 
     modal.innerHTML = `
-        <div style="background: #ffffff; padding: 25px; border-radius: 12px; width: 90%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); position: relative;">
-            <button onclick="document.getElementById('modalSuaThongTinCaNhan').remove()" style="position: absolute; top: 12px; right: 15px; background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">&times;</button>
-            <h3 style="color: #1e3a8a; margin-top: 0; margin-bottom: 15px; font-size: 18px; text-align: center;">👤 Chỉnh Sửa Thông Tin Cá Nhân</h3>
+        <div style="background: #ffffff; padding: 28px; border-radius: 16px; width: 90%; max-width: 420px; box-shadow: 0 25px 50px rgba(15, 23, 42, 0.25); position: relative;">
+            <button onclick="document.getElementById('modalSuaThongTinCaNhan').remove()" style="position: absolute; top: 16px; right: 18px; background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 8px; font-size: 18px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center;">&times;</button>
+            <h3 style="color: #0f172a; margin-top: 0; margin-bottom: 20px; font-size: 17px; font-weight: 800; text-align: center;">👤 Chỉnh Sửa Thông Tin Cá Nhân</h3>
             <form onsubmit="luuThongTinCaNhan(event)">
-                <div style="margin-bottom: 12px;">
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 4px;">Họ & Tên / Tên hiển thị:</label>
-                    <input type="text" id="self_tennhanvien" value="${tenHienTai}" required style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px;">Họ & Tên / Tên hiển thị:</label>
+                    <input type="text" id="self_tennhanvien" value="${tenHienTai}" required style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; box-sizing: border-box; outline: none;">
                 </div>
-                <div style="margin-bottom: 12px;">
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 4px;">Email:</label>
-                    <input type="email" id="self_email" value="${emailHienTai}" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px;">Email:</label>
+                    <input type="email" id="self_email" value="${emailHienTai}" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; box-sizing: border-box; outline: none;">
                 </div>
-                <div style="margin-bottom: 12px;">
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 4px;">Số điện thoại:</label>
-                    <input type="text" id="self_sdt" value="${sdtHienTai}" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px;">Số điện thoại:</label>
+                    <input type="text" id="self_sdt" value="${sdtHienTai}" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; box-sizing: border-box; outline: none;">
                 </div>
-                <div style="margin-bottom: 18px;">
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 4px;">Mật khẩu mới (Bỏ trống nếu không đổi):</label>
-                    <input type="password" id="self_matkhau" placeholder="Mật khẩu mới..." style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px;">Mật khẩu mới (Bỏ trống nếu không đổi):</label>
+                    <input type="password" id="self_matkhau" placeholder="Mật khẩu mới..." style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; box-sizing: border-box; outline: none;">
                 </div>
                 <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" onclick="document.getElementById('modalSuaThongTinCaNhan').remove()" style="background: #94a3b8; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;">Hủy</button>
-                    <button type="submit" style="background: #2563eb; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;">💾 Lưu thay đổi</button>
+                    <button type="button" onclick="document.getElementById('modalSuaThongTinCaNhan').remove()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 12.5px;">Hủy</button>
+                    <button type="submit" style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 12.5px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">💾 Lưu thay đổi</button>
                 </div>
             </form>
         </div>
@@ -859,15 +854,13 @@ function hienThiPopupGiaHanChoNhanVien() {
     if (document.getElementById('modalGiaHanNV')) return;
     const modal = document.createElement('div');
     modal.id = 'modalGiaHanNV';
-    modal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); z-index: 999999; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;`;
+    modal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); z-index: 999999; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif;`;
     modal.innerHTML = `
-        <div style="background: #ffffff; padding: 35px; border-radius: 12px; width: 90%; max-width: 450px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
-            <div style="font-size: 48px; margin-bottom: 10px;">🔒</div>
-            <h2 style="color: #dc2626; margin-top: 0; font-size: 22px;">Phòng Khám Đã Hết Hạn Bản Quyền</h2>
-            <p style="color: #475569; font-size: 14px; line-height: 1.5; margin-bottom: 20px;">Tài khoản sử dụng của phòng khám đã hết hạn bản quyền phần mềm. Vui lòng liên hệ <b>Chủ phòng khám</b> để tiến hành gia hạn và tiếp tục sử dụng hệ thống.</p>
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <button onclick="dangXuat()" style="background: #dc2626; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">Đăng xuất</button>
-            </div>
+        <div style="background: #ffffff; padding: 35px; border-radius: 16px; width: 90%; max-width: 440px; text-align: center; box-shadow: 0 25px 50px rgba(15, 23, 42, 0.25);">
+            <div style="font-size: 52px; margin-bottom: 12px;">🔒</div>
+            <h2 style="color: #dc2626; margin-top: 0; font-size: 20px; font-weight: 800;">Phòng Khám Đã Hết Hạn Bản Quyền</h2>
+            <p style="color: #475569; font-size: 13.5px; line-height: 1.6; margin-bottom: 24px;">Tài khoản sử dụng của phòng khám đã hết hạn bản quyền phần mềm. Vui lòng liên hệ <b>Chủ phòng khám</b> để tiến hành gia hạn và tiếp tục sử dụng hệ thống.</p>
+            <button onclick="dangXuat()" style="background: #dc2626; color: white; border: none; padding: 11px 24px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 13.5px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);">Đăng xuất</button>
         </div>
     `;
     document.body.appendChild(modal);
@@ -885,7 +878,7 @@ function xuLyCoDuLieuMoiPC(noiDungThongBao) {
     if (center) {
         const toast = document.createElement('div');
         toast.className = 'notify-toast-pc';
-        toast.innerHTML = `<div style="font-size: 18px; margin-right: 10px;">🔔</div><div style="flex: 1;"><h4 style="margin: 0 0 4px 0; font-size: 14px; color: #1e293b;">Thông Báo Mới</h4><p style="margin: 0; font-size: 12px; color: #64748b;">${noiDungThongBao}</p></div><button onclick="this.parentElement.remove()" style="background:none; border:none; font-size:16px; cursor:pointer; color:#94a3b8; padding-left:10px;">&times;</button>`;
+        toast.innerHTML = `<div style="font-size: 18px; margin-right: 12px;">🔔</div><div style="flex: 1;"><h4 style="margin: 0 0 4px 0; font-size: 13.5px; font-weight: 700; color: #0f172a;">Thông Báo Mới</h4><p style="margin: 0; font-size: 12px; color: #64748b; line-height: 1.4;">${noiDungThongBao}</p></div><button onclick="this.parentElement.remove()" style="background:none; border:none; font-size:16px; cursor:pointer; color:#94a3b8; padding-left:10px;">&times;</button>`;
         center.appendChild(toast);
         setTimeout(() => { toast.style.transition = 'opacity 0.3s ease'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 5000);
     }
@@ -901,13 +894,13 @@ function xuLyCoDuLieuMoiPC(noiDungThongBao) {
     if (listDiv) {
         if (listDiv.innerHTML.includes('Chưa có thông báo nào')) listDiv.innerHTML = '';
         const timeNow = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-        listDiv.innerHTML = `<div style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; background: #f8fafc; word-break: break-word;"><div><div style="font-weight: bold; color: #1e293b; margin-bottom: 2px;">${noiDungThongBao}</div><div style="font-size: 10px; color: #64748b;">${timeNow}</div></div></div>` + listDiv.innerHTML;
+        listDiv.innerHTML = `<div style="padding: 12px 16px; border-bottom: 1px solid #f1f5f9; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; background: #fff; word-break: break-word;"><div><div style="font-weight: 600; color: #1e293b; margin-bottom: 3px; line-height: 1.4;">${noiDungThongBao}</div><div style="font-size: 10.5px; color: #94a3b8;">${timeNow}</div></div></div>` + listDiv.innerHTML;
     }
 }
 
 function xoaTatCaThongBaoPC() {
     const listDiv = document.getElementById('pcNotificationList');
-    if (listDiv) listDiv.innerHTML = `<div style="padding: 15px; text-align: center; color: #64748b; font-size: 12px;">Chưa có thông báo nào</div>`;
+    if (listDiv) listDiv.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b; font-size: 12px;">Chưa có thông báo nào</div>`;
     const badge = document.getElementById('navNotificationBadge');
     if (badge) { badge.innerText = '0'; badge.style.display = 'none'; }
 }
