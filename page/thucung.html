@@ -112,15 +112,15 @@
         }
         .filter-dropdown:hover { border-color: #cbd5e1; }
 
-        /* BẢNG DỮ LIỆU CHÍNH */
+        /* BẢNG DỮ LIỆU CHÍNH - HỖ TRỢ CUỘN NGANG AN TOÀN TRÊN MOBILE */
         .table-container {
             background: var(--white); border: 1px solid var(--border); border-radius: 16px;
-            box-shadow: var(--shadow); overflow: visible; margin-bottom: 20px;
+            box-shadow: var(--shadow); overflow-x: auto; margin-bottom: 20px;
         }
-        .custom-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        .custom-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 900px; }
         .custom-table th {
             background: #f8fafc; color: var(--muted); font-weight: 700; font-size: 11px; text-transform: uppercase;
-            padding: 14px 16px; border-bottom: 1px solid var(--border); letter-spacing: 0.5px;
+            padding: 14px 16px; border-bottom: 1px solid var(--border); letter-spacing: 0.5px; white-space: nowrap;
         }
         .custom-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: var(--text); position: relative; }
         .custom-table tr:hover { background: #f8fbff; }
@@ -179,7 +179,7 @@
         /* PHÂN TRANG & FOOTER BẢNG */
         .table-footer {
             display: flex; align-items: center; justify-content: space-between; padding: 16px 20px;
-            background: var(--white); border-top: 1px solid var(--border); font-size: 12px; color: var(--muted);
+            background: var(--white); border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); flex-wrap: wrap; gap: 10px;
         }
         .pagination { display: flex; align-items: center; gap: 5px; }
         .page-num {
@@ -213,6 +213,16 @@
 
         .empty-state { text-align: center; padding: 40px; color: var(--muted); }
         .empty-state i { font-size: 32px; margin-bottom: 10px; color: #cbd5e1; }
+
+        /* RESPONSIVE TRÊN MOBILE */
+        @media (max-width: 768px) {
+            .content-body { padding: 12px !important; }
+            .pet-top { flex-direction: column; align-items: stretch; gap: 12px; padding: 16px; }
+            .pet-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .pet-toolbar { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px; }
+            .toolbar-left { flex-direction: column; align-items: stretch; }
+            .search-box-wrap { min-width: 100%; }
+        }
     </style>
 </head>
 
@@ -289,7 +299,7 @@
                     </div>
                 </div>
 
-                <!-- Bảng danh sách dữ liệu -->
+                <!-- Bảng danh sách dữ liệu (Hỗ trợ cuộn ngang mượt mà trên mobile) -->
                 <div class="table-container">
                     <table class="custom-table">
                         <thead>
@@ -424,7 +434,6 @@
         let mapKhachHang = {};
         let danhSachLienKetGoc = [];
 
-        // Ảnh đại diện thú cưng mặc định nếu chưa có trong DB
         const DEFAULT_PET_IMAGE = 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=150&q=80';
 
         function escapeHtml(value) {
@@ -454,13 +463,11 @@
             `;
 
             try {
-                // 1. Tải khách hàng để ánh xạ chủ nuôi
                 const { data: khData } = await db.from('khachhang').select('id, hovaten, sodienthoai, makhachhang');
                 if (khData) {
                     khData.forEach(kh => { mapKhachHang[kh.id] = kh; });
                 }
 
-                // 2. Tải liên kết thú cưng - khách hàng (bắt lỗi an toàn nếu bảng không tồn tại)
                 try {
                     const { data: lkData } = await db.from('thucung_khachhang').select('*');
                     danhSachLienKetGoc = lkData || [];
@@ -468,7 +475,6 @@
                     danhSachLienKetGoc = [];
                 }
 
-                // 3. Tải danh sách thú cưng (Sắp xếp ID giảm dần để thú cưng mới nhất lên đầu)
                 const { data, error } = await db.from('thucung').select('*').order('id', { ascending: false });
                 if (error) {
                     hienThiLoi('Không thể tải dữ liệu thú cưng');
@@ -565,16 +571,12 @@
                 genderHtml = `<span class="badge-gender-female"><i class="fa-solid fa-venus"></i> Cái</span>`;
             }
 
-            // --- ĐỒNG BỘ TÌM KIẾM LIÊN KẾT CHỦ NUÔI LINH HOẠT ---
             let danhSachKHId = [];
-            
-            // 1. Kiểm tra cột khóa ngoại trực tiếp trên bảng thucung (makhachhang, khachhang_id, makh)
             const directKhId = item.makhachhang !== undefined ? item.makhachhang : (item.khachhang_id !== undefined ? item.khachhang_id : item.makh);
             if (directKhId !== null && directKhId !== undefined && directKhId !== '') {
                 danhSachKHId.push(directKhId);
             }
 
-            // 2. Kiểm tra qua bảng trung gian thucung_khachhang
             const cacLienKet = danhSachLienKetGoc.filter(lk => {
                 const pId = lk.thucung_id !== undefined ? lk.thucung_id : lk.mathucung;
                 return Number(pId) === Number(item.id);
@@ -644,7 +646,6 @@
             `;
         }
 
-        // Đóng mở menu thao tác nhanh ẩn/hiện
         function toggleActionMenu(event, id) {
             event.stopPropagation();
             const currentMenu = document.getElementById(`actionMenu_${id}`);
@@ -901,7 +902,6 @@
 
             let htmlSuKien = [];
 
-            // 1. Lịch sử khám bệnh
             const { data: kbData } = await db.from('khambenh').select('*').eq('mathucung', petId);
             if (kbData) {
                 kbData.forEach(kb => {
@@ -924,7 +924,6 @@
                 });
             }
 
-            // 2. Lịch sử tiêm vaccine
             const { data: vcData } = await db.from('nhatkylamvaccine').select('*').eq('mathucung', petId);
             if (vcData) {
                 vcData.forEach(vc => {
