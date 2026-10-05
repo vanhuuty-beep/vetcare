@@ -112,15 +112,15 @@
         }
         .filter-dropdown:hover { border-color: #cbd5e1; }
 
-        /* BẢNG DỮ LIỆU CHÍNH */
+        /* BẢNG DỮ LIỆU CHÍNH - ĐẢM BẢO GỌN GÀNG VÀ HỖ TRỢ CUỘN NGANG TRÊN MOBILE */
         .table-container {
             background: var(--white); border: 1px solid var(--border); border-radius: 16px;
-            box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px;
+            box-shadow: var(--shadow); overflow-x: auto; margin-bottom: 20px;
         }
-        .custom-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        .custom-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 900px; }
         .custom-table th {
             background: #f8fafc; color: var(--muted); font-weight: 700; font-size: 11px; text-transform: uppercase;
-            padding: 14px 16px; border-bottom: 1px solid var(--border); letter-spacing: 0.5px;
+            padding: 14px 16px; border-bottom: 1px solid var(--border); letter-spacing: 0.5px; white-space: nowrap;
         }
         .custom-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: var(--text); }
         .custom-table tr:hover { background: #f8fbff; }
@@ -162,7 +162,7 @@
             display: inline-flex; align-items: center; gap: 5px; background: #ecfdf5; color: #059669;
             font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; margin-top: 2px;
         }
-        .money-text { font-weight: 750; color: #0f172a; }
+        .money-text { font-weight: 750; color: #0f172a; white-space: nowrap; }
 
         /* QR CODE THUMBNAIL */
         .table-qr-thumb {
@@ -188,7 +188,7 @@
         /* PHÂN TRANG & FOOTER BẢNG */
         .table-footer {
             display: flex; align-items: center; justify-content: space-between; padding: 16px 20px;
-            background: var(--white); border-top: 1px solid var(--border); font-size: 12px; color: var(--muted);
+            background: var(--white); border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); flex-wrap: wrap; gap: 10px;
         }
         .pagination { display: flex; align-items: center; gap: 5px; }
         .page-num {
@@ -220,6 +220,16 @@
 
         .empty-state { text-align: center; padding: 40px; color: var(--muted); }
         .empty-state i { font-size: 32px; margin-bottom: 10px; color: #cbd5e1; }
+
+        /* RESPONSIVE TRÊN MOBILE */
+        @media (max-width: 768px) {
+            .content-body { padding: 12px !important; }
+            .customer-top { flex-direction: column; align-items: stretch; gap: 12px; padding: 16px; }
+            .customer-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .customer-toolbar { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px; }
+            .toolbar-left { flex-direction: column; align-items: stretch; }
+            .search-box-wrap { min-width: 100%; }
+        }
     </style>
 </head>
 
@@ -301,7 +311,7 @@
                     </div>
                 </div>
 
-                <!-- Bảng danh sách dữ liệu -->
+                <!-- Bảng danh sách dữ liệu (Hỗ trợ cuộn ngang mượt mà trên mobile) -->
                 <div class="table-container">
                     <table class="custom-table">
                         <thead>
@@ -390,7 +400,6 @@
         let mapThuCung = {};
         let mapLichSuKham = {};
 
-        // Ảnh đại diện thú cưng mặc định nếu chưa có trong DB
         const DEFAULT_PET_IMAGE = 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=150&q=80';
 
         function chuanHoaSoDienThoai(sdt) {
@@ -455,7 +464,6 @@
                 mapThuCung = {};
                 mapLichSuKham = {};
 
-                // 1. Lấy danh sách thú cưng
                 const { data: tcData, error: tcError } = await db.from('thucung').select('*');
                 let petToKhach = {};
                 if (!tcError && tcData) {
@@ -492,7 +500,6 @@
                     }
                 }
 
-                // 2. Quét chi tiêu toàn diện
                 window.khamToPet = {};
                 const { data: kbData } = await db.from('khambenh').select('*');
                 if (kbData) {
@@ -563,7 +570,6 @@
 
                 mapLichSuKham = thongKeChiTieu;
 
-                // 3. Tải danh sách khách hàng (Sắp xếp ID giảm dần để khách mới nhất lên đầu)
                 const maphongkham = sessionStorage.getItem('maphongkham') || '';
                 const cleanCurrentPK = maphongkham ? maphongkham.replace(/_/g, '').trim().toLowerCase() : '';
 
