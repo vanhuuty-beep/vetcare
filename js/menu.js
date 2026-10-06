@@ -490,8 +490,8 @@ document.addEventListener("DOMContentLoaded", function() {
         topnavContainer.innerHTML = `
             <div class="top-navbar" id="topNavbarHeader" style="display: flex; justify-content: space-between; align-items: center; padding: 0 10px; background: ${mainThemeColor}; border-bottom: 1px solid rgba(255,255,255,0.08); height: 55px; box-sizing: border-box; position: relative; color: white;">
                 <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
-                    <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: rgba(255,255,255,0.08); border: none; font-size: 14px; color: white; width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;" title="Mở/Đóng Menu"><i class="fa-solid fa-bars"></i></button>
-                    <h2 class="topbar-title-pc" style="margin: 0; font-size: 12px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">VETCARE PRO</h2>
+                    <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: rgba(255,255,255,0.15); border: none; font-size: 15px; color: white; width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s;" title="Mở/Đóng Menu"><i class="fa-solid fa-bars"></i></button>
+                    <h2 class="topbar-title-pc" style="margin: 0; font-size: 12px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.3px;">Quản Lý Phòng Khám Thú Y</h2>
                 </div>
                 
                 <!-- NÚT MỞ POPUP TÌM KIẾM TOÀN CỤC -->
@@ -501,12 +501,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 </div>
 
                 <div style="display: flex; align-items: center; gap: 6px; position: relative;">
-                    <div id="headerBellBtnPC" style="position: relative; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: rgba(255,255,255,0.08); border-radius: 8px; cursor: pointer;" title="Xem lịch sử thông báo">
+                    <div id="headerBellBtnPC" style="position: relative; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: rgba(255,255,255,0.08); border-radius: 8px; cursor: pointer; transition: 0.2s;" title="Xem lịch sử thông báo">
                         <span style="font-size: 15px; color: #fbbf24;"><i class="fa-solid fa-bell"></i></span>
                         <span id="navNotificationBadge" style="position: absolute; top: -2px; right: -2px; background: #ef4444; color: white; font-size: 9px; padding: 1px 4px; border-radius: 50%; display: none; font-weight: bold;">0</span>
                     </div>
 
-                    <div onclick="moModalSuaThongTinCaNhan()" class="topbar-user-btn" style="display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.08); padding: 5px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-size: 11.5px; font-weight: 600; color: white; cursor: pointer; white-space: nowrap;">
+                    <div onclick="moModalSuaThongTinCaNhan()" class="topbar-user-btn" style="display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.08); padding: 5px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-size: 11.5px; font-weight: 600; color: white; cursor: pointer; white-space: nowrap;" title="Thông tin cá nhân">
                         <span style="color: #60a5fa;"><i class="fa-solid fa-user-circle"></i></span> 
                         <span class="topbar-username-text" style="max-width: 75px; overflow: hidden; text-overflow: ellipsis;">${tenHienThi}</span>
                     </div>
