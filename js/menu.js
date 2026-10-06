@@ -552,7 +552,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <div class="top-navbar" id="topNavbarHeader" style="display: flex; justify-content: space-between; align-items: center; padding: 0 10px; background: ${mainThemeColor}; border-bottom: 1px solid rgba(255,255,255,0.08); height: 55px; box-sizing: border-box; position: relative; color: white;">
                 <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
                     <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: rgba(255,255,255,0.08); border: none; font-size: 14px; color: white; width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s;" title="Mở/Đóng Menu"><i class="fa-solid fa-bars"></i></button>
-                    <h2 class="topbar-title-pc" style="margin: 0; font-size: 12px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.3px;">VETCARE PRO</h2>
+                    <h2 class="topbar-title-pc" style="margin: 0; font-size: 12px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.3px;">Quản Lý Phòng Khám Thú Y</h2>
                 </div>
                 
                 <!-- THANH TÌM KIẾM THÔNG MINH TOÀN HỆ THỐNG TRÊN TOPBAR -->
