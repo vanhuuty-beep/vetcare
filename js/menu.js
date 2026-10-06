@@ -485,30 +485,34 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const tenHienThi = currentUser?.tennhanvien || currentUser?.hovaten || currentUser?.tentaikhoan || currentUser?.username || 'Tài khoản';
 
-    const topnavContainer = document.getElementById('topnav-container');
+   const topnavContainer = document.getElementById('topnav-container');
     if (topnavContainer) {
         topnavContainer.innerHTML = `
-            <div class="top-navbar" id="topNavbarHeader" style="display: flex; justify-content: space-between; align-items: center; padding: 0 10px; background: ${mainThemeColor}; border-bottom: 1px solid rgba(255,255,255,0.08); height: 55px; box-sizing: border-box; position: relative; color: white;">
-                <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
-                    <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: rgba(255,255,255,0.15); border: none; font-size: 15px; color: white; width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s;" title="Mở/Đóng Menu"><i class="fa-solid fa-bars"></i></button>
-                    <h2 class="topbar-title-pc" style="margin: 0; font-size: 12px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.3px;">Quản Lý Phòng Khám Thú Y</h2>
+            <div class="top-navbar" id="topNavbarHeader" style="display: flex; justify-content: space-between; align-items: center; padding: 0 8px; background: ${mainThemeColor}; border-bottom: 1px solid rgba(255,255,255,0.08); height: 55px; box-sizing: border-box; position: relative; color: white; width: 100%; overflow: hidden;">
+                
+                <!-- CỤM BÊN TRÁI: NÚT 3 GẠCH (LUÔN HIỂN THỊ CỐ ĐỊNH) -->
+                <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                    <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); font-size: 16px; color: white; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" title="Mở/Đóng Menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
                 </div>
                 
-                <!-- NÚT MỞ POPUP TÌM KIẾM TOÀN CỤC -->
-                <div onclick="moModalTimKiemNhanh()" style="cursor: pointer; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 7px 12px; display: flex; align-items: center; gap: 8px; flex: 1; max-width: 400px; margin: 0 10px; transition: 0.2s;" title="Click để tìm kiếm nhanh">
-                    <span style="font-size: 13px;">🔍</span>
-                    <span style="font-size: 12px; color: rgba(255,255,255,0.7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tìm kiếm khách hàng, SĐT, thú cưng...</span>
+                <!-- THANH TÌM KIẾM NHANH Ở GIỮA -->
+                <div onclick="moModalTimKiemNhanh()" style="cursor: pointer; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 7px 10px; display: flex; align-items: center; gap: 6px; flex: 1; max-width: 380px; margin: 0 6px; box-sizing: border-box;" title="Click để tìm kiếm nhanh">
+                    <span style="font-size: 13px; flex-shrink: 0;">🔍</span>
+                    <span style="font-size: 11.5px; color: rgba(255,255,255,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tìm kiếm KH, SĐT...</span>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: 6px; position: relative;">
-                    <div id="headerBellBtnPC" style="position: relative; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: rgba(255,255,255,0.08); border-radius: 8px; cursor: pointer; transition: 0.2s;" title="Xem lịch sử thông báo">
-                        <span style="font-size: 15px; color: #fbbf24;"><i class="fa-solid fa-bell"></i></span>
+                <!-- CỤM BÊN PHẢI: THÔNG BÁO, TÀI KHOẢN, ĐĂNG XUẤT -->
+                <div style="display: flex; align-items: center; gap: 5px; flex-shrink: 0;">
+                    <div id="headerBellBtnPC" style="position: relative; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: rgba(255,255,255,0.08); border-radius: 8px; cursor: pointer;" title="Xem lịch sử thông báo">
+                        <span style="font-size: 14px; color: #fbbf24;"><i class="fa-solid fa-bell"></i></span>
                         <span id="navNotificationBadge" style="position: absolute; top: -2px; right: -2px; background: #ef4444; color: white; font-size: 9px; padding: 1px 4px; border-radius: 50%; display: none; font-weight: bold;">0</span>
                     </div>
 
-                    <div onclick="moModalSuaThongTinCaNhan()" class="topbar-user-btn" style="display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.08); padding: 5px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-size: 11.5px; font-weight: 600; color: white; cursor: pointer; white-space: nowrap;" title="Thông tin cá nhân">
+                    <div onclick="moModalSuaThongTinCaNhan()" class="topbar-user-btn" style="display: flex; align-items: center; gap: 3px; background: rgba(255,255,255,0.08); padding: 4px 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-size: 11px; font-weight: 600; color: white; cursor: pointer; white-space: nowrap;" title="Thông tin cá nhân">
                         <span style="color: #60a5fa;"><i class="fa-solid fa-user-circle"></i></span> 
-                        <span class="topbar-username-text" style="max-width: 75px; overflow: hidden; text-overflow: ellipsis;">${tenHienThi}</span>
+                        <span class="topbar-username-text" style="max-width: 60px; overflow: hidden; text-overflow: ellipsis;">${tenHienThi}</span>
                     </div>
 
                     <button onclick="dangXuat()" style="background-color: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center;" title="Đăng xuất">
