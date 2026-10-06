@@ -384,69 +384,8 @@ document.addEventListener("DOMContentLoaded", function() {
         body.sidebar-collapsed:not(.mobile-menu-open) .sidebar #sidebar-date { display: none !important; }
         body.sidebar-collapsed:not(.mobile-menu-open) .submenu-container.open { display: none !important; }
 
-        /* --- CSS THANH TÌM KIẾM THÔNG MINH TRÊN TOPBAR & TÙY CHỈNH MOBILE --- */
-        .topbar-smart-search-global {
-            position: relative;
-            flex: 1;
-            max-width: 420px;
-            margin: 0 15px;
-        }
-        .topbar-smart-search-global input {
-            width: 100%;
-            height: 38px;
-            padding: 0 14px 0 38px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            font-size: 12.5px;
-            outline: none;
-            background: rgba(255, 255, 255, 0.08);
-            color: #ffffff;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .topbar-smart-search-global input::placeholder { color: rgba(255, 255, 255, 0.5); }
-        .topbar-smart-search-global input:focus {
-            background: #ffffff;
-            border-color: #3b82f6;
-            color: #1e293b;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
-        }
-        .topbar-smart-search-global::before {
-            content: "🔍";
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 13px;
-            z-index: 2;
-        }
-        #topbarSearchDropdownGlobal {
-            position: absolute;
-            top: calc(100% + 8px);
-            left: 0;
-            right: 0;
-            background: #fff;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
-            max-height: 400px;
-            overflow-y: auto;
-            z-index: 999999;
-            display: none;
-            text-align: left;
-        }
-
-        /* --- TÙY CHỈNH RESPONSIVE TOPBAR TRÊN MOBILE --- */
         @media (max-width: 768px) {
             .topbar-title-pc { display: none !important; }
-            .topbar-smart-search-global {
-                max-width: 130px !important;
-                margin: 0 4px !important;
-            }
-            .topbar-smart-search-global input {
-                height: 34px !important;
-                font-size: 11px !important;
-                padding-left: 28px !important;
-            }
             .topbar-user-btn { max-width: 85px; padding: 4px 6px !important; }
             .topbar-username-text { max-width: 45px !important; font-size: 10.5px !important; }
         }
@@ -551,23 +490,23 @@ document.addEventListener("DOMContentLoaded", function() {
         topnavContainer.innerHTML = `
             <div class="top-navbar" id="topNavbarHeader" style="display: flex; justify-content: space-between; align-items: center; padding: 0 10px; background: ${mainThemeColor}; border-bottom: 1px solid rgba(255,255,255,0.08); height: 55px; box-sizing: border-box; position: relative; color: white;">
                 <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
-                    <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: rgba(255,255,255,0.08); border: none; font-size: 14px; color: white; width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s;" title="Mở/Đóng Menu"><i class="fa-solid fa-bars"></i></button>
-                    <h2 class="topbar-title-pc" style="margin: 0; font-size: 12px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.3px;">Quản Lý Phòng Khám Thú Y</h2>
+                    <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: rgba(255,255,255,0.08); border: none; font-size: 14px; color: white; width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;" title="Mở/Đóng Menu"><i class="fa-solid fa-bars"></i></button>
+                    <h2 class="topbar-title-pc" style="margin: 0; font-size: 12px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">VETCARE PRO</h2>
                 </div>
                 
-                <!-- THANH TÌM KIẾM THÔNG MINH TOÀN HỆ THỐNG TRÊN TOPBAR -->
-                <div class="topbar-smart-search-global">
-                    <input type="text" id="topbarGlobalSearchInput" placeholder="Tìm kiếm khách hàng, SĐT, thú cưng..." autocomplete="off" onkeyup="xuLyTimKiemThongMinhGlobalTopbar(this.value)">
-                    <div id="topbarSearchDropdownGlobal"></div>
+                <!-- NÚT MỞ POPUP TÌM KIẾM TOÀN CỤC -->
+                <div onclick="moModalTimKiemNhanh()" style="cursor: pointer; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 7px 12px; display: flex; align-items: center; gap: 8px; flex: 1; max-width: 400px; margin: 0 10px; transition: 0.2s;" title="Click để tìm kiếm nhanh">
+                    <span style="font-size: 13px;">🔍</span>
+                    <span style="font-size: 12px; color: rgba(255,255,255,0.7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tìm kiếm khách hàng, SĐT, thú cưng...</span>
                 </div>
 
                 <div style="display: flex; align-items: center; gap: 6px; position: relative;">
-                    <div id="headerBellBtnPC" style="position: relative; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: rgba(255,255,255,0.08); border-radius: 8px; cursor: pointer; transition: 0.2s;" title="Xem lịch sử thông báo">
+                    <div id="headerBellBtnPC" style="position: relative; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: rgba(255,255,255,0.08); border-radius: 8px; cursor: pointer;" title="Xem lịch sử thông báo">
                         <span style="font-size: 15px; color: #fbbf24;"><i class="fa-solid fa-bell"></i></span>
                         <span id="navNotificationBadge" style="position: absolute; top: -2px; right: -2px; background: #ef4444; color: white; font-size: 9px; padding: 1px 4px; border-radius: 50%; display: none; font-weight: bold;">0</span>
                     </div>
 
-                    <div onclick="moModalSuaThongTinCaNhan()" class="topbar-user-btn" style="display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.08); padding: 5px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-size: 11.5px; font-weight: 600; color: white; cursor: pointer; white-space: nowrap;" title="Thông tin cá nhân">
+                    <div onclick="moModalSuaThongTinCaNhan()" class="topbar-user-btn" style="display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.08); padding: 5px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-size: 11.5px; font-weight: 600; color: white; cursor: pointer; white-space: nowrap;">
                         <span style="color: #60a5fa;"><i class="fa-solid fa-user-circle"></i></span> 
                         <span class="topbar-username-text" style="max-width: 75px; overflow: hidden; text-overflow: ellipsis;">${tenHienThi}</span>
                     </div>
@@ -579,15 +518,6 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
         `;
     }
-
-    // Đóng dropdown tìm kiếm global khi click ra ngoài
-    document.addEventListener('click', function(e) {
-        const searchContainer = document.querySelector('.topbar-smart-search-global');
-        const dropdown = document.getElementById('topbarSearchDropdownGlobal');
-        if (searchContainer && dropdown && !searchContainer.contains(e.target)) {
-            dropdown.style.display = 'none';
-        }
-    });
 
     if (!document.getElementById('globalAudioNotification')) {
         const audioTag = document.createElement('audio');
@@ -646,18 +576,47 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
-// --- HÀM TÌM KIẾM THÔNG MINH TOÀN HỆ THỐNG TRÊN TOPBAR ---
-async function xuLyTimKiemThongMinhGlobalTopbar(tuKhoa) {
-    const dropdown = document.getElementById('topbarSearchDropdownGlobal');
+// --- HÀM MỞ POPUP TÌM KIẾM NHANH (MƯỢT MÀ TRÊN MOBILE & PC) ---
+function moModalTimKiemNhanh() {
+    if (document.getElementById('modalTimKiemNhanh')) return;
+    const modal = document.createElement('div');
+    modal.id = 'modalTimKiemNhanh';
+    modal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 9999999; display: flex; align-items: flex-start; justify-content: center; padding-top: 50px; font-family: 'Inter', sans-serif; box-sizing: border-box;`;
+
+    modal.innerHTML = `
+        <div style="background: #ffffff; width: 92%; max-width: 550px; border-radius: 16px; box-shadow: 0 25px 50px rgba(15, 23, 42, 0.3); overflow: hidden; display: flex; flex-direction: column; max-height: 85vh;">
+            <div style="padding: 14px 16px; background: #0f172a; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 16px;">🔍</span>
+                <input type="text" id="popupGlobalSearchInput" placeholder="Nhập tên khách hàng, SĐT hoặc thú cưng..." autocomplete="off" onkeyup="xuLyTimKiemModal(this.value)" style="flex: 1; height: 40px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; padding: 0 14px; color: #fff; font-size: 13.5px; outline: none;" autofocus>
+                <button onclick="document.getElementById('modalTimKiemNhanh').remove()" style="background: none; border: none; color: #94a3b8; font-size: 22px; cursor: pointer; padding: 0 4px;">&times;</button>
+            </div>
+            <div id="popupSearchResultContainer" style="padding: 12px; overflow-y: auto; flex: 1; background: #f8fafc;">
+                <div style="text-align: center; color: #64748b; font-size: 13px; padding: 30px;">Nhập từ khóa để bắt đầu tìm kiếm...</div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    setTimeout(() => {
+        const input = document.getElementById('popupGlobalSearchInput');
+        if (input) input.focus();
+    }, 100);
+
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.remove();
+    });
+}
+
+async function xuLyTimKiemModal(tuKhoa) {
+    const container = document.getElementById('popupSearchResultContainer');
     const keywordRaw = tuKhoa.trim();
 
     if (!keywordRaw) {
-        dropdown.style.display = 'none';
+        container.innerHTML = `<div style="text-align: center; color: #64748b; font-size: 13px; padding: 30px;">Nhập từ khóa để bắt đầu tìm kiếm...</div>`;
         return;
     }
 
     if (typeof db === 'undefined' || !db) {
-        dropdown.style.display = 'none';
+        container.innerHTML = `<div style="text-align: center; color: #dc2626; font-size: 13px; padding: 20px;">Lỗi kết nối cơ sở dữ liệu!</div>`;
         return;
     }
 
@@ -665,12 +624,12 @@ async function xuLyTimKiemThongMinhGlobalTopbar(tuKhoa) {
         const { data: listKhach } = await db.from('khachhang')
             .select('*')
             .or(`hovaten.ilike.%${keywordRaw}%,sodienthoai.ilike.%${keywordRaw}%`)
-            .limit(5);
+            .limit(6);
 
         const { data: listThuCung } = await db.from('thucung')
             .select('*')
             .ilike('tenthucung', `%${keywordRaw}%`)
-            .limit(5);
+            .limit(6);
 
         let khachIds = [];
         if (listKhach && listKhach.length > 0) {
@@ -692,55 +651,53 @@ async function xuLyTimKiemThongMinhGlobalTopbar(tuKhoa) {
             }
         }
 
-        dropdown.style.display = 'block';
         let html = '';
-
         const hasKhach = listKhach && listKhach.length > 0;
         const hasTC = listThuCung && listThuCung.length > 0;
 
         if (!hasKhach && !hasTC) {
-            dropdown.innerHTML = `<div style="padding: 15px; font-size: 12.5px; color: #64748b; text-align: center;">Không tìm thấy khách hàng hoặc thú cưng phù hợp</div>`;
+            container.innerHTML = `<div style="text-align: center; color: #64748b; font-size: 13px; padding: 30px;">Không tìm thấy kết quả phù hợp</div>`;
             return;
         }
 
         if (hasKhach) {
-            html += `<div style="padding: 8px 14px; font-size: 11px; font-weight: 800; background: #f1f5f9; color: #475569; border-bottom: 1px solid #e2e8f0; letter-spacing: 0.5px;">👤 KHÁCH HÀNG & THÚ CƯNG</div>`;
+            html += `<div style="font-size: 11px; font-weight: 800; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">👤 Khách hàng & Thú cưng trực thuộc</div>`;
             listKhach.forEach(kh => {
                 const sdtStr = kh.sodienthoai || kh.sdt || 'Không có';
                 const dsThuCungCuaKhach = mapThuCungTheoKhach[kh.id] || [];
 
                 html += `
-                    <div style="padding: 12px 14px; border-bottom: 1px solid #f1f5f9; background: #fff;">
+                    <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <div>
-                                <b style="color: #1e293b; font-size: 13px;">${kh.hovaten}</b> 
-                                <span style="font-size: 11.5px; color: #2563eb; font-weight: 600; margin-left: 6px;">(SĐT: ${sdtStr})</span>
+                                <b style="color: #0f172a; font-size: 13.5px;">${kh.hovaten}</b> 
+                                <span style="font-size: 12px; color: #2563eb; font-weight: 600; margin-left: 6px;">(${sdtStr})</span>
                             </div>
-                            <button onclick="window.location.href='khachhang.html?id=${kh.id}'" style="background: #e2e8f0; border: none; padding: 3px 8px; border-radius: 6px; font-size: 10.5px; cursor: pointer; font-weight: 700; color: #334155;">Xem KH</button>
+                            <button onclick="window.location.href='khachhang.html?id=${kh.id}'" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: 700; color: #334155;">Xem KH</button>
                         </div>
                 `;
 
                 if (dsThuCungCuaKhach.length > 0) {
-                    html += `<div style="padding-left: 10px; border-left: 2px solid #cbd5e1; margin-top: 6px; display: flex; flex-direction: column; gap: 6px;">`;
+                    html += `<div style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px;">`;
                     dsThuCungCuaKhach.forEach(tc => {
                         html += `
-                            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 6px 10px; border-radius: 8px; font-size: 11.5px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px 10px; border-radius: 8px; border: 1px solid #f1f5f9;">
                                 <div>
-                                    <span style="font-weight: 700; color: #0f172a;">🐾 ${tc.tenthucung || tc.ten || '---'}</span>
+                                    <span style="font-weight: 700; color: #1e293b; font-size: 12px;">🐾 ${tc.tenthucung || tc.ten || '---'}</span>
                                     <span style="color: #64748b; font-size: 11px; margin-left: 4px;">(${tc.loaigiong || tc.giong || 'Thú cưng'})</span>
                                 </div>
                                 <div style="display: flex; gap: 4px;">
-                                    <button type="button" onclick="window.location.href='khambenh.html?mathucung=${tc.id}'" style="background: #10b981; color: white; border: none; padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: 700; cursor: pointer;">Khám</button>
-                                    <button type="button" onclick="window.location.href='nhatkylamvaccine.html?mathucung=${tc.id}'" style="background: #f59e0b; color: white; border: none; padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: 700; cursor: pointer;">Tiêm</button>
-                                    <button type="button" onclick="window.location.href='noitru.html?mathucung=${tc.id}'" style="background: #8b5cf6; color: white; border: none; padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: 700; cursor: pointer;">Lưu trú</button>
-                                    <button type="button" onclick="window.location.href='nhatkyspa.html?mathucung=${tc.id}'" style="background: #ec4899; color: white; border: none; padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: 700; cursor: pointer;">Spa</button>
+                                    <button type="button" onclick="window.location.href='khambenh.html?mathucung=${tc.id}'" style="background: #10b981; color: white; border: none; padding: 5px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">Khám</button>
+                                    <button type="button" onclick="window.location.href='nhatkylamvaccine.html?mathucung=${tc.id}'" style="background: #f59e0b; color: white; border: none; padding: 5px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">Tiêm</button>
+                                    <button type="button" onclick="window.location.href='noitru.html?mathucung=${tc.id}'" style="background: #8b5cf6; color: white; border: none; padding: 5px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">Lưu trú</button>
+                                    <button type="button" onclick="window.location.href='nhatkyspa.html?mathucung=${tc.id}'" style="background: #ec4899; color: white; border: none; padding: 5px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">Spa</button>
                                 </div>
                             </div>
                         `;
                     });
                     html += `</div>`;
                 } else {
-                    html += `<div style="font-size: 11.5px; color: #94a3b8; font-style: italic; padding-left: 4px;">Chưa có thú cưng nào</div>`;
+                    html += `<div style="font-size: 11.5px; color: #94a3b8; font-style: italic;">Chưa có thú cưng nào</div>`;
                 }
 
                 html += `</div>`;
@@ -748,28 +705,28 @@ async function xuLyTimKiemThongMinhGlobalTopbar(tuKhoa) {
         }
 
         if (hasTC) {
-            html += `<div style="padding: 8px 14px; font-size: 11px; font-weight: 800; background: #eff6ff; color: #0369a1; border-bottom: 1px solid #bae6fd; margin-top: 4px; letter-spacing: 0.5px;">🐾 KẾT QUẢ TÌM THÚ CƯNG</div>`;
+            html += `<div style="font-size: 11px; font-weight: 800; color: #0369a1; margin: 14px 0 8px 0; text-transform: uppercase; letter-spacing: 0.5px;">🐾 Kết quả tìm kiếm Thú cưng</div>`;
             listThuCung.forEach(tc => {
                 html += `
-                    <div style="padding: 10px 14px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+                    <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <div style="font-weight: 700; color: #0f172a; font-size: 12.5px;">🐶 ${tc.tenthucung || tc.ten || '---'}</div>
+                            <div style="font-weight: 700; color: #0f172a; font-size: 13px;">🐶 ${tc.tenthucung || tc.ten || '---'}</div>
                             <div style="font-size: 11px; color: #64748b;">Giống: ${tc.loaigiong || tc.giong || '---'}</div>
                         </div>
                         <div style="display: flex; gap: 4px;">
-                            <button type="button" onclick="window.location.href='khambenh.html?mathucung=${tc.id}'" style="background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 700; cursor: pointer;">Khám</button>
-                            <button type="button" onclick="window.location.href='nhatkylamvaccine.html?mathucung=${tc.id}'" style="background: #f59e0b; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 700; cursor: pointer;">Tiêm</button>
-                            <button type="button" onclick="window.location.href='noitru.html?mathucung=${tc.id}'" style="background: #8b5cf6; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 700; cursor: pointer;">Lưu trú</button>
-                            <button type="button" onclick="window.location.href='nhatkyspa.html?mathucung=${tc.id}'" style="background: #ec4899; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 700; cursor: pointer;">Spa</button>
+                            <button type="button" onclick="window.location.href='khambenh.html?mathucung=${tc.id}'" style="background: #10b981; color: white; border: none; padding: 5px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">Khám</button>
+                            <button type="button" onclick="window.location.href='nhatkylamvaccine.html?mathucung=${tc.id}'" style="background: #f59e0b; color: white; border: none; padding: 5px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">Tiêm</button>
+                            <button type="button" onclick="window.location.href='noitru.html?mathucung=${tc.id}'" style="background: #8b5cf6; color: white; border: none; padding: 5px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">Lưu trú</button>
+                            <button type="button" onclick="window.location.href='nhatkyspa.html?mathucung=${tc.id}'" style="background: #ec4899; color: white; border: none; padding: 5px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">Spa</button>
                         </div>
                     </div>
                 `;
             });
         }
 
-        dropdown.innerHTML = html;
+        container.innerHTML = html;
     } catch (err) {
-        console.error('Lỗi tìm kiếm topbar:', err);
+        console.error('Lỗi tìm kiếm modal:', err);
     }
 }
 
