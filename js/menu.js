@@ -384,12 +384,12 @@ document.addEventListener("DOMContentLoaded", function() {
         body.sidebar-collapsed:not(.mobile-menu-open) .sidebar #sidebar-date { display: none !important; }
         body.sidebar-collapsed:not(.mobile-menu-open) .submenu-container.open { display: none !important; }
 
-        /* CSS THANH TÌM KIẾM THÔNG MINH TRÊN TOPBAR CHUNG */
+        /* --- CSS THANH TÌM KIẾM THÔNG MINH TRÊN TOPBAR & TÙY CHỈNH MOBILE --- */
         .topbar-smart-search-global {
             position: relative;
             flex: 1;
             max-width: 420px;
-            margin: 0 20px;
+            margin: 0 15px;
         }
         .topbar-smart-search-global input {
             width: 100%;
@@ -433,6 +433,22 @@ document.addEventListener("DOMContentLoaded", function() {
             z-index: 999999;
             display: none;
             text-align: left;
+        }
+
+        /* --- TÙY CHỈNH RESPONSIVE TOPBAR TRÊN MOBILE --- */
+        @media (max-width: 768px) {
+            .topbar-title-pc { display: none !important; }
+            .topbar-smart-search-global {
+                max-width: 130px !important;
+                margin: 0 4px !important;
+            }
+            .topbar-smart-search-global input {
+                height: 34px !important;
+                font-size: 11px !important;
+                padding-left: 28px !important;
+            }
+            .topbar-user-btn { max-width: 85px; padding: 4px 6px !important; }
+            .topbar-username-text { max-width: 45px !important; font-size: 10.5px !important; }
         }
 
         #pcNotificationDropdown {
@@ -533,33 +549,30 @@ document.addEventListener("DOMContentLoaded", function() {
     const topnavContainer = document.getElementById('topnav-container');
     if (topnavContainer) {
         topnavContainer.innerHTML = `
-            <div class="top-navbar" id="topNavbarHeader" style="display: flex; justify-content: space-between; align-items: center; padding: 0 20px; background: ${mainThemeColor}; border-bottom: 1px solid rgba(255,255,255,0.08); height: 60px; box-sizing: border-box; position: relative; color: white;">
-                <div style="display: flex; align-items: center; gap: 12px; overflow: hidden;">
-                    <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: rgba(255,255,255,0.08); border: none; font-size: 15px; color: white; width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s;" title="Thu gọn/Mở rộng Menu"><i class="fa-solid fa-bars"></i></button>
-                    <h2 style="margin: 0; font-size: 13.5px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.3px;">QUẢN LÝ PHÒNG KHÁM THÚ Y</h2>
+            <div class="top-navbar" id="topNavbarHeader" style="display: flex; justify-content: space-between; align-items: center; padding: 0 10px; background: ${mainThemeColor}; border-bottom: 1px solid rgba(255,255,255,0.08); height: 55px; box-sizing: border-box; position: relative; color: white;">
+                <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                    <button class="toggle-btn" onclick="toggleSidebar()" style="cursor: pointer; background: rgba(255,255,255,0.08); border: none; font-size: 14px; color: white; width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s;" title="Mở/Đóng Menu"><i class="fa-solid fa-bars"></i></button>
+                    <h2 class="topbar-title-pc" style="margin: 0; font-size: 12px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.3px;">VETCARE PRO</h2>
                 </div>
                 
                 <!-- THANH TÌM KIẾM THÔNG MINH TOÀN HỆ THỐNG TRÊN TOPBAR -->
                 <div class="topbar-smart-search-global">
-                    <input type="text" id="topbarGlobalSearchInput" placeholder="Tìm kiếm khách hàng, SĐT hoặc thú cưng..." autocomplete="off" onkeyup="xuLyTimKiemThongMinhGlobalTopbar(this.value)">
+                    <input type="text" id="topbarGlobalSearchInput" placeholder="Tìm kiếm khách hàng, SĐT, thú cưng..." autocomplete="off" onkeyup="xuLyTimKiemThongMinhGlobalTopbar(this.value)">
                     <div id="topbarSearchDropdownGlobal"></div>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: 12px; position: relative;">
-                    <div id="headerBellBtnPC" style="position: relative; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: rgba(255,255,255,0.08); border-radius: 9px; cursor: pointer; transition: 0.2s;" title="Xem lịch sử thông báo">
-                        <span style="font-size: 16px; color: #fbbf24;"><i class="fa-solid fa-bell"></i></span>
-                        <span id="navNotificationBadge" style="position: absolute; top: -2px; right: -2px; background: #ef4444; color: white; font-size: 9px; padding: 1px 5px; border-radius: 50%; display: none; font-weight: bold;">0</span>
+                <div style="display: flex; align-items: center; gap: 6px; position: relative;">
+                    <div id="headerBellBtnPC" style="position: relative; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: rgba(255,255,255,0.08); border-radius: 8px; cursor: pointer; transition: 0.2s;" title="Xem lịch sử thông báo">
+                        <span style="font-size: 15px; color: #fbbf24;"><i class="fa-solid fa-bell"></i></span>
+                        <span id="navNotificationBadge" style="position: absolute; top: -2px; right: -2px; background: #ef4444; color: white; font-size: 9px; padding: 1px 4px; border-radius: 50%; display: none; font-weight: bold;">0</span>
                     </div>
 
-                    <div onclick="moModalSuaThongTinCaNhan()" style="display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.08); padding: 6px 12px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.1); font-size: 12px; font-weight: 600; color: white; cursor: pointer; white-space: nowrap; transition: 0.2s;" title="Chỉnh sửa thông tin cá nhân">
-                        <span style="color: #60a5fa;"><i class="fa-solid fa-user-circle"></i></span> <span style="max-width: 100px; overflow: hidden; text-overflow: ellipsis;">${tenHienThi}</span>
+                    <div onclick="moModalSuaThongTinCaNhan()" class="topbar-user-btn" style="display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.08); padding: 5px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-size: 11.5px; font-weight: 600; color: white; cursor: pointer; white-space: nowrap;" title="Thông tin cá nhân">
+                        <span style="color: #60a5fa;"><i class="fa-solid fa-user-circle"></i></span> 
+                        <span class="topbar-username-text" style="max-width: 75px; overflow: hidden; text-overflow: ellipsis;">${tenHienThi}</span>
                     </div>
-                    
-                    <a href="../mb/trangchu.html" style="background-color: #0284c7; color: white; text-decoration: none; padding: 7px 12px; border-radius: 9px; font-size: 11.5px; font-weight: 600; white-space: nowrap; display: none; @media(min-width: 1024px){display: inline-flex;} align-items: center; gap: 6px; transition: 0.2s;">
-                        <i class="fa-solid fa-mobile-screen-button"></i> Mobile
-                    </a>
 
-                    <button onclick="dangXuat()" style="background-color: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); padding: 7px 12px; border-radius: 9px; cursor: pointer; font-size: 12px; font-weight: 600; white-space: nowrap; transition: 0.2s;" title="Đăng xuất">
+                    <button onclick="dangXuat()" style="background-color: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center;" title="Đăng xuất">
                         <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </div>
