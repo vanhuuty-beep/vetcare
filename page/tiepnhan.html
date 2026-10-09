@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiếp Nhận Khách Hàng & Thú Cưng - VetCare Pro</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../logo/logo.png">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- VetCare JS cấu hình kết nối -->
+    <script src="../js/env.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --text: #1e293b;
+            --muted: #64748b;
+            --bg: #0f172a;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --green: #0f766e;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; padding: 0; min-height: 100vh;
+            background: var(--bg);
+            font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .standalone-modal-container {
+            width: 100%; max-width: 650px; background: #fff;
+            border-radius: 16px; overflow: hidden;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
+            display: flex; flex-direction: column; max-height: 92vh;
+            margin: 20px;
+        }
+
+        .modal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px 20px; border-bottom: 1px solid var(--border); background: #f8fafc;
+        }
+        .modal-header h3 {
+            margin: 0; color: var(--text); font-size: 16px; font-weight: 800;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .close-btn {
+            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+            border: 0; border-radius: 8px; background: #f1f5f9; color: var(--muted); font-size: 18px; cursor: pointer; text-decoration: none;
+        }
+        .close-btn:hover { color: #dc2626; background: #fee2e2; }
+
+        .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+
+        .section-box {
+            background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px;
+        }
+        .section-box h4 {
+            margin: 0 0 12px; font-size: 13px; font-weight: 700; color: var(--green);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        
+        .tab-switch-group { display: inline-flex; background: #e2e8f0; padding: 3px; border-radius: 8px; gap: 2px; }
+        .tab-switch-btn { padding: 4px 12px; font-size: 11px; font-weight: 600; border: 0; background: transparent; color: var(--muted); border-radius: 6px; cursor: pointer; transition: 0.15s; }
+        .tab-switch-btn.active { background: #fff; color: var(--text); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        .form-group { margin-bottom: 14px; position: relative; }
+        .form-group label { display: block; margin-bottom: 6px; color: var(--text); font-size: 12px; font-weight: 700; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; height: 40px; padding: 0 14px; border: 1px solid var(--border); border-radius: 9px;
+            background: #fff; outline: none; font-size: 13px; color: var(--text); transition: 0.2s;
+        }
+        .form-group select {
+            appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; padding-right: 36px;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+        .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        /* GỢI Ý TÌM KIẾM KHÁCH HÀNG CŨ */
+        .suggestions-dropdown {
+            position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+            background: #fff; border: 1px solid var(--border); border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12); max-height: 200px; overflow-y: auto; z-index: 100;
+            display: none;
+        }
+        .suggestion-item {
+            padding: 10px 14px; font-size: 12.5px; cursor: pointer; border-bottom: 1px solid #f1f5f9; color: var(--text);
+        }
+        .suggestion-item:hover { background: #f8fafc; color: var(--primary); font-weight: 600; }
+
+        .modal-footer {
+            display: flex; justify-content: flex-end; gap: 10px; padding: 16px 20px;
+            border-top: 1px solid var(--border); background: #fafbfc;
+        }
+        .btn-main {
+            height: 40px; padding: 0 20px; border: 0; border-radius: 10px; background: var(--green); color: #fff;
+            font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(15, 118, 110, 0.2); transition: 0.2s;
+        }
+        .btn-main:hover { background: #115e59; }
+        .btn-outline {
+            height: 40px; padding: 0 16px; border: 1px solid var(--border); border-radius: 10px; background: #fff;
+            color: var(--text); font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+        }
+        .btn-outline:hover { background: #f1f5f9; }
+    </style>
+</head>
+
+<body>
+
+    <div class="standalone-modal-container">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-paw" style="color: #0f766e;"></i> Tiếp Nhận Khách Hàng & Thú Cưng Mới</h3>
+            <a href="khambenh.html" class="close-btn" title="Đóng trang">×</a>
+        </div>
+        
+        <div class="modal-body">
+            <!-- THÔNG TIN CHỦ SỞ HỮU -->
+            <div class="section-box">
+                <h4>
+                    <span><i class="fa-regular fa-user"></i> THÔNG TIN CHỦ SỞ HỮU (BẢNG KHACHHANG)</span>
+                    <div class="tab-switch-group">
+                        <button type="button" class="tab-switch-btn active" id="tabKhachMoi" onclick="chonLoaiKhach('moi')">Khách mới</button>
+                        <button type="button" class="tab-switch-btn" id="tabKhachCu" onclick="chonLoaiKhach('cu')">Khách cũ</button>
+                    </div>
+                </h4>
+
+                <!-- Ô tìm kiếm thông minh cho khách hàng cũ -->
+                <div id="khachCuSearchGroup" class="form-group" style="display: none; margin-bottom: 12px;">
+                    <label>Tìm kiếm khách hàng cũ (Gõ tên hoặc SĐT):</label>
+                    <input type="text" id="inputTimKhachCu" placeholder="🔍 Nhập tên hoặc số điện thoại để tìm..." oninput="locKhachHangCu(this.value)" autocomplete="off">
+                    <input type="hidden" id="selectedKhachHangId" value="">
+                    <div id="suggestionsKhachCu" class="suggestions-dropdown"></div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Họ và tên chủ nuôi (*):</label>
+                        <input type="text" id="tn_hovaten" placeholder="Nguyễn Văn A">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Số điện thoại:</label>
+                        <input type="text" id="tn_sodienthoai" placeholder="0912 345 678 (Không bắt buộc)">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Địa chỉ thường trú:</label>
+                    <input type="text" id="tn_diachi" placeholder="Số nhà, đường, phường, quận...">
+                </div>
+            </div>
+
+            <!-- THÔNG TIN THÚ CƯNG -->
+            <div class="section-box" style="margin-bottom: 0;">
+                <h4><span><i class="fa-solid fa-dog"></i> THÔNG TIN THÚ CƯNG (BẢNG THUCUNG)</span></h4>
+                
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Tên thú cưng (*):</label>
+                        <input type="text" id="tn_tenthucung" placeholder="Bơ, Mochi, Lu Lu...">
+                    </div>
+                    <div class="form-group">
+                        <label>Chủng loài (loai):</label>
+                        <select id="tn_loai">
+                            <option value="Chó cưng">Chó cưng</option>
+                            <option value="Mèo cưng">Mèo cưng</option>
+                            <option value="Thú cưng khác">Thú cưng khác</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Giống loài (giong):</label>
+                        <input type="text" id="tn_giong" placeholder="Golden, Poodle, Mèo Ta...">
+                    </div>
+                    <div class="form-group">
+                        <label>Giới tính (gioitinh):</label>
+                        <select id="tn_gioitinh">
+                            <option value="Đực">Đực</option>
+                            <option value="Cái">Cái</option>
+							<option value="Đã triệt sản">Đã triệt sản</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Độ tuổi (tuoi):</label>
+                        <input type="text" id="tn_tuoi" placeholder="Ví dụ: 1 tuổi">
+                    </div>
+                    <div class="form-group">
+                        <label>Trọng lượng kg (cannang):</label>
+                        <input type="text" id="tn_cannang" placeholder="Ví dụ: 4.5">
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Màu lông (maulong):</label>
+                        <input type="text" id="tn_maulong" placeholder="Vàng, Trắng, Đen đốm...">
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: center; gap: 10px; height: 40px; margin-top: 22px; margin-bottom: 0;">
+                        <input type="checkbox" id="tn_dattrietsan" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--green);">
+                        <label for="tn_dattrietsan" style="margin: 0; cursor: pointer; font-weight: 700; color: #0f766e;">🐶 Đã triệt sản</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <a href="khambenh.html" class="btn-outline">Hủy bỏ</a>
+            <button class="btn-main" onclick="luuTiepNhanKhachVaPet()"><i class="fa-solid fa-floppy-disk"></i> Lưu tiếp nhận & Tạo phiếu khám</button>
+        </div>
+    </div>
+
+    <!-- SCRIPT XỬ LÝ DỮ LIỆU ĐỘC LẬP VỚI TÌM KIẾM THÔNG MINH -->
+    <script>
+        let danhSachKhachHangToanCuc = [];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await taiDanhSachKhachHangCu();
+
+            // Đóng khung gợi ý khi click ra ngoài
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#khachCuSearchGroup')) {
+                    const box = document.getElementById('suggestionsKhachCu');
+                    if (box) box.style.display = 'none';
+                }
+            });
+        });
+
+        function chonLoaiKhach(loai) {
+            const btnMoi = document.getElementById('tabKhachMoi');
+            const btnCu = document.getElementById('tabKhachCu');
+            const groupCu = document.getElementById('khachCuSearchGroup');
+
+            if (loai === 'moi') {
+                btnMoi.classList.add('active');
+                btnCu.classList.remove('active');
+                groupCu.style.display = 'none';
+                document.getElementById('tn_hovaten').value = '';
+                document.getElementById('tn_sodienthoai').value = '';
+                document.getElementById('tn_diachi').value = '';
+                document.getElementById('selectedKhachHangId').value = '';
+                document.getElementById('tn_hovaten').readOnly = false;
+            } else {
+                btnCu.classList.add('active');
+                btnMoi.classList.remove('active');
+                groupCu.style.display = 'block';
+                document.getElementById('tn_hovaten').readOnly = true;
+            }
+        }
+
+        async function taiDanhSachKhachHangCu() {
+            if (typeof db === 'undefined' || !db) return;
+            const { data } = await db.from('khachhang').select('*').order('id', { ascending: false });
+            if (data) {
+                danhSachKhachHangToanCuc = data;
+            }
+        }
+
+        function locKhachHangCu(keyword) {
+            const dropdown = document.getElementById('suggestionsKhachCu');
+            const term = keyword.trim().toLowerCase();
+            
+            if (!term) {
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            const filtered = danhSachKhachHangToanCuc.filter(kh => {
+                const ten = (kh.hovaten || '').toLowerCase();
+                const sdt = (kh.sodienthoai || '').toLowerCase();
+                return ten.includes(term) || sdt.includes(term);
+            }).slice(0, 10); // Hiển thị tối đa 10 kết quả cho mượt
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = `<div class="suggestion-item" style="color: #94a3b8; cursor: default;">Không tìm thấy khách hàng phù hợp</div>`;
+                dropdown.style.display = 'block';
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(kh => {
+                html += `<div class="suggestion-item" onclick='chonKhachCu(${JSON.stringify(kh)})'>
+                    <b>${kh.hovaten}</b> - SĐT: ${kh.sodienthoai || 'Trống'} <span style="color: #64748b; font-size: 11px;">(ĐC: ${kh.diachi || '---'})</span>
+                </div>`;
+            });
+            dropdown.innerHTML = html;
+            dropdown.style.display = 'block';
+        }
+
+        function chonKhachCu(kh) {
+            document.getElementById('selectedKhachHangId').value = kh.id;
+            document.getElementById('inputTimKhachCu').value = `${kh.hovaten} - ${kh.sodienthoai || ''}`;
+            document.getElementById('tn_hovaten').value = kh.hovaten || '';
+            document.getElementById('tn_sodienthoai').value = kh.sodienthoai || '';
+            document.getElementById('tn_diachi').value = kh.diachi || '';
+            document.getElementById('suggestionsKhachCu').style.display = 'none';
+        }
+
+        async function luuTiepNhanKhachVaPet() {
+            const hovaten = document.getElementById('tn_hovaten').value.trim();
+            const sodienthoai = document.getElementById('tn_sodienthoai').value.trim();
+            const diachi = document.getElementById('tn_diachi').value.trim();
+            
+            const tenthucung = document.getElementById('tn_tenthucung').value.trim();
+            const loai = document.getElementById('tn_loai').value;
+            const giong = document.getElementById('tn_giong').value.trim();
+            const gioitinh = document.getElementById('tn_gioitinh').value;
+            const tuoi = document.getElementById('tn_tuoi').value.trim();
+            const cannang = document.getElementById('tn_cannang').value.trim();
+            const maulong = document.getElementById('tn_maulong').value.trim();
+            const dattrietsan = document.getElementById('tn_dattrietsan').checked ? 'Đã triệt sản' : 'Chưa triệt sản';
+
+            if (!hovaten) {
+                alert('Vui lòng nhập Họ và tên chủ nuôi!');
+                return;
+            }
+            if (!tenthucung) {
+                alert('Vui lòng nhập tên thú cưng!');
+                return;
+            }
+
+            let maKhachHangFinal = null;
+            const tabCuActive = document.getElementById('tabKhachCu').classList.contains('active');
+            
+            if (tabCuActive) {
+                maKhachHangFinal = document.getElementById('selectedKhachHangId').value;
+                if (!maKhachHangFinal) {
+                    alert('Vui lòng gõ tìm và chọn khách hàng cũ từ danh sách gợi ý!');
+                    return;
+                }
+            } else {
+                let khTonTai = null;
+                if (sodienthoai) {
+                    khTonTai = danhSachKhachHangToanCuc.find(x => x.sodienthoai === sodienthoai);
+                }
+
+                if (khTonTai) {
+                    maKhachHangFinal = khTonTai.id;
+                } else {
+                    const maphongkham = sessionStorage.getItem('maphongkham') || '';
+                    const { data: newKh, error: errKh } = await db.from('khachhang').insert([{
+                        hovaten, 
+                        sodienthoai: sodienthoai || null, 
+                        diachi, 
+                        maphongkham
+                    }]).select().single();
+
+                    if (errKh) {
+                        alert('Lỗi lưu khách hàng: ' + errKh.message);
+                        return;
+                    }
+                    maKhachHangFinal = newKh.id;
+                }
+            }
+
+            const maphongkham = sessionStorage.getItem('maphongkham') || '';
+            const payloadPet = {
+                tenthucung,
+                loai,
+                giong,
+                gioitinh,
+                tuoi,
+                cannang: cannang !== '' ? parseFloat(cannang.replace(',', '.')) : null,
+                maulong,
+                trietsan: dattrietsan,
+                makhachhang: parseInt(maKhachHangFinal),
+                maphongkham
+            };
+
+            const { data: newPet, error: errPet } = await db.from('thucung').insert([payloadPet]).select().single();
+            if (errPet) {
+                alert('Lỗi lưu thú cưng: ' + errPet.message);
+                return;
+            }
+
+            alert('Tiếp nhận khách hàng và thú cưng thành công!');
+            window.location.href = `khambenh.html?mathucung=${newPet.id}`;
+        }
+    </script>
+</body>
+
+</html>
