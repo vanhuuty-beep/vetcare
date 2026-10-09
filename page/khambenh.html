@@ -114,29 +114,150 @@
         .filter-btn:hover { background: #f1f5f9; color: var(--text); }
         .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-        /* BẢNG DỮ LIỆU CHÍNH - HỖ TRỢ CUỘN NGANG AN TOÀN TRÊN MOBILE */
-        .table-container {
-            background: var(--white); border: 1px solid var(--border); border-radius: 16px;
-            box-shadow: var(--shadow); overflow-x: auto; margin-bottom: 20px;
+        /* DANH SÁCH BỆNH ÁN DẠNG CARD */
+        .medical-record-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 20px;
         }
-        .custom-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 950px; }
-        .custom-table th {
-            background: #f8fafc; color: var(--muted); font-weight: 700; font-size: 11px; text-transform: uppercase;
-            padding: 14px 16px; border-bottom: 1px solid var(--border); letter-spacing: 0.5px; white-space: nowrap;
+        .medical-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: all 0.2s ease;
         }
-        .custom-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: var(--text); position: relative; }
-        .custom-table tr:hover { background: #f8fbff; }
-        .custom-table tr:last-child td { border-bottom: none; }
-
-        .pet-cell-info div:first-child { font-weight: 700; color: var(--text); font-size: 13px; }
-        .pet-cell-info div:last-child { font-size: 11px; color: var(--muted); margin-top: 2px; }
-        .pet-code-mini { display: inline-block; font-size: 10px; background: #f1f5f9; color: var(--muted); padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-top: 3px; }
-
+        .medical-card:hover {
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+        }
+        .card-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 12px;
+            margin-bottom: 14px;
+        }
+        .pet-profile-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .pet-avatar-box {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #e0f2fe;
+            color: #0369a1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 16px;
+        }
+        .pet-main-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .pet-sub-meta {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+        .card-actions-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
         .badge-status {
-            display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 6px;
-            font-size: 11px; font-weight: 700; cursor: pointer; border: 0; transition: 0.15s; white-space: nowrap;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 0;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
         .badge-status:hover { filter: brightness(0.95); }
+
+        .btn-print-mini {
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.15s;
+        }
+        .btn-print-mini:hover { background: #f1f5f9; border-color: #cbd5e1; }
+
+        /* LƯỚI THÔNG TIN CHỈ SỐ (4 CỘT) */
+        .card-grid-info {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            font-size: 12px;
+            margin-bottom: 12px;
+            background: #f8fafc;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid #f1f5f9;
+        }
+        .info-item span { color: var(--muted); }
+        .info-item b { color: var(--text); }
+
+        /* LƯỚI NỘI DUNG CHUYÊN MÔN (3 CỘT) */
+        .card-grid-content {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+        .content-box-field {
+            background: #fff;
+            border: 1px solid #f1f5f9;
+            padding: 10px 12px;
+            border-radius: 10px;
+        }
+        .content-box-field label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--muted);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        .content-box-field div {
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        /* PHẦN ĐƠN THUỐC BÊN DƯỚI */
+        .prescription-section {
+            border-top: 1px dashed var(--border);
+            padding-top: 10px;
+            font-size: 13px;
+        }
+        .prescription-section label {
+            font-weight: 700;
+            color: var(--primary-dark);
+            display: block;
+            margin-bottom: 4px;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
 
         /* DROPDOWN THAO TÁC NHANH */
         .action-dropdown-wrapper { position: relative; display: inline-block; }
@@ -161,10 +282,10 @@
         .action-menu-item.danger { color: #dc2626; }
         .action-menu-item.danger:hover { background: #fee2e2; }
 
-        /* PHÂN TRANG & FOOTER BẢNG */
+        /* PHÂN TRANG & FOOTER */
         .table-footer {
             display: flex; align-items: center; justify-content: space-between; padding: 16px 20px;
-            background: var(--white); border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); flex-wrap: wrap; gap: 10px;
+            background: var(--white); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); font-size: 12px; color: var(--muted); flex-wrap: wrap; gap: 10px;
         }
         .pagination { display: flex; align-items: center; gap: 5px; }
         .page-num {
@@ -212,7 +333,7 @@
         .table-modal th, .table-modal td { border: 1px solid var(--border); padding: 8px; font-size: 12px; vertical-align: middle; background: #fff; }
         .table-modal th { background: #f8fafc; font-weight: 700; color: var(--muted); text-align: left; }
 
-        .empty-state { text-align: center; padding: 40px; color: var(--muted); }
+        .empty-state { text-align: center; padding: 40px; color: var(--muted); background: var(--white); border: 1px solid var(--border); border-radius: 16px; }
         .empty-state i { font-size: 32px; margin-bottom: 10px; color: #cbd5e1; }
 
         /* RESPONSIVE TRÊN MOBILE */
@@ -224,6 +345,8 @@
             .toolbar-left { flex-direction: column; align-items: stretch; }
             .search-box-wrap { min-width: 100%; }
             .form-row-2 { grid-template-columns: 1fr; }
+            .card-grid-info { grid-template-columns: repeat(2, 1fr); }
+            .card-grid-content { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -301,40 +424,21 @@
                     </div>
                 </div>
 
-                <!-- Bảng danh sách dữ liệu (Hỗ trợ cuộn ngang mượt mà trên mobile) -->
-                <div class="table-container">
-                    <table class="custom-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 50px;">#</th>
-                                <th>Thú cưng / Chủ nuôi</th>
-                                <th>Ngày khám & Hẹn tái khám</th>
-                                <th>Triệu chứng & Chẩn đoán</th>
-                                <th style="text-align: right;">Chi phí (VNĐ)</th>
-                                <th style="text-align: center; width: 130px;">Trạng thái</th>
-                                <th style="width: 80px; text-align: right;">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody id="data-table">
-                            <tr>
-                                <td colspan="7">
-                                    <div class="empty-state">
-                                        <i class="fa-solid fa-spinner fa-spin"></i>
-                                        <div>Đang tải dữ liệu khám bệnh...</div>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- DANH SÁCH BỆNH ÁN DẠNG CARD -->
+                <div class="medical-record-container" id="data-table">
+                    <div class="empty-state">
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        <div>Đang tải dữ liệu khám bệnh...</div>
+                    </div>
+                </div>
 
-                    <!-- Chân bảng & Phân trang -->
-                    <div class="table-footer">
-                        <div id="paginationInfo">Hiển thị 0 bản ghi</div>
-                        <div class="pagination">
-                            <button class="page-num" id="btnPrevPage" onclick="doiTrang(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-                            <span style="padding: 0 8px; font-weight: 700;" id="pageIndicator">1 / 1</span>
-                            <button class="page-num" id="btnNextPage" onclick="doiTrang(1)"><i class="fa-solid fa-chevron-right"></i></button>
-                        </div>
+                <!-- Phân trang -->
+                <div class="table-footer">
+                    <div id="paginationInfo">Hiển thị 0 bản ghi</div>
+                    <div class="pagination">
+                        <button class="page-num" id="btnPrevPage" onclick="doiTrang(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                        <span style="padding: 0 8px; font-weight: 700;" id="pageIndicator">1 / 1</span>
+                        <button class="page-num" id="btnNextPage" onclick="doiTrang(1)"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -679,7 +783,7 @@
         let dangInKhamId = null;
 
         let trangHienTai = 1;
-        let soDongMoiTrang = 12;
+        let soDongMoiTrang = 10;
         let duLieuHienThiHienTai = [];
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -816,7 +920,7 @@
         }
 
         function renderPhanTrang() {
-            const tbody = document.getElementById('data-table');
+            const container = document.getElementById('data-table');
             const all = danhSachKhamBenhGoc || [];
             const dang = all.filter(x => (x.trangthai || 'Đang điều trị') === 'Đang điều trị').length;
             const khoi = all.filter(x => (x.trangthai || '') === 'Đã khỏi bệnh').length;
@@ -829,18 +933,14 @@
 
             document.getElementById('kbCount').textContent = `${duLieuHienThiHienTai.length.toLocaleString('vi-VN')} phiếu khám`;
 
-            tbody.innerHTML = '';
+            container.innerHTML = '';
             const total = duLieuHienThiHienTai.length;
             if (total === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7">
-                            <div class="empty-state">
-                                <i class="fa-solid fa-stethoscope"></i>
-                                <div>Không tìm thấy phiếu khám bệnh nào</div>
-                            </div>
-                        </td>
-                    </tr>`;
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-stethoscope"></i>
+                        <div>Không tìm thấy phiếu khám bệnh nào</div>
+                    </div>`;
                 document.getElementById('paginationInfo').innerText = 'Hiển thị 0 bản ghi';
                 document.getElementById('pageIndicator').innerText = '1 / 1';
                 return;
@@ -854,62 +954,98 @@
             const endIndex = Math.min(startIndex + soDongMoiTrang, total);
             const pageData = duLieuHienThiHienTai.slice(startIndex, endIndex);
 
-            pageData.forEach((item, index) => {
+            pageData.forEach((item) => {
                 const maKB = item.makhambenh || formatMaKham(item.id);
                 const tenTC = (item.mathucung && mapThuCung[item.mathucung]) ? mapThuCung[item.mathucung] : 'Thú cưng #' + item.mathucung;
                 const tenChu = (item.mathucung && mapKhachHang[item.mathucung]) ? mapKhachHang[item.mathucung] : 'Chưa rõ chủ';
                 const chiPhi = Number(item.chiphi) || 0;
                 const ngayKham = item.ngaykham ? new Date(item.ngaykham + 'T00:00:00').toLocaleDateString('vi-VN') : '---';
-                const ngayTaiKham = item.ngaytaikham ? new Date(item.ngaytaikham + 'T00:00:00').toLocaleDateString('vi-VN') : 'Không có';
+                const ngayTaiKham = item.ngaytaikham ? new Date(item.ngaytaikham + 'T00:00:00').toLocaleDateString('vi-VN') : 'Không';
                 const trangThai = item.trangthai || 'Đang điều trị';
+                const nhietDoVal = item.nhietdo ? item.nhietdo + ' °C' : '--';
+                const tamUngVal = item.tientamung ? Number(item.tientamung).toLocaleString('vi-VN') + ' đ' : '0 đ';
 
-                let statusBg = '#fef2f2'; let statusColor = '#dc2626';
+                let statusBg = '#fef3c7'; let statusColor = '#d97706';
                 if (trangThai === 'Đã khỏi bệnh') { statusBg = '#ecfdf5'; statusColor = '#059669'; }
-                else if (trangThai === 'Hẹn tái khám') { statusBg = '#fff7ed'; statusColor = '#d97706'; }
+                else if (trangThai === 'Đang điều trị') { statusBg = '#eff6ff'; statusColor = '#2563eb'; }
 
                 let nextStatus = 'Đã khỏi bệnh';
                 if (trangThai === 'Đã khỏi bệnh') nextStatus = 'Hẹn tái khám';
                 else if (trangThai === 'Hẹn tái khám') nextStatus = 'Đang điều trị';
 
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="font-weight: 600; color: var(--muted);">${startIndex + index + 1}</td>
-                        <td>
-                            <div class="pet-cell-info">
-                                <div>${escapeHtml(tenTC)}</div>
-                                <div><i class="fa-solid fa-user" style="font-size:10px;"></i> ${escapeHtml(tenChu)}</div>
-                                <span class="pet-code-mini">${escapeHtml(maKB)}</span>
-                            </div>
-                        </td>
-                        <td>
-                            <div style="font-weight: 600;"><i class="fa-regular fa-calendar"></i> ${ngayKham}</div>
-                            <div style="font-size: 11px; color: var(--orange); margin-top: 3px;"><i class="fa-solid fa-clock-rotate-left"></i> Tái khám: ${ngayTaiKham}</div>
-                        </td>
-                        <td>
-                            <div style="font-weight: 600; color: var(--orange);">${escapeHtml(item.chandoan || 'Chưa có chẩn đoán')}</div>
-                            <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">TC: ${escapeHtml(item.trieuchung || '---')}</div>
-                        </td>
-                        <td style="text-align: right; font-weight: 700; color: var(--green);">${chiPhi.toLocaleString('vi-VN')} đ</td>
-                        <td style="text-align: center;">
-                            <button class="badge-status" style="background: ${statusBg}; color: ${statusColor};" onclick="capNhatTrangThaiKhambenh(${item.id}, '${nextStatus}')">
-                                ${escapeHtml(trangThai)} <i class="fa-solid fa-rotate" style="font-size: 10px;"></i>
-                            </button>
-                        </td>
-                        <td style="text-align: right;">
-                            <div class="action-dropdown-wrapper">
-                                <button class="btn-action-dropdown" onclick="toggleActionMenu(event, ${item.id})" title="Thao tác nhanh"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-                                <div class="action-menu-popup" id="actionMenu_${item.id}">
-                                    <button class="action-menu-item" onclick="window.location.href='nhatkynoitru.html?makhambenh=${item.id}'"><i class="fa-solid fa-hospital" style="color: #7c3aed; width: 16px;"></i> Nhập viện</button>
-                                    <button class="action-menu-item" onclick="window.location.href='nhatkylamvaccine.html?makhambenh=${item.id}&mathucung=${item.mathucung}'"><i class="fa-solid fa-syringe" style="color: #059669; width: 16px;"></i> Vắc-xin</button>
-                                    <button class="action-menu-item" onclick="window.location.href='phieuchidinh.html?makhambenh=${item.id}'"><i class="fa-solid fa-file-medical" style="color: #2563eb; width: 16px;"></i> Chỉ định</button>
-                                    <button class="action-menu-item" onclick="window.location.href='donthuoc.html?makhambenh=${item.id}'"><i class="fa-solid fa-pills" style="color: #d97706; width: 16px;"></i> Đơn thuốc</button>
-                                    <button class="action-menu-item" onclick="inPhieuKham(${item.id})"><i class="fa-solid fa-print" style="color: #4338ca; width: 16px;"></i> In phiếu khám</button>
-                                    <button class="action-menu-item" onclick="moModalSua(${item.id})"><i class="fa-solid fa-pen" style="color: #b45309; width: 16px;"></i> Sửa phiếu</button>
-                                    <button class="action-menu-item danger" onclick="xoaKhamBenh(${item.id})"><i class="fa-solid fa-trash" style="width: 16px;"></i> Xóa phiếu</button>
+                let donThuocStr = 'Không có đơn thuốc';
+                const hoaDonCu = mapHoaDonThuoc[item.id];
+                if (hoaDonCu && hoaDonCu.chitiet) {
+                    try {
+                        let chiTietArr = JSON.parse(hoaDonCu.chitiet);
+                        if (Array.isArray(chiTietArr) && chiTietArr.length > 0) {
+                            donThuocStr = chiTietArr.map(t => `${t.mathuoc} (SL: ${t.soluong})`).join(', ');
+                        }
+                    } catch (e) {}
+                }
+
+                let avtText = tenTC.charAt(0).toUpperCase();
+
+                container.innerHTML += `
+                    <div class="medical-card">
+                        <!-- Header Card -->
+                        <div class="card-header-row">
+                            <div class="pet-profile-info">
+                                <div class="pet-avatar-box">${escapeHtml(avtText)}</div>
+                                <div>
+                                    <div class="pet-main-title">${escapeHtml(tenTC)} &nbsp;|&nbsp; Chủ: ${escapeHtml(tenChu)}</div>
+                                    <div class="pet-sub-meta">Mã BA: <b>${escapeHtml(maKB)}</b> &nbsp;&bull;&nbsp; Ngày khám: ${ngayKham}</div>
                                 </div>
                             </div>
-                        </td>
-                    </tr>
+                            <div class="card-actions-top">
+                                <button class="badge-status" style="background: ${statusBg}; color: ${statusColor};" onclick="capNhatTrangThaiKhambenh(${item.id}, '${nextStatus}')">
+                                    ${escapeHtml(trangThai)} <i class="fa-solid fa-rotate" style="font-size: 10px;"></i>
+                                </button>
+                                <button class="btn-print-mini" onclick="inPhieuKham(${item.id})"><i class="fa-solid fa-print"></i> In phiếu</button>
+                                <div class="action-dropdown-wrapper">
+                                    <button class="btn-action-dropdown" onclick="toggleActionMenu(event, ${item.id})" title="Thao tác nhanh" style="width:32px; height:32px;"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                    <div class="action-menu-popup" id="actionMenu_${item.id}">
+                                        <button class="action-menu-item" onclick="window.location.href='nhatkynoitru.html?makhambenh=${item.id}'"><i class="fa-solid fa-hospital" style="color: #7c3aed; width: 16px;"></i> Nhập viện</button>
+                                        <button class="action-menu-item" onclick="window.location.href='nhatkylamvaccine.html?makhambenh=${item.id}&mathucung=${item.mathucung}'"><i class="fa-solid fa-syringe" style="color: #059669; width: 16px;"></i> Vắc-xin</button>
+                                        <button class="action-menu-item" onclick="window.location.href='phieuchidinh.html?makhambenh=${item.id}'"><i class="fa-solid fa-file-medical" style="color: #2563eb; width: 16px;"></i> Chỉ định</button>
+                                        <button class="action-menu-item" onclick="window.location.href='donthuoc.html?makhambenh=${item.id}'"><i class="fa-solid fa-pills" style="color: #d97706; width: 16px;"></i> Đơn thuốc</button>
+                                        <button class="action-menu-item" onclick="moModalSua(${item.id})"><i class="fa-solid fa-pen" style="color: #b45309; width: 16px;"></i> Sửa phiếu</button>
+                                        <button class="action-menu-item danger" onclick="xoaKhamBenh(${item.id})"><i class="fa-solid fa-trash" style="width: 16px;"></i> Xóa phiếu</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Các chỉ số sinh hiệu (4 cột) -->
+                        <div class="card-grid-info">
+                            <div class="info-item"><span>Thân nhiệt:</span> <b>${nhietDoVal}</b></div>
+                            <div class="info-item"><span>Chi phí khám:</span> <b>${chiPhi.toLocaleString('vi-VN')} đ</b></div>
+                            <div class="info-item"><span>Tạm ứng:</span> <b>${tamUngVal}</b></div>
+                            <div class="info-item"><span>Tái khám:</span> <b>${ngayTaiKham}</b></div>
+                        </div>
+
+                        <!-- Nội dung khám (3 cột) -->
+                        <div class="card-grid-content">
+                            <div class="content-box-field">
+                                <label>Triệu chứng lâm sàng</label>
+                                <div>${escapeHtml(item.trieuchung || '---')}</div>
+                            </div>
+                            <div class="content-box-field">
+                                <label>Chẩn đoán xác định</label>
+                                <div style="color: var(--primary); font-weight: 600;">${escapeHtml(item.chandoan || '---')}</div>
+                            </div>
+                            <div class="content-box-field">
+                                <label>Phác đồ xử lý & Điều trị</label>
+                                <div>${escapeHtml(item.dieutri || '---')}</div>
+                            </div>
+                        </div>
+
+                        <!-- Đơn thuốc & Hướng dẫn -->
+                        <div class="prescription-section">
+                            <label>Đơn thuốc & Hướng dẫn:</label>
+                            <div style="color: var(--text);">${escapeHtml(donThuocStr)}</div>
+                        </div>
+                    </div>
                 `;
             });
 
