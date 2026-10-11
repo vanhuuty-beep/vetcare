@@ -574,7 +574,24 @@
             }
 
             data.forEach(item => {
-                const logoHtml = item.logo ? `<img src="${item.logo}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border);">` : '<span style="font-size: 20px;">🏥</span>';
+                // Xử lý lấy link logo tự động chuẩn xác từ Storage
+                let rawLogo = item.logo || item.logourl || item.hinhanh || '';
+                let logoUrl = '';
+
+                if (rawLogo) {
+                    let fileName = rawLogo.split('/').pop().split('?')[0];
+                    if (fileName) {
+                        const { data: publicURLData } = db.storage.from('logo').getPublicUrl(fileName);
+                        logoUrl = publicURLData ? publicURLData.publicUrl : rawLogo;
+                    } else {
+                        logoUrl = rawLogo;
+                    }
+                }
+
+                const logoHtml = logoUrl 
+                    ? `<img src="${logoUrl}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border);" onerror="this.onerror=null; this.src='https://via.placeholder.com/36?text=PK';">` 
+                    : '<span style="font-size: 20px;">🏥</span>';
+
                 const ngayHetHan = item.ngayhethan ? new Date(item.ngayhethan).toLocaleDateString('vi-VN') : '---';
                 const trangThaiBadge = item.trangthai === 'Khóa' 
                     ? `<span style="background: var(--red-bg); color: var(--red); padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11px;">Khóa</span>` 
