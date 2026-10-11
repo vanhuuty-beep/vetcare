@@ -375,17 +375,16 @@
                 document.getElementById('sodienthoai').value = data.sodienthoai || data.sdt || '';
                 document.getElementById('diachi').value = data.diachi || '';
                 
-                // Xử lý nạp logo chuẩn xác tự động lấy link Public từ Supabase Storage
+                // Xử lý nạp logo linh hoạt (hỗ trợ cả URL đầy đủ và tên file)
                 let rawLogo = data.logo || '';
                 let logoUrl = '';
 
                 if (rawLogo) {
-                    let fileName = rawLogo.split('/').pop().split('?')[0];
-                    if (fileName) {
-                        const { data: publicURLData } = db.storage.from('logo').getPublicUrl(fileName);
-                        logoUrl = publicURLData ? publicURLData.publicUrl : rawLogo;
-                    } else {
+                    if (rawLogo.startsWith('http')) {
                         logoUrl = rawLogo;
+                    } else {
+                        const { data: publicURLData } = db.storage.from('logo').getPublicUrl(rawLogo);
+                        logoUrl = publicURLData ? publicURLData.publicUrl : '';
                     }
                 }
 
