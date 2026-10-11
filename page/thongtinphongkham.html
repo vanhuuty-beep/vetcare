@@ -375,16 +375,20 @@
                 document.getElementById('sodienthoai').value = data.sodienthoai || data.sdt || '';
                 document.getElementById('diachi').value = data.diachi || '';
                 
-                // Xử lý nạp logo linh hoạt (hỗ trợ cả URL đầy đủ và tên file)
+                // Xử lý nạp logo, tự động làm sạch ký tự thừa và lấy link public từ Supabase
                 let rawLogo = data.logo || '';
                 let logoUrl = '';
 
                 if (rawLogo) {
-                    if (rawLogo.startsWith('http')) {
-                        logoUrl = rawLogo;
+                    // Loại bỏ hoàn toàn ký tự xuống dòng ẩn hoặc khoảng trắng thừa
+                    rawLogo = rawLogo.replace(/[\r\n]+/g, "").trim();
+                    let fileName = rawLogo.split('/').pop().split('?')[0];
+
+                    if (fileName && fileName.includes('.')) {
+                        const { data: publicURLData } = db.storage.from('logo').getPublicUrl(fileName);
+                        logoUrl = publicURLData ? publicURLData.publicUrl : rawLogo;
                     } else {
-                        const { data: publicURLData } = db.storage.from('logo').getPublicUrl(rawLogo);
-                        logoUrl = publicURLData ? publicURLData.publicUrl : '';
+                        logoUrl = rawLogo;
                     }
                 }
 
@@ -422,7 +426,7 @@
                 .from('logo')
                 .getPublicUrl(filePath);
 
-            const publicUrl = publicURLData.publicUrl;
+            const publicUrl = publicURLData ? publicURLData.publicUrl.replace(/[\r\n]+/g, "").trim() : '';
 
             // Gán vào input ẩn và hiển thị xem trước
             document.getElementById('logoUrlHidden').value = publicUrl;
@@ -440,7 +444,7 @@
                 chuphongkham: document.getElementById('chuphongkham').value.trim(),
                 sodienthoai: document.getElementById('sodienthoai').value.trim(),
                 diachi: document.getElementById('diachi').value.trim(),
-                logo: document.getElementById('logoUrlHidden').value.trim()
+                logo: document.getElementById('logoUrlHidden').value.trim().replace(/[\r\n]+/g, "")
             };
 
             let { error } = await db
