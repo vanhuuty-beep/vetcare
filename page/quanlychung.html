@@ -574,15 +574,16 @@
             }
 
             data.forEach(item => {
-                // Xử lý lấy link logo tự động chuẩn xác từ Storage
+                // Xử lý làm sạch ký tự ẩn và lấy link public chuẩn xác từ Storage
                 let rawLogo = item.logo || item.logourl || item.hinhanh || '';
                 let logoUrl = '';
 
                 if (rawLogo) {
+                    rawLogo = rawLogo.replace(/[\r\n]+/g, "").trim();
                     let fileName = rawLogo.split('/').pop().split('?')[0];
-                    if (fileName) {
+                    if (fileName && fileName.includes('.')) {
                         const { data: publicURLData } = db.storage.from('logo').getPublicUrl(fileName);
-                        logoUrl = publicURLData ? publicURLData.publicUrl : rawLogo;
+                        logoUrl = publicURLData ? publicURLData.publicUrl.replace(/[\r\n]+/g, "").trim() : rawLogo;
                     } else {
                         logoUrl = rawLogo;
                     }
