@@ -346,7 +346,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT XỬ LÝ UPLOAD VÀ LƯU DỮ LIỆU (GIỮ NGUYÊN LOGIC CŨ CỦA BẠN) -->
+    <!-- SCRIPT XỬ LÝ UPLOAD VÀ LƯU DỮ LIỆU -->
     <script>
         window.addEventListener('DOMContentLoaded', async () => {
             const maphongkham = sessionStorage.getItem('maphongkham');
@@ -375,7 +375,20 @@
                 document.getElementById('sodienthoai').value = data.sodienthoai || data.sdt || '';
                 document.getElementById('diachi').value = data.diachi || '';
                 
-                const logoUrl = data.logo || '';
+                // Xử lý nạp logo chuẩn xác tự động lấy link Public từ Supabase Storage
+                let rawLogo = data.logo || '';
+                let logoUrl = '';
+
+                if (rawLogo) {
+                    let fileName = rawLogo.split('/').pop().split('?')[0];
+                    if (fileName) {
+                        const { data: publicURLData } = db.storage.from('logo').getPublicUrl(fileName);
+                        logoUrl = publicURLData ? publicURLData.publicUrl : rawLogo;
+                    } else {
+                        logoUrl = rawLogo;
+                    }
+                }
+
                 document.getElementById('logoUrlHidden').value = logoUrl;
                 if (logoUrl) {
                     document.getElementById('imgPreview').src = logoUrl;
